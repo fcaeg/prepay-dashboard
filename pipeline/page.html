@@ -1,0 +1,1474 @@
+<meta name="dash-one-writer">
+<style>
+#dash-root { --dash-gutter: var(--cds-pad-lg); }
+.pc { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: grid; gap: var(--cds-gap-lg); max-width: 88rem; margin-inline: auto; }
+.pc-head { display: grid; gap: var(--cds-gap-xs); }
+.pc-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.pc-take { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); line-height: 1.6; }
+.pc .pc-take b, .pc .pc-n b { font-weight: 600; color: var(--color-fg); }
+.pc-note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pc-bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: end; }
+.pc-field { display: grid; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-width: 0; }
+.pc-field select, .pc-field input { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); max-width: 100%; }
+.pc-btn { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: transparent; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.pc-btn:hover { background: var(--color-panel); }
+.pc-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.pc-tab { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; margin-bottom: -1px; }
+.pc-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: 600; }
+.pc-tab:focus-visible, .pc-btn:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.pc-sec { display: grid; gap: var(--cds-gap-md); }
+.pc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+.pc-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; }
+.pc-tile-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pc-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.pc-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.pc-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; align-content: start; }
+.pc-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.pc-card > p { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+.pc-chart { position: relative; min-height: 240px; }
+.pc-chart svg { display: block; }
+.pc-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+.pc-tip span { color: var(--cds-text-secondary); }
+.pc-hbars { display: grid; gap: var(--cds-gap-sm); min-height: 160px; align-content: start; }
+.pc-hrow { display: grid; grid-template-columns: minmax(6rem, 11rem) 1fr auto; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); }
+.pc-hrow .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-hrow .t { height: 14px; background: var(--cds-chart-grid); border-radius: var(--cds-radius); overflow: hidden; }
+.pc-hrow .f { height: 100%; border-radius: var(--cds-radius); }
+.pc-hrow .v { font-variant-numeric: tabular-nums; text-align: right; color: var(--color-fg-muted); min-width: 7.5rem; }
+.pc-tools { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: end; }
+.pc-scroll { max-height: 34rem; overflow: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+.pc table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.pc th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: 600; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; cursor: pointer; z-index: 1; }
+.pc th.num, .pc td.num { text-align: right; }
+.pc td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: middle; }
+.pc td.wrap { min-width: 12rem; }
+.pc td .cb { display: flex; align-items: center; gap: var(--cds-gap-xs); justify-content: flex-end; }
+.pc td .cb i { display: inline-block; height: 8px; border-radius: 2px; background: var(--cds-chart-muted); min-width: 1px; }
+.pc tr:hover td { background: var(--cds-chart-grid); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); border: 1px solid currentColor; white-space: nowrap; }
+.pill.bad { color: var(--color-bad); } .pill.warn { color: var(--color-warn); } .pill.ok { color: var(--color-ok); } .pill.mute { color: var(--color-fg-muted); }
+.pc-alert .pc-big { color: var(--color-bad); }
+.pc-warn .pc-big { color: var(--color-warn); }
+.pc-method { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.6; margin: 0; max-width: 70ch; }
+.pc-headrow { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: center; justify-content: space-between; }
+.pc-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 3px; background: var(--color-panel); gap: 2px; }
+.pc-seg button { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); background: transparent; border: 0; border-radius: 999px; padding: var(--cds-pad-xs) var(--cds-pad-lg); cursor: pointer; white-space: nowrap; }
+.pc-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-panel); font-weight: 600; }
+.pc-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.pc-seg-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-right: var(--cds-gap-xs); }
+.pc-metricwrap { display: inline-flex; align-items: center; }
+.pc-tile.on { border-color: var(--color-fg); }
+.pc-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-lg); align-items: start; }
+.pc-card details summary { cursor: pointer; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding: var(--cds-pad-xs) 0; }
+.pc-card details[open] summary { margin-bottom: var(--cds-gap-xs); }
+.pc-mlabel { font-weight: 600; color: var(--color-fg); }
+.pc-rank { display: grid; gap: 6px; }
+.pc-rrow { display: grid; grid-template-columns: 2rem minmax(7rem, 12rem) 1fr minmax(8.5rem, auto); gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); }
+.pc-rrow .n { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
+.pc-rrow .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-rrow .t { position: relative; height: 18px; background: var(--cds-chart-grid); border-radius: var(--cds-radius); }
+.pc-rrow .f { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--cds-radius); }
+.pc-rrow .m { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--color-fg); }
+.pc-rrow .v { text-align: right; font-variant-numeric: tabular-nums; }
+.pc-rrow .v b { font-weight: 600; }
+.pc-rrow.sel .l { font-weight: 600; }
+.pc-rrow.dim { opacity: .5; }
+.pc-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pc-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+@media (max-width: 560px) { .pc-rrow { grid-template-columns: 1.5rem minmax(0, 1fr) auto; row-gap: 2px; } .pc-rrow .n { grid-row: 1 / span 2; align-self: center; } .pc-rrow .l { grid-column: 2; grid-row: 1; } .pc-rrow .v { grid-column: 3; grid-row: 1; text-align: right; } .pc-rrow .t { grid-column: 2 / -1; grid-row: 2; height: 14px; } }
+.pc-heat-wrap { overflow-x: auto; }
+.pc-heat { display: grid; gap: 2px; font-size: 11px; font-variant-numeric: tabular-nums; min-width: max-content; }
+.pc-heat .hc { min-width: 2.6rem; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 3px; cursor: pointer; color: var(--color-fg); }
+.pc-heat .hc.sel { outline: 2px solid var(--color-fg); outline-offset: -1px; font-weight: 600; }
+.pc-heat .hl { position: sticky; left: 0; background: var(--color-panel); padding-right: var(--cds-pad-sm); white-space: nowrap; display: flex; align-items: center; font-size: var(--cds-font-size-caption); z-index: 1; }
+.pc-heat .hh { text-align: center; color: var(--color-fg-muted); padding-bottom: 2px; }
+.pc table td:first-child { white-space: nowrap; }
+.pc table th, .pc table td { overflow-wrap: normal; word-break: normal; }
+.pc table td:not(.wrap) { white-space: nowrap; }
+@media (max-width: 640px) { .pc td.wrap { min-width: 10rem; } }
+.pc-smx .hc { min-width: 5.6rem; height: 30px; font-size: 11px; cursor: default; padding: 0 4px; white-space: nowrap; }
+.pc-smx .hh { padding: 4px; font-size: 11px; white-space: nowrap; position: sticky; top: 0; background: var(--color-panel); z-index: 2; }
+.pc-smx > .hl:first-child { position: sticky; top: 0; left: 0; z-index: 3; }
+.pc-smx-wrap { max-height: 32rem; overflow: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 0 4px 4px 0; }
+.pc-dual { display: grid; gap: 2px; }
+.pc-dual .t { height: 9px; }
+.pc-hrow.click { cursor: pointer; }
+.pc-hrow.on .l { font-weight: 600; text-decoration: underline; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+[data-dash-source-state=empty] { color: transparent; }
+
+/* ---------- responsive: iOS / Android / PC ---------- */
+.pc { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); padding-bottom: env(safe-area-inset-bottom); overflow-wrap: anywhere; }
+.pc *, .pc *::before, .pc *::after { box-sizing: border-box; }
+.pc button, .pc select, .pc input, .pc summary, .pc .hc { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.pc-scroll, .pc-heat-wrap, .pc-tabs { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.pc-chart svg { touch-action: pan-y; }
+.pc-tip { max-width: min(18rem, 90%); white-space: normal; }
+.pc table th:first-child, .pc table td:first-child { position: sticky; left: 0; background: var(--color-panel); z-index: 1; }
+.pc table th:first-child { z-index: 2; }
+@media (hover: none) { .pc tr:hover td { background: transparent; } .pc table td:first-child { background: var(--color-panel); } .pc-btn:hover { background: transparent; } }
+@media (pointer: coarse) {
+  .pc-tab { min-height: 44px; }
+  .pc-btn, .pc-seg button { min-height: 40px; }
+  .pc-field select, .pc-field input { min-height: 44px; font-size: max(16px, var(--cds-font-size-body)); }
+  .pc-card details summary { min-height: 40px; display: flex; align-items: center; }
+  .pc th { padding-top: var(--cds-pad-sm); padding-bottom: var(--cds-pad-sm); }
+}
+@media (max-width: 900px) {
+  .pc-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .pc-tabs::-webkit-scrollbar { display: none; }
+  .pc-tab { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: start; }
+}
+@media (max-width: 640px) {
+  .pc { gap: var(--cds-gap-md); }
+  .pc-title { font-size: calc(var(--cds-font-size-title) * 0.8); }
+  .pc-headrow { align-items: stretch; }
+  .pc-metricwrap { width: 100%; justify-content: space-between; }
+  .pc-seg { flex: 1; } .pc-seg button { flex: 1; padding-left: var(--cds-pad-sm); padding-right: var(--cds-pad-sm); }
+  .pc-bar { display: grid; grid-template-columns: 1fr 1fr; align-items: end; }
+  .pc-bar .pc-field select, .pc-bar .pc-field input { width: 100%; }
+  .pc-tools .pc-field, .pc-tools .pc-field input { width: 100%; }
+  .pc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-sm); }
+  .pc-tile { padding: var(--cds-pad-sm) var(--cds-pad-md); }
+  .pc-big { font-size: calc(var(--cds-font-size-title) * 0.85); }
+  .pc-card { padding: var(--cds-pad-md); }
+  .pc-grid, .pc-split { grid-template-columns: minmax(0, 1fr); }
+  .pc-hrow { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .pc-hrow .l { grid-column: 1; } .pc-hrow .v { grid-column: 2; grid-row: 1; min-width: 0; }
+  .pc-hrow .t { grid-column: 1 / -1; }
+  .pc-scroll { max-height: 65vh; }
+  .pc-heat { grid-auto-columns: minmax(2.2rem, 1fr); }
+  .pc-heat .hl { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+  .pc-heat .hc { min-width: 2.2rem; height: 28px; }
+}
+@media (max-width: 380px) { .pc-tiles { grid-template-columns: minmax(0, 1fr); } .pc-bar { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="pc">
+  <header class="pc-head" id="top">
+    <div class="pc-headrow">
+      <h1 class="pc-title">Prepay Dashboard · ยอดขายซิม Prepay สาขา WW</h1>
+      <div class="pc-metricwrap"><span class="pc-seg-l">ดูยอดเป็น</span>
+        <div class="pc-seg" role="group" aria-label="เลือกตัววัดยอดขาย" data-draw="metric_seg"></div>
+      </div>
+    </div>
+    <p class="pc-take">วันนี้ (<b data-draw="t_today" data-source="kpi" data-field="today">—</b>) ขายซิม Prepay ได้ QTY <b data-draw="t_tqty" data-source="kpi" data-field="today_units">—</b> Net Amount <b data-draw="t_tnet" data-source="kpi" data-field="today_net">—</b> บาท · เดือนนี้ QTY <b data-draw="t_mqty" data-source="kpi" data-field="mtd_units">—</b> · ตั้งแต่ต้นปี QTY <b data-draw="t_units" data-source="kpi" data-field="units">—</b> Net Amount <b data-draw="t_net" data-source="kpi" data-field="net">—</b> บาท · ซิมในสต็อกที่เกินอายุแล้ว <b data-draw="t_expired" data-source="exp_sum" data-field="n">—</b> ชิ้น</p>
+    <p class="pc-note" id="one-month-note" hidden>ไฟล์ขายตอนนี้มีข้อมูลเพียงเดือนเดียว ยอดสะสมตั้งแต่ต้นปี (YTD) จึงเท่ากับยอดเดือนล่าสุด เมื่อเพิ่มไฟล์ขายเดือนก่อน ๆ กราฟรายเดือนและยอด YTD จะครบเอง วันสุดท้ายในไฟล์อาจยังไม่ครบวัน</p>
+  </header>
+
+  <div class="pc-bar" id="filters">
+    <label class="pc-field">ภาค
+      <select id="f-area" data-draw="f_area" data-source="shops" aria-label="ภาค"></select>
+    </label>
+    <label class="pc-field">ประเภทสาขา
+      <select id="f-stype" data-draw="f_stype" data-source="shops" aria-label="ประเภทสาขา"></select>
+    </label>
+    <label class="pc-field">สาขา
+      <select id="f-shop" data-draw="f_shop" data-source="shops" aria-label="สาขา"></select>
+    </label>
+    <label class="pc-field">กลุ่มซิม
+      <select id="f-group" data-draw="f_group" data-source="matcodes" aria-label="กลุ่มซิม"></select>
+    </label>
+    <button class="pc-btn pc-reset" type="button">ล้างตัวกรอง</button>
+  </div>
+  <p class="pc-note" id="scope-note">เลือกภาคหรือประเภทสาขาก่อน รายชื่อสาขาจะเหลือเฉพาะสาขาในกลุ่มนั้น · เมื่อเลือกสาขา ทุกหน้าจะแสดงเฉพาะสาขานั้น ยกเว้นหน้า Ranking Area ที่ยังเทียบทุก Area · นับเฉพาะสาขา WW ที่อยู่ในไฟล์เป้า · สาขาที่ปิดแล้ว (SIS / Makro) ไม่มีในตัวกรองประเภทสาขา แต่ยอดขายย้อนหลังยังรวมอยู่เมื่อเลือก "ทุกประเภทสาขา"</p>
+
+  <nav class="pc-tabs" role="tablist" aria-label="มุมมอง">
+    <button class="pc-tab" type="button" role="tab" data-tab="today" aria-selected="true">วันนี้</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="overview" aria-selected="false">แนวโน้มและเป้า</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="products" aria-selected="false">Matcode และช่วงราคา</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="shops" aria-selected="false">สาขา</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="ranking" aria-selected="false">Ranking Area</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="staff" aria-selected="false">พนักงาน</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock พอขายไหม</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">แจ้งเตือนซิมใกล้หมดอายุ</button>
+  </nav>
+
+  <section class="pc-sec" id="today" data-page="today">
+    <div class="pc-tiles">
+      <div class="pc-tile" id="tile-today-qty">
+        <span class="pc-tile-l">QTY วันนี้ <span data-draw="d_date" data-source="kpi" data-field="today">—</span></span>
+        <span class="pc-big" data-draw="d_qty" data-source="kpi" data-field="today_units">—</span>
+        <span class="pc-sub">เฉลี่ยต่อวันเดือนนี้ <b data-draw="d_avg" data-source="kpi" data-field="avg_units">—</b></span>
+      </div>
+      <div class="pc-tile" id="tile-today-net">
+        <span class="pc-tile-l">Net Amount วันนี้ (บาท)</span>
+        <span class="pc-big" data-draw="d_net" data-source="kpi" data-field="today_net">—</span>
+        <span class="pc-sub">ข้อมูลวันที่ <span data-draw="d_tdate" data-source="kpi" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
+      </div>
+      <div class="pc-tile" id="tile-today-shops">
+        <span class="pc-tile-l">สาขาที่มียอดขายวันนี้</span>
+        <span class="pc-big" data-draw="d_shops" data-source="kpi" data-field="today_shops">—</span>
+        <span class="pc-sub">พนักงานที่ขายวันนี้ <span data-draw="d_staff" data-source="kpi" data-field="today_staff">—</span> คน</span>
+      </div>
+      <div class="pc-tile" id="tile-mtd-qty">
+        <span class="pc-tile-l">QTY เดือนนี้ (MTD)</span>
+        <span class="pc-big" data-draw="d_mqty" data-source="kpi" data-field="mtd_units">—</span>
+        <span class="pc-sub">Net Amount <span data-draw="d_mnet" data-source="kpi" data-field="mtd_net">—</span> บาท</span>
+      </div>
+    </div>
+
+    <div class="pc-split">
+      <article class="pc-card" id="card-today-chart">
+        <h3><span class="pc-mlabel" data-draw="ml_1" data-mlabel></span> วันนี้ตามประเภทสาขา</h3>
+        <p>ความยาวแท่ง = ยอดวันนี้ ตัวเลขด้านขวา = ยอดและสัดส่วนของทุกประเภทสาขา</p>
+        <div class="pc-hbars" data-draw="c_today_type" data-source="kpi"></div>
+      </article>
+      <article class="pc-card" id="card-today-trend">
+        <h3><span class="pc-mlabel" data-draw="ml_2" data-mlabel></span> รายวันเดือนนี้</h3>
+        <p>แท่งสีเข้ม = วันนี้ (วันล่าสุดที่อัปโหลด) · เส้นประ = ค่าเฉลี่ยต่อวันของเดือนนี้ · ชี้ที่แท่งเพื่อดูทั้ง QTY และ Net Amount</p>
+        <div class="pc-chart" data-draw="c_today_trend" data-source="daily"></div>
+      </article>
+    </div>
+
+    <article class="pc-card" id="card-today-type">
+      <h3>ตารางยอดขายวันนี้ตามประเภทสาขา</h3>
+      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · % เป้าเดือนนี้ = QTY เดือนนี้ของสาขาที่มีเป้า ÷ เป้า PRE · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+      <div class="pc-scroll">
+        <table data-draw="tb_today" data-source="kpi" data-row-key="area,stype,group"></table>
+      </div>
+    </article>
+
+    <div class="pc-bar">
+      <label class="pc-field">ช่วงเวลาของข้อมูลเชิงวิเคราะห์
+        <select id="f-period" aria-label="ช่วงเวลาของข้อมูลเชิงวิเคราะห์">
+          <option value="today">วันนี้</option>
+          <option value="mtd">เดือนนี้ (MTD)</option>
+          <option value="ytd">ตั้งแต่ต้นปี (YTD)</option>
+        </select>
+      </label>
+    </div>
+    <article class="pc-card" id="card-shop-sold">
+      <h3>สาขาที่ขายได้ · <span data-draw="sold_period" data-source="shop_sales" data-field="period"></span></h3>
+      <p><span data-draw="sold_note" data-source="shop_sales shops"></span> · ตามตัวกรองภาค ประเภทสาขา สาขา และกลุ่มซิมด้านบน · เรียงตามตัววัดที่เลือก (<span data-draw="ml_11" data-mlabel></span>)</p>
+      <div class="pc-scroll"><table data-draw="tb_shopsold" data-source="shop_sales" data-row-key="area,stype,group,period,shop"></table></div>
+      <details><summary data-draw="nosold_sum" data-source="shop_sales shops"></summary>
+        <div class="pc-scroll"><table data-draw="tb_nosold" data-source="shops" data-row-key="shop"></table></div>
+      </details>
+    </article>
+    <div class="pc-grid">
+      <article class="pc-card" id="card-by-area">
+        <h3>มุม Area</h3>
+        <p>เรียงจากยอดมากไปน้อย พร้อมสัดส่วนของยอดรวม</p>
+        <div class="pc-hbars" data-draw="c_bd_area" data-source="breakdown"></div>
+        <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
+          <div class="pc-scroll"><table data-draw="bd_area" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
+        </details>
+      </article>
+      <article class="pc-card" id="card-by-simtype">
+        <h3>มุม Type Sim</h3>
+        <p>Custom Model ตาม Master Prepaid (CUSTOM_MODEL) พร้อมสัดส่วนของยอดรวม</p>
+        <div class="pc-hbars" data-draw="c_bd_simtype" data-source="breakdown"></div>
+        <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
+          <div class="pc-scroll"><table data-draw="bd_simtype" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
+        </details>
+      </article>
+      <article class="pc-card" id="card-by-simgroup">
+        <h3>มุมประเภทซิม (รุ่นย่อย)</h3>
+        <p>รุ่นย่อยตาม Master Prepaid (CUSTOM_SUBMODEL) เช่น READY NET 3M / 6M / 12M · แสดง 10 อันดับแรก ดูทั้งหมดในตาราง</p>
+        <div class="pc-hbars" data-draw="c_bd_simgroup" data-source="breakdown"></div>
+        <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
+          <div class="pc-scroll"><table data-draw="bd_simgroup" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
+        </details>
+      </article>
+      <article class="pc-card" id="card-by-band">
+        <h3>มุมกลุ่มราคา</h3>
+        <p>จัดกลุ่มจากราคาป้ายของ Matcode เรียงจากราคาต่ำไปสูง</p>
+        <div class="pc-hbars" data-draw="c_bd_band" data-source="breakdown"></div>
+        <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
+          <div class="pc-scroll"><table data-draw="bd_band" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
+        </details>
+      </article>
+    </div>
+  </section>
+
+  <section class="pc-sec" id="overview" data-page="overview" hidden>
+    <div class="pc-tiles">
+      <div class="pc-tile" id="tile-ytd-units">
+        <span class="pc-tile-l">QTY สะสมตั้งแต่ต้นปี</span>
+        <span class="pc-big" data-draw="k_units" data-source="kpi" data-field="units">—</span>
+        <span class="pc-sub">หักคืนสินค้า (Credit Note) แล้ว</span>
+      </div>
+      <div class="pc-tile" id="tile-ytd-net">
+        <span class="pc-tile-l">Net Amount สะสมตั้งแต่ต้นปี (บาท)</span>
+        <span class="pc-big" data-draw="k_net" data-source="kpi" data-field="net">—</span>
+        <span class="pc-sub">จากคอลัมน์ NET_AMOUNT</span>
+      </div>
+      <div class="pc-tile" id="tile-mtd">
+        <span class="pc-tile-l">QTY เดือนล่าสุด</span>
+        <span class="pc-big" data-draw="k_mtd" data-source="kpi" data-field="mtd_units">—</span>
+        <span class="pc-sub">เฉลี่ย <b data-draw="k_avg" data-source="kpi" data-field="avg_units">—</b> ต่อวัน · เดือนก่อน <b data-draw="k_prevavg" data-source="kpi" data-field="prev_avg_units">—</b></span>
+      </div>
+      <div class="pc-tile" id="tile-last">
+        <span class="pc-tile-l">QTY วันล่าสุด <span data-draw="k_lastdate" data-source="kpi" data-field="last_date">—</span> )</span>
+        <span class="pc-big" data-draw="k_lastunits" data-source="kpi" data-field="last_units">—</span>
+        <span class="pc-sub">Net Amount <span data-draw="k_lastnet" data-source="kpi" data-field="last_net">—</span> บาท</span>
+      </div>
+      <div class="pc-tile" id="tile-target">
+        <span class="pc-tile-l">เทียบเป้า PRE เดือนล่าสุด (สาขาที่มีเป้า)</span>
+        <span class="pc-big" data-draw="k_ach" data-source="kpi" data-field="ach">—</span>
+        <span class="pc-sub"><span data-draw="k_tgtunits" data-source="kpi" data-field="tgt_shop_units">—</span> จากเป้า <span data-draw="k_target" data-source="kpi" data-field="target_units">—</span> · สะสมทั้งปี <b data-draw="k_ytdach" data-source="kpi" data-field="ytd_ach">—</b></span>
+      </div>
+    </div>
+
+    <article class="pc-card" id="card-target">
+      <h3>ยอดขายเทียบเป้า PRE รายเดือน</h3>
+      <p>แท่ง = <span data-draw="ml_3" data-mlabel></span> ของสาขาที่มีเป้าในเดือนนั้น · เส้นขีด = เป้า PRE รวม (หน่วยเดียวกับปุ่มด้านบน) · ตัวเลขบนแท่ง = % ทำได้ (เขียว ≥ 95% · เหลือง 80–95% · แดง &lt; 80%)</p>
+      <p class="pc-note" id="tgt-note" hidden>เป้า PRE เป็นเป้ารวมทุกกลุ่มซิม เลือก "ทุกกลุ่มซิม" เพื่อดูการ์ดนี้</p>
+      <div class="pc-chart" data-draw="c_target" data-source="target_monthly"></div>
+    </article>
+
+    <div class="pc-grid">
+      <article class="pc-card" id="card-monthly">
+        <h3>ยอดขายรายเดือน</h3>
+        <p><span data-draw="ml_4" data-mlabel></span> ซิม Prepay ต่อเดือน ชี้ที่แท่งเพื่อดูทั้ง QTY และ Net Amount</p>
+        <div class="pc-chart" data-draw="c_monthly" data-source="monthly"></div>
+      </article>
+      <article class="pc-card" id="card-daily">
+        <h3>ยอดขายรายวัน</h3>
+        <p><span data-draw="ml_5" data-mlabel></span> ซิม Prepay ต่อวัน ตามวันที่ออกบิล เลือกเดือนที่ต้องการดูได้</p>
+        <label class="pc-field">เดือน
+          <select id="f-dmonth" data-draw="f_dmonth" data-source="monthly" aria-label="เดือนของกราฟรายวัน"></select>
+        </label>
+        <div class="pc-chart" data-draw="c_daily" data-source="daily"></div>
+      </article>
+    </div>
+
+    <div class="pc-grid">
+      <article class="pc-card" id="card-groups">
+        <h3>ยอดขายตามกลุ่มซิม</h3>
+        <p>กลุ่มตาม Master Prepaid (CUSTOM_MODEL) · <span data-draw="ml_6" data-mlabel></span> และสัดส่วน</p>
+        <div class="pc-hbars" data-draw="c_groups" data-source="kpi"></div>
+      </article>
+      <article class="pc-card" id="card-bands">
+        <h3>ยอดขายตามช่วงราคา</h3>
+        <p>จัดช่วงจากราคาป้ายของ Matcode · <span data-draw="ml_7" data-mlabel></span> และสัดส่วน</p>
+        <div class="pc-hbars" data-draw="c_bands" data-source="bands"></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="pc-sec" id="products" data-page="products" hidden>
+    <article class="pc-card" id="card-bands-net">
+      <h3>Net Amount ตามช่วงราคา</h3>
+      <p>ช่วงราคาต่ำขายได้QTY มาก แต่ Net Amount มาจากซิมราคาสูง เทียบสองมุมนี้ก่อนตัดสินใจเรื่องสต็อก</p>
+      <div class="pc-hbars" data-draw="c_bands_net" data-source="bands"></div>
+    </article>
+    <article class="pc-card" id="card-matcodes">
+      <h3>Matcode ที่ขายดี</h3>
+      <p>เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · "สต็อกพอขาย" = สต็อกคงเหลือ ÷ ยอดขายเฉลี่ยต่อวันของเดือนล่าสุด</p>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหา Matcode หรือชื่อสินค้า
+          <input id="q-mat" class="pc-q" data-q="mat" type="search" aria-label="ค้นหา Matcode">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_mat" data-source="mat" data-row-key="area,stype,group,matcode"></table>
+      </div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="shops" data-page="shops" hidden>
+    <article class="pc-card" id="card-regions">
+      <h3>ยอดขายตามภาค (Region)</h3>
+      <p>ภาคและเป้ามาจากไฟล์ Retail WW Target รายเดือน · สาขา WW ที่ไม่อยู่ในไฟล์เป้ารวมไว้ในแถว "ไม่มีในไฟล์เป้า"</p>
+      <div class="pc-scroll">
+        <table data-draw="tb_region" data-source="region_perf" data-row-key="area,stype,group,region"></table>
+      </div>
+    </article>
+    <article class="pc-card" id="card-shoptable">
+      <h3>ยอดขายรายสาขา</h3>
+      <p>ประเภทสาขาตามไฟล์เป้าเดือนล่าสุดที่สาขาปรากฏ · % เป้าเดือนล่าสุด = QTY เดือนล่าสุด ÷ เป้า PRE เดือนนั้น · % เป้าสะสม = QTY ในเดือนที่สาขามีเป้า ÷ เป้ารวม ม.ค. ถึงเดือนล่าสุด (คิดเมื่อเลือกทุกกลุ่มซิม) · สต็อกเก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหารหัสหรือชื่อสาขา
+          <input id="q-shop" class="pc-q" data-q="shop" type="search" aria-label="ค้นหาสาขา">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_shop" data-source="shop_perf" data-row-key="area,stype,group,shop"></table>
+      </div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="ranking" data-page="ranking" hidden>
+    <div class="pc-tiles">
+      <div class="pc-tile" id="tile-r-dach">
+        <span class="pc-tile-l">Daily · % เทียบเป้าต่อวัน (<span data-draw="r_dlabel" data-source="area_day" data-field="date"></span>)</span>
+        <span class="pc-big" data-draw="r_dach" data-source="area_day" data-field="ach_net">—</span>
+        <span class="pc-sub">ยอด <b data-draw="r_dact" data-source="area_day" data-field="net">—</b> / เป้าต่อวัน <b data-draw="r_tpd" data-source="area_rank" data-field="tpd_net">—</b></span>
+      </div>
+      <div class="pc-tile" id="tile-r-ach">
+        <span class="pc-tile-l">สะสม · % เทียบเป้าถึงวันนี้</span>
+        <span class="pc-big" data-draw="r_ach" data-source="area_rank" data-field="ach_net">—</span>
+        <span class="pc-sub">ยอดสะสม <b data-draw="r_act" data-source="area_rank" data-field="act_net">—</b> / เป้าถึงวันนี้ <b data-draw="r_ttd" data-source="area_rank" data-field="ttd_net">—</b></span>
+      </div>
+      <div class="pc-tile" id="tile-r-tgt">
+        <span class="pc-tile-l">เป้าทั้งเดือน</span>
+        <span class="pc-big" data-draw="r_tgt" data-source="area_rank" data-field="target_net">—</span>
+        <span class="pc-sub">ต้องทำต่อวันเพื่อให้ถึงเป้าเดือน <b data-draw="r_need" data-source="area_rank" data-field="need_net">—</b></span>
+      </div>
+      <div class="pc-tile" id="tile-r-days">
+        <span class="pc-tile-l">วันที่ผ่านไปของเดือน</span>
+        <span class="pc-big" data-draw="r_days" data-source="area_rank" data-field="elapsed">—</span>
+        <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
+      </div>
+    </div>
+    <p class="pc-note">เป้าต่อวัน = เป้าของเดือน ÷ จำนวนวันในเดือน · เป้าถึงวันนี้ = เป้าต่อวัน × จำนวนวันที่ผ่านไป · สี: <span style="color:var(--color-ok)">■</span> ≥ 100% · <span style="color:var(--color-warn)">■</span> 90–99% · <span style="color:var(--color-bad)">■</span> &lt; 90% · เส้นตั้งในกราฟ = 100% ของเป้า · ใช้ปุ่มด้านบนสลับ Net Amount / QTY</p>
+
+    <div class="pc-split">
+      <article class="pc-card" id="card-rank-daily">
+        <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบเป้าต่อวัน</h3>
+        <p>ยอดของวันที่เลือกเทียบเป้าต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+        <label class="pc-field">วันที่
+          <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
+        </label>
+        <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
+      </article>
+      <article class="pc-card" id="card-rank">
+        <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบเป้าถึงวันนี้</h3>
+        <p>ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบเป้าถึงวันนี้ เรียงจาก % มากไปน้อย</p>
+        <div class="pc-rank" data-draw="c_rank" data-source="area_rank"></div>
+      </article>
+    </div>
+
+    <article class="pc-card" id="card-rank-heat">
+      <h3>% เทียบเป้าต่อวัน ราย Area × รายวัน (<span data-draw="ml_10" data-mlabel></span>)</h3>
+      <p>แต่ละช่อง = ยอดของวันนั้น ÷ เป้าต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking</p>
+      <div class="pc-heat-wrap"><div class="pc-heat" data-draw="c_rank_heat" data-source="area_day"></div></div>
+    </article>
+
+    <article class="pc-card" id="card-rank-table">
+      <h3>ตาราง Ranking ราย Area (Daily และสะสม)</h3>
+      <p>ส่วนต่าง = ยอดสะสม − เป้าถึงวันนี้ · "ต้องทำต่อวัน" = (เป้าทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · เป้ามาจากไฟล์เป้า PRE ของเดือนนี้ และเป็นเป้ารวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)</p>
+      <div class="pc-scroll"><table data-draw="tb_rank" data-source="area_rank" data-row-key="stype,area"></table></div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="staff" data-page="staff" hidden>
+    <article class="pc-card" id="card-stafftable">
+      <h3>ยอดขายรายพนักงาน</h3>
+      <p>นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล สาขาหลัก = สาขาที่พนักงานขายมากที่สุด</p>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
+          <input id="q-staff" class="pc-q" data-q="staff" type="search" aria-label="ค้นหาพนักงาน">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_staff" data-source="staff_perf" data-row-key="area,stype,group,emp"></table>
+      </div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="stock" data-page="stock" hidden>
+    <div class="pc-tiles">
+      <div class="pc-tile" id="tile-s-stock">
+        <span class="pc-tile-l">Stock คงเหลือ (QTY)</span>
+        <span class="pc-big" data-draw="s_stock" data-source="stock_cover">—</span>
+        <span class="pc-sub">Stock ณ <span data-draw="s_asof" data-source="stock_by_shop" data-field="asof">—</span> · ตามตัวกรองด้านบน</span>
+      </div>
+      <div class="pc-tile" id="tile-s-sold">
+        <span class="pc-tile-l">ยอดขาย 28 วันย้อนหลัง (QTY)</span>
+        <span class="pc-big" data-draw="s_sold" data-source="stock_cover">—</span>
+        <span class="pc-sub" data-draw="s_window" data-source="stock_cover"></span>
+      </div>
+      <div class="pc-tile" id="tile-s-cover">
+        <span class="pc-tile-l">Stock พอขายได้อีก</span>
+        <span class="pc-big" data-draw="s_cover" data-source="stock_cover">—</span>
+        <span class="pc-sub">คิดจากยอดขายเฉลี่ยต่อวันใน 28 วัน</span>
+      </div>
+      <div class="pc-tile pc-alert" id="tile-s-risk">
+        <span class="pc-tile-l">สาขา × Type Sim ที่หมดหรือเสี่ยงขาด</span>
+        <span class="pc-big" data-draw="s_risk" data-source="stock_cover">—</span>
+        <span class="pc-sub" data-draw="s_risk_sub" data-source="stock_cover"></span>
+      </div>
+    </div>
+    <p class="pc-note">วิธีอ่าน: เฉลี่ยต่อวัน = ยอดขาย 28 วันย้อนหลัง ÷ 28 · พอขาย (วัน) = Stock ÷ เฉลี่ยต่อวัน · สถานะ: <span style="color:var(--color-bad)">■</span> หมด / เสี่ยงขาด (&lt; 7 วัน) · <span style="color:var(--color-warn)">■</span> ไม่พอ 28 วัน (7–27 วัน) · <span style="color:var(--color-ok)">■</span> พอ (28–56 วัน) · <span style="color:#6b7fd7">■</span> เกิน (&gt; 56 วัน) · <span style="color:var(--color-fg-muted)">■</span> ไม่มียอดขายใน 28 วัน · "ควรเติม" = จำนวนที่ต้องเพิ่มให้พอขาย 28 วัน (ยอดขาย 28 วัน − Stock) · Stock จากไฟล์ stock balance ล่าสุด</p>
+
+    <div class="pc-split">
+      <article class="pc-card" id="card-s-type">
+        <h3>Stock เทียบยอดขาย 28 วัน ราย Type Sim</h3>
+        <p>แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 28 วัน · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 28 วัน</p>
+        <div class="pc-hbars" data-draw="c_s_type" data-source="stock_cover"></div>
+      </article>
+      <article class="pc-card" id="card-s-status">
+        <h3>จำนวนสาขา × Type Sim ตามสถานะ</h3>
+        <p>นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง</p>
+        <div class="pc-hbars" data-draw="c_s_status" data-source="stock_cover"></div>
+      </article>
+    </div>
+
+    <article class="pc-card" id="card-s-matrix">
+      <h3>แผนผัง Stock ราย สาขา × Type Sim</h3>
+      <p>แต่ละช่อง = Stock / พอขายได้กี่วัน (ช่องที่หมดแสดงยอดขาย 28 วัน) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด</p>
+      <div class="pc-heat-wrap pc-smx-wrap"><div class="pc-heat pc-smx" data-draw="c_s_matrix" data-source="stock_cover"></div></div>
+    </article>
+
+    <article class="pc-card" id="card-s-table">
+      <h3>ตาราง Stock ราย สาขา</h3>
+      <div class="pc-tools">
+        <label class="pc-field">ระดับ
+          <select id="f-slevel" aria-label="ระดับของตาราง Stock">
+            <option value="group">Type Sim (Custom Model)</option>
+            <option value="sub">ประเภทซิม (รุ่นย่อย)</option>
+            <option value="mat">Matcode</option>
+          </select>
+        </label>
+        <label class="pc-field">สถานะ
+          <select id="f-sstatus" aria-label="สถานะ Stock">
+            <option value="ALL">ทุกสถานะ</option>
+            <option value="risk">หมด + เสี่ยงขาด</option>
+            <option value="short">ไม่พอ 28 วัน</option>
+            <option value="ok">พอ</option>
+            <option value="over">เกิน</option>
+            <option value="idle">ไม่มียอดขาย 28 วัน</option>
+          </select>
+        </label>
+        <label class="pc-field">ค้นหาสาขา / สินค้า
+          <input id="q-stock" class="pc-q" data-q="stock" type="search" aria-label="ค้นหาสาขาหรือสินค้า">
+        </label>
+      </div>
+      <div class="pc-scroll"><table data-draw="tb_stock" data-source="stock_cover" data-row-key="shop,level,key"></table></div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="expiry" data-page="expiry" hidden>
+    <div class="pc-bar">
+      <label class="pc-field">อายุซิมนับจากรับเข้าสต็อก
+        <select id="f-life" aria-label="อายุซิม">
+          <option value="270">270 วัน</option>
+          <option value="365">365 วัน</option>
+          <option value="540">540 วัน</option>
+        </select>
+      </label>
+    </div>
+    <p class="pc-method">ไฟล์ Stock ไม่มีวันหมดอายุของซิมโดยตรง จึงประมาณจากจำนวนวันที่ซิมอยู่ในสต็อกนับจากรับเข้าครั้งแรก (FIRST_AGING) · วันคงเหลือ = อายุซิมที่เลือก − จำนวนวันในสต็อก · ปรับอายุซิมให้ตรงกับเงื่อนไขของซิมแต่ละล็อตได้จากตัวเลือกด้านบน</p>
+    <div class="pc-tiles">
+      <div class="pc-tile pc-alert" id="tile-expired">
+        <span class="pc-tile-l">เกินอายุแล้ว (ชิ้น)</span>
+        <span class="pc-big" data-draw="e_expired" data-source="exp_sum" data-field="n">—</span>
+        <span class="pc-sub">มูลค่าตามราคาป้าย <span data-draw="e_expired_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
+      </div>
+      <div class="pc-tile pc-alert" id="tile-d30">
+        <span class="pc-tile-l">หมดอายุภายใน 30 วัน</span>
+        <span class="pc-big" data-draw="e_d30" data-source="exp_sum" data-field="n">—</span>
+        <span class="pc-sub">มูลค่า <span data-draw="e_d30_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
+      </div>
+      <div class="pc-tile pc-warn" id="tile-d60">
+        <span class="pc-tile-l">หมดอายุใน 31–60 วัน</span>
+        <span class="pc-big" data-draw="e_d60" data-source="exp_sum" data-field="n">—</span>
+        <span class="pc-sub">มูลค่า <span data-draw="e_d60_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
+      </div>
+      <div class="pc-tile" id="tile-d90">
+        <span class="pc-tile-l">หมดอายุใน 61–90 วัน</span>
+        <span class="pc-big" data-draw="e_d90" data-source="exp_sum" data-field="n">—</span>
+        <span class="pc-sub">มูลค่า <span data-draw="e_d90_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
+      </div>
+    </div>
+    <article class="pc-card" id="card-expshop">
+      <h3>สาขาที่มีซิมเสี่ยงหมดอายุ</h3>
+      <p>นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย</p>
+      <div class="pc-scroll">
+        <table data-draw="tb_expshop" data-source="exp_shop" data-row-key="area,stype,group,life,shop"></table>
+      </div>
+    </article>
+    <article class="pc-card" id="card-expserial">
+      <h3>รายการซิมใกล้หมดอายุ ราย Serial</h3>
+      <p>เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า</p>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหา
+          <input id="q-exp" class="pc-q" data-q="exp" type="search" aria-label="ค้นหา Serial">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_exp" data-source="exp" data-row-key="serial"></table>
+      </div>
+    </article>
+  </section>
+</div>
+
+<script>
+/* ---------- calculations (all derived from the attached files) ---------- */
+window.PC_CALCS = window.PC_CALCS || {};
+function PCdef(id, spec) { window.PC_CALCS[id] = spec; return spec; }
+dash.calc('enriched', PCdef('enriched', {
+  title: 'ยอดขายพร้อมกลุ่มซิม ช่วงราคา และภาค',
+  description: 'แต่ละแถวของยอดขายรายวัน เติมกลุ่มซิม ช่วงราคา และภาค (area) ของสาขา',
+  inputs: ['sales_daily', 'matcodes', 'shops'],
+  fn: (sales_daily, matcodes, shops) => {
+    const m = new Map(matcodes.map((r) => [r.matcode, r]));
+    const s = new Map(shops.map((r) => [r.shop, r]));
+    return sales_daily.map((r) => {
+      const mm = m.get(r.matcode) || {}, ss = s.get(r.shop) || {};
+      return { date: r.date, month: r.date.slice(0, 7), shop: r.shop, matcode: r.matcode, emp: r.emp, units: +r.units, net: +r.net, amount: +r.amount, disc: +r.disc, simtype: mm.subgroup || mm.group || 'อื่น ๆ', stype_order: +(ss.stype_order ?? 9),
+        group: mm.group || 'อื่น ๆ', band: mm.band || 'ไม่ทราบราคา', area: ss.area || '-', stype: ss.stype || 'ไม่ระบุ', region: ss.region || '-' };
+    });
+  },
+}));
+
+dash.calc('kpi', PCdef('kpi', {
+  title: 'ตัวเลขสรุปตามตัวกรอง',
+  description: 'ยอดสะสม เดือนล่าสุด วันล่าสุด และเทียบเป้า สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = ทั้งหมด)',
+  inputs: ['enriched', 'shops', 'targets'],
+  fn: (enriched, shops, targets) => {
+    const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
+    const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), '');
+    const mDays = new Set(enriched.filter((r) => r.month === lastMonth).map((r) => r.date)).size;
+    const prevMonth = [...new Set(enriched.map((r) => r.month))].sort().filter((m) => m < lastMonth).pop();
+    const pDays = new Set(enriched.filter((r) => r.month === prevMonth).map((r) => r.date)).size;
+    const area = new Map(shops.map((r) => [r.shop, r.area])), sty = new Map(shops.map((r) => [r.shop, r.stype]));
+    const tk = new Set(targets.map((r) => r.month + '|' + r.shop));
+    const tgt = new Map(targets.filter((r) => r.month === lastMonth).map((r) => [r.shop, { ...r, area: area.get(r.shop), stype: sty.get(r.shop) }]));
+    const acc = new Map();
+    const get = (c, t, g) => { const k = c + '|' + t + '|' + g; if (!acc.has(k)) acc.set(k, { area: c, stype: t, group: g, units: 0, net: 0, mtd_units: 0, mtd_net: 0, prev_units: 0, ord: t === 'ALL' ? 100 : 9, tq: 0, ta: 0, td: 0, tn: 0, tsh: new Set(), tst: new Set(), sh: new Set(), st: new Set(), days: new Map(), tsu: 0, ysu: 0 }); return acc.get(k); };
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const a = get(c, t, g); a.units += r.units; a.net += r.net; if (tk.has(r.month + '|' + r.shop)) a.ysu += r.units;
+      if (r.units > 0) { a.sh.add(r.shop); a.st.add(r.emp); }
+      const d = a.days.get(r.date) || { u: 0, n: 0 }; d.u += r.units; d.n += r.net; a.days.set(r.date, d);
+      if (t !== 'ALL') a.ord = r.stype_order;
+      if (r.date === today) { a.tq += r.units; a.ta += r.amount; a.td += r.disc; a.tn += r.net; if (r.units > 0) { a.tsh.add(r.shop); a.tst.add(r.emp); } }
+      if (r.month === prevMonth) a.prev_units += r.units;
+      if (r.month === lastMonth) { a.mtd_units += r.units; a.mtd_net += r.net; if (tgt.has(r.shop)) a.tsu += r.units; }
+    }
+    return [...acc.values()].map((a) => {
+      const last = [...a.days.keys()].sort().pop();
+      const tl = [...tgt.values()].filter((s) => (a.area === 'ALL' || s.area === a.area) && (a.stype === 'ALL' || s.stype === a.stype));
+      const target = a.group === 'ALL' && tl.length ? Math.round(tl.reduce((x, s) => x + +s.target_units, 0)) : null;
+      const yt = targets.filter((s) => (a.area === 'ALL' || area.get(s.shop) === a.area) && (a.stype === 'ALL' || sty.get(s.shop) === a.stype));
+      const ytdT = a.group === 'ALL' && yt.length ? Math.round(yt.reduce((x, s) => x + +s.target_units, 0)) : null;
+      return { area: a.area, stype: a.stype, group: a.group, units: a.units, net: Math.round(a.net), month: lastMonth, ord: a.ord, today, today_units: a.tq, today_amount: Math.round(a.ta), today_disc: Math.round(a.td), today_net: Math.round(a.tn), today_shops: a.tsh.size, today_staff: a.tst.size, mtd_units: a.mtd_units, mtd_net: Math.round(a.mtd_net),
+        avg_units: Math.round(a.mtd_units / mDays), prev_avg_units: pDays ? Math.round(a.prev_units / pDays) : null, shops: a.sh.size, staff: a.st.size, last_date: last, last_units: a.days.get(last).u, last_net: Math.round(a.days.get(last).n),
+        target_units: target, tgt_shop_units: target ? a.tsu : null, ach: target ? Math.round((a.tsu / target) * 1000) / 1000 : null,
+        ytd_target: ytdT, ytd_tgt_units: ytdT ? a.ysu : null, ytd_ach: ytdT ? Math.round((a.ysu / ytdT) * 1000) / 1000 : null };
+    });
+  },
+}));
+
+dash.calc('breakdown', PCdef('breakdown', {
+  title: 'ข้อมูลเชิงวิเคราะห์ตามมุมมอง',
+  description: 'QTY Net Amount และสัดส่วน ตาม Area / Type Sim / ประเภทซิม / กลุ่มราคา สำหรับวันนี้ เดือนนี้ และตั้งแต่ต้นปี ทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched'],
+  fn: (enriched) => {
+    const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''), lastMonth = today.slice(0, 7);
+    const bands = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
+    const base = new Map();
+    for (const r of enriched) { const ps = ['ytd']; if (r.month === lastMonth) ps.push('mtd'); if (r.date === today) ps.push('today');
+      for (const pd of ps) { const k = [pd, r.area, r.stype, r.group, r.simtype, r.band].join('|'); const b = base.get(k) || { pd, area: r.area, stype: r.stype, group: r.group, simtype: r.simtype, band: r.band, q: 0, n: 0 };
+        b.q += r.units; b.n += r.net; base.set(k, b); } }
+    const acc = new Map(), tot = new Map();
+    for (const b of base.values()) for (const c of [b.area, 'ALL']) for (const t of [b.stype, 'ALL']) for (const g of [b.group, 'ALL']) {
+      const f = c + '|' + t + '|' + g + '|' + b.pd; const tt = tot.get(f) || { q: 0, n: 0 }; tt.q += b.q; tt.n += b.n; tot.set(f, tt);
+      for (const [dim, key] of [['area', b.area], ['simtype', b.group], ['simgroup', b.simtype], ['band', b.band]]) {
+        const k = f + '|' + dim + '|' + key; const a = acc.get(k) || { area: c, stype: t, group: g, period: b.pd, dim, key, ord: dim === 'band' ? bands.indexOf(key) : 0, qty: 0, net: 0 };
+        a.qty += b.q; a.net += b.n; acc.set(k, a); } }
+    return [...acc.values()].map((a) => { const tt = tot.get(a.area + '|' + a.stype + '|' + a.group + '|' + a.period);
+      return { ...a, net: Math.round(a.net), share_qty: tt.q ? Math.round((a.qty / tt.q) * 1000) / 1000 : 0, share_net: tt.n ? Math.round((a.net / tt.n) * 1000) / 1000 : 0 }; });
+  },
+}));
+
+dash.calc('target_monthly', PCdef('target_monthly', {
+  title: 'ยอดขายเทียบเป้า PRE รายเดือน',
+  description: 'เป้า PRE รวมของสาขาที่มีเป้าในแต่ละเดือน เทียบ QTY ของสาขาเหล่านั้น ต่อภาค (ALL = ทั้งหมด)',
+  inputs: ['enriched', 'targets', 'shops'],
+  fn: (enriched, targets, shops) => {
+    const sh = new Map(shops.map((r) => [r.shop, r])), tk = new Set(targets.map((r) => r.month + '|' + r.shop));
+    const acc = new Map();
+    const get = (c, t, m) => { const k = c + '|' + t + '|' + m; if (!acc.has(k)) acc.set(k, { area: c, stype: t, month: m, target: 0, actual: 0, target_net: 0, actual_net: 0 }); return acc.get(k); };
+    const dims = (c0, t0) => [c0, 'ALL'].flatMap((c) => [[c, t0], [c, 'ALL']]);
+    for (const r of targets) { const s = sh.get(r.shop) || {}; for (const [c, t] of dims(s.area || '-', s.stype || 'ไม่ระบุ')) { const a = get(c, t, r.month); a.target += +r.target_units; a.target_net += +r.target_net || 0; } }
+    for (const r of enriched) if (tk.has(r.month + '|' + r.shop)) for (const [c, t] of dims(r.area, r.stype)) { const a = get(c, t, r.month); a.actual += r.units; a.actual_net += r.net; }
+    return [...acc.values()].filter((a) => a.target > 0).map((a) => ({ ...a, target: Math.round(a.target), target_net: Math.round(a.target_net), actual_net: Math.round(a.actual_net), ach: Math.round((a.actual / a.target) * 1000) / 1000, ach_net: a.target_net ? Math.round((a.actual_net / a.target_net) * 1000) / 1000 : null }));
+  },
+}));
+
+dash.calc('area_rank', PCdef('area_rank', {
+  title: 'Ranking Area เดือนปัจจุบัน',
+  description: 'ต่อ Area และประเภทสาขา (ALL = รวม): เป้าเดือนปัจจุบัน (QTY และ Net) เป้าต่อวัน = เป้า ÷ วันในเดือน เป้าถึงวันนี้ = เป้าต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
+  inputs: ['enriched', 'targets', 'shops'],
+  fn: (enriched, targets, shops) => {
+    const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''); const m = today.slice(0, 7);
+    const days = new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate(), elapsed = +today.slice(8, 10), left = Math.max(0, days - elapsed);
+    const sh = new Map(shops.map((r) => [r.shop, r]));
+    const acc = new Map();
+    const get = (t, c) => { const k = t + '|' + c; if (!acc.has(k)) acc.set(k, { stype: t, area: c, target_units: 0, target_net: 0, act_units: 0, act_net: 0, shops: new Set(), sold: new Set(), today_units: 0, today_net: 0 }); return acc.get(k); };
+    const dims = (t0, c0) => [t0, 'ALL'].flatMap((t) => [[t, c0], [t, 'ALL']]);
+    for (const r of targets) if (r.month === m) { const s = sh.get(r.shop); if (!s) continue; for (const [t, c] of dims(s.stype, s.area)) { const a = get(t, c); a.target_units += +r.target_units || 0; a.target_net += +r.target_net || 0; a.shops.add(r.shop); } }
+    for (const r of enriched) if (r.month === m) for (const [t, c] of dims(r.stype, r.area)) { const a = get(t, c); a.act_units += r.units; a.act_net += r.net; if (r.units > 0) a.sold.add(r.shop); if (r.date === today) { a.today_units += r.units; a.today_net += r.net; } }
+    const R = (x) => Math.round(x * 1000) / 1000;
+    return [...acc.values()].filter((a) => a.area !== '-').map((a) => {
+      const tpdU = a.target_units / days, tpdN = a.target_net / days, ttdU = tpdU * elapsed, ttdN = tpdN * elapsed;
+      return { stype: a.stype, area: a.area, month: m, today, days, elapsed, left, shops: a.shops.size, sold_shops: a.sold.size,
+        target_units: Math.round(a.target_units), target_net: Math.round(a.target_net), tpd_units: Math.round(tpdU * 10) / 10, tpd_net: Math.round(tpdN),
+        ttd_units: Math.round(ttdU), ttd_net: Math.round(ttdN), act_units: a.act_units, act_net: Math.round(a.act_net),
+        ach_units: ttdU ? R(a.act_units / ttdU) : null, ach_net: ttdN ? R(a.act_net / ttdN) : null,
+        gap_units: Math.round(a.act_units - ttdU), gap_net: Math.round(a.act_net - ttdN),
+        avg_units: Math.round((a.act_units / elapsed) * 10) / 10, avg_net: Math.round(a.act_net / elapsed),
+        need_units: left ? Math.max(0, Math.round(((a.target_units - a.act_units) / left) * 10) / 10) : null, need_net: left ? Math.max(0, Math.round((a.target_net - a.act_net) / left)) : null,
+        full_units: a.target_units ? R(a.act_units / a.target_units) : null, full_net: a.target_net ? R(a.act_net / a.target_net) : null };
+    });
+  },
+}));
+
+dash.calc('area_day', PCdef('area_day', {
+  title: 'ยอดรายวันต่อ Area เดือนปัจจุบัน',
+  description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น เป้าต่อวัน (เป้าเดือน ÷ วันในเดือน) และ % เทียบเป้าต่อวัน รวมวันที่ไม่มียอด (= 0)',
+  inputs: ['area_rank', 'enriched'],
+  fn: (area_rank, enriched) => {
+    if (!area_rank.length) return [];
+    const m = area_rank[0].month; const dates = [...new Set(enriched.filter((r) => r.month === m).map((r) => r.date))].sort();
+    const acc = new Map();
+    for (const a of area_rank) for (const d of dates) acc.set(a.stype + '|' + a.area + '|' + d, { stype: a.stype, area: a.area, date: d, units: 0, net: 0, tpd_units: a.tpd_units, tpd_net: a.tpd_net });
+    for (const r of enriched) if (r.month === m) for (const t of [r.stype, 'ALL']) for (const c of [r.area, 'ALL']) { const x = acc.get(t + '|' + c + '|' + r.date); if (x) { x.units += r.units; x.net += r.net; } }
+    const R = (x) => Math.round(x * 1000) / 1000;
+    return [...acc.values()].map((x) => ({ ...x, net: Math.round(x.net), ach_units: x.tpd_units ? R(x.units / x.tpd_units) : null, ach_net: x.tpd_net ? R(x.net / x.tpd_net) : null }));
+  },
+}));
+
+dash.calc('shop_sales', PCdef('shop_sales', {
+  title: 'ยอดขายรายสาขา วันนี้ / เดือนนี้ / ตั้งแต่ต้นปี',
+  description: 'QTY Net Amount และจำนวนพนักงานที่ขาย ต่อสาขา สำหรับช่วงวันนี้ (วันล่าสุดในไฟล์) เดือนนี้ และตั้งแต่ต้นปี ทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = รวม) เฉพาะสาขาที่มียอด',
+  inputs: ['enriched', 'shops'],
+  fn: (enriched, shops) => {
+    const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''), m = today.slice(0, 7);
+    const sh = new Map(shops.map((r) => [String(r.shop), r]));
+    const acc = new Map();
+    for (const r of enriched) {
+      const ps = ['ytd']; if (r.month === m) ps.push('mtd'); if (r.date === today) ps.push('today');
+      const s = sh.get(String(r.shop)) || {};
+      for (const pd of ps) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+        const k = pd + '|' + c + '|' + t + '|' + g + '|' + r.shop;
+        const a = acc.get(k) || { period: pd, area: c, stype: t, group: g, shop: String(r.shop), name: s.name || r.shop, shop_type: r.stype, shop_area: r.area, qty: 0, net: 0, emps: new Set() };
+        a.qty += r.units; a.net += r.net; if (r.units > 0) a.emps.add(r.emp); acc.set(k, a);
+      }
+    }
+    return [...acc.values()].filter((a) => a.qty !== 0 || Math.round(a.net) !== 0).map(({ emps, ...a }) => ({ ...a, net: Math.round(a.net), staff: emps.size }));
+  },
+}));
+
+dash.calc('stock_cover', PCdef('stock_cover', {
+  title: 'Stock เทียบยอดขาย 28 วันย้อนหลัง',
+  description: 'ต่อสาขา × (Type Sim / รุ่นย่อย / Matcode): Stock คงเหลือ ยอดขาย 28 วันย้อนหลังถึงวันล่าสุดในไฟล์ เฉลี่ยต่อวัน จำนวนวันที่พอขาย สถานะ และจำนวนที่ควรเติมให้พอขาย 28 วัน',
+  inputs: ['enriched', 'stock_by_shop', 'matcodes', 'shops'],
+  fn: (enriched, stock_by_shop, matcodes, shops) => {
+    const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), '');
+    const from = new Date(Date.parse(today + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+    const mm = new Map(matcodes.map((r) => [String(r.matcode), r])), sh = new Map(shops.map((r) => [String(r.shop), r]));
+    const acc = new Map();
+    const add = (shop, mat, stock, sold) => { const s = sh.get(shop); if (!s || +s.stype_order >= 90) return; const m = mm.get(mat) || {};
+      const g = m.group || 'อื่น ๆ', sub = m.subgroup || g;
+      for (const [level, key, label] of [['group', g, g], ['sub', sub, sub], ['mat', mat, mat + ' ' + (m.name || '')]]) {
+        const k = shop + '|' + level + '|' + key;
+        const a = acc.get(k) || { shop, name: s.name, area: s.area, stype: s.stype, level, key, label, group: g, stock: 0, sold28: 0 };
+        a.stock += stock; a.sold28 += sold; acc.set(k, a); } };
+    for (const r of stock_by_shop) add(String(r.shop), String(r.matcode), +r.qty || 0, 0);
+    for (const r of enriched) if (r.date >= from && r.date <= today) add(String(r.shop), String(r.matcode), 0, r.units);
+    return [...acc.values()].filter((a) => a.stock > 0 || a.sold28 > 0).map((a) => {
+      const avg = a.sold28 / 28, cover = avg > 0 ? a.stock / avg : null;
+      const status = a.sold28 <= 0 ? 'idle' : a.stock <= 0 ? 'out' : cover < 7 ? 'low' : cover < 28 ? 'short' : cover <= 56 ? 'ok' : 'over';
+      return { ...a, from, to: today, avg_day: Math.round(avg * 100) / 100, cover_days: cover == null ? null : Math.round(cover), status, need28: Math.max(0, Math.ceil(a.sold28 - a.stock)) };
+    });
+  },
+}));
+
+dash.calc('daily', PCdef('daily', {
+  title: 'ยอดขายรายวัน',
+  description: 'QTY และ Net Amountต่อวัน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched'],
+  fn: (enriched) => {
+    const acc = new Map();
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const k = c + '|' + t + '|' + g + '|' + r.date; const a = acc.get(k) || { area: c, stype: t, group: g, date: r.date, units: 0, net: 0 };
+      a.units += r.units; a.net += r.net; acc.set(k, a);
+    }
+    return [...acc.values()].map((a) => ({ ...a, net: Math.round(a.net) }));
+  },
+}));
+
+dash.calc('monthly', PCdef('monthly', {
+  title: 'ยอดขายรายเดือน',
+  description: 'QTY และ Net Amountต่อเดือน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched'],
+  fn: (enriched) => {
+    const acc = new Map();
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const k = c + '|' + t + '|' + g + '|' + r.month; const a = acc.get(k) || { area: c, stype: t, group: g, month: r.month, units: 0, net: 0 };
+      a.units += r.units; a.net += r.net; acc.set(k, a);
+    }
+    return [...acc.values()].map((a) => ({ ...a, net: Math.round(a.net) }));
+  },
+}));
+
+dash.calc('bands', PCdef('bands', {
+  title: 'ยอดขายตามช่วงราคา',
+  description: 'QTY Net Amount และสัดส่วนต่อช่วงราคาป้าย สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched'],
+  fn: (enriched) => {
+    const acc = new Map(), tot = new Map();
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const k = c + '|' + t + '|' + g + '|' + r.band; const a = acc.get(k) || { area: c, stype: t, group: g, band: r.band, units: 0, net: 0 };
+      a.units += r.units; a.net += r.net; acc.set(k, a);
+      const tk = c + '|' + t + '|' + g, tt = tot.get(tk) || { u: 0, n: 0 }; tt.u += r.units; tt.n += r.net; tot.set(tk, tt);
+    }
+    return [...acc.values()].map((a) => { const t = tot.get(a.area + '|' + a.stype + '|' + a.group);
+      return { ...a, net: Math.round(a.net), share_units: Math.round((a.units / t.u) * 1000) / 1000, share_net: Math.round((a.net / t.n) * 1000) / 1000 }; });
+  },
+}));
+
+dash.calc('mat', PCdef('mat', {
+  title: 'ยอดขายและสต็อกราย Matcode',
+  description: 'QTY Net Amount สัดส่วน สต็อกคงเหลือ และจำนวนวันที่สต็อกพอขาย ราย Matcode สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched', 'matcodes', 'stock_by_shop', 'shops'],
+  fn: (enriched, matcodes, stock_by_shop, shops) => {
+    const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
+    const mDays = new Set(enriched.filter((r) => r.month === lastMonth).map((r) => r.date)).size;
+    const m = new Map(matcodes.map((r) => [r.matcode, r])), co = new Map(shops.map((r) => [r.shop, r.area])), ty = new Map(shops.map((r) => [r.shop, r.stype]));
+    const acc = new Map(), tot = new Map();
+    const get = (c, t, g, mc) => { const k = c + '|' + t + '|' + g + '|' + mc; if (!acc.has(k)) { const mm = m.get(mc) || {}; acc.set(k, { area: c, stype: t, group: g, matcode: mc, name: mm.name || mc, sim_group: mm.group || '-', price: mm.price ?? null, status: mm.status || '-', units: 0, net: 0, mtd: 0, stock: 0 }); } return acc.get(k); };
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const a = get(c, t, g, r.matcode); a.units += r.units; a.net += r.net; if (r.month === lastMonth) a.mtd += r.units;
+      tot.set(c + '|' + t + '|' + g, (tot.get(c + '|' + t + '|' + g) || 0) + r.units);
+    }
+    for (const s of stock_by_shop) { const c0 = co.get(s.shop) || '-', t0 = ty.get(s.shop) || 'ไม่ระบุ', g0 = (m.get(s.matcode) || {}).group || 'อื่น ๆ';
+      for (const [c, t, g] of [c0, 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) get(c, t, g, s.matcode).stock += s.qty; }
+    return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, matcode: a.matcode, name: a.name, sim_group: a.sim_group, price: a.price, status: a.status,
+      units: a.units, net: Math.round(a.net), share: tot.get(a.area + '|' + a.stype + '|' + a.group) ? Math.round((a.units / tot.get(a.area + '|' + a.stype + '|' + a.group)) * 1000) / 1000 : 0,
+      stock: a.stock, cover_days: a.mtd > 0 ? Math.round(a.stock / (a.mtd / mDays)) : null }));
+  },
+}));
+
+dash.calc('shop_perf', PCdef('shop_perf', {
+  title: 'ยอดขายรายสาขา',
+  description: 'QTY Net Amount พนักงานที่ขาย สต็อก สต็อกเก่า และ % เป้า ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched', 'shops', 'stock_by_shop', 'matcodes', 'targets'],
+  fn: (enriched, shops, stock_by_shop, matcodes, targets) => {
+    const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
+    const tm = new Map(targets.map((r) => [r.month + '|' + r.shop, +r.target_units])), yT = new Map();
+    for (const r of targets) yT.set(r.shop, (yT.get(r.shop) || 0) + +r.target_units);
+    const sh = new Map(shops.map((r) => [r.shop, r])), mg = new Map(matcodes.map((r) => [r.matcode, r.group]));
+    const acc = new Map();
+    const get = (c, t, g, s) => { const k = c + '|' + t + '|' + g + '|' + s; if (!acc.has(k)) { const x = sh.get(s) || {}; acc.set(k, { area: c, stype: t, group: g, shop: s, name: x.name || s, region: x.region || '-', type: x.stype || 'ไม่ระบุ', target: g === 'ALL' ? tm.get(lastMonth + '|' + s) ?? null : null, ytdT: g === 'ALL' ? yT.get(s) ?? null : null, ytdU: 0, units: 0, net: 0, mtd: 0, st: new Set(), stock: 0, aged: 0 }); } return acc.get(k); };
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const a = get(c, t, g, r.shop); a.units += r.units; a.net += r.net; if (r.month === lastMonth) a.mtd += r.units; if (tm.has(r.month + '|' + r.shop)) a.ytdU += r.units; if (r.units > 0) a.st.add(r.emp);
+    }
+    for (const s of stock_by_shop) { const c0 = (sh.get(s.shop) || {}).area || '-', t0 = (sh.get(s.shop) || {}).stype || 'ไม่ระบุ', g0 = mg.get(s.matcode) || 'อื่น ๆ';
+      for (const [c, t, g] of [c0, 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) { const a = get(c, t, g, s.shop); a.stock += s.qty; a.aged += s.a271_365 + s.a365p; } }
+    return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, shop: a.shop, name: a.name, region: a.region, type: a.type, units: a.units, net: Math.round(a.net),
+      staff: a.st.size, stock: a.stock, aged: a.aged, target: a.target ? Math.round(a.target) : null, mtd: a.mtd, ach: a.target ? Math.round((a.mtd / a.target) * 1000) / 1000 : null,
+      ytd_target: a.ytdT ? Math.round(a.ytdT) : null, ytd_units: a.ytdT ? a.ytdU : null, ytd_ach: a.ytdT ? Math.round((a.ytdU / a.ytdT) * 1000) / 1000 : null }));
+  },
+}));
+
+dash.calc('region_perf', PCdef('region_perf', {
+  title: 'ยอดขายตามภาค',
+  description: 'QTY Net Amount จำนวนสาขา % เป้าเดือนล่าสุด และ % เป้าสะสม (สาขาที่มีเป้า) ต่อภาค สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['shop_perf'],
+  fn: (shop_perf) => {
+    const acc = new Map();
+    for (const s of shop_perf) { const k = s.area + '|' + s.stype + '|' + s.group + '|' + s.region;
+      const a = acc.get(k) || { area: s.area, stype: s.stype, group: s.group, region: s.region, shops: 0, units: 0, net: 0, target: 0, tu: 0, yt: 0, yu: 0 };
+      if (s.units > 0) a.shops += 1; a.units += s.units; a.net += s.net;
+      if (s.target) { a.target += s.target; a.tu += s.mtd; } if (s.ytd_target) { a.yt += s.ytd_target; a.yu += s.ytd_units; } acc.set(k, a); }
+    return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, region: a.region, shops: a.shops, units: a.units, net: a.net,
+      target: a.target || null, ach: a.target ? Math.round((a.tu / a.target) * 1000) / 1000 : null,
+      ytd_target: a.yt || null, ytd_ach: a.yt ? Math.round((a.yu / a.yt) * 1000) / 1000 : null }));
+  },
+}));
+
+dash.calc('staff_perf', PCdef('staff_perf', {
+  title: 'ยอดขายรายพนักงาน',
+  description: 'QTY Net Amount จำนวน Matcode ที่ขาย และสาขาหลัก ต่อพนักงาน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  inputs: ['enriched', 'staff', 'shops'],
+  fn: (enriched, staff, shops) => {
+    const st = new Map(staff.map((r) => [r.emp, r])), sh = new Map(shops.map((r) => [r.shop, r.name]));
+    const acc = new Map();
+    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      const k = c + '|' + t + '|' + g + '|' + r.emp; const a = acc.get(k) || { area: c, stype: t, group: g, emp: r.emp, units: 0, net: 0, mc: new Set() };
+      a.units += r.units; a.net += r.net; if (r.units > 0) a.mc.add(r.matcode); acc.set(k, a);
+    }
+    return [...acc.values()].map((a) => { const e = st.get(a.emp) || {};
+      return { area: a.area, stype: a.stype, group: a.group, emp: a.emp, name: e.name || a.emp, shop: sh.get(e.shop) || e.shop || '-', units: a.units, net: Math.round(a.net), matcodes: a.mc.size }; });
+  },
+}));
+
+dash.calc('exp', PCdef('exp', {
+  title: 'ซิมในสต็อกพร้อมวันคงเหลือ',
+  description: 'ซิมที่อยู่ในสต็อกตั้งแต่ 180 วันขึ้นไป พร้อมวันคงเหลือเมื่อนับอายุซิม 270, 365 และ 540 วัน',
+  inputs: ['aging_serials', 'matcodes', 'shops'],
+  fn: (aging_serials, matcodes, shops) => {
+    const m = new Map(matcodes.map((r) => [r.matcode, r])), s = new Map(shops.map((r) => [r.shop, r]));
+    return aging_serials.map((r) => { const mm = m.get(r.matcode) || {}, ss = s.get(r.shop) || {};
+      return { serial: r.serial, shop: r.shop, shop_name: ss.name || r.shop, area: ss.area || '-', stype: ss.stype || 'ไม่ระบุ', matcode: r.matcode, name: mm.name || r.matcode, group: mm.group || 'อื่น ๆ',
+        price: mm.price ?? null, location: r.location, first: r.first, aging: r.aging, left_270: 270 - r.aging, left_365: 365 - r.aging, left_540: 540 - r.aging }; });
+  },
+}));
+
+dash.calc('exp_sum', PCdef('exp_sum', {
+  title: 'สรุปซิมใกล้หมดอายุ',
+  description: 'จำนวนและมูลค่าตามราคาป้าย แยกเกินอายุแล้ว / ภายใน 30 / 31–60 / 61–90 วัน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
+  inputs: ['exp'],
+  fn: (exp) => {
+    const acc = new Map();
+    const st = (d) => (d <= 0 ? 'expired' : d <= 30 ? 'd30' : d <= 60 ? 'd60' : d <= 90 ? 'd90' : null);
+    for (const r of exp) for (const life of [270, 365, 540]) { const s = st(r['left_' + life]); if (!s) continue;
+      for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + s;
+        const a = acc.get(k) || { area: c, stype: t, group: g, life, status: s, n: 0, value: 0 }; a.n += 1; a.value += r.price || 0; acc.set(k, a); } }
+    const out = [...acc.values()];
+    const keys = new Set(out.map((a) => a.area + '|' + a.stype + '|' + a.group));
+    for (const k of keys) { const [c, t, g] = k.split('|'); for (const life of [270, 365, 540]) for (const s of ['expired', 'd30', 'd60', 'd90'])
+      if (!acc.has(k + '|' + life + '|' + s)) out.push({ area: c, stype: t, group: g, life, status: s, n: 0, value: 0 }); }
+    return out;
+  },
+}));
+
+dash.calc('exp_shop', PCdef('exp_shop', {
+  title: 'สาขาที่มีซิมเสี่ยงหมดอายุ',
+  description: 'จำนวนซิมที่เกินอายุแล้วและที่เหลือไม่เกิน 90 วัน ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
+  inputs: ['exp'],
+  fn: (exp) => {
+    const acc = new Map();
+    for (const r of exp) for (const life of [270, 365, 540]) { const d = r['left_' + life]; if (d > 90) continue;
+      for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + r.shop;
+        const a = acc.get(k) || { area: c, stype: t, group: g, life, shop: r.shop, name: r.shop_name, expired: 0, soon: 0, value: 0 };
+        if (d <= 0) a.expired += 1; else a.soon += 1; a.value += r.price || 0; acc.set(k, a); } }
+    return [...acc.values()];
+  },
+}));
+</script>
+
+<script>
+/* ---------- shared helpers ---------- */
+window.PC = (() => {
+  const nf = d3.format(','), pf = d3.format('.1%');
+  const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const day = (s) => { const d = new Date(s + 'T00:00:00Z'); return d.getUTCDate() + ' ' + TH[d.getUTCMonth()] + ' ' + (d.getUTCFullYear() + 543 - 2500); };
+  const mon = (s) => TH[+s.slice(5, 7) - 1] + ' ' + (+s.slice(0, 4) + 543 - 2500);
+  const M = () => (dash.params().metric === 'qty' ? 'qty' : 'net');
+  const isNet = () => M() === 'net';
+  const mlabel = () => (isNet() ? 'Net Amount' : 'QTY');
+  const mfmt = (v) => (isNet() ? '฿' + nf(Math.round(v)) : nf(v));
+  const axf = (v) => (isNet() ? (Math.abs(v) >= 1e6 ? d3.format('.3~s')(v).replace('G', 'B') : Math.abs(v) >= 1e3 ? d3.format('.3~s')(v) : nf(v)) : nf(v));
+  const P = () => { const p = dash.params(); return { area: p.area || 'ALL', stype: p.stype || 'ALL', group: p.group || 'ALL', life: +(p.life || 365), shop: p.shop || 'ALL' }; };
+  const enc = (v) => encodeURIComponent(String(v));
+  const where = (o) => Object.entries(o).map(([k, v]) => enc(k) + '=' + enc(v)).join('&');
+  // one shop selected: recompute that view from only that shop's rows (Ranking Area stays all Areas)
+  const SHOP_BASE = { sales_daily: 'shop', stock_by_shop: 'shop', targets: 'shop', aging_serials: 'shop' };
+  const SHOP_SKIP = new Set(['area_rank', 'area_day']);
+  let shopCache = new Map(), shopToken = null;
+  const shopGet = (id, sh) => {
+    const k = sh + '|' + id; if (shopCache.has(k)) return shopCache.get(k);
+    let v = null;
+    if (id in SHOP_BASE) { const d = dash.data(id); if (d.status !== 'ok') return null;
+      v = d.data.filter((r) => String(r[SHOP_BASE[id]]) === sh);
+      if (id === 'sales_daily') { const maxD = d.data.reduce((a, r) => (r.date > a ? r.date : a), '');
+        if (v.length && !v.some((r) => r.date === maxD)) { const last = v[v.length - 1]; v = v.concat([{ ...last, date: maxD, units: '0', amount: '0', disc: '0', net: '0' }]); } } }
+    else { const c = window.PC_CALCS[id]; if (!c) return null; const args = [];
+      for (const i of c.inputs) { const a = (i in SHOP_BASE || (window.PC_CALCS[i] && !SHOP_SKIP.has(i))) ? shopGet(i, sh) : (dash.data(i).status === 'ok' ? dash.data(i).data : null); if (a == null) return null; args.push(a); }
+      try { v = c.fn(...args); } catch (e) { console.error('shop calc', id, e); return null; } }
+    shopCache.set(k, v); return v;
+  };
+  const rows = (id) => {
+    const sh = String(dash.params().shop || 'ALL');
+    if (sh !== 'ALL' && window.PC_CALCS && window.PC_CALCS[id] && !SHOP_SKIP.has(id)) {
+      const d0 = dash.data('sales_daily'); const tok = d0.status === 'ok' ? d0.data : null;
+      if (tok !== shopToken) { shopCache = new Map(); shopToken = tok; }
+      const v = shopGet(id, sh); if (v) return v;
+    }
+    const d = dash.data(id); return d.status === 'ok' ? d.data : null; };
+  const pick = (id, extra) => { const r = rows(id); if (!r) return null; const p = P(); return r.filter((x) => x.area === p.area && x.stype === p.stype && x.group === p.group && Object.entries(extra || {}).every(([k, v]) => x[k] === v)); };
+  // one marked value
+  const val = (el, id, field, match, fmt) => {
+    const r = pick(id, match);
+    el.dataset.where = where({ area: P().area, stype: P().stype, group: P().group, ...(match || {}) });
+    const v = r && r[0] ? r[0][field] : null;
+    el.textContent = v == null ? '—' : fmt ? fmt(v) : nf(v);
+    el.classList.toggle('dash-skeleton', !rows(id) && dash.data(id).status === 'loading');
+  };
+  const failed = (el, id) => { const s = dash.data(id).status; if (s === 'error') { el.replaceChildren(); const d = document.createElement('div'); d.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;min-height:inherit;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)'; const dot = document.createElement('i'); dot.style.cssText = 'width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)'; d.append(dot, 'Failed to load'); el.append(d); return true; } return false; };
+  // vertical bars
+  const vbar = (el, data, { xk, xf, tipf, hl, avg }) => {
+    const vk = isNet() ? 'net' : 'units';
+    el.replaceChildren(); if (!data || !data.length) return;
+    const W = Math.max(280, el.clientWidth), H = 240, col = dash.colors[0];
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const yMax = d3.max(data, (d) => d[vk]) || 1, y = d3.scaleLinear([0, yMax], [H - 24, 10]).nice();
+    const probe = svg.append('text').attr('font-size', 12).text(axf(y.domain()[1])); const ml = probe.node().getComputedTextLength() + 10; probe.remove();
+    const x = d3.scaleBand(data.map((d) => d[xk]), [ml, W - 4]).padding(0.25);
+    svg.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', ml).attr('x2', W - 4).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(y.ticks(4)).join('text').attr('x', ml - 6).attr('y', (d) => y(d) + 4).attr('text-anchor', 'end').attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((d) => axf(d));
+    const every = Math.max(1, Math.ceil(data.length / Math.max(1, Math.floor((W - ml) / 46))));
+    svg.append('g').selectAll('text').data(data.filter((d, i) => i % every === 0)).join('text').attr('x', (d) => x(d[xk]) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((d) => xf(d[xk]));
+    svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+    const tip = document.createElement('div'); tip.className = 'pc-tip'; tip.hidden = true; el.append(tip);
+    svg.append('g').selectAll('rect').data(data).join('rect').attr('x', (d) => x(d[xk])).attr('width', x.bandwidth()).attr('y', (d) => y(Math.max(0, d[vk]))).attr('height', (d) => Math.max(0, y(0) - y(Math.max(0, d[vk]))))
+      .attr('rx', Math.min(3, x.bandwidth() / 2)).attr('fill', (d) => (hl == null || d[xk] === hl ? col : dash.colors[0])).attr('fill-opacity', (d) => (hl == null || d[xk] === hl ? 1 : 0.45))
+      .on('pointerdown pointermove', function (ev, d) { d3.select(this).attr('opacity', 0.8); tip.hidden = false; tip.replaceChildren(); const a = document.createElement('span'); a.textContent = tipf(d[xk]); tip.append(a, document.createElement('br'), 'QTY ' + nf(d.units) + ' · Net ฿' + nf(d.net));
+        const r = el.getBoundingClientRect(); let lx = ev.clientX - r.left + 12; if (lx + tip.offsetWidth > r.width) lx = ev.clientX - r.left - tip.offsetWidth - 12; tip.style.left = Math.max(0, lx) + 'px'; tip.style.top = Math.max(0, ev.clientY - r.top - 40) + 'px'; })
+      .on('pointerleave', function (ev) { d3.select(this).attr('opacity', 1); if (ev.pointerType === 'mouse') tip.hidden = true; });
+    if (avg != null && avg > 0) { svg.append('line').attr('x1', ml).attr('x2', W - 4).attr('y1', y(avg)).attr('y2', y(avg)).attr('stroke', 'var(--color-fg)').attr('stroke-dasharray', '4 4').attr('stroke-width', 1.25).attr('pointer-events', 'none');
+      svg.append('text').attr('x', W - 6).attr('y', y(avg) - 5).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg)').attr('pointer-events', 'none').text('เฉลี่ย ' + mfmt(Math.round(avg))); }
+  };
+  // horizontal html bars
+  const hbar = (el, data, { label, value, share, sub, color }) => {
+    el.replaceChildren(); if (!data || !data.length) return;
+    const max = d3.max(data, (d) => d[value]) || 1;
+    for (const d of data) { const row = document.createElement('div'); row.className = 'pc-hrow';
+      const l = document.createElement('span'); l.className = 'l'; l.textContent = d[label]; l.title = d[label];
+      const t = document.createElement('span'); t.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.width = Math.max(0, (d[value] / max) * 100) + '%'; f.style.background = color || dash.colors[0]; f.style.display = 'block'; t.append(f);
+      const v = document.createElement('span'); v.className = 'v'; v.textContent = sub(d) + (share ? ' · ' + pf(d[share]) : '');
+      row.append(l, t, v); el.append(row); }
+  };
+  // table
+  const sorts = {}, queries = {};
+  const table = (el, name, data, { key, cols, def, q, limit, dir }) => {
+    el.replaceChildren(); if (!data) return;
+    let s = sorts[name];
+    if (!s || !cols.some((c) => c.f === s.f) || (s.auto && (s.f !== def || s.dir !== (dir || -1)))) s = sorts[name] = { f: def, dir: dir || -1, auto: true };
+    const query = (queries[q] || '').trim().toLowerCase();
+    let r = query ? data.filter((d) => cols.some((c) => String(d[c.f] ?? '').toLowerCase().includes(query))) : data.slice();
+    r.sort((a, b) => { const x = a[s.f], y = b[s.f]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'th')) * s.dir; });
+    if (limit) r = r.slice(0, limit);
+    const thead = document.createElement('thead'), hr = document.createElement('tr');
+    const barMax = {}; cols.filter((c) => c.bar).forEach((c) => (barMax[c.f] = d3.max(r, (d) => d[c.f]) || 1));
+    for (const c of cols) { const th = document.createElement('th'); th.dataset.field = c.f; th.textContent = c.label + (s.f === c.f ? (s.dir < 0 ? ' ↓' : ' ↑') : ''); if (c.num) th.className = 'num';
+      th.setAttribute('aria-sort', s.f === c.f ? (s.dir < 0 ? 'descending' : 'ascending') : 'none'); th.tabIndex = 0;
+      const go = () => { s.auto = false; if (s.f === c.f) s.dir = -s.dir; else { s.f = c.f; s.dir = c.num ? -1 : 1; } dash.draw(name); };
+      th.addEventListener('click', go); th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }); hr.append(th); }
+    thead.append(hr);
+    const tb = document.createElement('tbody');
+    for (const d of r) { const tr = document.createElement('tr'); tr.dataset.key = key.map((k) => enc(d[k])).join(',');
+      for (const c of cols) { const td = document.createElement('td'); if (c.num) td.className = 'num'; if (c.wrap) td.className = 'wrap';
+        const v = d[c.f];
+        if (c.pill) { const p = document.createElement('span'); const [cls, txt] = c.pill(d); p.className = 'pill ' + cls; p.textContent = txt; td.append(p); }
+        else if (c.bar) { const w = document.createElement('span'); w.className = 'cb'; const i = document.createElement('i'); i.style.width = Math.max(1, (Math.max(0, v) / barMax[c.f]) * 60) + 'px'; const t = document.createElement('span'); t.textContent = v == null ? '' : c.fmt ? c.fmt(v) : nf(v); w.append(i, t); td.append(w); }
+        else td.textContent = v == null ? '' : c.fmt ? c.fmt(v) : String(v);
+        tr.append(td); }
+      tb.append(tr); }
+    el.append(thead, tb);
+  };
+  return { nf, pf, day, mon, P, M, isNet, mlabel, mfmt, axf, rows, pick, val, vbar, hbar, table, queries, failed, where };
+})();
+</script>
+
+<script>
+/* ---------- controls ---------- */
+{ let rz = 0, lastW = window.innerWidth; const redraw = () => { if (Math.abs(window.innerWidth - lastW) < 8) return; lastW = window.innerWidth;
+    ['c_target', 'c_monthly', 'c_daily', 'c_today_trend', 'c_rank_heat'].forEach((n) => dash.draw(n)); };
+  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(redraw, 200); }, { passive: true });
+  window.addEventListener('orientationchange', () => { clearTimeout(rz); rz = setTimeout(() => { lastW = -99; redraw(); }, 300); }, { passive: true }); }
+// tap outside a chart hides its tooltip on touch screens
+document.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse' && !e.target.closest('.pc-chart')) document.querySelectorAll('.pc-tip').forEach((x) => { x.hidden = true; }); }, { passive: true });
+const setDefaults = () => {};
+document.querySelectorAll('.pc-reset').forEach((b) => b.addEventListener('click', () => { dash.resetParams(); setDefaults(); }));
+const tabs = [...document.querySelectorAll('.pc-tab')];
+const showTab = (id) => {
+  tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === id)));
+  document.querySelectorAll('[data-page]').forEach((s) => { s.hidden = s.dataset.page !== id; });
+  dash.setLink(id);
+  const sel = tabs.find((x) => x.dataset.tab === id); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  requestAnimationFrame(() => ['c_target', 'c_monthly', 'c_daily', 'c_today_trend', 'c_rank_heat', 'c_s_matrix'].forEach((n) => { try { dash.draw(n); } catch (e) {} }));
+};
+tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
+{ const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
+document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
+  PC.queries[inp.dataset.q] = inp.value;
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], exp: ['tb_exp'], stock: ['tb_stock'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+}));
+document.querySelectorAll('#f-life').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ life: +sel.value })));
+document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
+document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
+document.querySelectorAll('#f-sstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ sstatus: sel.value })));
+dash.draw('metric_seg', (el) => { const m = PC.M(); el.replaceChildren(...[['net', 'Net Amount'], ['qty', 'QTY']].map(([k, l]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.metric = k; b.textContent = l; b.setAttribute('aria-pressed', String(k === m)); b.onclick = () => dash.setParams({ metric: k }); return b; })); });
+dash.draw('ml_1', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_2', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_3', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_4', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_5', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_6', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_7', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_8', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_9', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_10', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_11', (el) => { el.textContent = PC.mlabel(); });
+
+dash.onData(() => {
+  document.querySelectorAll('#f-life').forEach((sel) => { sel.value = String(dash.params().life || 365); });
+  document.querySelectorAll('#f-period').forEach((sel) => { sel.value = dash.params().period || 'today'; });
+  document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'group'; });
+  document.querySelectorAll('#f-sstatus').forEach((sel) => { sel.value = dash.params().sstatus || 'ALL'; });
+  const m = PC.rows('monthly');
+  document.querySelectorAll('#tgt-note').forEach((n) => { n.hidden = PC.P().group === 'ALL'; });
+  document.querySelectorAll('#one-month-note').forEach((n) => { n.hidden = !(m && new Set(m.map((r) => r.month)).size === 1); });
+});
+</script>
+
+<script>
+/* ---------- filters (choices come from data) ---------- */
+dash.draw('f_area', (sel) => {
+  const s = PC.rows('shops') || [];
+  const cs = [...new Set(s.map((r) => r.area))].filter(Boolean).sort((a, b) => a.localeCompare(b));
+  sel.replaceChildren(new Option('ทุกภาค', 'ALL'), ...cs.map((c) => new Option(c, c)));
+  sel.value = PC.P().area;
+  sel.onchange = () => dash.setParams({ area: sel.value, shop: 'ALL' });
+});
+dash.draw('f_stype', (sel) => {
+  const s = PC.rows('shops') || [];
+  const ord = new Map(s.map((r) => [r.stype, r.stype_order]));
+  const ts = [...ord.keys()].filter((x) => x && ord.get(x) < 90).sort((a, b) => ord.get(a) - ord.get(b));
+  sel.replaceChildren(new Option('ทุกประเภทสาขา', 'ALL'), ...ts.map((x) => new Option(x, x)));
+  sel.value = PC.P().stype;
+  sel.onchange = () => dash.setParams({ stype: sel.value, shop: 'ALL' });
+});
+dash.draw('f_shop', (sel) => {
+  const s = PC.rows('shops') || []; const p = PC.P();
+  const list = s.filter((r) => +r.stype_order < 90 && (p.area === 'ALL' || r.area === p.area) && (p.stype === 'ALL' || r.stype === p.stype))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'th'));
+  sel.replaceChildren(new Option('ทุกสาขา (' + list.length + ')', 'ALL'), ...list.map((r) => new Option(r.name + ' · ' + r.shop, String(r.shop))));
+  sel.value = list.some((r) => String(r.shop) === p.shop) ? p.shop : 'ALL';
+  sel.onchange = () => { const r = s.find((x) => String(x.shop) === sel.value); dash.setParams(r ? { shop: sel.value } : { shop: 'ALL' }); };
+});
+dash.draw('f_group', (sel) => {
+  const m = PC.rows('matcodes') || [];
+  const gs = [...new Set(m.map((r) => r.group))].sort();
+  sel.replaceChildren(new Option('ทุกกลุ่มซิม', 'ALL'), ...gs.map((g) => new Option(g, g)));
+  sel.value = PC.P().group;
+  sel.onchange = () => dash.setParams({ group: sel.value });
+});
+</script>
+
+<script>
+/* ---------- header and tiles ---------- */
+const money = (v) => PC.nf(Math.round(v));
+dash.draw('t_units', (el) => PC.val(el, 'kpi', 'units'));
+dash.draw('t_net', (el) => PC.val(el, 'kpi', 'net', null, money));
+dash.draw('t_shops', (el) => PC.val(el, 'kpi', 'shops'));
+dash.draw('t_last', (el) => PC.val(el, 'kpi', 'last_date', null, PC.day));
+const topMat = () => { const r = PC.pick('mat'); return r && r.length ? r.slice().sort((a, b) => b.units - a.units)[0] : null; };
+dash.draw('t_topname', (el) => { const t = topMat(); if (t) PC.val(el, 'mat', 'name', { matcode: t.matcode }, String); else el.textContent = '—'; });
+dash.draw('t_topunits', (el) => { const t = topMat(); if (t) PC.val(el, 'mat', 'units', { matcode: t.matcode }); else el.textContent = '—'; });
+dash.draw('t_expired', (el) => PC.val(el, 'exp_sum', 'n', { life: PC.P().life, status: 'expired' }));
+dash.draw('t_today', (el) => PC.val(el, 'kpi', 'today', null, PC.day));
+dash.draw('t_tqty', (el) => PC.val(el, 'kpi', 'today_units'));
+dash.draw('t_tnet', (el) => PC.val(el, 'kpi', 'today_net', null, money));
+dash.draw('t_mqty', (el) => PC.val(el, 'kpi', 'mtd_units'));
+dash.draw('d_date', (el) => PC.val(el, 'kpi', 'today', null, PC.day));
+dash.draw('d_qty', (el) => PC.val(el, 'kpi', 'today_units'));
+dash.draw('d_avg', (el) => PC.val(el, 'kpi', 'avg_units'));
+dash.draw('d_net', (el) => PC.val(el, 'kpi', 'today_net', null, (v) => '฿' + money(v)));
+dash.draw('d_tdate', (el) => PC.val(el, 'kpi', 'today', null, (v) => PC.day(v)));
+dash.draw('d_shops', (el) => PC.val(el, 'kpi', 'today_shops'));
+dash.draw('d_staff', (el) => PC.val(el, 'kpi', 'today_staff'));
+dash.draw('d_mqty', (el) => PC.val(el, 'kpi', 'mtd_units'));
+dash.draw('d_mnet', (el) => PC.val(el, 'kpi', 'mtd_net', null, money));
+dash.draw('k_units', (el) => PC.val(el, 'kpi', 'units'));
+dash.draw('k_net', (el) => PC.val(el, 'kpi', 'net', null, (v) => '฿' + money(v)));
+dash.draw('k_mtd', (el) => PC.val(el, 'kpi', 'mtd_units'));
+dash.draw('k_avg', (el) => PC.val(el, 'kpi', 'avg_units'));
+dash.draw('k_prevavg', (el) => PC.val(el, 'kpi', 'prev_avg_units'));
+dash.draw('k_lastdate', (el) => PC.val(el, 'kpi', 'last_date', null, PC.day));
+dash.draw('k_lastunits', (el) => PC.val(el, 'kpi', 'last_units'));
+dash.draw('k_lastnet', (el) => PC.val(el, 'kpi', 'last_net', null, money));
+dash.draw('k_ach', (el) => { PC.val(el, 'kpi', 'ach', null, PC.pf); const r = PC.pick('kpi'); const a = r && r[0] ? r[0].ach : null;
+  el.style.color = a == null ? '' : a >= 0.95 ? 'var(--color-ok)' : a >= 0.8 ? 'var(--color-warn)' : 'var(--color-bad)'; });
+dash.draw('k_tgtunits', (el) => PC.val(el, 'kpi', 'tgt_shop_units'));
+dash.draw('k_target', (el) => PC.val(el, 'kpi', 'target_units'));
+dash.draw('k_ytdach', (el) => PC.val(el, 'kpi', 'ytd_ach', null, PC.pf));
+</script>
+
+<script>
+/* ---------- overview charts ---------- */
+dash.draw('c_target', (el) => {
+  if (PC.failed(el, 'target_monthly')) return;
+  el.replaceChildren(); const all = PC.rows('target_monthly'); const p = PC.P();
+  if (!all || p.group !== 'ALL') return;
+  const data = all.filter((r) => r.area === p.area && r.stype === p.stype).sort((a, b) => a.month.localeCompare(b.month)); if (!data.length) return;
+  const W = Math.max(280, el.clientWidth), H = 240;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+  const N = PC.isNet(), A = N ? 'actual_net' : 'actual', T = N ? 'target_net' : 'target', R = N ? 'ach_net' : 'ach';
+  const y = d3.scaleLinear([0, d3.max(data, (d) => Math.max(d[T], d[A])) * 1.12], [H - 24, 8]).nice();
+  const probe = svg.append('text').attr('font-size', 12).text(PC.axf(y.domain()[1])); const ml = probe.node().getComputedTextLength() + 10; probe.remove();
+  const x = d3.scaleBand(data.map((d) => d.month), [ml, W - 4]).padding(0.3);
+  svg.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', ml).attr('x2', W - 4).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', 'var(--cds-chart-grid)');
+  svg.append('g').selectAll('text').data(y.ticks(4)).join('text').attr('x', ml - 6).attr('y', (d) => y(d) + 4).attr('text-anchor', 'end').attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((d) => PC.axf(d));
+  const every = Math.max(1, Math.ceil(data.length / Math.max(1, Math.floor((W - ml) / 52))));
+  svg.append('g').selectAll('text').data(data.filter((d, i) => i % every === 0)).join('text').attr('x', (d) => x(d.month) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((d) => PC.mon(d.month));
+  const col = (a) => (a >= 0.95 ? 'var(--color-ok)' : a >= 0.8 ? 'var(--color-warn)' : 'var(--color-bad)');
+  const tip = document.createElement('div'); tip.className = 'pc-tip'; tip.hidden = true; el.append(tip);
+  const g = svg.append('g').selectAll('g').data(data).join('g');
+  g.append('rect').attr('x', (d) => x(d.month)).attr('width', x.bandwidth()).attr('y', (d) => y(d[A])).attr('height', (d) => y(0) - y(d[A])).attr('rx', Math.min(3, x.bandwidth() / 2)).attr('fill', dash.colors[0]);
+  g.append('line').attr('x1', (d) => x(d.month) - 4).attr('x2', (d) => x(d.month) + x.bandwidth() + 4).attr('y1', (d) => y(d[T])).attr('y2', (d) => y(d[T])).attr('stroke', 'var(--color-fg)').attr('stroke-width', 2);
+  if (x.bandwidth() >= 26) g.append('text').attr('x', (d) => x(d.month) + x.bandwidth() / 2).attr('y', (d) => Math.min(y(d[A]), y(d[T])) - 6).attr('text-anchor', 'middle').attr('font-size', 11).attr('font-weight', 600).attr('fill', (d) => col(d[R])).text((d) => (d[R] == null ? '' : Math.round(d[R] * 100) + '%'));
+  g.append('rect').attr('x', (d) => x(d.month)).attr('width', x.bandwidth()).attr('y', 0).attr('height', H - 24).attr('fill', 'transparent')
+    .on('pointerdown pointermove', (ev, d) => { tip.hidden = false; tip.replaceChildren(); const a = document.createElement('span'); a.textContent = PC.mon(d.month); tip.append(a, document.createElement('br'), 'QTY ' + PC.nf(d.actual) + ' / เป้า ' + PC.nf(d.target) + ' (' + PC.pf(d.ach) + ')', document.createElement('br'), 'Net ฿' + PC.nf(d.actual_net) + ' / เป้า ฿' + PC.nf(d.target_net) + (d.ach_net == null ? '' : ' (' + PC.pf(d.ach_net) + ')'));
+      const r = el.getBoundingClientRect(); let lx = ev.clientX - r.left + 12; if (lx + tip.offsetWidth > r.width) lx = ev.clientX - r.left - tip.offsetWidth - 12; tip.style.left = Math.max(0, lx) + 'px'; tip.style.top = Math.max(0, ev.clientY - r.top - 50) + 'px'; })
+    .on('pointerleave', (ev) => { if (ev.pointerType === 'mouse') tip.hidden = true; });
+});
+dash.draw('c_monthly', (el) => { if (PC.failed(el, 'monthly')) return; const r = PC.pick('monthly'); PC.vbar(el, r && r.slice().sort((a, b) => a.month.localeCompare(b.month)), { xk: 'month', xf: PC.mon, tipf: PC.mon }); });
+const months = () => { const m = PC.rows('monthly'); return m ? [...new Set(m.map((r) => r.month))].sort() : []; };
+const dmonth = () => { const ms = months(); const v = dash.params().dmonth; return ms.includes(v) ? v : ms[ms.length - 1]; };
+dash.draw('f_dmonth', (sel) => { const ms = months(); sel.replaceChildren(...ms.slice().reverse().map((m) => new Option(PC.mon(m), m))); sel.value = dmonth() || ''; sel.onchange = () => dash.setParams({ dmonth: sel.value }); });
+dash.draw('c_daily', (el) => { if (PC.failed(el, 'daily')) return; const dm = dmonth(); const r0 = PC.pick('daily'); const r = r0 && r0.filter((x) => x.date.startsWith(dm || '')); PC.vbar(el, r && r.slice().sort((a, b) => a.date.localeCompare(b.date)), { xk: 'date', xf: (d) => String(+d.slice(8, 10)), tipf: PC.day }); });
+dash.draw('c_groups', (el) => {
+  if (PC.failed(el, 'kpi')) return;
+  const all = PC.rows('kpi'); if (!all) { el.replaceChildren(); return; }
+  const p = PC.P(), tot = all.find((r) => r.area === p.area && r.stype === p.stype && r.group === 'ALL');
+  const vk = PC.isNet() ? 'net' : 'units';
+  const r = all.filter((x) => x.area === p.area && x.stype === p.stype && x.group !== 'ALL').map((x) => ({ ...x, share: tot && tot[vk] ? x[vk] / tot[vk] : 0 })).sort((a, b) => b[vk] - a[vk]);
+  PC.hbar(el, r, { label: 'group', value: vk, share: 'share', sub: (d) => PC.mfmt(d[vk]), color: (dash.colors[1]) });
+  el.querySelectorAll('.pc-hrow').forEach((row, i) => { if (r[i].group !== p.group && p.group !== 'ALL') row.style.opacity = 0.45; });
+});
+const bandOrder = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
+dash.draw('c_bands', (el) => { if (PC.failed(el, 'bands')) return; const r = PC.pick('bands'); PC.hbar(el, r && r.slice().sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)), PC.isNet() ? { label: 'band', value: 'net', share: 'share_net', sub: (d) => PC.mfmt(d.net) } : { label: 'band', value: 'units', share: 'share_units', sub: (d) => PC.mfmt(d.units) }); });
+dash.draw('c_bands_net', (el) => { if (PC.failed(el, 'bands')) return; const r = PC.pick('bands'); PC.hbar(el, r && r.slice().sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)), { label: 'band', value: 'net', share: 'share_net', sub: (d) => 'Net ฿' + PC.nf(d.net), color: dash.colors[2] }); });
+</script>
+
+<script>
+/* ---------- ranking ---------- */
+const rkCol = (a) => (a == null ? 'var(--cds-chart-muted)' : a >= 1 ? 'var(--color-ok)' : a >= 0.9 ? 'var(--color-warn)' : 'var(--color-bad)');
+const rkF = () => (PC.isNet() ? { ach: 'ach_net', act: 'act_net', ttd: 'ttd_net', tgt: 'target_net', tpd: 'tpd_net', need: 'need_net', gap: 'gap_net', avg: 'avg_net', full: 'full_net', d: 'net' } : { ach: 'ach_units', act: 'act_units', ttd: 'ttd_units', tgt: 'target_units', tpd: 'tpd_units', need: 'need_units', gap: 'gap_units', avg: 'avg_units', full: 'full_units', d: 'units' });
+const rDates = () => { const r = PC.rows('area_day'); return r ? [...new Set(r.map((x) => x.date))].sort() : []; };
+const rDate = () => { const ds = rDates(); const v = dash.params().rdate; return ds.includes(v) ? v : ds[ds.length - 1]; };
+const rkRows = () => { const all = PC.rows('area_rank'); if (!all) return null; const st = PC.P().stype, f = rkF();
+  const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && x[f.tgt] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1));
+  return r.map((x, i) => ({ ...x, rank: i + 1 })); };
+const rdRows = () => { const all = PC.rows('area_day'); if (!all) return null; const st = PC.P().stype, d = rDate(), f = rkF();
+  const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && x.date === d && x[f.tpd] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1) || b[f.d] - a[f.d]);
+  return r.map((x, i) => ({ ...x, drank: i + 1 })); };
+const rkTot = (id) => { const all = PC.rows(id); const st = PC.P().stype; if (!all) return null; return all.find((x) => x.stype === st && x.area === 'ALL' && (id !== 'area_day' || x.date === rDate())) || null; };
+const rkVal = (el, id, key, fmt) => { const f = rkF(); const fld = f[key] || key; const r = rkTot(id);
+  el.dataset.field = fld; el.dataset.where = PC.where({ stype: PC.P().stype, area: 'ALL', ...(id === 'area_day' && r ? { date: r.date } : {}) });
+  const v = r ? r[fld] : null; el.textContent = v == null ? '—' : fmt ? fmt(v) : PC.mfmt(v); return v; };
+dash.draw('r_dlabel', (el) => { const d = rDate(); el.textContent = d ? PC.day(d) : '—'; });
+dash.draw('r_dach', (el) => { const v = rkVal(el, 'area_day', 'ach', PC.pf); el.style.color = v == null ? '' : rkCol(v); });
+dash.draw('r_dact', (el) => rkVal(el, 'area_day', 'd'));
+dash.draw('r_ach', (el) => { const v = rkVal(el, 'area_rank', 'ach', PC.pf); el.style.color = v == null ? '' : rkCol(v); });
+dash.draw('r_act', (el) => rkVal(el, 'area_rank', 'act'));
+dash.draw('r_ttd', (el) => rkVal(el, 'area_rank', 'ttd'));
+dash.draw('r_tgt', (el) => rkVal(el, 'area_rank', 'tgt'));
+dash.draw('r_tpd', (el) => rkVal(el, 'area_rank', 'tpd'));
+dash.draw('r_need', (el) => rkVal(el, 'area_rank', 'need'));
+dash.draw('r_days', (el) => { const all = PC.rows('area_rank'); const r = all && all[0]; el.dataset.field = 'elapsed'; el.textContent = r ? r.elapsed + ' / ' + r.days + ' วัน' : '—'; });
+dash.draw('r_date', (el) => { const all = PC.rows('area_rank'); const r = all && all[0]; el.dataset.field = 'today'; el.textContent = r ? PC.day(r.today) : '—'; });
+dash.draw('f_rdate', (sel) => { const ds = rDates(); sel.replaceChildren(...ds.slice().reverse().map((d) => new Option(PC.day(d), d))); sel.value = rDate() || ''; sel.onchange = () => dash.setParams({ rdate: sel.value }); });
+const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
+  el.replaceChildren(); if (!r || !r.length) return; const sel = PC.P().area;
+  const max = Math.max(1.2, d3.max(r, (d) => d[achK] || 0) * 1.05);
+  for (const d of r) { const row = document.createElement('div'); row.className = 'pc-rrow' + (sel !== 'ALL' ? (d.area === sel ? ' sel' : ' dim') : '');
+    row.dataset.where = PC.where({ stype: d.stype, area: d.area, ...(extra ? extra(d) : {}) });
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = d[rankK];
+    const l = document.createElement('span'); l.className = 'l'; l.textContent = d.area; l.title = d.area;
+    const t = document.createElement('span'); t.className = 't';
+    const fl = document.createElement('span'); fl.className = 'f'; fl.style.width = Math.min(100, (Math.max(0, d[achK] || 0) / max) * 100) + '%'; fl.style.background = rkCol(d[achK]);
+    const mk = document.createElement('span'); mk.className = 'm'; mk.style.left = (1 / max) * 100 + '%'; t.append(fl, mk);
+    const v = document.createElement('span'); v.className = 'v'; const b = document.createElement('b'); b.textContent = d[achK] == null ? '–' : PC.pf(d[achK]); b.style.color = rkCol(d[achK]);
+    v.append(b, ' · ' + PC.mfmt(d[actK]) + ' / ' + PC.mfmt(d[tgtK]));
+    row.title = d.area + ' · ยอด ' + PC.mfmt(d[actK]) + ' · ' + tgtLabel + ' ' + PC.mfmt(d[tgtK]);
+    row.append(n, l, t, v); el.append(row); }
+};
+dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'เป้าต่อวัน', (d) => ({ date: d.date })); });
+dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'เป้าถึงวันนี้'); });
+dash.draw('c_rank_heat', (el) => {
+  if (PC.failed(el, 'area_day')) return; el.replaceChildren();
+  const all = PC.rows('area_day'), rk = rkRows(); if (!all || !rk || !rk.length) return;
+  const st = PC.P().stype, f = rkF(), ds = rDates(), cur = rDate();
+  const by = new Map(all.filter((x) => x.stype === st).map((x) => [x.area + '|' + x.date, x]));
+  const narrow = window.matchMedia('(max-width: 640px)').matches; el.style.gridTemplateColumns = (narrow ? 'minmax(6.5rem, 9rem)' : 'minmax(9rem, max-content)') + ' repeat(' + ds.length + ', minmax(' + (narrow ? '2.2rem' : '2.6rem') + ', 1fr))';
+  const blank = document.createElement('div'); blank.className = 'hl'; el.append(blank);
+  for (const d of ds) { const h = document.createElement('div'); h.className = 'hh'; h.textContent = +d.slice(8, 10); el.append(h); }
+  const cell = (x) => { const c = document.createElement('div'); c.className = 'hc' + (x && x.date === cur ? ' sel' : ''); const a = x ? x[f.ach] : null;
+    c.style.background = a == null ? 'transparent' : 'color-mix(in srgb, ' + rkCol(a) + ' ' + (a >= 1 ? Math.min(85, 35 + (a - 1) * 50) : a >= 0.9 ? 45 : Math.max(25, 75 - a * 50)) + '%, transparent)';
+    c.textContent = a == null ? '' : Math.round(a * 100); if (x) { c.dataset.where = PC.where({ stype: st, area: x.area, date: x.date }); c.title = x.area + ' · ' + PC.day(x.date) + ' · ' + PC.mfmt(x[f.d]) + ' / เป้า ' + PC.mfmt(x[f.tpd]) + ' (' + (a == null ? '–' : PC.pf(a)) + ')'; c.onclick = () => dash.setParams({ rdate: x.date }); }
+    return c; };
+  for (const a of [{ area: 'ALL', rank: '' }, ...rk]) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = a.area === 'ALL' ? 'รวมทุก Area' : a.rank + '. ' + a.area; if (a.area === 'ALL') l.style.fontWeight = '600'; el.append(l);
+    for (const d of ds) el.append(cell(by.get(a.area + '|' + d))); }
+});
+dash.draw('tb_rank', (el) => {
+  const r0 = rkRows(); const f = rkF(); const N = PC.isNet(); const fm = (v) => (v == null ? '' : N ? PC.nf(Math.round(v)) : PC.nf(v));
+  const dd = new Map((rdRows() || []).map((x) => [x.area, x])); const dl = rDate() ? PC.day(rDate()) : '';
+  const r = r0 && r0.map((x) => { const y = dd.get(x.area) || {}; return { ...x, drank: y.drank ?? null, dval: y[f.d] ?? null, dach: y[f.ach] ?? null }; });
+  const pill = (k) => (d) => (d[k] == null ? ['mute', '–'] : [d[k] >= 1 ? 'ok' : d[k] >= 0.9 ? 'warn' : 'bad', PC.pf(d[k])]);
+  PC.table(el, 'tb_rank', r, { key: ['stype', 'area'], def: 'rank', dir: 1, cols: [
+    { f: 'rank', label: 'อันดับสะสม', num: true, fmt: PC.nf }, { f: 'drank', label: 'อันดับ Daily', num: true, fmt: PC.nf }, { f: 'area', label: 'Area', wrap: true },
+    { f: 'dval', label: 'ยอด ' + dl, num: true, fmt: fm }, { f: f.tpd, label: 'เป้าต่อวัน', num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
+    { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ttd, label: 'เป้าถึงวันนี้', num: true, fmt: fm }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
+    { f: f.gap, label: 'ส่วนต่างสะสม', num: true, fmt: (v) => (v > 0 ? '+' : '') + fm(v) }, { f: f.tgt, label: 'เป้าทั้งเดือน', num: true, fmt: fm },
+    { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm }, { f: f.full, label: '% ของเป้าทั้งเดือน', num: true, fmt: PC.pf } ] });
+});
+
+/* ---------- shops that sold ---------- */
+const PERIOD_L = { today: 'วันนี้', mtd: 'เดือนนี้ (MTD)', ytd: 'ตั้งแต่ต้นปี (YTD)' };
+const soldRows = () => { const pd = dash.params().period || 'today'; const r = PC.pick('shop_sales', { period: pd }); if (!r) return null;
+  const vk = PC.isNet() ? 'net' : 'qty'; const tot = r.reduce((s, x) => s + x[vk], 0);
+  return r.slice().sort((a, b) => b[vk] - a[vk] || b.qty - a.qty).map((x, i) => ({ ...x, rank: i + 1, share: tot ? x[vk] / tot : null })); };
+const scopeShops = () => { const s = PC.rows('shops'); if (!s) return null; const p = PC.P();
+  return s.filter((r) => +r.stype_order < 90 && (p.area === 'ALL' || r.area === p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
+const noSold = () => { const r = soldRows(), s = scopeShops(); if (!r || !s) return null; const got = new Set(r.filter((x) => x.qty > 0).map((x) => x.shop));
+  return s.filter((x) => !got.has(String(x.shop))).sort((a, b) => String(a.area).localeCompare(String(b.area)) || String(a.name).localeCompare(String(b.name), 'th')); };
+dash.draw('sold_period', (el) => { el.textContent = PERIOD_L[dash.params().period || 'today']; });
+dash.draw('sold_note', (el) => { const r = soldRows(), s = scopeShops(); if (!r || !s) { el.textContent = '—'; return; }
+  const n = r.filter((x) => x.qty > 0).length; el.textContent = 'ขายได้ ' + PC.nf(n) + ' จาก ' + PC.nf(s.length) + ' สาขา'; });
+dash.draw('nosold_sum', (el) => { const r = noSold(); el.textContent = r ? 'ดูสาขาที่ยังไม่มียอดขายในช่วงนี้ (' + PC.nf(r.length) + ' สาขา)' : 'ดูสาขาที่ยังไม่มียอดขายในช่วงนี้'; });
+dash.draw('tb_shopsold', (el) => {
+  const N = PC.isNet();
+  PC.table(el, 'tb_shopsold', soldRows(), { key: ['area', 'stype', 'group', 'period', 'shop'], def: 'rank', dir: 1, cols: [
+    { f: 'rank', label: 'อันดับ', num: true, fmt: PC.nf }, { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true },
+    { f: 'shop_type', label: 'ประเภทสาขา' }, { f: 'shop_area', label: 'Area' },
+    { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N }, { f: 'qty', label: 'QTY', num: true, fmt: PC.nf, bar: !N },
+    { f: 'share', label: '% ของยอดรวม', num: true, fmt: PC.pf }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf } ] });
+});
+dash.draw('tb_nosold', (el) => PC.table(el, 'tb_nosold', noSold(), { key: ['shop'], def: 'area', dir: 1, cols: [
+  { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'stype', label: 'ประเภทสาขา' }, { f: 'area', label: 'Area' } ] }));
+
+/* ---------- stock ---------- */
+const ST = { out: ['หมด', 'var(--color-bad)', 'bad'], low: ['เสี่ยงขาด (< 7 วัน)', 'var(--color-bad)', 'bad'], short: ['ไม่พอ 28 วัน', 'var(--color-warn)', 'warn'], ok: ['พอ (28–56 วัน)', 'var(--color-ok)', 'ok'], over: ['เกิน (> 56 วัน)', '#6b7fd7', 'mute'], idle: ['ไม่มียอดขาย 28 วัน', 'var(--cds-chart-muted)', 'mute'] };
+const ST_ORDER = ['out', 'low', 'short', 'ok', 'over', 'idle'];
+const stRows = (level) => { const r = PC.rows('stock_cover'); if (!r) return null; const p = PC.P();
+  return r.filter((x) => x.level === (level || 'group') && (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)); };
+const stTot = () => { const r = stRows('group'); if (!r) return null; const s = r.reduce((a, x) => a + x.stock, 0), q = r.reduce((a, x) => a + x.sold28, 0); return { s, q, cover: q > 0 ? s / (q / 28) : null, r }; };
+const coverTxt = (d) => (d == null ? '–' : d > 365 ? '> 1 ปี' : PC.nf(Math.round(d)) + ' วัน');
+dash.draw('s_asof', (el) => { const r = PC.rows('stock_by_shop'); const v = r && r[0] && r[0].asof; el.textContent = v ? PC.day(v.slice(0, 10)) + (v.length > 10 ? ' ' + v.slice(11) + ' น.' : '') : '—'; });
+dash.draw('s_stock', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.s) : '—'; });
+dash.draw('s_sold', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.q) : '—'; });
+dash.draw('s_window', (el) => { const r = PC.rows('stock_cover'); const x = r && r[0]; el.textContent = x ? PC.day(x.from) + ' – ' + PC.day(x.to) + ' · เฉลี่ย ' + PC.nf(Math.round((stTot().q / 28) * 10) / 10) + ' ต่อวัน' : ''; });
+dash.draw('s_cover', (el) => { const t = stTot(); el.textContent = t ? coverTxt(t.cover) : '—'; el.style.color = !t || t.cover == null ? '' : t.cover < 7 ? 'var(--color-bad)' : t.cover < 28 ? 'var(--color-warn)' : 'var(--color-ok)'; });
+dash.draw('s_risk', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.r.filter((x) => x.status === 'out' || x.status === 'low').length) : '—'; });
+dash.draw('s_risk_sub', (el) => { const t = stTot(); if (!t) { el.textContent = ''; return; } const c = (k) => t.r.filter((x) => x.status === k).length;
+  el.textContent = 'หมด ' + PC.nf(c('out')) + ' · เสี่ยงขาด ' + PC.nf(c('low')) + ' · ไม่พอ 28 วัน ' + PC.nf(c('short')); });
+dash.draw('c_s_type', (el) => {
+  if (PC.failed(el, 'stock_cover')) return; el.replaceChildren(); const r = stRows('group'); if (!r) return;
+  const by = new Map(); for (const x of r) { const a = by.get(x.key) || { key: x.key, stock: 0, sold: 0 }; a.stock += x.stock; a.sold += x.sold28; by.set(x.key, a); }
+  const data = [...by.values()].sort((a, b) => b.sold - a.sold || b.stock - a.stock); const max = d3.max(data, (d) => Math.max(d.stock, d.sold)) || 1;
+  for (const d of data) { const cover = d.sold > 0 ? d.stock / (d.sold / 28) : null; const col = cover == null ? ST.idle[1] : cover < 7 ? ST.low[1] : cover < 28 ? ST.short[1] : cover <= 56 ? ST.ok[1] : ST.over[1];
+    const row = document.createElement('div'); row.className = 'pc-hrow';
+    const l = document.createElement('span'); l.className = 'l'; l.textContent = d.key; l.title = d.key;
+    const dual = document.createElement('span'); dual.className = 'pc-dual';
+    for (const [v, c, o] of [[d.stock, col, 1], [d.sold, 'var(--color-fg-muted)', 0.35]]) { const tr = document.createElement('span'); tr.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.display = 'block'; f.style.width = Math.max(0, (v / max) * 100) + '%'; f.style.background = c; f.style.opacity = o; tr.append(f); dual.append(tr); }
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = 'Stock ' + PC.nf(d.stock) + ' · ขาย ' + PC.nf(d.sold) + ' · ' + coverTxt(cover);
+    row.append(l, dual, v); el.append(row); }
+});
+dash.draw('c_s_status', (el) => {
+  if (PC.failed(el, 'stock_cover')) return; el.replaceChildren(); const r = stRows('group'); if (!r) return;
+  const cur = dash.params().sstatus || 'ALL'; const max = Math.max(1, ...ST_ORDER.map((k) => r.filter((x) => x.status === k).length));
+  for (const k of ST_ORDER) { const n = r.filter((x) => x.status === k).length; const fk = k === 'out' || k === 'low' ? 'risk' : k;
+    const row = document.createElement('div'); row.className = 'pc-hrow click' + (cur === fk ? ' on' : ''); row.tabIndex = 0; row.setAttribute('role', 'button');
+    const l = document.createElement('span'); l.className = 'l'; l.textContent = ST[k][0];
+    const tr = document.createElement('span'); tr.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.display = 'block'; f.style.width = (n / max) * 100 + '%'; f.style.background = ST[k][1]; tr.append(f);
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = PC.nf(n) + ' คู่ · ' + (r.length ? PC.pf(n / r.length) : '–');
+    const go = () => dash.setParams({ sstatus: cur === fk ? 'ALL' : fk }); row.onclick = go; row.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+    row.append(l, tr, v); el.append(row); }
+});
+dash.draw('c_s_matrix', (el) => {
+  if (PC.failed(el, 'stock_cover')) return; el.replaceChildren(); const r = stRows('group'); if (!r || !r.length) return;
+  const types = [...new Set(r.map((x) => x.key))].sort(); const shopsM = new Map();
+  for (const x of r) { const a = shopsM.get(x.shop) || { shop: x.shop, name: x.name, cells: {}, risk: 0, short: 0 }; a.cells[x.key] = x; if (x.status === 'out' || x.status === 'low') a.risk++; if (x.status === 'short') a.short++; shopsM.set(x.shop, a); }
+  const list = [...shopsM.values()].sort((a, b) => b.risk - a.risk || b.short - a.short || String(a.name).localeCompare(String(b.name), 'th'));
+  const narrow = window.matchMedia('(max-width: 640px)').matches;
+  el.style.gridTemplateColumns = (narrow ? 'minmax(7rem, 9rem)' : 'minmax(12rem, max-content)') + ' repeat(' + types.length + ', minmax(5.6rem, 1fr))';
+  const h0 = document.createElement('div'); h0.className = 'hl'; h0.textContent = 'สาขา (' + list.length + ')'; el.append(h0);
+  for (const ty of types) { const h = document.createElement('div'); h.className = 'hh'; h.textContent = ty.replace(/^SIM /, ''); h.title = ty; el.append(h); }
+  for (const s of list) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = s.name; l.title = s.name + ' · ' + s.shop; el.append(l);
+    for (const ty of types) { const x = s.cells[ty]; const c = document.createElement('div'); c.className = 'hc';
+      if (x) { const st = ST[x.status]; c.style.background = 'color-mix(in srgb, ' + st[1] + ' ' + (x.status === 'idle' ? 25 : 40) + '%, transparent)';
+        const cellTxt = () => (x.status === 'out' ? 'หมด · ขาย ' + PC.nf(x.sold28) : PC.nf(x.stock) + ' / ' + (x.cover_days == null ? '–' : (x.cover_days > 999 ? '999+' : x.cover_days) + ' วัน')); c.textContent = cellTxt();
+        c.title = s.name + ' · ' + ty + '\nStock ' + PC.nf(x.stock) + ' · ขาย 28 วัน ' + PC.nf(x.sold28) + ' · พอขาย ' + coverTxt(x.cover_days) + ' · ' + st[0] + (x.need28 ? ' · ควรเติม ' + PC.nf(x.need28) : '');
+        c.onclick = () => { c.textContent = c.textContent === cellTxt() ? 'ขาย 28 วัน ' + PC.nf(x.sold28) : cellTxt(); }; }
+      el.append(c); } }
+});
+dash.draw('tb_stock', (el) => {
+  const lv = dash.params().slevel || 'group', sf = dash.params().sstatus || 'ALL'; let r = stRows(lv);
+  if (r && sf !== 'ALL') r = r.filter((x) => (sf === 'risk' ? x.status === 'out' || x.status === 'low' : x.status === sf));
+  const rank = (s) => ST_ORDER.indexOf(s);
+  r = r && r.map((x) => ({ ...x, srank: rank(x.status) * 1e6 + (x.cover_days ?? 1e5) }));
+  PC.table(el, 'tb_stock', r, { key: ['shop', 'level', 'key'], def: 'srank', dir: 1, q: 'stock', limit: 2000, cols: [
+    { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
+    { f: 'label', label: lv === 'group' ? 'Type Sim' : lv === 'sub' ? 'ประเภทซิม (รุ่นย่อย)' : 'Matcode', wrap: lv === 'mat' },
+    { f: 'stock', label: 'Stock', num: true, fmt: PC.nf, bar: true }, { f: 'sold28', label: 'ขาย 28 วัน', num: true, fmt: PC.nf },
+    { f: 'avg_day', label: 'เฉลี่ย/วัน', num: true, fmt: (v) => (v > 0 && v < 0.1 ? '< 0.1' : d3.format(',.1f')(v)) }, { f: 'cover_days', label: 'พอขาย (วัน)', num: true, fmt: (v) => (v > 999 ? '999+' : PC.nf(v)) },
+    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [ST[d.status][2], ST[d.status][0]] }, { f: 'need28', label: 'ควรเติม (ให้พอ 28 วัน)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') } ] });
+});
+
+/* ---------- today charts ---------- */
+dash.draw('c_today_type', (el) => {
+  if (PC.failed(el, 'kpi')) return;
+  const all = PC.rows('kpi'); if (!all) { el.replaceChildren(); return; }
+  const p = PC.P(), vk = PC.isNet() ? 'today_net' : 'today_units';
+  const tot = all.find((x) => x.area === p.area && x.group === p.group && x.stype === 'ALL');
+  const r = all.filter((x) => x.area === p.area && x.group === p.group && x.stype !== 'ALL' && (x.ord < 90 || x.today_units !== 0) && (p.stype === 'ALL' || x.stype === p.stype))
+    .map((x) => ({ ...x, share: tot && tot[vk] ? x[vk] / tot[vk] : 0 })).sort((a, b) => a.ord - b.ord);
+  PC.hbar(el, r, { label: 'stype', value: vk, share: 'share', sub: (d) => PC.mfmt(d[vk]) + ' · ' + PC.nf(d.today_shops) + ' สาขา' });
+});
+dash.draw('c_today_trend', (el) => {
+  if (PC.failed(el, 'daily')) return;
+  const r0 = PC.pick('daily'); if (!r0) { el.replaceChildren(); return; }
+  const today = r0.reduce((a, r) => (r.date > a ? r.date : a), ''); const m = today.slice(0, 7);
+  const r = r0.filter((x) => x.date.startsWith(m)).sort((a, b) => a.date.localeCompare(b.date));
+  const vk = PC.isNet() ? 'net' : 'units'; const full = r.filter((x) => x.date !== today);
+  const avg = full.length ? full.reduce((s, x) => s + x[vk], 0) / full.length : null;
+  PC.vbar(el, r, { xk: 'date', xf: (d) => String(+d.slice(8, 10)), tipf: PC.day, hl: today, avg });
+});
+const bandOrderBd = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
+const bdColor = { area: 0, simtype: 1, simgroup: 1, band: 2 };
+for (const [name, dim] of [['bd_area', 'area'], ['bd_simtype', 'simtype'], ['bd_simgroup', 'simgroup'], ['bd_band', 'band']])
+  dash.draw('c_' + name, (el) => {
+    if (PC.failed(el, 'breakdown')) return;
+    const r0 = PC.pick('breakdown', { period: dash.params().period || 'today', dim }); if (!r0) { el.replaceChildren(); return; }
+    const N = PC.isNet(), vk = N ? 'net' : 'qty', sk = N ? 'share_net' : 'share_qty';
+    let r = r0.filter((x) => x.qty !== 0 || x.net !== 0);
+    r = dim === 'band' ? r.sort((a, b) => bandOrderBd.indexOf(a.key) - bandOrderBd.indexOf(b.key)) : r.sort((a, b) => b[vk] - a[vk]);
+    if (dim === 'simgroup') r = r.slice(0, 10);
+    PC.hbar(el, r, { label: 'key', value: vk, share: sk, sub: (d) => PC.mfmt(d[vk]), color: dash.colors[bdColor[dim]] });
+    if (!r.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงนี้'; el.append(e); }
+  });
+
+/* ---------- tables ---------- */
+dash.draw('tb_today', (el) => {
+  const all = PC.rows('kpi'); const p = PC.P();
+  const r = all && all.filter((x) => x.area === p.area && x.group === p.group && (p.stype === 'ALL' || x.stype === p.stype || x.stype === 'ALL') && (x.stype === 'ALL' || x.ord < 90 || x.today_units !== 0));
+  PC.table(el, 'tb_today', r, { key: ['area', 'stype', 'group'], def: 'ord', dir: 1, cols: [
+    { f: 'stype', label: 'ประเภทสาขา', fmt: (v) => (v === 'ALL' ? 'รวมทุกประเภทสาขา' : v) },
+    { f: 'today_net', label: 'Net Amount วันนี้', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'today_units', label: 'QTY วันนี้', num: true, fmt: PC.nf, bar: !PC.isNet() },
+    { f: 'today_shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }, { f: 'mtd_units', label: 'QTY เดือนนี้', num: true, fmt: PC.nf }, { f: 'mtd_net', label: 'Net Amount เดือนนี้', num: true, fmt: PC.nf },
+    { f: 'ach', label: '% เป้าเดือนนี้', num: true, pill: (d) => achPill(d) } ] });
+  el.querySelectorAll('tbody tr').forEach((tr) => { if (tr.dataset.key.includes(',ALL,')) tr.style.fontWeight = '600'; });
+});
+const bdCols = (label) => [{ f: 'key', label }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'share_net', label: '% Net', num: true, fmt: PC.pf },
+  { f: 'qty', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'share_qty', label: '% QTY', num: true, fmt: PC.pf }];
+const bdRows = (dim) => PC.pick('breakdown', { period: dash.params().period || 'today', dim });
+for (const [name, dim, label, def, dir] of [['bd_area', 'area', 'Area', 'm', -1], ['bd_simtype', 'simtype', 'Type Sim (Custom Model)', 'm', -1], ['bd_simgroup', 'simgroup', 'ประเภทซิม (รุ่นย่อย)', 'm', -1], ['bd_band', 'band', 'กลุ่มราคา', 'ord', 1]])
+  dash.draw(name, (el) => PC.table(el, name, bdRows(dim), { key: ['area', 'stype', 'group', 'period', 'dim', 'key'], def: def === 'm' ? (PC.isNet() ? 'net' : 'qty') : def, dir, cols: bdCols(label) }));
+const achPill = (d) => d.ach == null ? ['mute', '–'] : [d.ach >= 0.95 ? 'ok' : d.ach >= 0.8 ? 'warn' : 'bad', PC.pf(d.ach)];
+dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', PC.pick('mat'), { key: ['area', 'stype', 'group', 'matcode'], def: PC.isNet() ? 'net' : 'units', q: 'mat', cols: [
+  { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'กลุ่ม' }, { f: 'status', label: 'สถานะ' },
+  { f: 'price', label: 'ราคาป้าย', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() },
+  { f: 'share', label: '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'สต็อกคงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_days', label: 'สต็อกพอขาย (วัน)', num: true, fmt: PC.nf } ] }));
+dash.draw('tb_region', (el) => PC.table(el, 'tb_region', PC.pick('region_perf'), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
+  { f: 'region', label: 'ภาค' }, { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() },
+  { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'target', label: 'เป้าเดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้าเดือนล่าสุด', num: true, pill: achPill },
+  { f: 'ytd_target', label: 'เป้าสะสม', num: true, fmt: PC.nf }, { f: 'ytd_ach', label: '% เป้าสะสม', num: true, pill: (d) => achPill({ ach: d.ytd_ach }) } ] }));
+dash.draw('tb_shop', (el) => PC.table(el, 'tb_shop', PC.pick('shop_perf'), { key: ['area', 'stype', 'group', 'shop'], def: PC.isNet() ? 'net' : 'units', q: 'shop', cols: [
+  { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'region', label: 'ภาค' }, { f: 'type', label: 'ประเภทสาขา' },
+  { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf },
+  { f: 'target', label: 'เป้าเดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้าเดือนล่าสุด', num: true, pill: achPill }, { f: 'ytd_ach', label: '% เป้าสะสม', num: true, pill: (d) => achPill({ ach: d.ytd_ach }) },
+  { f: 'stock', label: 'สต็อก', num: true, fmt: PC.nf }, { f: 'aged', label: 'สต็อกเก่า', num: true, fmt: PC.nf } ] }));
+dash.draw('tb_staff', (el) => PC.table(el, 'tb_staff', PC.pick('staff_perf'), { key: ['area', 'stype', 'group', 'emp'], def: PC.isNet() ? 'net' : 'units', q: 'staff', cols: [
+  { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก', wrap: true },
+  { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf } ] }));
+</script>
+
+<script>
+/* ---------- expiry ---------- */
+for (const [n, st] of [['e_expired', 'expired'], ['e_d30', 'd30'], ['e_d60', 'd60'], ['e_d90', 'd90']]) {
+  dash.draw(n, (el) => PC.val(el, 'exp_sum', 'n', { life: PC.P().life, status: st }));
+  dash.draw(n + '_v', (el) => PC.val(el, 'exp_sum', 'value', { life: PC.P().life, status: st }, (v) => PC.nf(Math.round(v))));
+}
+dash.draw('tb_expshop', (el) => PC.table(el, 'tb_expshop', PC.pick('exp_shop', { life: PC.P().life }), { key: ['area', 'stype', 'group', 'life', 'shop'], def: 'expired', cols: [
+  { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'expired', label: 'เกินอายุแล้ว', num: true, bar: true },
+  { f: 'soon', label: 'เหลือ ≤ 90 วัน', num: true, fmt: PC.nf }, { f: 'value', label: 'มูลค่า (บาท)', num: true, fmt: (v) => PC.nf(Math.round(v)) } ] }));
+dash.draw('tb_exp', (el) => {
+  const all = PC.rows('exp'); const p = PC.P(), f = 'left_' + p.life;
+  const r = all && all.filter((x) => (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && x[f] <= 90);
+  PC.table(el, 'tb_exp', r, { key: ['serial'], def: f, dir: 1, q: 'exp', limit: 1000, cols: [
+    { f: f, label: 'สถานะ', pill: (d) => d[f] <= 0 ? ['bad', 'เกินอายุ ' + PC.nf(-d[f]) + ' วัน'] : d[f] <= 30 ? ['bad', 'เหลือ ' + d[f] + ' วัน'] : d[f] <= 60 ? ['warn', 'เหลือ ' + d[f] + ' วัน'] : ['mute', 'เหลือ ' + d[f] + ' วัน'] },
+    { f: 'serial', label: 'Serial' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'สินค้า', wrap: true },
+    { f: 'first', label: 'รับเข้าครั้งแรก', fmt: PC.day }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' } ] });
+});
+</script>
