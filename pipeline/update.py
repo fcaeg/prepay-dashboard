@@ -4,8 +4,9 @@ Usage (from repo root):
   python3 -I pipeline/update.py [--sales FILE ...] [--stock FILE] [--target FILE ...] [--master FILE]
 
 FILE may be .csv or .zip (a zip's CSV inside is used). Each run:
-  * sales: rows for the bill dates found in the new file REPLACE the same dates in the state
-           (so a month-to-date file can be re-sent every day; older dates stay as they are)
+  * sales: SIM,PRE rows of the new file are ADDED to the state and de-duplicated on
+           shop/order/bill/product/serial/status/amount/bill time (hashed), the same rule as the
+           first build, so a month-to-date file can be re-sent every day without double counting
   * stock: the new stock file replaces the stock snapshot
   * target: a "Target_of_<Mon>_26*.xlsx" file is parsed and replaces that month's targets
   * master: replaces the product master (Master Prepaid.xlsx)
@@ -32,11 +33,19 @@ def read_csv_any(path):
         except UnicodeDecodeError: pass
     return pd.read_csv(io.BytesIO(raw), dtype=str, encoding='cp874', encoding_errors='replace'), label
 
-def sales_tables(s):
-    """raw POS rows -> per-date tables kept in state"""
-    s = s.drop_duplicates(DEDUP)
-    s['BD'] = pd.to_datetime(s.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce')
-    p = s[s.DESCRIPTION.str.upper().str.startswith('SIM,PRE', na=False) & s.BD.notna()].copy()
+KEEP = ['BILL_DATE', 'SHOP_CODE', 'PRODUCT_CODE', 'DESCRIPTION', 'PRICE', 'QTY', 'DISCOUNT_AMOUNT', 'NET_AMOUNT', 'ORDER_STATUS', 'SALE_CODE', 'SALE_NAME', 'COMPANY_NAME']
+
+def sim_rows(s):
+    """raw POS rows -> SIM,PRE rows with a hashed de-duplication key (bill / order / serial numbers are not kept)"""
+    import hashlib
+    p = s[s.DESCRIPTION.str.upper().str.startswith('SIM,PRE', na=False)].copy()
+    p['key'] = p[DEDUP].fillna('').astype(str).agg('|'.join, axis=1).map(lambda x: hashlib.sha1(x.encode()).hexdigest()[:16])
+    return p[['key'] + KEEP].drop_duplicates('key')
+
+def sales_tables(p):
+    """SIM,PRE rows (state) -> fact / staff / price tables"""
+    p = p.copy()
+    p['BD'] = pd.to_datetime(p.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce'); p = p[p.BD.notna()]
     p['sign'] = p.ORDER_STATUS.map({'Payment': 1, 'CreditNote': -1}).fillna(0)
     p['units'] = p.sign; p['net'] = p.sign * p.NET_AMOUNT.astype(float)
     p['amount'] = p.sign * p.PRICE.astype(float) * p.QTY.astype(float).clip(lower=1); p['disc'] = p.sign * p.DISCOUNT_AMOUNT.astype(float)
@@ -44,35 +53,43 @@ def sales_tables(s):
     fact = p.groupby(['date', 'SHOP_CODE', 'PRODUCT_CODE', 'emp'], as_index=False).agg(units=('units', 'sum'), amount=('amount', 'sum'), disc=('disc', 'sum'), net=('net', 'sum')) \
         .rename(columns={'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode'})
     for c in ['net', 'amount', 'disc']: fact[c] = fact[c].round(2)
-    staff = p.groupby(['date', 'emp', 'SALE_NAME', 'SHOP_CODE'], as_index=False, dropna=False).size().rename(columns={'SALE_NAME': 'name', 'SHOP_CODE': 'shop', 'size': 'n'})
-    price = p[p.sign == 1].groupby(['date', 'PRODUCT_CODE', 'PRICE'], as_index=False).size().rename(columns={'PRODUCT_CODE': 'matcode', 'PRICE': 'price', 'size': 'n'})
+    staff = p.groupby(['emp', 'SALE_NAME', 'SHOP_CODE'], as_index=False, dropna=False).size().rename(columns={'SALE_NAME': 'name', 'SHOP_CODE': 'shop', 'size': 'n'})
+    price = p[p.sign == 1].groupby(['PRODUCT_CODE', 'PRICE'], as_index=False).size().rename(columns={'PRODUCT_CODE': 'matcode', 'PRICE': 'price', 'size': 'n'})
     names = p.groupby('PRODUCT_CODE', as_index=False).DESCRIPTION.first().rename(columns={'PRODUCT_CODE': 'matcode', 'DESCRIPTION': 'name'})
-    comp = p.groupby('SHOP_CODE', as_index=False).COMPANY_NAME.first().rename(columns={'SHOP_CODE': 'shop', 'COMPANY_NAME': 'company'})
-    asof = s.BD.max()
-    return dict(fact=fact, staff=staff, price=price), names, comp, asof
+    return fact, staff, price, names, p.BD.max()
 
 def load(name, **kw):
     fp = os.path.join(ST, name)
-    return pd.read_csv(fp, dtype=str, **kw) if os.path.exists(fp) else None
+    return pd.read_csv(fp, dtype=str, keep_default_na=False, na_values=[''], **kw) if os.path.exists(fp) else None
 
 def save(df, name): df.to_csv(os.path.join(ST, name), index=False, compression='gzip' if name.endswith('.gz') else None)
 
+def _month(df):
+    return pd.to_datetime(df.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce').dt.strftime('%Y-%m').fillna('unknown')
+
+def load_sim():
+    fs = sorted(glob.glob(os.path.join(ST, 'sim_*.csv.gz')))
+    return pd.concat([load(os.path.basename(f)) for f in fs]) if fs else None
+
+def save_sim(df, only=None):
+    """one file per bill month, so a daily run only rewrites the months that changed"""
+    for mo, g in df.groupby(_month(df)):
+        if only is None or mo in only: save(g.sort_values(['BILL_DATE', 'key']), f'sim_{mo}.csv.gz')
+
 def merge_sales(paths):
+    """new rows are added to the state; rows already there (same bill/order/product/serial/status/amount/time) are not counted twice"""
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
+    old = load_sim(); changed = set()
     for path in paths:
         raw, label = read_csv_any(path)
-        tabs, names, comp, asof = sales_tables(raw)
-        dates = set(tabs['fact'].date)
-        for key, fn in [('fact', 'fact.csv.gz'), ('staff', 'staff.csv.gz'), ('price', 'price.csv.gz')]:
-            old = load(fn)
-            new = tabs[key].astype(str)
-            if old is not None: new = pd.concat([old[~old.date.isin(dates)], new])
-            save(new.sort_values(list(new.columns[:3])), fn)
-        for df, fn, k in [(names, 'names.csv', 'matcode'), (comp, 'company.csv', 'shop')]:
-            old = load(fn); df = df.astype(str)
-            save(pd.concat([df, old]).drop_duplicates(k) if old is not None else df, fn)
-        if pd.notna(asof) and asof.strftime('%Y-%m-%d %H:%M') > meta.get('sales_asof', ''): meta['sales_asof'] = asof.strftime('%Y-%m-%d %H:%M')
-        print(f'sales: {label}: {len(raw):,} rows, {len(dates)} dates {min(dates)}..{max(dates)}')
+        new = sim_rows(raw); n0 = 0 if old is None else len(old)
+        add = new if old is None else new[~new.key.isin(set(old.key))]
+        changed |= set(_month(add))
+        old = new if old is None else pd.concat([old, add])
+        bd = pd.to_datetime(new.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce')
+        if bd.notna().any() and bd.max().strftime('%Y-%m-%d %H:%M') > meta.get('sales_asof', ''): meta['sales_asof'] = bd.max().strftime('%Y-%m-%d %H:%M')
+        print(f'sales: {label}: {len(raw):,} rows, SIM PRE {len(new):,}, new to state {len(old) - n0:,}, bills {bd.min():%Y-%m-%d}..{bd.max():%Y-%m-%d %H:%M}')
+    save_sim(old, changed)
     json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
 
 def merge_stock(path):
@@ -120,10 +137,9 @@ def grp(n):
 
 def build():
     meta = json.load(open(os.path.join(ST, 'meta.json')))
-    f = load('fact.csv.gz'); staff = load('staff.csv.gz'); price = load('price.csv.gz'); names = load('names.csv'); comp = load('company.csv')
+    f, staff, price, names, _ = sales_tables(load_sim())
     k = load('stock.csv.gz'); allt = load('targets_all.csv')
-    for c in ['units']: f[c] = f[c].astype(float).astype(int)
-    for c in ['amount', 'disc', 'net']: f[c] = f[c].astype(float)
+    f['units'] = f.units.astype(int)
     f = f[f.date.str[:4] == f.date.max()[:4]]  # current year only
     k['aging'] = k.FIRST_AGING.astype(int)
     k['first'] = pd.to_datetime(k.FIRST_UPDATE_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce').dt.strftime('%Y-%m-%d')
@@ -154,7 +170,7 @@ def build():
     rrp = {'3000096683': 535, '3000096684': 880, '3000096454': 49, '3000098016': 49, '3000080483': 399, '3000098814': 399, '3000093272': 49, '3000096034': 1790, '3000098816': 999, '3000093326': 299,
            '3000080422': 399, '3000080426': 399, '3000080424': 399, '3000080425': 399, '3000080484': 899}
     rrp.update({kk: float(v) for kk, v in mi.RRP.dropna().items() if str(v).strip() not in ('', '0')})
-    price['n'] = price.n.astype(int); price['price'] = price.price.astype(float)
+    price['price'] = price.price.astype(float)
     pm = price.groupby(['matcode', 'price']).n.sum().reset_index().sort_values(['matcode', 'n', 'price'], ascending=[True, False, True]).drop_duplicates('matcode').set_index('matcode').price
     m['price'] = m.matcode.map(pm).fillna(m.matcode.map(rrp)); m['band'] = m.price.map(band)
     # shops
@@ -168,7 +184,7 @@ def build():
     shops = shops[['shop', 'company', 'month', 'name', 'region', 'type', 'province', 'dm', 'target_units', 'target_net', 'area', 'stype', 'stype_order']]
     f = f[f.shop.isin(ww)]; k = k[k.SHOP_CODE.isin(ww)]
     # staff: most common name and shop
-    staff['n'] = staff.n.astype(int); staff = staff[staff.shop.isin(ww)]
+    staff = staff[staff.shop.isin(ww)]
     e = staff.groupby(['emp', 'name']).n.sum().reset_index().sort_values('n', ascending=False).drop_duplicates('emp')[['emp', 'name']]
     es = staff.groupby(['emp', 'shop']).n.sum().reset_index().sort_values('n', ascending=False).drop_duplicates('emp')[['emp', 'shop']]
     e = e.merge(es, on='emp')
