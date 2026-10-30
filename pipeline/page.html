@@ -175,11 +175,11 @@
     </label>
     <button class="pc-btn pc-reset" type="button">ล้างตัวกรอง</button>
   </div>
-  <p class="pc-note" id="scope-note">เลือกภาคหรือประเภทสาขาก่อน รายชื่อสาขาจะเหลือเฉพาะสาขาในกลุ่มนั้น · เมื่อเลือกสาขา ทุกหน้าจะแสดงเฉพาะสาขานั้น ยกเว้นหน้า Ranking Area ที่ยังเทียบทุก Area · นับเฉพาะสาขา WW ที่อยู่ในไฟล์เป้า · สาขาที่ปิดแล้ว (SIS / Makro) ไม่มีในตัวกรองประเภทสาขา แต่ยอดขายย้อนหลังยังรวมอยู่เมื่อเลือก "ทุกประเภทสาขา"</p>
+  <p class="pc-note" id="scope-note">เลือกภาคหรือประเภทสาขาก่อน รายชื่อสาขาจะเหลือเฉพาะสาขาในกลุ่มนั้น · เมื่อเลือกสาขา ทุกหน้าจะแสดงเฉพาะสาขานั้น ยกเว้นหน้า Ranking Area ที่ยังเทียบทุก Area · นับเฉพาะสาขา WW ที่อยู่ในไฟล์ Target · สาขาที่ปิดแล้ว (SIS / Makro) ไม่มีในตัวกรองประเภทสาขา แต่ยอดขายย้อนหลังยังรวมอยู่เมื่อเลือก "ทุกประเภทสาขา"</p>
 
   <nav class="pc-tabs" role="tablist" aria-label="มุมมอง">
     <button class="pc-tab" type="button" role="tab" data-tab="today" aria-selected="true">วันนี้</button>
-    <button class="pc-tab" type="button" role="tab" data-tab="overview" aria-selected="false">แนวโน้มและเป้า</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="overview" aria-selected="false">แนวโน้มและ Target</button>
     <button class="pc-tab" type="button" role="tab" data-tab="products" aria-selected="false">Matcode และช่วงราคา</button>
     <button class="pc-tab" type="button" role="tab" data-tab="shops" aria-selected="false">สาขา</button>
     <button class="pc-tab" type="button" role="tab" data-tab="ranking" aria-selected="false">Ranking Area</button>
@@ -227,7 +227,7 @@
 
     <article class="pc-card" id="card-today-type">
       <h3>ตารางยอดขายวันนี้ตามประเภทสาขา</h3>
-      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · % เป้า QTY = QTY เดือนนี้ของสาขาที่มีเป้า ÷ เป้า PRE (Target Subscribers, คอลัมน์ L) · % เป้า Net = Net Amount ÷ เป้า PRE (Target Revenue, คอลัมน์ BA) · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · Target เปลี่ยนตามปุ่มดูยอดด้านบน: Net Amount = Target Revenue ของ PRE (คอลัมน์ BA) · QTY = Target Subscribers ของ PRE (คอลัมน์ L) · % Target = ยอดเดือนนี้ของสาขาที่มี Target ÷ Target · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
       <div class="pc-scroll">
         <table data-draw="tb_today" data-source="kpi" data-row-key="area,stype,group"></table>
       </div>
@@ -309,16 +309,16 @@
         <span class="pc-sub">Net Amount <span data-draw="k_lastnet" data-source="kpi" data-field="last_net">—</span> บาท</span>
       </div>
       <div class="pc-tile" id="tile-target">
-        <span class="pc-tile-l">เทียบเป้า PRE เดือนล่าสุด · <span data-draw="ml_12" data-mlabel></span> (สาขาที่มีเป้า)</span>
+        <span class="pc-tile-l">เทียบ Target PRE เดือนล่าสุด · <span data-draw="ml_12" data-mlabel></span> (สาขาที่มี Target)</span>
         <span class="pc-big" data-draw="k_ach" data-source="kpi" data-field="ach">—</span>
-        <span class="pc-sub"><span data-draw="k_tgtunits" data-source="kpi" data-field="tgt_shop_units">—</span> จากเป้า <span data-draw="k_target" data-source="kpi" data-field="target_units">—</span> · สะสมทั้งปี <b data-draw="k_ytdach" data-source="kpi" data-field="ytd_ach">—</b></span>
+        <span class="pc-sub"><span data-draw="k_tgtunits" data-source="kpi" data-field="tgt_shop_units">—</span> จาก Target <span data-draw="k_target" data-source="kpi" data-field="target_units">—</span> · สะสมทั้งปี <b data-draw="k_ytdach" data-source="kpi" data-field="ytd_ach">—</b></span>
       </div>
     </div>
 
     <article class="pc-card" id="card-target">
-      <h3>ยอดขายเทียบเป้า PRE รายเดือน</h3>
-      <p>แท่ง = <span data-draw="ml_3" data-mlabel></span> ของสาขาที่มีเป้าในเดือนนั้น · เส้นขีด = เป้า PRE รวม (หน่วยเดียวกับปุ่มด้านบน) · ตัวเลขบนแท่ง = % ทำได้ (เขียว ≥ 95% · เหลือง 80–95% · แดง &lt; 80%)</p>
-      <p class="pc-note" id="tgt-note" hidden>เป้า PRE เป็นเป้ารวมทุกกลุ่มซิม เลือก "ทุกกลุ่มซิม" เพื่อดูการ์ดนี้</p>
+      <h3>ยอดขายเทียบ Target PRE รายเดือน</h3>
+      <p>แท่ง = <span data-draw="ml_3" data-mlabel></span> ของสาขาที่มี Target ในเดือนนั้น · เส้นขีด = Target PRE รวม (หน่วยเดียวกับปุ่มด้านบน) · ตัวเลขบนแท่ง = % ทำได้ (เขียว ≥ 95% · เหลือง 80–95% · แดง &lt; 80%)</p>
+      <p class="pc-note" id="tgt-note" hidden>Target PRE เป็น Target รวมทุกกลุ่มซิม เลือก "ทุกกลุ่มซิม" เพื่อดูการ์ดนี้</p>
       <div class="pc-chart" data-draw="c_target" data-source="target_monthly"></div>
     </article>
 
@@ -375,14 +375,14 @@
   <section class="pc-sec" id="shops" data-page="shops" hidden>
     <article class="pc-card" id="card-regions">
       <h3>ยอดขายตามภาค (Region)</h3>
-      <p>ภาคและเป้ามาจากไฟล์ Retail WW Target รายเดือน · สาขา WW ที่ไม่อยู่ในไฟล์เป้ารวมไว้ในแถว "ไม่มีในไฟล์เป้า"</p>
+      <p>ภาคและ Target มาจากไฟล์ Retail WW Target รายเดือน · สาขา WW ที่ไม่อยู่ในไฟล์ Target รวมไว้ในแถว "ไม่มีในไฟล์ Target"</p>
       <div class="pc-scroll">
         <table data-draw="tb_region" data-source="region_perf" data-row-key="area,stype,group,region"></table>
       </div>
     </article>
     <article class="pc-card" id="card-shoptable">
       <h3>ยอดขายรายสาขา</h3>
-      <p>ประเภทสาขาตามไฟล์เป้าเดือนล่าสุดที่สาขาปรากฏ · % เป้าเดือนล่าสุด = QTY เดือนล่าสุด ÷ เป้า PRE เดือนนั้น · % เป้าสะสม = QTY ในเดือนที่สาขามีเป้า ÷ เป้ารวม ม.ค. ถึงเดือนล่าสุด (คิดเมื่อเลือกทุกกลุ่มซิม) · สต็อกเก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
+      <p>ประเภทสาขาตามไฟล์ Target เดือนล่าสุดที่สาขาปรากฏ · Target และ % Target เปลี่ยนตามปุ่มดูยอด (Net Amount หรือ QTY) · % Target เดือนล่าสุด = ยอดเดือนล่าสุด ÷ Target PRE เดือนนั้น · % Target สะสม = ยอดในเดือนที่สาขามี Target ÷ Target รวม ม.ค. ถึงเดือนล่าสุด (คิดเมื่อเลือกทุกกลุ่มซิม) · สต็อกเก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัสหรือชื่อสาขา
           <input id="q-shop" class="pc-q" data-q="shop" type="search" aria-label="ค้นหาสาขา">
@@ -397,19 +397,19 @@
   <section class="pc-sec" id="ranking" data-page="ranking" hidden>
     <div class="pc-tiles">
       <div class="pc-tile" id="tile-r-dach">
-        <span class="pc-tile-l">Daily · % เทียบเป้าต่อวัน (<span data-draw="r_dlabel" data-source="area_day" data-field="date"></span>)</span>
+        <span class="pc-tile-l">Daily · % เทียบ Target ต่อวัน (<span data-draw="r_dlabel" data-source="area_day" data-field="date"></span>)</span>
         <span class="pc-big" data-draw="r_dach" data-source="area_day" data-field="ach_net">—</span>
-        <span class="pc-sub">ยอด <b data-draw="r_dact" data-source="area_day" data-field="net">—</b> / เป้าต่อวัน <b data-draw="r_tpd" data-source="area_rank" data-field="tpd_net">—</b></span>
+        <span class="pc-sub">ยอด <b data-draw="r_dact" data-source="area_day" data-field="net">—</b> / Target ต่อวัน <b data-draw="r_tpd" data-source="area_rank" data-field="tpd_net">—</b></span>
       </div>
       <div class="pc-tile" id="tile-r-ach">
-        <span class="pc-tile-l">สะสม · % เทียบเป้าถึงวันนี้</span>
+        <span class="pc-tile-l">สะสม · % เทียบ Target ถึงวันนี้</span>
         <span class="pc-big" data-draw="r_ach" data-source="area_rank" data-field="ach_net">—</span>
-        <span class="pc-sub">ยอดสะสม <b data-draw="r_act" data-source="area_rank" data-field="act_net">—</b> / เป้าถึงวันนี้ <b data-draw="r_ttd" data-source="area_rank" data-field="ttd_net">—</b></span>
+        <span class="pc-sub">ยอดสะสม <b data-draw="r_act" data-source="area_rank" data-field="act_net">—</b> / Target ถึงวันนี้ <b data-draw="r_ttd" data-source="area_rank" data-field="ttd_net">—</b></span>
       </div>
       <div class="pc-tile" id="tile-r-tgt">
-        <span class="pc-tile-l">เป้าทั้งเดือน</span>
+        <span class="pc-tile-l">Target ทั้งเดือน</span>
         <span class="pc-big" data-draw="r_tgt" data-source="area_rank" data-field="target_net">—</span>
-        <span class="pc-sub">ต้องทำต่อวันเพื่อให้ถึงเป้าเดือน <b data-draw="r_need" data-source="area_rank" data-field="need_net">—</b></span>
+        <span class="pc-sub">ต้องทำต่อวันเพื่อให้ถึง Target เดือน <b data-draw="r_need" data-source="area_rank" data-field="need_net">—</b></span>
       </div>
       <div class="pc-tile" id="tile-r-days">
         <span class="pc-tile-l">วันที่ผ่านไปของเดือน</span>
@@ -417,33 +417,33 @@
         <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
       </div>
     </div>
-    <p class="pc-note">เป้าต่อวัน = เป้าของเดือน ÷ จำนวนวันในเดือน · เป้าถึงวันนี้ = เป้าต่อวัน × จำนวนวันที่ผ่านไป · สี: <span style="color:var(--color-ok)">■</span> ≥ 100% · <span style="color:var(--color-warn)">■</span> 90–99% · <span style="color:var(--color-bad)">■</span> &lt; 90% · เส้นตั้งในกราฟ = 100% ของเป้า · ใช้ปุ่มด้านบนสลับ Net Amount / QTY</p>
+    <p class="pc-note">Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: <span style="color:var(--color-ok)">■</span> ≥ 100% · <span style="color:var(--color-warn)">■</span> 90–99% · <span style="color:var(--color-bad)">■</span> &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY</p>
 
     <div class="pc-split">
       <article class="pc-card" id="card-rank-daily">
-        <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบเป้าต่อวัน</h3>
-        <p>ยอดของวันที่เลือกเทียบเป้าต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+        <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบ Target ต่อวัน</h3>
+        <p>ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
         <label class="pc-field">วันที่
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
         <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
       </article>
       <article class="pc-card" id="card-rank">
-        <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบเป้าถึงวันนี้</h3>
-        <p>ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบเป้าถึงวันนี้ เรียงจาก % มากไปน้อย</p>
+        <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้</h3>
+        <p>ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย</p>
         <div class="pc-rank" data-draw="c_rank" data-source="area_rank"></div>
       </article>
     </div>
 
     <article class="pc-card" id="card-rank-heat">
-      <h3>% เทียบเป้าต่อวัน ราย Area × รายวัน (<span data-draw="ml_10" data-mlabel></span>)</h3>
-      <p>แต่ละช่อง = ยอดของวันนั้น ÷ เป้าต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking</p>
+      <h3>% เทียบ Target ต่อวัน ราย Area × รายวัน (<span data-draw="ml_10" data-mlabel></span>)</h3>
+      <p>แต่ละช่อง = ยอดของวันนั้น ÷ Target ต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking</p>
       <div class="pc-heat-wrap"><div class="pc-heat" data-draw="c_rank_heat" data-source="area_day"></div></div>
     </article>
 
     <article class="pc-card" id="card-rank-table">
       <h3>ตาราง Ranking ราย Area (Daily และสะสม)</h3>
-      <p>ส่วนต่าง = ยอดสะสม − เป้าถึงวันนี้ · "ต้องทำต่อวัน" = (เป้าทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · เป้ามาจากไฟล์เป้า PRE ของเดือนนี้ และเป็นเป้ารวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)</p>
+      <p>ส่วนต่าง = ยอดสะสม − Target ถึงวันนี้ · "ต้องทำต่อวัน" = (Target ทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · Target มาจากไฟล์ Target PRE ของเดือนนี้ และเป็น Target รวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)</p>
       <div class="pc-scroll"><table data-draw="tb_rank" data-source="area_rank" data-row-key="stype,area"></table></div>
     </article>
   </section>
@@ -653,7 +653,7 @@ dash.calc('enriched', PCdef('enriched', {
 
 dash.calc('kpi', PCdef('kpi', {
   title: 'ตัวเลขสรุปตามตัวกรอง',
-  description: 'ยอดสะสม เดือนล่าสุด วันล่าสุด และเทียบเป้า สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = ทั้งหมด)',
+  description: 'ยอดสะสม เดือนล่าสุด วันล่าสุด และเทียบ Target สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = ทั้งหมด)',
   inputs: ['enriched', 'shops', 'targets'],
   fn: (enriched, shops, targets) => {
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
@@ -716,8 +716,8 @@ dash.calc('breakdown', PCdef('breakdown', {
 }));
 
 dash.calc('target_monthly', PCdef('target_monthly', {
-  title: 'ยอดขายเทียบเป้า PRE รายเดือน',
-  description: 'เป้า PRE รวมของสาขาที่มีเป้าในแต่ละเดือน เทียบ QTY ของสาขาเหล่านั้น ต่อภาค (ALL = ทั้งหมด)',
+  title: 'ยอดขายเทียบ Target PRE รายเดือน',
+  description: 'Target PRE รวมของสาขาที่มี Target ในแต่ละเดือน เทียบ QTY ของสาขาเหล่านั้น ต่อภาค (ALL = ทั้งหมด)',
   inputs: ['enriched', 'targets', 'shops'],
   fn: (enriched, targets, shops) => {
     const sh = new Map(shops.map((r) => [r.shop, r])), tk = new Set(targets.map((r) => r.month + '|' + r.shop));
@@ -732,7 +732,7 @@ dash.calc('target_monthly', PCdef('target_monthly', {
 
 dash.calc('area_rank', PCdef('area_rank', {
   title: 'Ranking Area เดือนปัจจุบัน',
-  description: 'ต่อ Area และประเภทสาขา (ALL = รวม): เป้าเดือนปัจจุบัน (QTY และ Net) เป้าต่อวัน = เป้า ÷ วันในเดือน เป้าถึงวันนี้ = เป้าต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
+  description: 'ต่อ Area และประเภทสาขา (ALL = รวม): Target เดือนปัจจุบัน (QTY และ Net) Target ต่อวัน = Target ÷ วันในเดือน Target ถึงวันนี้ = Target ต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
   inputs: ['enriched', 'targets', 'shops'],
   fn: (enriched, targets, shops) => {
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''); const m = today.slice(0, 7);
@@ -760,7 +760,7 @@ dash.calc('area_rank', PCdef('area_rank', {
 
 dash.calc('area_day', PCdef('area_day', {
   title: 'ยอดรายวันต่อ Area เดือนปัจจุบัน',
-  description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น เป้าต่อวัน (เป้าเดือน ÷ วันในเดือน) และ % เทียบเป้าต่อวัน รวมวันที่ไม่มียอด (= 0)',
+  description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น Target ต่อวัน (Target เดือน ÷ วันในเดือน) และ % เทียบ Target ต่อวัน รวมวันที่ไม่มียอด (= 0)',
   inputs: ['area_rank', 'enriched'],
   fn: (area_rank, enriched) => {
     if (!area_rank.length) return [];
@@ -909,7 +909,7 @@ dash.calc('mat', PCdef('mat', {
 
 dash.calc('shop_perf', PCdef('shop_perf', {
   title: 'ยอดขายรายสาขา',
-  description: 'QTY Net Amount พนักงานที่ขาย สต็อก สต็อกเก่า และ % เป้า ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  description: 'QTY Net Amount พนักงานที่ขาย สต็อก สต็อกเก่า และ % Target ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched', 'shops', 'stock_by_shop', 'matcodes', 'targets'],
   fn: (enriched, shops, stock_by_shop, matcodes, targets) => {
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
@@ -935,7 +935,7 @@ dash.calc('shop_perf', PCdef('shop_perf', {
 
 dash.calc('region_perf', PCdef('region_perf', {
   title: 'ยอดขายตามภาค',
-  description: 'QTY Net Amount จำนวนสาขา % เป้าเดือนล่าสุด และ % เป้าสะสม (สาขาที่มีเป้า) ต่อภาค สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
+  description: 'QTY Net Amount จำนวนสาขา % Target เดือนล่าสุด และ % Target สะสม (สาขาที่มี Target) ต่อภาค สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['shop_perf'],
   fn: (shop_perf) => {
     const acc = new Map();
@@ -1280,7 +1280,7 @@ dash.draw('c_target', (el) => {
   g.append('line').attr('x1', (d) => x(d.month) - 4).attr('x2', (d) => x(d.month) + x.bandwidth() + 4).attr('y1', (d) => y(d[T])).attr('y2', (d) => y(d[T])).attr('stroke', 'var(--color-fg)').attr('stroke-width', 2);
   if (x.bandwidth() >= 26) g.append('text').attr('x', (d) => x(d.month) + x.bandwidth() / 2).attr('y', (d) => Math.min(y(d[A]), y(d[T])) - 6).attr('text-anchor', 'middle').attr('font-size', 11).attr('font-weight', 600).attr('fill', (d) => col(d[R])).text((d) => (d[R] == null ? '' : Math.round(d[R] * 100) + '%'));
   g.append('rect').attr('x', (d) => x(d.month)).attr('width', x.bandwidth()).attr('y', 0).attr('height', H - 24).attr('fill', 'transparent')
-    .on('pointerdown pointermove', (ev, d) => { tip.hidden = false; tip.replaceChildren(); const a = document.createElement('span'); a.textContent = PC.mon(d.month); tip.append(a, document.createElement('br'), 'QTY ' + PC.nf(d.actual) + ' / เป้า ' + PC.nf(d.target) + ' (' + PC.pf(d.ach) + ')', document.createElement('br'), 'Net ฿' + PC.nf(d.actual_net) + ' / เป้า ฿' + PC.nf(d.target_net) + (d.ach_net == null ? '' : ' (' + PC.pf(d.ach_net) + ')'));
+    .on('pointerdown pointermove', (ev, d) => { tip.hidden = false; tip.replaceChildren(); const a = document.createElement('span'); a.textContent = PC.mon(d.month); tip.append(a, document.createElement('br'), 'QTY ' + PC.nf(d.actual) + ' / Target ' + PC.nf(d.target) + ' (' + PC.pf(d.ach) + ')', document.createElement('br'), 'Net ฿' + PC.nf(d.actual_net) + ' / Target ฿' + PC.nf(d.target_net) + (d.ach_net == null ? '' : ' (' + PC.pf(d.ach_net) + ')'));
       const r = el.getBoundingClientRect(); let lx = ev.clientX - r.left + 12; if (lx + tip.offsetWidth > r.width) lx = ev.clientX - r.left - tip.offsetWidth - 12; tip.style.left = Math.max(0, lx) + 'px'; tip.style.top = Math.max(0, ev.clientY - r.top - 50) + 'px'; })
     .on('pointerleave', (ev) => { if (ev.pointerType === 'mouse') tip.hidden = true; });
 });
@@ -1346,8 +1346,8 @@ const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
     row.title = d.area + ' · ยอด ' + PC.mfmt(d[actK]) + ' · ' + tgtLabel + ' ' + PC.mfmt(d[tgtK]);
     row.append(n, l, t, v); el.append(row); }
 };
-dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'เป้าต่อวัน', (d) => ({ date: d.date })); });
-dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'เป้าถึงวันนี้'); });
+dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
+dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้'); });
 dash.draw('c_rank_heat', (el) => {
   if (PC.failed(el, 'area_day')) return; el.replaceChildren();
   const all = PC.rows('area_day'), rk = rkRows(); if (!all || !rk || !rk.length) return;
@@ -1358,7 +1358,7 @@ dash.draw('c_rank_heat', (el) => {
   for (const d of ds) { const h = document.createElement('div'); h.className = 'hh'; h.textContent = +d.slice(8, 10); el.append(h); }
   const cell = (x) => { const c = document.createElement('div'); c.className = 'hc' + (x && x.date === cur ? ' sel' : ''); const a = x ? x[f.ach] : null;
     c.style.background = a == null ? 'transparent' : 'color-mix(in srgb, ' + rkCol(a) + ' ' + (a >= 1 ? Math.min(85, 35 + (a - 1) * 50) : a >= 0.9 ? 45 : Math.max(25, 75 - a * 50)) + '%, transparent)';
-    c.textContent = a == null ? '' : Math.round(a * 100); if (x) { c.dataset.where = PC.where({ stype: st, area: x.area, date: x.date }); c.title = x.area + ' · ' + PC.day(x.date) + ' · ' + PC.mfmt(x[f.d]) + ' / เป้า ' + PC.mfmt(x[f.tpd]) + ' (' + (a == null ? '–' : PC.pf(a)) + ')'; c.onclick = () => dash.setParams({ rdate: x.date }); }
+    c.textContent = a == null ? '' : Math.round(a * 100); if (x) { c.dataset.where = PC.where({ stype: st, area: x.area, date: x.date }); c.title = x.area + ' · ' + PC.day(x.date) + ' · ' + PC.mfmt(x[f.d]) + ' / Target ' + PC.mfmt(x[f.tpd]) + ' (' + (a == null ? '–' : PC.pf(a)) + ')'; c.onclick = () => dash.setParams({ rdate: x.date }); }
     return c; };
   for (const a of [{ area: 'ALL', rank: '' }, ...rk]) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = a.area === 'ALL' ? 'รวมทุก Area' : a.rank + '. ' + a.area; if (a.area === 'ALL') l.style.fontWeight = '600'; el.append(l);
     for (const d of ds) el.append(cell(by.get(a.area + '|' + d))); }
@@ -1370,10 +1370,10 @@ dash.draw('tb_rank', (el) => {
   const pill = (k) => (d) => (d[k] == null ? ['mute', '–'] : [d[k] >= 1 ? 'ok' : d[k] >= 0.9 ? 'warn' : 'bad', PC.pf(d[k])]);
   PC.table(el, 'tb_rank', r, { key: ['stype', 'area'], def: 'rank', dir: 1, cols: [
     { f: 'rank', label: 'อันดับสะสม', num: true, fmt: PC.nf }, { f: 'drank', label: 'อันดับ Daily', num: true, fmt: PC.nf }, { f: 'area', label: 'Area', wrap: true },
-    { f: 'dval', label: 'ยอด ' + dl, num: true, fmt: fm }, { f: f.tpd, label: 'เป้าต่อวัน', num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
-    { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ttd, label: 'เป้าถึงวันนี้', num: true, fmt: fm }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
-    { f: f.gap, label: 'ส่วนต่างสะสม', num: true, fmt: (v) => (v > 0 ? '+' : '') + fm(v) }, { f: f.tgt, label: 'เป้าทั้งเดือน', num: true, fmt: fm },
-    { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm }, { f: f.full, label: '% ของเป้าทั้งเดือน', num: true, fmt: PC.pf } ] });
+    { f: 'dval', label: 'ยอด ' + dl, num: true, fmt: fm }, { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
+    { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ttd, label: 'Target ถึงวันนี้', num: true, fmt: fm }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
+    { f: f.gap, label: 'ส่วนต่างสะสม', num: true, fmt: (v) => (v > 0 ? '+' : '') + fm(v) }, { f: f.tgt, label: 'Target ทั้งเดือน', num: true, fmt: fm },
+    { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm }, { f: f.full, label: '% ของ Target ทั้งเดือน', num: true, fmt: PC.pf } ] });
 });
 
 /* ---------- shops that sold ---------- */
@@ -1551,8 +1551,8 @@ dash.draw('tb_today', (el) => {
     { f: 'stype', label: 'ประเภทสาขา', fmt: (v) => (v === 'ALL' ? 'รวมทุกประเภทสาขา' : v) },
     { f: 'today_net', label: 'Net Amount วันนี้', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'today_units', label: 'QTY วันนี้', num: true, fmt: PC.nf, bar: !PC.isNet() },
     { f: 'today_shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }, { f: 'mtd_units', label: 'QTY เดือนนี้', num: true, fmt: PC.nf }, { f: 'mtd_net', label: 'Net Amount เดือนนี้', num: true, fmt: PC.nf },
-    ...(PC.isNet() ? [{ f: 'target_net', label: 'เป้า Net เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: (d) => achPill({ ach: d.ach_net }) }, { f: 'ach', label: '% เป้า QTY', num: true, pill: (d) => achPill(d) }]
-      : [{ f: 'target_units', label: 'เป้า QTY เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้า QTY', num: true, pill: (d) => achPill(d) }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: (d) => achPill({ ach: d.ach_net }) }]) ] });
+    ...(PC.isNet() ? [{ f: 'target_net', label: 'Target เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% Target', num: true, pill: (d) => achPill({ ach: d.ach_net }) }]
+      : [{ f: 'target_units', label: 'Target เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach', label: '% Target', num: true, pill: (d) => achPill(d) }]) ] });
   el.querySelectorAll('tbody tr').forEach((tr) => { if (tr.dataset.key.includes(',ALL,')) tr.style.fontWeight = '600'; });
 });
 const bdCols = (label) => [{ f: 'key', label }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'share_net', label: '% Net', num: true, fmt: PC.pf },
@@ -1561,11 +1561,10 @@ const bdRows = (dim) => PC.pick('breakdown', { period: dash.params().period || '
 for (const [name, dim, label, def, dir] of [['bd_area', 'area', 'Area', 'm', -1], ['bd_simtype', 'simtype', 'Type Sim (Custom Model)', 'm', -1], ['bd_simgroup', 'simgroup', 'ประเภทซิม (รุ่นย่อย)', 'm', -1], ['bd_band', 'band', 'กลุ่มราคา', 'ord', 1]])
   dash.draw(name, (el) => PC.table(el, name, bdRows(dim), { key: ['area', 'stype', 'group', 'period', 'dim', 'key'], def: def === 'm' ? (PC.isNet() ? 'net' : 'qty') : def, dir, cols: bdCols(label) }));
 const tgtCols = (withYtdTarget) => { const N = PC.isNet(); const pill = (k) => (d) => achPill({ ach: d[k] });
-  const q = [{ f: 'target', label: 'เป้า QTY เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้า QTY', num: true, pill: pill('ach') }];
-  const n = [{ f: 'target_net', label: 'เป้า Net เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: pill('ach_net') }];
-  const y = N ? [...(withYtdTarget ? [{ f: 'ytd_target_net', label: 'เป้า Net สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach_net', label: '% เป้า Net สะสม', num: true, pill: pill('ytd_ach_net') }]
-    : [...(withYtdTarget ? [{ f: 'ytd_target', label: 'เป้า QTY สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach', label: '% เป้า QTY สะสม', num: true, pill: pill('ytd_ach') }];
-  return N ? [...n, ...q, ...y] : [...q, ...n, ...y]; };
+  return N ? [{ f: 'target_net', label: 'Target เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% Target', num: true, pill: pill('ach_net') },
+      ...(withYtdTarget ? [{ f: 'ytd_target_net', label: 'Target สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach_net', label: '% Target สะสม', num: true, pill: pill('ytd_ach_net') }]
+    : [{ f: 'target', label: 'Target เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% Target', num: true, pill: pill('ach') },
+      ...(withYtdTarget ? [{ f: 'ytd_target', label: 'Target สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach', label: '% Target สะสม', num: true, pill: pill('ytd_ach') }]; };
 const achPill = (d) => d.ach == null ? ['mute', '–'] : [d.ach >= 0.95 ? 'ok' : d.ach >= 0.8 ? 'warn' : 'bad', PC.pf(d.ach)];
 dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', PC.pick('mat'), { key: ['area', 'stype', 'group', 'matcode'], def: PC.isNet() ? 'net' : 'units', q: 'mat', cols: [
   { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'กลุ่ม' }, { f: 'status', label: 'สถานะ' },
