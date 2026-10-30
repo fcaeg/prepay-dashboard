@@ -59,7 +59,7 @@ body {{ margin: 0; background: var(--color-bg); color: var(--color-fg); font-fam
 <script>{pako}</script>
 <script>
 window.dash = (() => {{
-  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL' }};
+  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL', ascope: 'current', alevel: 'core' }};
   let params = {{ ...DEF }}, ready = false, error = null;
   const RAW = {{}}, calcs = {{}}, cache = {{}}, draws = new Map(), onData = [];
   const get = (id) => {{
