@@ -227,7 +227,7 @@
 
     <article class="pc-card" id="card-today-type">
       <h3>ตารางยอดขายวันนี้ตามประเภทสาขา</h3>
-      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · % เป้าเดือนนี้ = QTY เดือนนี้ของสาขาที่มีเป้า ÷ เป้า PRE · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · % เป้า QTY = QTY เดือนนี้ของสาขาที่มีเป้า ÷ เป้า PRE (Target Subscribers, คอลัมน์ L) · % เป้า Net = Net Amount ÷ เป้า PRE (Target Revenue, คอลัมน์ BA) · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
       <div class="pc-scroll">
         <table data-draw="tb_today" data-source="kpi" data-row-key="area,stype,group"></table>
       </div>
@@ -309,7 +309,7 @@
         <span class="pc-sub">Net Amount <span data-draw="k_lastnet" data-source="kpi" data-field="last_net">—</span> บาท</span>
       </div>
       <div class="pc-tile" id="tile-target">
-        <span class="pc-tile-l">เทียบเป้า PRE เดือนล่าสุด (สาขาที่มีเป้า)</span>
+        <span class="pc-tile-l">เทียบเป้า PRE เดือนล่าสุด · <span data-draw="ml_12" data-mlabel></span> (สาขาที่มีเป้า)</span>
         <span class="pc-big" data-draw="k_ach" data-source="kpi" data-field="ach">—</span>
         <span class="pc-sub"><span data-draw="k_tgtunits" data-source="kpi" data-field="tgt_shop_units">—</span> จากเป้า <span data-draw="k_target" data-source="kpi" data-field="target_units">—</span> · สะสมทั้งปี <b data-draw="k_ytdach" data-source="kpi" data-field="ytd_ach">—</b></span>
       </div>
@@ -665,26 +665,30 @@ dash.calc('kpi', PCdef('kpi', {
     const tk = new Set(targets.map((r) => r.month + '|' + r.shop));
     const tgt = new Map(targets.filter((r) => r.month === lastMonth).map((r) => [r.shop, { ...r, area: area.get(r.shop), stype: sty.get(r.shop) }]));
     const acc = new Map();
-    const get = (c, t, g) => { const k = c + '|' + t + '|' + g; if (!acc.has(k)) acc.set(k, { area: c, stype: t, group: g, units: 0, net: 0, mtd_units: 0, mtd_net: 0, prev_units: 0, ord: t === 'ALL' ? 100 : 9, tq: 0, ta: 0, td: 0, tn: 0, tsh: new Set(), tst: new Set(), sh: new Set(), st: new Set(), days: new Map(), tsu: 0, ysu: 0 }); return acc.get(k); };
+    const get = (c, t, g) => { const k = c + '|' + t + '|' + g; if (!acc.has(k)) acc.set(k, { area: c, stype: t, group: g, units: 0, net: 0, mtd_units: 0, mtd_net: 0, prev_units: 0, ord: t === 'ALL' ? 100 : 9, tq: 0, ta: 0, td: 0, tn: 0, tsh: new Set(), tst: new Set(), sh: new Set(), st: new Set(), days: new Map(), tsu: 0, ysu: 0, tsn: 0, ysn: 0 }); return acc.get(k); };
     for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
-      const a = get(c, t, g); a.units += r.units; a.net += r.net; if (tk.has(r.month + '|' + r.shop)) a.ysu += r.units;
+      const a = get(c, t, g); a.units += r.units; a.net += r.net; if (tk.has(r.month + '|' + r.shop)) { a.ysu += r.units; a.ysn += r.net; }
       if (r.units > 0) { a.sh.add(r.shop); a.st.add(r.emp); }
       const d = a.days.get(r.date) || { u: 0, n: 0 }; d.u += r.units; d.n += r.net; a.days.set(r.date, d);
       if (t !== 'ALL') a.ord = r.stype_order;
       if (r.date === today) { a.tq += r.units; a.ta += r.amount; a.td += r.disc; a.tn += r.net; if (r.units > 0) { a.tsh.add(r.shop); a.tst.add(r.emp); } }
       if (r.month === prevMonth) a.prev_units += r.units;
-      if (r.month === lastMonth) { a.mtd_units += r.units; a.mtd_net += r.net; if (tgt.has(r.shop)) a.tsu += r.units; }
+      if (r.month === lastMonth) { a.mtd_units += r.units; a.mtd_net += r.net; if (tgt.has(r.shop)) { a.tsu += r.units; a.tsn += r.net; } }
     }
     return [...acc.values()].map((a) => {
       const last = [...a.days.keys()].sort().pop();
       const tl = [...tgt.values()].filter((s) => (a.area === 'ALL' || s.area === a.area) && (a.stype === 'ALL' || s.stype === a.stype));
       const target = a.group === 'ALL' && tl.length ? Math.round(tl.reduce((x, s) => x + +s.target_units, 0)) : null;
+      const targetN = a.group === 'ALL' && tl.length ? Math.round(tl.reduce((x, s) => x + (+s.target_net || 0), 0)) : null;
       const yt = targets.filter((s) => (a.area === 'ALL' || area.get(s.shop) === a.area) && (a.stype === 'ALL' || sty.get(s.shop) === a.stype));
       const ytdT = a.group === 'ALL' && yt.length ? Math.round(yt.reduce((x, s) => x + +s.target_units, 0)) : null;
+      const ytdTN = a.group === 'ALL' && yt.length ? Math.round(yt.reduce((x, s) => x + (+s.target_net || 0), 0)) : null;
       return { area: a.area, stype: a.stype, group: a.group, units: a.units, net: Math.round(a.net), month: lastMonth, ord: a.ord, today, today_units: a.tq, today_amount: Math.round(a.ta), today_disc: Math.round(a.td), today_net: Math.round(a.tn), today_shops: a.tsh.size, today_staff: a.tst.size, mtd_units: a.mtd_units, mtd_net: Math.round(a.mtd_net),
         avg_units: Math.round(a.mtd_units / mDays), prev_avg_units: pDays ? Math.round(a.prev_units / pDays) : null, shops: a.sh.size, staff: a.st.size, last_date: last, last_units: a.days.get(last).u, last_net: Math.round(a.days.get(last).n),
         target_units: target, tgt_shop_units: target ? a.tsu : null, ach: target ? Math.round((a.tsu / target) * 1000) / 1000 : null,
-        ytd_target: ytdT, ytd_tgt_units: ytdT ? a.ysu : null, ytd_ach: ytdT ? Math.round((a.ysu / ytdT) * 1000) / 1000 : null };
+        ytd_target: ytdT, ytd_tgt_units: ytdT ? a.ysu : null, ytd_ach: ytdT ? Math.round((a.ysu / ytdT) * 1000) / 1000 : null,
+        target_net: targetN || null, tgt_shop_net: targetN ? Math.round(a.tsn) : null, ach_net: targetN ? Math.round((a.tsn / targetN) * 1000) / 1000 : null,
+        ytd_target_net: ytdTN || null, ytd_tgt_net: ytdTN ? Math.round(a.ysn) : null, ytd_ach_net: ytdTN ? Math.round((a.ysn / ytdTN) * 1000) / 1000 : null };
     });
   },
 }));
@@ -911,17 +915,21 @@ dash.calc('shop_perf', PCdef('shop_perf', {
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
     const tm = new Map(targets.map((r) => [r.month + '|' + r.shop, +r.target_units])), yT = new Map();
     for (const r of targets) yT.set(r.shop, (yT.get(r.shop) || 0) + +r.target_units);
+    const tmN = new Map(targets.map((r) => [r.month + '|' + r.shop, +r.target_net || 0])), yTN = new Map();
+    for (const r of targets) yTN.set(r.shop, (yTN.get(r.shop) || 0) + (+r.target_net || 0));
     const sh = new Map(shops.map((r) => [r.shop, r])), mg = new Map(matcodes.map((r) => [r.matcode, r.group]));
     const acc = new Map();
-    const get = (c, t, g, s) => { const k = c + '|' + t + '|' + g + '|' + s; if (!acc.has(k)) { const x = sh.get(s) || {}; acc.set(k, { area: c, stype: t, group: g, shop: s, name: x.name || s, region: x.region || '-', type: x.stype || 'ไม่ระบุ', target: g === 'ALL' ? tm.get(lastMonth + '|' + s) ?? null : null, ytdT: g === 'ALL' ? yT.get(s) ?? null : null, ytdU: 0, units: 0, net: 0, mtd: 0, st: new Set(), stock: 0, aged: 0 }); } return acc.get(k); };
+    const get = (c, t, g, s) => { const k = c + '|' + t + '|' + g + '|' + s; if (!acc.has(k)) { const x = sh.get(s) || {}; acc.set(k, { area: c, stype: t, group: g, shop: s, name: x.name || s, region: x.region || '-', type: x.stype || 'ไม่ระบุ', target: g === 'ALL' ? tm.get(lastMonth + '|' + s) ?? null : null, ytdT: g === 'ALL' ? yT.get(s) ?? null : null, targetN: g === 'ALL' ? tmN.get(lastMonth + '|' + s) ?? null : null, ytdTN: g === 'ALL' ? yTN.get(s) ?? null : null, ytdN: 0, mtdN: 0, ytdU: 0, units: 0, net: 0, mtd: 0, st: new Set(), stock: 0, aged: 0 }); } return acc.get(k); };
     for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
-      const a = get(c, t, g, r.shop); a.units += r.units; a.net += r.net; if (r.month === lastMonth) a.mtd += r.units; if (tm.has(r.month + '|' + r.shop)) a.ytdU += r.units; if (r.units > 0) a.st.add(r.emp);
+      const a = get(c, t, g, r.shop); a.units += r.units; a.net += r.net; if (r.month === lastMonth) { a.mtd += r.units; a.mtdN += r.net; } if (tm.has(r.month + '|' + r.shop)) { a.ytdU += r.units; a.ytdN += r.net; } if (r.units > 0) a.st.add(r.emp);
     }
     for (const s of stock_by_shop) { const c0 = (sh.get(s.shop) || {}).area || '-', t0 = (sh.get(s.shop) || {}).stype || 'ไม่ระบุ', g0 = mg.get(s.matcode) || 'อื่น ๆ';
       for (const [c, t, g] of [c0, 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) { const a = get(c, t, g, s.shop); a.stock += s.qty; a.aged += s.a271_365 + s.a365p; } }
     return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, shop: a.shop, name: a.name, region: a.region, type: a.type, units: a.units, net: Math.round(a.net),
       staff: a.st.size, stock: a.stock, aged: a.aged, target: a.target ? Math.round(a.target) : null, mtd: a.mtd, ach: a.target ? Math.round((a.mtd / a.target) * 1000) / 1000 : null,
-      ytd_target: a.ytdT ? Math.round(a.ytdT) : null, ytd_units: a.ytdT ? a.ytdU : null, ytd_ach: a.ytdT ? Math.round((a.ytdU / a.ytdT) * 1000) / 1000 : null }));
+      ytd_target: a.ytdT ? Math.round(a.ytdT) : null, ytd_units: a.ytdT ? a.ytdU : null, ytd_ach: a.ytdT ? Math.round((a.ytdU / a.ytdT) * 1000) / 1000 : null,
+      target_net: a.targetN ? Math.round(a.targetN) : null, mtd_net: Math.round(a.mtdN), ach_net: a.targetN ? Math.round((a.mtdN / a.targetN) * 1000) / 1000 : null,
+      ytd_target_net: a.ytdTN ? Math.round(a.ytdTN) : null, ytd_net: a.ytdTN ? Math.round(a.ytdN) : null, ytd_ach_net: a.ytdTN ? Math.round((a.ytdN / a.ytdTN) * 1000) / 1000 : null }));
   },
 }));
 
@@ -932,12 +940,14 @@ dash.calc('region_perf', PCdef('region_perf', {
   fn: (shop_perf) => {
     const acc = new Map();
     for (const s of shop_perf) { const k = s.area + '|' + s.stype + '|' + s.group + '|' + s.region;
-      const a = acc.get(k) || { area: s.area, stype: s.stype, group: s.group, region: s.region, shops: 0, units: 0, net: 0, target: 0, tu: 0, yt: 0, yu: 0 };
+      const a = acc.get(k) || { area: s.area, stype: s.stype, group: s.group, region: s.region, shops: 0, units: 0, net: 0, target: 0, tu: 0, yt: 0, yu: 0, tN: 0, tuN: 0, ytN: 0, yuN: 0 };
       if (s.units > 0) a.shops += 1; a.units += s.units; a.net += s.net;
-      if (s.target) { a.target += s.target; a.tu += s.mtd; } if (s.ytd_target) { a.yt += s.ytd_target; a.yu += s.ytd_units; } acc.set(k, a); }
+      if (s.target) { a.target += s.target; a.tu += s.mtd; } if (s.ytd_target) { a.yt += s.ytd_target; a.yu += s.ytd_units; }
+      if (s.target_net) { a.tN += s.target_net; a.tuN += s.mtd_net; } if (s.ytd_target_net) { a.ytN += s.ytd_target_net; a.yuN += s.ytd_net; } acc.set(k, a); }
     return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, region: a.region, shops: a.shops, units: a.units, net: a.net,
       target: a.target || null, ach: a.target ? Math.round((a.tu / a.target) * 1000) / 1000 : null,
-      ytd_target: a.yt || null, ytd_ach: a.yt ? Math.round((a.yu / a.yt) * 1000) / 1000 : null }));
+      ytd_target: a.yt || null, ytd_ach: a.yt ? Math.round((a.yu / a.yt) * 1000) / 1000 : null,
+      target_net: a.tN || null, ach_net: a.tN ? Math.round((a.tuN / a.tN) * 1000) / 1000 : null, ytd_target_net: a.ytN || null, ytd_ach_net: a.ytN ? Math.round((a.yuN / a.ytN) * 1000) / 1000 : null }));
   },
 }));
 
@@ -1158,6 +1168,7 @@ dash.draw('ml_8', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_9', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_10', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_11', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_12', (el) => { el.textContent = PC.mlabel(); });
 
 dash.onData(() => {
   document.querySelectorAll('#f-life').forEach((sel) => { sel.value = String(dash.params().life || 365); });
@@ -1238,11 +1249,11 @@ dash.draw('k_prevavg', (el) => PC.val(el, 'kpi', 'prev_avg_units'));
 dash.draw('k_lastdate', (el) => PC.val(el, 'kpi', 'last_date', null, PC.day));
 dash.draw('k_lastunits', (el) => PC.val(el, 'kpi', 'last_units'));
 dash.draw('k_lastnet', (el) => PC.val(el, 'kpi', 'last_net', null, money));
-dash.draw('k_ach', (el) => { PC.val(el, 'kpi', 'ach', null, PC.pf); const r = PC.pick('kpi'); const a = r && r[0] ? r[0].ach : null;
+dash.draw('k_ach', (el) => { const F = PC.isNet() ? 'ach_net' : 'ach'; el.dataset.field = F; PC.val(el, 'kpi', F, null, PC.pf); const r = PC.pick('kpi'); const a = r && r[0] ? r[0][F] : null;
   el.style.color = a == null ? '' : a >= 0.95 ? 'var(--color-ok)' : a >= 0.8 ? 'var(--color-warn)' : 'var(--color-bad)'; });
-dash.draw('k_tgtunits', (el) => PC.val(el, 'kpi', 'tgt_shop_units'));
-dash.draw('k_target', (el) => PC.val(el, 'kpi', 'target_units'));
-dash.draw('k_ytdach', (el) => PC.val(el, 'kpi', 'ytd_ach', null, PC.pf));
+dash.draw('k_tgtunits', (el) => { const F = PC.isNet() ? 'tgt_shop_net' : 'tgt_shop_units'; el.dataset.field = F; PC.val(el, 'kpi', F, null, PC.mfmt); });
+dash.draw('k_target', (el) => { const F = PC.isNet() ? 'target_net' : 'target_units'; el.dataset.field = F; PC.val(el, 'kpi', F, null, PC.mfmt); });
+dash.draw('k_ytdach', (el) => { const F = PC.isNet() ? 'ytd_ach_net' : 'ytd_ach'; el.dataset.field = F; PC.val(el, 'kpi', F, null, PC.pf); });
 </script>
 
 <script>
@@ -1540,7 +1551,8 @@ dash.draw('tb_today', (el) => {
     { f: 'stype', label: 'ประเภทสาขา', fmt: (v) => (v === 'ALL' ? 'รวมทุกประเภทสาขา' : v) },
     { f: 'today_net', label: 'Net Amount วันนี้', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'today_units', label: 'QTY วันนี้', num: true, fmt: PC.nf, bar: !PC.isNet() },
     { f: 'today_shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }, { f: 'mtd_units', label: 'QTY เดือนนี้', num: true, fmt: PC.nf }, { f: 'mtd_net', label: 'Net Amount เดือนนี้', num: true, fmt: PC.nf },
-    { f: 'ach', label: '% เป้าเดือนนี้', num: true, pill: (d) => achPill(d) } ] });
+    ...(PC.isNet() ? [{ f: 'target_net', label: 'เป้า Net เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: (d) => achPill({ ach: d.ach_net }) }, { f: 'ach', label: '% เป้า QTY', num: true, pill: (d) => achPill(d) }]
+      : [{ f: 'target_units', label: 'เป้า QTY เดือนนี้', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้า QTY', num: true, pill: (d) => achPill(d) }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: (d) => achPill({ ach: d.ach_net }) }]) ] });
   el.querySelectorAll('tbody tr').forEach((tr) => { if (tr.dataset.key.includes(',ALL,')) tr.style.fontWeight = '600'; });
 });
 const bdCols = (label) => [{ f: 'key', label }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'share_net', label: '% Net', num: true, fmt: PC.pf },
@@ -1548,6 +1560,12 @@ const bdCols = (label) => [{ f: 'key', label }, { f: 'net', label: 'Net Amount (
 const bdRows = (dim) => PC.pick('breakdown', { period: dash.params().period || 'today', dim });
 for (const [name, dim, label, def, dir] of [['bd_area', 'area', 'Area', 'm', -1], ['bd_simtype', 'simtype', 'Type Sim (Custom Model)', 'm', -1], ['bd_simgroup', 'simgroup', 'ประเภทซิม (รุ่นย่อย)', 'm', -1], ['bd_band', 'band', 'กลุ่มราคา', 'ord', 1]])
   dash.draw(name, (el) => PC.table(el, name, bdRows(dim), { key: ['area', 'stype', 'group', 'period', 'dim', 'key'], def: def === 'm' ? (PC.isNet() ? 'net' : 'qty') : def, dir, cols: bdCols(label) }));
+const tgtCols = (withYtdTarget) => { const N = PC.isNet(); const pill = (k) => (d) => achPill({ ach: d[k] });
+  const q = [{ f: 'target', label: 'เป้า QTY เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้า QTY', num: true, pill: pill('ach') }];
+  const n = [{ f: 'target_net', label: 'เป้า Net เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% เป้า Net', num: true, pill: pill('ach_net') }];
+  const y = N ? [...(withYtdTarget ? [{ f: 'ytd_target_net', label: 'เป้า Net สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach_net', label: '% เป้า Net สะสม', num: true, pill: pill('ytd_ach_net') }]
+    : [...(withYtdTarget ? [{ f: 'ytd_target', label: 'เป้า QTY สะสม', num: true, fmt: PC.nf }] : []), { f: 'ytd_ach', label: '% เป้า QTY สะสม', num: true, pill: pill('ytd_ach') }];
+  return N ? [...n, ...q, ...y] : [...q, ...n, ...y]; };
 const achPill = (d) => d.ach == null ? ['mute', '–'] : [d.ach >= 0.95 ? 'ok' : d.ach >= 0.8 ? 'warn' : 'bad', PC.pf(d.ach)];
 dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', PC.pick('mat'), { key: ['area', 'stype', 'group', 'matcode'], def: PC.isNet() ? 'net' : 'units', q: 'mat', cols: [
   { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'กลุ่ม' }, { f: 'status', label: 'สถานะ' },
@@ -1555,12 +1573,11 @@ dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', PC.pick('mat'), { key: ['area
   { f: 'share', label: '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'สต็อกคงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_days', label: 'สต็อกพอขาย (วัน)', num: true, fmt: PC.nf } ] }));
 dash.draw('tb_region', (el) => PC.table(el, 'tb_region', PC.pick('region_perf'), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
   { f: 'region', label: 'ภาค' }, { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() },
-  { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'target', label: 'เป้าเดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้าเดือนล่าสุด', num: true, pill: achPill },
-  { f: 'ytd_target', label: 'เป้าสะสม', num: true, fmt: PC.nf }, { f: 'ytd_ach', label: '% เป้าสะสม', num: true, pill: (d) => achPill({ ach: d.ytd_ach }) } ] }));
+  { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, ...tgtCols(true) ] }));
 dash.draw('tb_shop', (el) => PC.table(el, 'tb_shop', PC.pick('shop_perf'), { key: ['area', 'stype', 'group', 'shop'], def: PC.isNet() ? 'net' : 'units', q: 'shop', cols: [
   { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'region', label: 'ภาค' }, { f: 'type', label: 'ประเภทสาขา' },
   { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf },
-  { f: 'target', label: 'เป้าเดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% เป้าเดือนล่าสุด', num: true, pill: achPill }, { f: 'ytd_ach', label: '% เป้าสะสม', num: true, pill: (d) => achPill({ ach: d.ytd_ach }) },
+  ...tgtCols(false),
   { f: 'stock', label: 'สต็อก', num: true, fmt: PC.nf }, { f: 'aged', label: 'สต็อกเก่า', num: true, fmt: PC.nf } ] }));
 dash.draw('tb_staff', (el) => PC.table(el, 'tb_staff', PC.pick('staff_perf'), { key: ['area', 'stype', 'group', 'emp'], def: PC.isNet() ? 'net' : 'units', q: 'staff', cols: [
   { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก', wrap: true },
