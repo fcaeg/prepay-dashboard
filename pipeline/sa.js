@@ -358,7 +358,7 @@ const RKX = (() => {
     const img = new Image(); img.src = url; img.alt = name; box.append(bt, img); m.append(box); document.body.append(m);
     const close = () => { m.remove(); URL.revokeObjectURL(url); }; cl.onclick = close; m.onclick = (e) => { if (e.target === m) close(); };
     try { a.click(); } catch (e) {} }, 'image/png');
-  return { draw, show };
+  return { draw, show, C, rr, fit };
 })();
 if (!window.PC_RKX_BOUND) { window.PC_RKX_BOUND = true;
   document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#rk-export'); if (!b) return; b.disabled = true; const t = b.textContent; b.textContent = 'กำลังสร้างรูป…';
@@ -441,3 +441,70 @@ if (!window.PC_AGCSV_BOUND) { window.PC_AGCSV_BOUND = true;
     const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }); const st = PC.rows('stock_by_shop'); const asof = (st && st[0] && st[0].asof || '').slice(0, 10);
     const sv = String(dash.params().agser ?? 'all'); const name = 'Aging_Serial_' + (sv === 'all' ? 'over180' : ['', '', '180-270', '271-365', 'over365'][+sv]) + (p.area !== 'ALL' ? '_' + p.area.replace(/[^\w]+/g, '') : '') + (asof ? '_' + asof : '') + '.csv';
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- watched serials: export PNG (overview / shop summary) ---------- */
+const WXP = (() => {
+  const C = RKX.C, rr = RKX.rr, fit = RKX.fit; const SC = { sold: C.ok, in_stock: C.bad, not_found: C.warn };
+  const setup = async (W, H) => { try { await document.fonts.ready; } catch (e) {} const FF = getComputedStyle(document.body).fontFamily || 'sans-serif';
+    const S = 2, cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S); g.fillStyle = C.bg; g.fillRect(0, 0, W, H); return { cv, g, F: (w, s) => w + ' ' + s + 'px ' + FF }; };
+  const asof = () => { const r = PC.rows('watch_serials'); const x = r && r[0]; return x ? 'ขายถึง ' + PC.day(x.sales_asof.slice(0, 10)) + ' ' + x.sales_asof.slice(11) + ' น. · Stock ณ ' + PC.day(x.stock_asof.slice(0, 10)) + ' ' + x.stock_asof.slice(11) + ' น.' : ''; };
+  const head = (g, F, W, P, title) => { g.fillStyle = C.fg; g.font = F(700, 34); g.fillText(fit(g, title, W * 0.62), P, P + 34); g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right';
+    const p = PC.P(); g.fillText([asof(), p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.shop !== 'ALL' ? 'สาขา ' + p.shop : ''].filter(Boolean).join('  ·  '), W - P, P + 34); g.textAlign = 'left'; g.fillStyle = C.line; g.fillRect(P, P + 56, W - 2 * P, 2); return P + 100; };
+  const foot = (g, F, P, H) => { g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว = ขายแล้ว · แดง = ยังไม่ขาย (ยังอยู่ใน Stock) · ส้ม = ไม่พบใน Stock และยังไม่พบการขาย  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6); };
+  const fname = (k) => 'Watch_' + k + '_' + String(wList() || '').replace(/[^\w฀-๿]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.png';
+  const overview = async () => { const r = wRows() || []; const N = r.length || 1; const cnt = (s) => wCount(r, s);
+    const by = new Map(); for (const x of r) { const a = by.get(x.area) || { area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.area, a); }
+    const areas = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n);
+    const sold = r.filter((x) => x.status === 'sold' && x.sold_date); const dmap = d3.rollup(sold, (v) => v.length, (x) => x.sold_date); let cum = 0; const days = [...dmap.keys()].sort().map((d) => { cum += dmap.get(d); return { d, n: dmap.get(d), c: cum }; });
+    const W = 2000, P = 48, ROW = 40, nr = Math.max(areas.length, days.length, 1); const H = P + 100 + 170 + 40 + 120 + 60 + nr * ROW + 50 + P;
+    const { cv, g, F } = await setup(W, H); let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · ' + (wList() || ''));
+    // tiles
+    const sv = sold.reduce((a, x) => a + (x.sold_net || 0), 0); const left = r.filter((x) => x.status === 'in_stock');
+    const tiles = [['Serial ที่ติดตาม', PC.nf(r.length), C.fg, PC.nf(new Set(r.map((x) => x.shop)).size) + ' สาขา · ' + PC.nf(new Set(r.map((x) => x.area)).size) + ' Area'],
+      ['ขายแล้ว', PC.nf(cnt('sold')), C.ok, PC.pf(cnt('sold') / N) + ' ของทั้งหมด · Net ฿' + PC.nf(Math.round(sv))], ['ยังไม่ขาย (ยังอยู่ใน Stock)', PC.nf(cnt('in_stock')), C.bad, PC.nf(new Set(left.map((x) => x.shop)).size) + ' สาขายังต้องขาย'],
+      ['ไม่พบใน Stock และยังไม่พบการขาย', PC.nf(cnt('not_found')), C.warn, 'อาจโอนออก / ตัดสต็อก / Serial ไม่ถูกต้อง']];
+    const tw = (W - 2 * P - 3 * 24) / 4; tiles.forEach(([l, v, c, s], i) => { const x = P + i * (tw + 24); rr(g, x, y, tw, 150, 10); g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
+      g.save(); rr(g, x, y, tw, 150, 10); g.clip(); g.fillStyle = c; g.fillRect(x, y, tw, 6); g.restore();
+      g.font = F(400, 19); g.fillStyle = C.mu; g.fillText(fit(g, l, tw - 40), x + 22, y + 42); g.font = F(700, 52); g.fillStyle = c; g.fillText(v, x + 22, y + 102); g.font = F(400, 17); g.fillStyle = C.mu; g.fillText(fit(g, s, tw - 40), x + 22, y + 132); });
+    y += 150 + 50;
+    // progress bar
+    g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('ความคืบหน้าการขาย', P, y); y += 20; let bx = P; const BW = W - 2 * P;
+    g.save(); rr(g, P, y, BW, 30, 8); g.clip(); g.fillStyle = C.grid; g.fillRect(P, y, BW, 30); for (const k of ['sold', 'in_stock', 'not_found']) { const w = (cnt(k) / N) * BW; g.fillStyle = SC[k]; g.fillRect(bx, y, w, 30); bx += w; } g.restore();
+    y += 58; let lx = P; for (const k of ['sold', 'in_stock', 'not_found']) { g.fillStyle = SC[k]; g.fillRect(lx, y - 14, 16, 16); g.font = F(400, 19); g.fillStyle = C.fg; const s = WS[k][0] + ' ' + PC.nf(cnt(k)) + ' (' + PC.pf(cnt(k) / N) + ')'; g.fillText(s, lx + 24, y); lx += g.measureText(s).width + 60; }
+    y += 50;
+    // two columns
+    const cw = (W - 2 * P - 48) / 2, x1 = P, x2 = P + cw + 48;
+    g.fillStyle = C.fg; g.font = F(700, 22); g.fillText('ราย Area', x1, y); g.fillText('ขายได้รายวัน (สะสม)', x2, y); y += 16;
+    const mx = Math.max(1, ...areas.map((a) => a.n)); areas.forEach((a, i) => { const ty = y + i * ROW; g.font = F(400, 18); g.fillStyle = C.fg; g.fillText(fit(g, a.area, cw * 0.32), x1, ty + 26);
+      const bx0 = x1 + cw * 0.34, bw = cw * 0.4; g.fillStyle = C.grid; rr(g, bx0, ty + 12, bw, 18, 9); g.fill(); g.save(); rr(g, bx0, ty + 12, (a.n / mx) * bw, 18, 9); g.clip(); let xx = bx0;
+      for (const [v, c] of [[a.s, C.ok], [a.n - a.s - a.nf, C.bad], [a.nf, C.warn]]) { const w = (v / mx) * bw; g.fillStyle = c; g.fillRect(xx, ty + 12, w, 18); xx += w; } g.restore();
+      g.font = F(400, 17); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText('ขายแล้ว ' + a.s + ' / ' + a.n + ' · ' + PC.pf(a.s / a.n), x1 + cw, ty + 26); g.textAlign = 'left'; });
+    if (!days.length) { g.font = F(400, 18); g.fillStyle = C.mu; g.fillText('ยังไม่พบ Serial ในรายการนี้ในรายงานการขาย', x2, y + 26); }
+    days.forEach((d, i) => { const ty = y + i * ROW; g.font = F(400, 18); g.fillStyle = C.fg; g.fillText(PC.day(d.d), x2, ty + 26); const bx0 = x2 + cw * 0.22, bw = cw * 0.5;
+      g.fillStyle = C.grid; rr(g, bx0, ty + 12, bw, 18, 9); g.fill(); g.fillStyle = C.ok; rr(g, bx0, ty + 12, Math.max(18, (d.c / N) * bw), 18, 9); g.fill();
+      g.font = F(400, 17); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText('ขาย ' + d.n + ' · สะสม ' + d.c + ' (' + PC.pf(d.c / N) + ')', x2 + cw, ty + 26); g.textAlign = 'left'; });
+    foot(g, F, P, H); return { cv, name: fname('Overview') }; };
+  const shops = async () => { const r = wRows() || []; const by = new Map();
+    for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(k, a); }
+    const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
+    const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + 40 + P; const { cv, g, F } = await setup(W, H);
+    let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() || ''));
+    const tot = { n: r.length, s: wCount(r, 'sold'), nf: wCount(r, 'not_found') }; g.font = F(400, 22); g.fillStyle = C.fg;
+    g.fillText(PC.nf(rows.length) + ' สาขา · ติดตาม ' + PC.nf(tot.n) + ' Serial · ขายแล้ว ' + PC.nf(tot.s) + ' (' + PC.pf(tot.s / Math.max(1, tot.n)) + ') · ยังไม่ขาย ' + PC.nf(tot.n - tot.s - tot.nf) + ' · ไม่พบใน Stock ' + PC.nf(tot.nf), P, y); y += 50;
+    const cols = [['#', 50, 'r'], ['สาขา', 560, 'l'], ['Area', 330, 'l'], ['ติดตาม', 130, 'r'], ['ยังไม่ขาย', 150, 'r'], ['ขายแล้ว', 140, 'r'], ['ไม่พบใน Stock', 170, 'r'], ['ความคืบหน้า', 374, 'l']];
+    const xs = []; let cx = P; for (const c of cols) { xs.push(cx); cx += c[1]; }
+    g.font = F(600, 18); g.fillStyle = C.mu; cols.forEach((c, i) => { if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(c[0], xs[i] + c[1] - 12, y); } else { g.textAlign = 'left'; g.fillText(c[0], xs[i] + (i === 7 ? 24 : 0), y); } }); g.textAlign = 'left';
+    y += 14; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2);
+    rows.forEach((d, i) => { const ty = y + i * ROW; if (i % 2) { g.fillStyle = '#f7f6f2'; g.fillRect(P, ty + 2, W - 2 * P, ROW); }
+      const vals = [String(i + 1), d.name, d.area, PC.nf(d.n), PC.nf(d.left), PC.nf(d.s), d.nf ? PC.nf(d.nf) : '–'];
+      vals.forEach((v, k) => { const c = cols[k]; g.font = F(k === 4 ? 700 : 400, 19); g.fillStyle = k === 4 && d.left ? C.bad : k === 5 && d.s ? C.ok : k === 0 ? C.mu : C.fg;
+        if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(v, xs[k] + c[1] - 12, ty + 30); } else { g.textAlign = 'left'; g.fillText(fit(g, v, c[1] - 16), xs[k], ty + 30); } }); g.textAlign = 'left';
+      const bx0 = xs[7] + 24, bw = 230; g.fillStyle = C.grid; rr(g, bx0, ty + 15, bw, 16, 8); g.fill(); g.save(); rr(g, bx0, ty + 15, bw, 16, 8); g.clip(); let xx = bx0;
+      for (const [v, c] of [[d.s, C.ok], [d.left, C.bad], [d.nf, C.warn]]) { const w = (v / d.n) * bw; g.fillStyle = c; g.fillRect(xx, ty + 15, w, 16); xx += w; } g.restore();
+      g.font = F(700, 18); g.fillStyle = d.pct >= 1 ? C.ok : d.pct > 0 ? C.warn : C.bad; g.textAlign = 'right'; g.fillText(PC.pf(d.pct), W - P, ty + 30); g.textAlign = 'left'; });
+    foot(g, F, P, H); return { cv, name: fname('Shops') }; };
+  return { overview, shops };
+})();
+if (!window.PC_WXP_BOUND) { window.PC_WXP_BOUND = true;
+  document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#w-exp-ov, #w-exp-shop'); if (!b) return; b.disabled = true; const t = b.textContent; b.textContent = 'กำลังสร้างรูป…';
+    try { const { cv, name } = await (b.id === 'w-exp-ov' ? WXP.overview() : WXP.shops()); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }

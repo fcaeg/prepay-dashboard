@@ -818,6 +818,7 @@ body.pc-noscroll { overflow: hidden; }
         <select id="f-wlist" data-draw="f_wlist" data-source="watch_serials" aria-label="รายการซิมที่ติดตาม"></select>
       </label>
       <p class="pc-note" data-draw="w_asof" data-source="watch_serials"></p>
+      <button class="pc-export pc-csv" id="w-exp-ov" type="button" title="ดาวน์โหลดรูป PNG แนวนอน: การ์ดสรุป + ความคืบหน้า (ราย Area และรายวัน)">⬇ Export รูป ภาพรวม</button>
     </div>
     <div class="pc-tiles">
       <div class="pc-tile"><span class="pc-tile-l">Serial ที่ติดตาม</span><span class="pc-big" data-draw="w_total" data-source="watch_serials">—</span><span class="pc-sub" data-draw="w_total_sub" data-source="watch_serials"></span></div>
@@ -835,6 +836,7 @@ body.pc-noscroll { overflow: hidden; }
     </article>
     <article class="pc-card" id="card-w-shop">
       <h3>สรุปราย สาขา <span class="pc-info" tabindex="0" role="note" aria-label="เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน" data-tip="เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน">i</span></h3>
+      <div class="pc-tools"><button class="pc-export" id="w-exp-shop" type="button" title="ดาวน์โหลดรูป PNG แนวนอน: ตารางสรุปรายสาขา">⬇ Export รูป สรุปรายสาขา</button></div>
       <div class="pc-scroll"><table data-draw="tb_w_shop" data-source="watch_serials" data-row-key="shop"></table></div>
     </article>
     <article class="pc-card" id="card-w-serial">
