@@ -178,6 +178,9 @@
   </header>
 
   <div class="pc-bar" id="filters">
+    <label class="pc-field">Region
+      <select id="f-zone" data-draw="f_zone" data-source="shops" aria-label="Region"></select>
+    </label>
     <label class="pc-field">ภาค
       <select id="f-area" data-draw="f_area" data-source="shops" aria-label="ภาค"></select>
     </label>
@@ -268,6 +271,14 @@
       </details>
     </article>
     <div class="pc-grid">
+      <article class="pc-card" id="card-by-zone">
+        <h3>Region</h3>
+        <p>BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก)</p>
+        <div class="pc-hbars" data-draw="c_bd_zone" data-source="breakdown"></div>
+        <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
+          <div class="pc-scroll"><table data-draw="bd_zone" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
+        </details>
+      </article>
       <article class="pc-card" id="card-by-area">
         <h3>Area</h3>
         <p>เรียงจากยอดมากไปน้อย พร้อมสัดส่วนของยอดรวม</p>
@@ -458,6 +469,11 @@
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
         <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
+      </article>
+      <article class="pc-card" id="card-rank-zone">
+        <h3>Ranking Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้</h3>
+        <p>BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน</p>
+        <div class="pc-scroll"><table data-draw="tb_rank_zone" data-source="area_rank area_day" data-row-key="stype,area"></table></div>
       </article>
       <article class="pc-card" id="card-rank">
         <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้</h3>
@@ -739,6 +755,11 @@
 <script>
 /* ---------- calculations (all derived from the attached files) ---------- */
 window.PC_CALCS = window.PC_CALCS || {};
+// Region = group of Areas: BMA (BMA I–V) · UPC I (north + northeast) · UPC II (south, central, east, west)
+function PCzone(a) { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }
+function PCz(a) { const z = PCzone(a); return z ? [z] : []; }
+function PCin(a, sel) { return sel === 'ALL' || a === sel || PCzone(a) === sel; }
+window.PC_ZONES = ['BMA', 'UPC I', 'UPC II'];
 function PCdef(id, spec) { window.PC_CALCS[id] = spec; return spec; }
 dash.calc('enriched', PCdef('enriched', {
   title: 'ยอดขายพร้อมกลุ่มซิม ช่วงราคา และภาค',
@@ -770,7 +791,7 @@ dash.calc('kpi', PCdef('kpi', {
     const tgt = new Map(targets.filter((r) => r.month === lastMonth).map((r) => [r.shop, { ...r, area: area.get(r.shop), stype: sty.get(r.shop) }]));
     const acc = new Map();
     const get = (c, t, g) => { const k = c + '|' + t + '|' + g; if (!acc.has(k)) acc.set(k, { area: c, stype: t, group: g, units: 0, net: 0, mtd_units: 0, mtd_net: 0, prev_units: 0, ord: t === 'ALL' ? 100 : 9, tq: 0, ta: 0, td: 0, tn: 0, tsh: new Set(), tst: new Set(), sh: new Set(), st: new Set(), days: new Map(), tsu: 0, ysu: 0, tsn: 0, ysn: 0 }); return acc.get(k); };
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const a = get(c, t, g); a.units += r.units; a.net += r.net; if (tk.has(r.month + '|' + r.shop)) { a.ysu += r.units; a.ysn += r.net; }
       if (r.units > 0) { a.sh.add(r.shop); a.st.add(r.emp); }
       const d = a.days.get(r.date) || { u: 0, n: 0 }; d.u += r.units; d.n += r.net; a.days.set(r.date, d);
@@ -781,10 +802,10 @@ dash.calc('kpi', PCdef('kpi', {
     }
     return [...acc.values()].map((a) => {
       const last = [...a.days.keys()].sort().pop();
-      const tl = [...tgt.values()].filter((s) => (a.area === 'ALL' || s.area === a.area) && (a.stype === 'ALL' || s.stype === a.stype));
+      const tl = [...tgt.values()].filter((s) => PCin(s.area, a.area) && (a.stype === 'ALL' || s.stype === a.stype));
       const target = a.group === 'ALL' && tl.length ? Math.round(tl.reduce((x, s) => x + +s.target_units, 0)) : null;
       const targetN = a.group === 'ALL' && tl.length ? Math.round(tl.reduce((x, s) => x + (+s.target_net || 0), 0)) : null;
-      const yt = targets.filter((s) => (a.area === 'ALL' || area.get(s.shop) === a.area) && (a.stype === 'ALL' || sty.get(s.shop) === a.stype));
+      const yt = targets.filter((s) => PCin(area.get(s.shop), a.area) && (a.stype === 'ALL' || sty.get(s.shop) === a.stype));
       const ytdT = a.group === 'ALL' && yt.length ? Math.round(yt.reduce((x, s) => x + +s.target_units, 0)) : null;
       const ytdTN = a.group === 'ALL' && yt.length ? Math.round(yt.reduce((x, s) => x + (+s.target_net || 0), 0)) : null;
       return { area: a.area, stype: a.stype, group: a.group, units: a.units, net: Math.round(a.net), month: lastMonth, ord: a.ord, today, today_units: a.tq, today_amount: Math.round(a.ta), today_disc: Math.round(a.td), today_net: Math.round(a.tn), today_shops: a.tsh.size, today_staff: a.tst.size, mtd_units: a.mtd_units, mtd_net: Math.round(a.mtd_net),
@@ -809,9 +830,9 @@ dash.calc('breakdown', PCdef('breakdown', {
       for (const pd of ps) { const k = [pd, r.area, r.stype, r.group, r.simtype, r.band].join('|'); const b = base.get(k) || { pd, area: r.area, stype: r.stype, group: r.group, simtype: r.simtype, band: r.band, q: 0, n: 0 };
         b.q += r.units; b.n += r.net; base.set(k, b); } }
     const acc = new Map(), tot = new Map();
-    for (const b of base.values()) for (const c of [b.area, 'ALL']) for (const t of [b.stype, 'ALL']) for (const g of [b.group, 'ALL']) {
+    for (const b of base.values()) for (const c of [b.area, ...PCz(b.area), 'ALL']) for (const t of [b.stype, 'ALL']) for (const g of [b.group, 'ALL']) {
       const f = c + '|' + t + '|' + g + '|' + b.pd; const tt = tot.get(f) || { q: 0, n: 0 }; tt.q += b.q; tt.n += b.n; tot.set(f, tt);
-      for (const [dim, key] of [['area', b.area], ['simtype', b.group], ['simgroup', b.simtype], ['band', b.band]]) {
+      for (const [dim, key] of [['area', b.area], ['zone', PCzone(b.area) || '-'], ['simtype', b.group], ['simgroup', b.simtype], ['band', b.band]]) {
         const k = f + '|' + dim + '|' + key; const a = acc.get(k) || { area: c, stype: t, group: g, period: b.pd, dim, key, ord: dim === 'band' ? bands.indexOf(key) : 0, qty: 0, net: 0 };
         a.qty += b.q; a.net += b.n; acc.set(k, a); } }
     return [...acc.values()].map((a) => { const tt = tot.get(a.area + '|' + a.stype + '|' + a.group + '|' + a.period);
@@ -827,7 +848,7 @@ dash.calc('target_monthly', PCdef('target_monthly', {
     const sh = new Map(shops.map((r) => [r.shop, r])), tk = new Set(targets.map((r) => r.month + '|' + r.shop));
     const acc = new Map();
     const get = (c, t, m) => { const k = c + '|' + t + '|' + m; if (!acc.has(k)) acc.set(k, { area: c, stype: t, month: m, target: 0, actual: 0, target_net: 0, actual_net: 0 }); return acc.get(k); };
-    const dims = (c0, t0) => [c0, 'ALL'].flatMap((c) => [[c, t0], [c, 'ALL']]);
+    const dims = (c0, t0) => [c0, ...PCz(c0), 'ALL'].flatMap((c) => [[c, t0], [c, 'ALL']]);
     for (const r of targets) { const s = sh.get(r.shop) || {}; for (const [c, t] of dims(s.area || '-', s.stype || 'ไม่ระบุ')) { const a = get(c, t, r.month); a.target += +r.target_units; a.target_net += +r.target_net || 0; } }
     for (const r of enriched) if (tk.has(r.month + '|' + r.shop)) for (const [c, t] of dims(r.area, r.stype)) { const a = get(c, t, r.month); a.actual += r.units; a.actual_net += r.net; }
     return [...acc.values()].filter((a) => a.target > 0).map((a) => ({ ...a, target: Math.round(a.target), target_net: Math.round(a.target_net), actual_net: Math.round(a.actual_net), ach: Math.round((a.actual / a.target) * 1000) / 1000, ach_net: a.target_net ? Math.round((a.actual_net / a.target_net) * 1000) / 1000 : null }));
@@ -845,7 +866,7 @@ dash.calc('area_rank', PCdef('area_rank', {
     const acc = new Map();
     const get = (t, c) => { const k = t + '|' + c; if (!acc.has(k)) acc.set(k, { stype: t, area: c, target_units: 0, target_net: 0, act_units: 0, act_net: 0, shops: new Set(), sold: new Set(), today_units: 0, today_net: 0, pm_units: 0, pm_net: 0 }); return acc.get(k); };
     const momWin = (enriched) => { const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''); const y = +today.slice(0, 4), mo = +today.slice(5, 7), d = +today.slice(8, 10); const pm = mo === 1 ? (y - 1) + '-12' : y + '-' + String(mo - 1).padStart(2, '0'); const pdays = new Date(Date.UTC(+pm.slice(0, 4), +pm.slice(5, 7), 0)).getUTCDate(); return { cur: today.slice(0, 7), pm, pto: pm + '-' + String(Math.min(d, pdays)).padStart(2, '0') }; }; const W = momWin(enriched); const momR = (c, p) => (p > 0 ? Math.round((c / p - 1) * 1000) / 1000 : null);
-    const dims = (t0, c0) => [t0, 'ALL'].flatMap((t) => [[t, c0], [t, 'ALL']]);
+    const dims = (t0, c0) => [t0, 'ALL'].flatMap((t) => [[t, c0], ...PCz(c0).map((z) => [t, z]), [t, 'ALL']]);
     for (const r of targets) if (r.month === m) { const s = sh.get(r.shop); if (!s) continue; for (const [t, c] of dims(s.stype, s.area)) { const a = get(t, c); a.target_units += +r.target_units || 0; a.target_net += +r.target_net || 0; a.shops.add(r.shop); } }
     for (const r of enriched) if (r.month === W.pm && r.date <= W.pto) for (const [t, c] of dims(r.stype, r.area)) { const a = get(t, c); a.pm_units += r.units; a.pm_net += r.net; }
     for (const r of enriched) if (r.month === m) for (const [t, c] of dims(r.stype, r.area)) { const a = get(t, c); a.act_units += r.units; a.act_net += r.net; if (r.units > 0) a.sold.add(r.shop); if (r.date === today) { a.today_units += r.units; a.today_net += r.net; } }
@@ -873,7 +894,7 @@ dash.calc('area_day', PCdef('area_day', {
     const m = area_rank[0].month; const dates = [...new Set(enriched.filter((r) => r.month === m).map((r) => r.date))].sort();
     const acc = new Map();
     for (const a of area_rank) for (const d of dates) acc.set(a.stype + '|' + a.area + '|' + d, { stype: a.stype, area: a.area, date: d, units: 0, net: 0, tpd_units: a.tpd_units, tpd_net: a.tpd_net });
-    for (const r of enriched) if (r.month === m) for (const t of [r.stype, 'ALL']) for (const c of [r.area, 'ALL']) { const x = acc.get(t + '|' + c + '|' + r.date); if (x) { x.units += r.units; x.net += r.net; } }
+    for (const r of enriched) if (r.month === m) for (const t of [r.stype, 'ALL']) for (const c of [r.area, ...PCz(r.area), 'ALL']) { const x = acc.get(t + '|' + c + '|' + r.date); if (x) { x.units += r.units; x.net += r.net; } }
     const R = (x) => Math.round(x * 1000) / 1000;
     return [...acc.values()].map((x) => ({ ...x, net: Math.round(x.net), ach_units: x.tpd_units ? R(x.units / x.tpd_units) : null, ach_net: x.tpd_net ? R(x.net / x.tpd_net) : null }));
   },
@@ -890,7 +911,7 @@ dash.calc('shop_sales', PCdef('shop_sales', {
     for (const r of enriched) {
       const ps = ['ytd']; if (r.month === m) ps.push('mtd'); if (r.date === today) ps.push('today');
       const s = sh.get(String(r.shop)) || {};
-      for (const pd of ps) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+      for (const pd of ps) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
         const k = pd + '|' + c + '|' + t + '|' + g + '|' + r.shop;
         const a = acc.get(k) || { period: pd, area: c, stype: t, group: g, shop: String(r.shop), name: s.name || r.shop, shop_type: r.stype, shop_area: r.area, qty: 0, net: 0, emps: new Set() };
         a.qty += r.units; a.net += r.net; if (r.units > 0) a.emps.add(r.emp); acc.set(k, a);
@@ -955,7 +976,7 @@ dash.calc('daily', PCdef('daily', {
   inputs: ['enriched'],
   fn: (enriched) => {
     const acc = new Map();
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.date; const a = acc.get(k) || { area: c, stype: t, group: g, date: r.date, units: 0, net: 0 };
       a.units += r.units; a.net += r.net; acc.set(k, a);
     }
@@ -969,7 +990,7 @@ dash.calc('monthly', PCdef('monthly', {
   inputs: ['enriched'],
   fn: (enriched) => {
     const acc = new Map();
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.month; const a = acc.get(k) || { area: c, stype: t, group: g, month: r.month, units: 0, net: 0 };
       a.units += r.units; a.net += r.net; acc.set(k, a);
     }
@@ -983,7 +1004,7 @@ dash.calc('bands', PCdef('bands', {
   inputs: ['enriched'],
   fn: (enriched) => {
     const acc = new Map(), tot = new Map();
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.band; const a = acc.get(k) || { area: c, stype: t, group: g, band: r.band, units: 0, net: 0 };
       a.units += r.units; a.net += r.net; acc.set(k, a);
       const tk = c + '|' + t + '|' + g, tt = tot.get(tk) || { u: 0, n: 0 }; tt.u += r.units; tt.n += r.net; tot.set(tk, tt);
@@ -1003,12 +1024,12 @@ dash.calc('mat', PCdef('mat', {
     const m = new Map(matcodes.map((r) => [r.matcode, r])), co = new Map(shops.map((r) => [r.shop, r.area])), ty = new Map(shops.map((r) => [r.shop, r.stype]));
     const acc = new Map(), tot = new Map();
     const get = (c, t, g, mc) => { const k = c + '|' + t + '|' + g + '|' + mc; if (!acc.has(k)) { const mm = m.get(mc) || {}; acc.set(k, { area: c, stype: t, group: g, matcode: mc, name: mm.name || mc, sim_group: mm.group || '-', price: mm.price ?? null, status: mm.status || '-', units: 0, net: 0, mtd: 0, stock: 0 }); } return acc.get(k); };
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const a = get(c, t, g, r.matcode); a.units += r.units; a.net += r.net; if (r.month === lastMonth) a.mtd += r.units;
       tot.set(c + '|' + t + '|' + g, (tot.get(c + '|' + t + '|' + g) || 0) + r.units);
     }
     for (const s of stock_by_shop) { const c0 = co.get(s.shop) || '-', t0 = ty.get(s.shop) || 'ไม่ระบุ', g0 = (m.get(s.matcode) || {}).group || 'อื่น ๆ';
-      for (const [c, t, g] of [c0, 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) get(c, t, g, s.matcode).stock += s.qty; }
+      for (const [c, t, g] of [c0, ...PCz(c0), 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) get(c, t, g, s.matcode).stock += s.qty; }
     return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, matcode: a.matcode, name: a.name, sim_group: a.sim_group, price: a.price, status: a.status,
       units: a.units, net: Math.round(a.net), share: tot.get(a.area + '|' + a.stype + '|' + a.group) ? Math.round((a.units / tot.get(a.area + '|' + a.stype + '|' + a.group)) * 1000) / 1000 : 0,
       stock: a.stock, cover_days: a.mtd > 0 ? Math.round(a.stock / (a.mtd / mDays)) : null }));
@@ -1029,11 +1050,11 @@ dash.calc('shop_perf', PCdef('shop_perf', {
     const sh = new Map(shops.map((r) => [r.shop, r])), mg = new Map(matcodes.map((r) => [r.matcode, r.group]));
     const acc = new Map();
     const get = (c, t, g, s) => { const k = c + '|' + t + '|' + g + '|' + s; if (!acc.has(k)) { const x = sh.get(s) || {}; acc.set(k, { area: c, stype: t, group: g, shop: s, name: x.name || s, region: x.region || '-', type: x.stype || 'ไม่ระบุ', target: g === 'ALL' ? tm.get(lastMonth + '|' + s) ?? null : null, ytdT: g === 'ALL' ? yT.get(s) ?? null : null, targetN: g === 'ALL' ? tmN.get(lastMonth + '|' + s) ?? null : null, ytdTN: g === 'ALL' ? yTN.get(s) ?? null : null, ytdN: 0, mtdN: 0, pmU: 0, pmN: 0, ytdU: 0, units: 0, net: 0, mtd: 0, st: new Set(), stock: 0, aged: 0 }); } return acc.get(k); };
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const a = get(c, t, g, r.shop); a.units += r.units; a.net += r.net; if (r.month === lastMonth) { a.mtd += r.units; a.mtdN += r.net; } if (r.month === W.pm && r.date <= W.pto) { a.pmU += r.units; a.pmN += r.net; } if (tm.has(r.month + '|' + r.shop)) { a.ytdU += r.units; a.ytdN += r.net; } if (r.units > 0) a.st.add(r.emp);
     }
     for (const s of stock_by_shop) { const c0 = (sh.get(s.shop) || {}).area || '-', t0 = (sh.get(s.shop) || {}).stype || 'ไม่ระบุ', g0 = mg.get(s.matcode) || 'อื่น ๆ';
-      for (const [c, t, g] of [c0, 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) { const a = get(c, t, g, s.shop); a.stock += s.qty; a.aged += s.a271_365 + s.a365p; } }
+      for (const [c, t, g] of [c0, ...PCz(c0), 'ALL'].flatMap((c) => [t0, 'ALL'].flatMap((t) => [[c, t, g0], [c, t, 'ALL']]))) { const a = get(c, t, g, s.shop); a.stock += s.qty; a.aged += s.a271_365 + s.a365p; } }
     return [...acc.values()].map((a) => ({ area: a.area, stype: a.stype, group: a.group, shop: a.shop, name: a.name, region: a.region, type: a.type, units: a.units, net: Math.round(a.net),
       staff: a.st.size, stock: a.stock, aged: a.aged, target: a.target ? Math.round(a.target) : null, mtd: a.mtd, ach: a.target ? Math.round((a.mtd / a.target) * 1000) / 1000 : null,
       ytd_target: a.ytdT ? Math.round(a.ytdT) : null, ytd_units: a.ytdT ? a.ytdU : null, ytd_ach: a.ytdT ? Math.round((a.ytdU / a.ytdT) * 1000) / 1000 : null,
@@ -1070,7 +1091,7 @@ dash.calc('staff_perf', PCdef('staff_perf', {
   fn: (enriched, staff, shops) => {
     const st = new Map(staff.map((r) => [r.emp, r])), sh = new Map(shops.map((r) => [r.shop, r.name]));
     const acc = new Map();
-    for (const r of enriched) for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
+    for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.emp; const a = acc.get(k) || { area: c, stype: t, group: g, emp: r.emp, units: 0, net: 0, mc: new Set() };
       a.units += r.units; a.net += r.net; if (r.units > 0) a.mc.add(r.matcode); acc.set(k, a);
     }
@@ -1099,7 +1120,7 @@ dash.calc('exp_sum', PCdef('exp_sum', {
     const acc = new Map();
     const st = (d) => (d <= 0 ? 'expired' : d <= 30 ? 'd30' : d <= 60 ? 'd60' : d <= 90 ? 'd90' : null);
     for (const r of exp) for (const life of [270, 365, 540]) { const s = st(r['left_' + life]); if (!s) continue;
-      for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + s;
+      for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + s;
         const a = acc.get(k) || { area: c, stype: t, group: g, life, status: s, n: 0, value: 0 }; a.n += 1; a.value += r.price || 0; acc.set(k, a); } }
     const out = [...acc.values()];
     const keys = new Set(out.map((a) => a.area + '|' + a.stype + '|' + a.group));
@@ -1116,7 +1137,7 @@ dash.calc('exp_shop', PCdef('exp_shop', {
   fn: (exp) => {
     const acc = new Map();
     for (const r of exp) for (const life of [270, 365, 540]) { const d = r['left_' + life]; if (d > 90) continue;
-      for (const [c, t, g] of [r.area, 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + r.shop;
+      for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + r.shop;
         const a = acc.get(k) || { area: c, stype: t, group: g, life, shop: r.shop, name: r.shop_name, expired: 0, soon: 0, value: 0 };
         if (d <= 0) a.expired += 1; else a.soon += 1; a.value += r.price || 0; acc.set(k, a); } }
     return [...acc.values()];
@@ -1136,7 +1157,7 @@ window.PC = (() => {
   const mlabel = () => (isNet() ? 'Net Amount' : 'QTY');
   const mfmt = (v) => (isNet() ? '฿' + nf(Math.round(v)) : nf(v));
   const axf = (v) => (isNet() ? (Math.abs(v) >= 1e6 ? d3.format('.3~s')(v).replace('G', 'B') : Math.abs(v) >= 1e3 ? d3.format('.3~s')(v) : nf(v)) : nf(v));
-  const P = () => { const p = dash.params(); return { area: p.area || 'ALL', stype: p.stype || 'ALL', group: p.group || 'ALL', life: +(p.life || 365), shop: p.shop || 'ALL' }; };
+  const P = () => { const p = dash.params(); return { zone: p.zone || 'ALL', area: (p.area && p.area !== 'ALL') ? p.area : (p.zone || 'ALL'), stype: p.stype || 'ALL', group: p.group || 'ALL', life: +(p.life || 365), shop: p.shop || 'ALL' }; };
   const enc = (v) => encodeURIComponent(String(v));
   const where = (o) => Object.entries(o).map(([k, v]) => enc(k) + '=' + enc(v)).join('&');
   // one shop selected: recompute that view from only that shop's rows (Ranking Area stays all Areas)
@@ -1284,6 +1305,7 @@ dash.draw('ml_10', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_11', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_12', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_13', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_14', (el) => { el.textContent = PC.mlabel(); });
 
 dash.onData(() => {
   document.querySelectorAll('#f-life').forEach((sel) => { sel.value = String(dash.params().life || 365); });
@@ -1303,11 +1325,16 @@ dash.onData(() => {
 
 <script>
 /* ---------- filters (choices come from data) ---------- */
+dash.draw('f_zone', (sel) => {
+  const z = dash.params().zone || 'ALL';
+  sel.replaceChildren(new Option('ทุก Region', 'ALL'), ...window.PC_ZONES.map((x) => new Option(x === 'BMA' ? 'BMA' : x === 'UPC I' ? 'UPC I (เหนือ + อีสาน)' : 'UPC II (ใต้ กลาง ตะวันออก ตะวันตก)', x)));
+  sel.value = z; sel.onchange = () => dash.setParams({ zone: sel.value, area: 'ALL', shop: 'ALL' });
+});
 dash.draw('f_area', (sel) => {
-  const s = PC.rows('shops') || [];
-  const cs = [...new Set(s.map((r) => r.area))].filter(Boolean).sort((a, b) => a.localeCompare(b));
-  sel.replaceChildren(new Option('ทุกภาค', 'ALL'), ...cs.map((c) => new Option(c, c)));
-  sel.value = PC.P().area;
+  const s = PC.rows('shops') || []; const z = dash.params().zone || 'ALL';
+  const cs = [...new Set(s.map((r) => r.area))].filter((a) => a && (z === 'ALL' || PCzone(a) === z)).sort((a, b) => a.localeCompare(b));
+  sel.replaceChildren(new Option(z === 'ALL' ? 'ทุกภาค' : 'ทุกภาคใน ' + z, 'ALL'), ...cs.map((c) => new Option(c, c)));
+  const cur = dash.params().area || 'ALL'; sel.value = cs.includes(cur) ? cur : 'ALL';
   sel.onchange = () => dash.setParams({ area: sel.value, shop: 'ALL' });
 });
 dash.draw('f_stype', (sel) => {
@@ -1320,7 +1347,7 @@ dash.draw('f_stype', (sel) => {
 });
 dash.draw('f_shop', (sel) => {
   const s = PC.rows('shops') || []; const p = PC.P();
-  const list = s.filter((r) => +r.stype_order < 90 && (p.area === 'ALL' || r.area === p.area) && (p.stype === 'ALL' || r.stype === p.stype))
+  const list = s.filter((r) => +r.stype_order < 90 && PCin(r.area, p.area) && (p.stype === 'ALL' || r.stype === p.stype))
     .sort((a, b) => String(a.name).localeCompare(String(b.name), 'th'));
   sel.replaceChildren(new Option('ทุกสาขา (' + list.length + ')', 'ALL'), ...list.map((r) => new Option(r.name + ' · ' + r.shop, String(r.shop))));
   sel.value = list.some((r) => String(r.shop) === p.shop) ? p.shop : 'ALL';
@@ -1429,12 +1456,12 @@ const mInfo = () => { const r = PC.rows('enriched'); if (!r || !r.length) return
   else { from = today.slice(0, 7) + '-01'; label = 'MTD ' + PC.mon(today.slice(0, 7)); }
   return { today, cur, pd, wk: Math.min(wk, cur.w), from, to, label }; };
 const mAgg = () => { const r = PC.rows('enriched'), mt = PC.rows('matcodes'), st = PC.rows('stock_by_shop'), shs = PC.rows('shops'); const I = mInfo(); if (!r || !mt || !st || !shs || !I) return null; const p = PC.P();
-  const ok = (x) => (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group);
+  const ok = (x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group);
   const f28 = new Date(Date.parse(I.today + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
   const mm = new Map(mt.map((x) => [String(x.matcode), x])); const by = new Map(); const g = (k) => { if (!by.has(k)) { const m = mm.get(k) || {}; by.set(k, { matcode: k, name: m.name || k, sim_group: m.group || '-', price: m.price ?? null, band: m.band || 'ไม่ทราบราคา', status: m.status || '-', units: 0, net: 0, stock: 0, s28: 0 }); } return by.get(k); };
   for (const x of r) { if (!ok(x)) continue; if (x.date >= I.from && x.date <= I.to) { const a = g(x.matcode); a.units += x.units; a.net += x.net; } if (x.date >= f28) g(x.matcode).s28 += x.units; }
   const sh = new Map(shs.map((s) => [String(s.shop), s]));
-  for (const s of st) { const S = sh.get(String(s.shop)); if (!S) continue; const m = mm.get(String(s.matcode)) || {}; if (!((p.area === 'ALL' || S.area === p.area) && (p.stype === 'ALL' || S.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop) && (p.group === 'ALL' || m.group === p.group))) continue; g(String(s.matcode)).stock += +s.qty || 0; }
+  for (const s of st) { const S = sh.get(String(s.shop)); if (!S) continue; const m = mm.get(String(s.matcode)) || {}; if (!(PCin(S.area, p.area) && (p.stype === 'ALL' || S.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop) && (p.group === 'ALL' || m.group === p.group))) continue; g(String(s.matcode)).stock += +s.qty || 0; }
   const rows = [...by.values()].filter((a) => a.units !== 0 || a.net !== 0 || a.stock > 0); const tu = rows.reduce((s, a) => s + a.units, 0), tn = rows.reduce((s, a) => s + a.net, 0);
   return rows.map((a) => ({ ...a, net: Math.round(a.net), share_u: tu ? a.units / tu : 0, share_n: tn ? a.net / tn : 0, cover_wk: a.s28 > 0 ? Math.round((a.stock / (a.s28 / 4)) * 10) / 10 : null })); };
 dash.draw('f_mweek', (sel) => { const I = mInfo(); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = weekRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); }
@@ -1456,12 +1483,12 @@ const rkF = () => (PC.isNet() ? { ach: 'ach_net', act: 'act_net', ttd: 'ttd_net'
 const rDates = () => { const r = PC.rows('area_day'); return r ? [...new Set(r.map((x) => x.date))].sort() : []; };
 const rDate = () => { const ds = rDates(); const v = dash.params().rdate; return ds.includes(v) ? v : ds[ds.length - 1]; };
 const rkRows = () => { const all = PC.rows('area_rank'); if (!all) return null; const st = PC.P().stype, f = rkF();
-  const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && x[f.tgt] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1));
+  const sel = PC.P().area, zsel = window.PC_ZONES.includes(sel) ? sel : null; const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && !window.PC_ZONES.includes(x.area) && (!zsel || PCzone(x.area) === zsel) && x[f.tgt] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1));
   return r.map((x, i) => ({ ...x, rank: i + 1 })); };
 const rdRows = () => { const all = PC.rows('area_day'); if (!all) return null; const st = PC.P().stype, d = rDate(), f = rkF();
-  const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && x.date === d && x[f.tpd] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1) || b[f.d] - a[f.d]);
+  const sel = PC.P().area, zsel = window.PC_ZONES.includes(sel) ? sel : null; const r = all.filter((x) => x.stype === st && x.area !== 'ALL' && !window.PC_ZONES.includes(x.area) && (!zsel || PCzone(x.area) === zsel) && x.date === d && x[f.tpd] > 0).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1) || b[f.d] - a[f.d]);
   return r.map((x, i) => ({ ...x, drank: i + 1 })); };
-const rkTot = (id) => { const all = PC.rows(id); const st = PC.P().stype; if (!all) return null; return all.find((x) => x.stype === st && x.area === 'ALL' && (id !== 'area_day' || x.date === rDate())) || null; };
+const rkTot = (id) => { const all = PC.rows(id); const st = PC.P().stype; if (!all) return null; const tk = window.PC_ZONES.includes(PC.P().area) ? PC.P().area : 'ALL'; return all.find((x) => x.stype === st && x.area === tk && (id !== 'area_day' || x.date === rDate())) || null; };
 const rkVal = (el, id, key, fmt) => { const f = rkF(); const fld = f[key] || key; const r = rkTot(id);
   el.dataset.field = fld; el.dataset.where = PC.where({ stype: PC.P().stype, area: 'ALL', ...(id === 'area_day' && r ? { date: r.date } : {}) });
   const v = r ? r[fld] : null; el.textContent = v == null ? '—' : fmt ? fmt(v) : PC.mfmt(v); return v; };
@@ -1480,7 +1507,7 @@ dash.draw('f_rdate', (sel) => { const ds = rDates(); sel.replaceChildren(...ds.s
 const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
   el.replaceChildren(); if (!r || !r.length) return; const sel = PC.P().area;
   const max = Math.max(1.2, d3.max(r, (d) => d[achK] || 0) * 1.05);
-  for (const d of r) { const row = document.createElement('div'); row.className = 'pc-rrow' + (sel !== 'ALL' ? (d.area === sel ? ' sel' : ' dim') : '');
+  for (const d of r) { const row = document.createElement('div'); row.className = 'pc-rrow' + (sel !== 'ALL' && !window.PC_ZONES.includes(sel) ? (d.area === sel ? ' sel' : ' dim') : '');
     row.dataset.where = PC.where({ stype: d.stype, area: d.area, ...(extra ? extra(d) : {}) });
     const n = document.createElement('span'); n.className = 'n'; n.textContent = d[rankK];
     const l = document.createElement('span'); l.className = 'l'; l.textContent = d.area; l.title = d.area;
@@ -1492,6 +1519,17 @@ const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
     row.title = d.area + ' · ยอด ' + PC.mfmt(d[actK]) + ' · ' + tgtLabel + ' ' + PC.mfmt(d[tgtK]);
     row.append(n, l, t, v); el.append(row); }
 };
+dash.draw('tb_rank_zone', (el) => { const all = PC.rows('area_rank'), ad = PC.rows('area_day'); const st = PC.P().stype, f = rkF(), N = PC.isNet(); const d = rDate();
+  const fm = (v) => (v == null ? '' : N ? PC.nf(Math.round(v)) : PC.nf(v));
+  const r = all && all.filter((x) => x.stype === st && window.PC_ZONES.includes(x.area)).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1)).map((x, i) => { const y = (ad || []).find((z) => z.stype === st && z.area === x.area && z.date === d) || {};
+    return { ...x, zrank: i + 1, areas: [...new Set(all.filter((z) => z.stype === st && PCzone(z.area) === x.area && !window.PC_ZONES.includes(z.area)).map((z) => z.area))].length, dval: y[f.d] ?? null, dach: y[f.ach] ?? null }; });
+  const pill = (k) => (dd) => (dd[k] == null ? ['mute', '–'] : [dd[k] >= 1 ? 'ok' : dd[k] >= 0.9 ? 'warn' : 'bad', PC.pf(dd[k])]);
+  PC.table(el, 'tb_rank_zone', r, { key: ['stype', 'area'], def: 'zrank', dir: 1, cols: [
+    { f: 'zrank', label: 'อันดับ', num: true, fmt: PC.nf }, { f: 'area', label: 'Region' }, { f: 'areas', label: 'Area', num: true, fmt: PC.nf }, { f: 'shops', label: 'สาขาที่มี Target', num: true, fmt: PC.nf },
+    { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'MoM', num: true, pill: (dd) => momPill(dd[N ? 'mom_net' : 'mom_units']) },
+    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + (d ? PC.day(d) : ''), num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
+    { f: f.ttd, label: 'Target ถึงวันนี้', num: true, fmt: fm }, { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
+    { f: f.tgt, label: 'Target ทั้งเดือน', num: true, fmt: fm }, { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm } ] }); });
 dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
 dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้'); });
 dash.draw('c_rank_heat', (el) => {
@@ -1506,7 +1544,7 @@ dash.draw('c_rank_heat', (el) => {
     c.style.background = a == null ? 'transparent' : 'color-mix(in srgb, ' + rkCol(a) + ' ' + (a >= 1 ? Math.min(85, 35 + (a - 1) * 50) : a >= 0.9 ? 45 : Math.max(25, 75 - a * 50)) + '%, transparent)';
     c.textContent = a == null ? '' : Math.round(a * 100); if (x) { c.dataset.where = PC.where({ stype: st, area: x.area, date: x.date }); c.title = x.area + ' · ' + PC.day(x.date) + ' · ' + PC.mfmt(x[f.d]) + ' / Target ' + PC.mfmt(x[f.tpd]) + ' (' + (a == null ? '–' : PC.pf(a)) + ')'; c.onclick = () => dash.setParams({ rdate: x.date }); }
     return c; };
-  for (const a of [{ area: 'ALL', rank: '' }, ...rk]) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = a.area === 'ALL' ? 'รวมทุก Area' : a.rank + '. ' + a.area; if (a.area === 'ALL') l.style.fontWeight = '600'; el.append(l);
+  const TK = window.PC_ZONES.includes(PC.P().area) ? PC.P().area : 'ALL'; for (const a of [{ area: TK, rank: '' }, ...rk]) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = a.area === TK ? (TK === 'ALL' ? 'รวมทุก Area' : 'รวม ' + TK) : a.rank + '. ' + a.area; if (a.area === TK) l.style.fontWeight = '600'; el.append(l);
     for (const d of ds) el.append(cell(by.get(a.area + '|' + d))); }
 });
 dash.draw('tb_rank', (el) => {
@@ -1528,7 +1566,7 @@ const soldRows = () => { const pd = dash.params().period || 'today'; const r = P
   const vk = PC.isNet() ? 'net' : 'qty'; const tot = r.reduce((s, x) => s + x[vk], 0);
   return r.slice().sort((a, b) => b[vk] - a[vk] || b.qty - a.qty).map((x, i) => ({ ...x, rank: i + 1, share: tot ? x[vk] / tot : null })); };
 const scopeShops = () => { const s = PC.rows('shops'); if (!s) return null; const p = PC.P();
-  return s.filter((r) => +r.stype_order < 90 && (p.area === 'ALL' || r.area === p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
+  return s.filter((r) => +r.stype_order < 90 && PCin(r.area, p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
 const noSold = () => { const r = soldRows(), s = scopeShops(); if (!r || !s) return null; const got = new Set(r.filter((x) => x.qty > 0).map((x) => x.shop));
   return s.filter((x) => !got.has(String(x.shop))).sort((a, b) => String(a.area).localeCompare(String(b.area)) || String(a.name).localeCompare(String(b.name), 'th')); };
 dash.draw('sold_period', (el) => { el.textContent = PERIOD_L[dash.params().period || 'today']; });
@@ -1550,13 +1588,13 @@ dash.draw('tb_nosold', (el) => PC.table(el, 'tb_nosold', noSold(), { key: ['shop
 const ST = { out: ['หมด', 'var(--color-bad)', 'bad'], low: ['เสี่ยงขาด (< 1 สัปดาห์)', 'var(--color-bad)', 'bad'], short: ['ไม่พอ 4 สัปดาห์', 'var(--color-warn)', 'warn'], ok: ['พอ (4–8 สัปดาห์)', 'var(--color-ok)', 'ok'], over: ['เกิน (> 8 สัปดาห์)', '#6b7fd7', 'mute'], idle: ['ไม่มียอดขาย 4 สัปดาห์', 'var(--cds-chart-muted)', 'mute'] };
 const ST_ORDER = ['out', 'low', 'short', 'ok', 'over', 'idle'];
 const stRows = (level) => { const r = PC.rows('stock_cover'); if (!r) return null; const p = PC.P();
-  return r.filter((x) => x.level === (level || 'group') && (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)); };
+  return r.filter((x) => x.level === (level || 'group') && PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)); };
 const stTot = () => { const r = stRows('group'); if (!r) return null; const s = r.reduce((a, x) => a + x.stock, 0), q = r.reduce((a, x) => a + x.sold28, 0); return { s, q, cover: q > 0 ? s / (q / 28) : null, r }; };
 const coverTxt = (d) => (d == null ? '–' : d / 7 > 52 ? '> 52 สัปดาห์' : d3.format(',.1f')(d / 7) + ' สัปดาห์');
 const wkTxt = (w) => (w == null ? '–' : w > 52 ? '> 52' : d3.format(',.1f')(w));
 const trendPill = (v) => (v == null ? ['mute', '–'] : [v > 0.2 ? 'bad' : v < -0.2 ? 'mute' : 'ok', (v > 0 ? '▲ +' : v < 0 ? '▼ −' : '') + PC.pf(Math.abs(v))]);
 const stRowsArea = (level) => { const r = PC.rows('stock_cover'); if (!r) return null; const p = PC.P();
-  return r.filter((x) => x.level === level && (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group)); };
+  return r.filter((x) => x.level === level && PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group)); };
 const shortByType = () => { const r = stRows('group'); if (!r) return null; const by = new Map();
   for (const x of r) { const a = by.get(x.key) || { key: x.key, stock: 0, sold: 0, out: [], low: [], short: [], need: 0 }; a.stock += x.stock; a.sold += x.sold28;
     if (x.status === 'out' || x.status === 'low' || x.status === 'short') { a[x.status].push(x); a.need += x.need28; } by.set(x.key, a); }
@@ -1677,10 +1715,10 @@ dash.draw('tb_stock', (el) => {
 /* ---------- missing matcodes ---------- */
 const GL = { urgent: ['ด่วน', 'bad', 'var(--color-bad)'], core: ['ควรมี', 'warn', 'var(--color-warn)'], other: ['อื่น ๆ', 'mute', 'var(--cds-chart-muted)'] };
 const gapRows = (useLevel) => { const r = PC.rows('assort_gap'); if (!r) return null; const p = PC.P(), sc = dash.params().ascope || 'current', lv = dash.params().alevel || 'core';
-  return r.filter((x) => (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)
+  return r.filter((x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)
     && (sc === 'all' || (sc === 'core' ? x.carry_pct >= 0.5 : x.status !== 'EOL'))
     && (!useLevel || lv === 'ALL' || (lv === 'urgent' ? x.level === 'urgent' : x.level !== 'other'))); };
-const gapScope = () => { const s = PC.rows('shops'); if (!s) return null; const p = PC.P(); return s.filter((r) => +r.stype_order < 90 && (p.area === 'ALL' || r.area === p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
+const gapScope = () => { const s = PC.rows('shops'); if (!s) return null; const p = PC.P(); return s.filter((r) => +r.stype_order < 90 && PCin(r.area, p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
 dash.draw('g_urgent', (el) => { const r = gapRows(false); el.textContent = r ? PC.nf(r.filter((x) => x.level === 'urgent').length) : '—'; });
 dash.draw('g_urgent_sub', (el) => { const r = gapRows(false); if (!r) { el.textContent = ''; return; } const u = r.filter((x) => x.level === 'urgent'); el.textContent = 'คู่ สาขา × Matcode · ' + PC.nf(new Set(u.map((x) => x.shop)).size) + ' สาขา · เคยขายรวม ' + PC.nf(u.reduce((a, x) => a + x.sold28_shop, 0)) + ' ชิ้นใน 28 วัน'; });
 dash.draw('g_core', (el) => { const r = gapRows(false); el.textContent = r ? PC.nf(r.filter((x) => x.level === 'core').length) : '—'; });
@@ -1749,7 +1787,7 @@ const WS = { sold: ['ขายแล้ว', 'ok', 'var(--color-ok)'], in_stock:
 const wLists = () => { const r = PC.rows('watch_serials'); return r ? [...new Set(r.map((x) => x.list))] : []; };
 const wList = () => { const ls = wLists(); const v = dash.params().wlist; return ls.includes(v) ? v : ls[ls.length - 1]; };
 const wRows = () => { const r = PC.rows('watch_serials'); if (!r) return null; const p = PC.P(), l = wList();
-  return r.filter((x) => x.list === l && (p.area === 'ALL' || x.area === p.area) && (p.shop === 'ALL' || String(x.shop) === p.shop || String(x.sold_shop) === p.shop)
+  return r.filter((x) => x.list === l && PCin(x.area, p.area) && (p.shop === 'ALL' || String(x.shop) === p.shop || String(x.sold_shop) === p.shop)
     && (p.stype === 'ALL' || (PC.rows('shops') || []).some((s) => String(s.shop) === String(x.shop) && s.stype === p.stype))); };
 const wCount = (r, s) => r.filter((x) => x.status === s).length;
 dash.draw('f_wlist', (sel) => { const ls = wLists(); sel.replaceChildren(...ls.map((l) => new Option(l, l))); sel.value = wList() || ''; sel.onchange = () => dash.setParams({ wlist: sel.value }); });
@@ -1813,7 +1851,7 @@ dash.draw('c_today_trend', (el) => {
 });
 const bandOrderBd = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
 const bdColor = { area: 0, simtype: 1, simgroup: 1, band: 2 };
-for (const [name, dim] of [['bd_area', 'area'], ['bd_simtype', 'simtype'], ['bd_simgroup', 'simgroup'], ['bd_band', 'band']])
+for (const [name, dim] of [['bd_zone', 'zone'], ['bd_area', 'area'], ['bd_simtype', 'simtype'], ['bd_simgroup', 'simgroup'], ['bd_band', 'band']])
   dash.draw('c_' + name, (el) => {
     if (PC.failed(el, 'breakdown')) return;
     const r0 = PC.pick('breakdown', { period: dash.params().period || 'today', dim }); if (!r0) { el.replaceChildren(); return; }
@@ -1840,7 +1878,7 @@ dash.draw('tb_today', (el) => {
 const bdCols = (label) => [{ f: 'key', label }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'share_net', label: '% Net', num: true, fmt: PC.pf },
   { f: 'qty', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'share_qty', label: '% QTY', num: true, fmt: PC.pf }];
 const bdRows = (dim) => PC.pick('breakdown', { period: dash.params().period || 'today', dim });
-for (const [name, dim, label, def, dir] of [['bd_area', 'area', 'Area', 'm', -1], ['bd_simtype', 'simtype', 'Type Sim (Custom Model)', 'm', -1], ['bd_simgroup', 'simgroup', 'ประเภทซิม (รุ่นย่อย)', 'm', -1], ['bd_band', 'band', 'กลุ่มราคา', 'ord', 1]])
+for (const [name, dim, label, def, dir] of [['bd_zone', 'zone', 'Region', 'm', -1], ['bd_area', 'area', 'Area', 'm', -1], ['bd_simtype', 'simtype', 'Type Sim (Custom Model)', 'm', -1], ['bd_simgroup', 'simgroup', 'ประเภทซิม (รุ่นย่อย)', 'm', -1], ['bd_band', 'band', 'กลุ่มราคา', 'ord', 1]])
   dash.draw(name, (el) => PC.table(el, name, bdRows(dim), { key: ['area', 'stype', 'group', 'period', 'dim', 'key'], def: def === 'm' ? (PC.isNet() ? 'net' : 'qty') : def, dir, cols: bdCols(label) }));
 const momPill = (v) => (v == null ? ['mute', '–'] : [v >= 0 ? 'ok' : v > -0.1 ? 'warn' : 'bad', (v > 0 ? '+' : v < 0 ? '−' : '') + PC.pf(Math.abs(v))]);
 const momCols = (rows) => { const N = PC.isNet(); const r0 = rows && rows[0]; const lbl = r0 && r0.pm_to ? PC.day(r0.pm_to.slice(0, 8) + '01').replace(/^1 /, '1–' + (+r0.pm_to.slice(8)) + ' ') : 'เดือนก่อน';
@@ -1856,8 +1894,8 @@ dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', mAgg(), { key: ['matcode'], d
   { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'Type Sim' }, { f: 'status', label: 'สถานะ' },
   { f: 'price', label: 'ราคาป้าย', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() },
   { f: PC.isNet() ? 'share_n' : 'share_u', label: PC.isNet() ? '% Net' : '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'Stock คงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: (v) => (v > 52 ? '> 52' : d3.format(',.1f')(v)) } ] }));
-dash.draw('tb_region', (el) => PC.table(el, 'tb_region', PC.pick('region_perf'), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
-  { f: 'region', label: 'ภาค' }, ...momCols(PC.pick('region_perf')), { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, ...tgtCols(),
+dash.draw('tb_region', (el) => PC.table(el, 'tb_region', (PC.pick('region_perf') || null) && PC.pick('region_perf').map((x) => ({ ...x, zone: PCzone(x.region) || '-' })), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
+  { f: 'region', label: 'ภาค' }, { f: 'zone', label: 'Region' }, ...momCols(PC.pick('region_perf')), { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, ...tgtCols(),
   { f: 'units', label: 'QTY ทั้งปี', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount ทั้งปี', num: true, fmt: PC.nf, bar: PC.isNet() } ] }));
 dash.draw('tb_shop', (el) => PC.table(el, 'tb_shop', PC.pick('shop_perf'), { key: ['area', 'stype', 'group', 'shop'], def: PC.isNet() ? 'net' : 'units', q: 'shop', cols: [
   { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, ...momCols(PC.pick('shop_perf')), { f: 'region', label: 'ภาค' }, { f: 'type', label: 'ประเภทสาขา' },
@@ -1880,7 +1918,7 @@ dash.draw('tb_expshop', (el) => PC.table(el, 'tb_expshop', PC.pick('exp_shop', {
   { f: 'soon', label: 'เหลือ ≤ 90 วัน', num: true, fmt: PC.nf }, { f: 'value', label: 'มูลค่า (บาท)', num: true, fmt: (v) => PC.nf(Math.round(v)) } ] }));
 dash.draw('tb_exp', (el) => {
   const all = PC.rows('exp'); const p = PC.P(), f = 'left_' + p.life;
-  const r = all && all.filter((x) => (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && x[f] <= 90);
+  const r = all && all.filter((x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && x[f] <= 90);
   PC.table(el, 'tb_exp', r, { key: ['serial'], def: f, dir: 1, q: 'exp', limit: 1000, cols: [
     { f: f, label: 'สถานะ', pill: (d) => d[f] <= 0 ? ['bad', 'เกินอายุ ' + PC.nf(-d[f]) + ' วัน'] : d[f] <= 30 ? ['bad', 'เหลือ ' + d[f] + ' วัน'] : d[f] <= 60 ? ['warn', 'เหลือ ' + d[f] + ' วัน'] : ['mute', 'เหลือ ' + d[f] + ' วัน'] },
     { f: 'serial', label: 'Serial' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'สินค้า', wrap: true },
