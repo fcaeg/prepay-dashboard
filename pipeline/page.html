@@ -493,7 +493,7 @@ body.pc-noscroll { overflow: hidden; }
       <p class="pc-note" data-draw="sh_range" data-source="enriched"></p>
     </div>
     <article class="pc-card" id="card-regions">
-      <h3>ยอดขายตามภาค (Area) · <span data-draw="sh_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
+      <h3>ยอดขายตามภาค (Area) · <span data-draw="sh_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="Target ของช่วงที่เลือก = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="Target ของช่วงที่เลือก = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
       <div class="pc-scroll">
         <table data-draw="tb_region" data-source="enriched targets shops" data-row-key="area"></table>
       </div>
@@ -528,7 +528,7 @@ body.pc-noscroll { overflow: hidden; }
       <p class="pc-note" data-draw="st_range" data-source="enriched"></p>
     </div>
     <article class="pc-card" id="card-stafftable">
-      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
+      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
       <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
@@ -587,7 +587,7 @@ body.pc-noscroll { overflow: hidden; }
     <article class="pc-card pc-insight" id="card-sa-text">
       <h3>บทวิเคราะห์ยอดขาย</h3>
       <ul class="pc-ins" data-draw="sa_text" data-source="enriched targets staff shops"></ul>
-      <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target" data-tip="วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target">i</span> คำอธิบาย</p>
+      <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="วิธีวิเคราะห์: เทียบกับช่วงเปรียบเทียบ (Same Day LW / Week ก่อน / LMTD) · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target" data-tip="วิธีวิเคราะห์: เทียบกับช่วงเปรียบเทียบ (Same Day LW / Week ก่อน / LMTD) · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target">i</span> คำอธิบาย</p>
     </article>
 
     <article class="pc-card" id="card-sa-alert">
@@ -597,18 +597,18 @@ body.pc-noscroll { overflow: hidden; }
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-rank">
-        <h3>ยอดขายราย <span data-draw="sa_lvl1" data-source="enriched"></span> · เทียบช่วงก่อนหน้า <span class="pc-info" tabindex="0" role="note" aria-label="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงก่อนหน้า · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)" data-tip="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงก่อนหน้า · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)">i</span></h3>
+        <h3>ยอดขายราย <span data-draw="sa_lvl1" data-source="enriched"></span> · เทียบช่วงเปรียบเทียบ <span class="pc-info" tabindex="0" role="note" aria-label="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงเปรียบเทียบ · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)" data-tip="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงเปรียบเทียบ · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)">i</span></h3>
         <div class="pc-sachart" data-draw="c_sa_rank" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pvm">
-        <h3>ยอดเปลี่ยนเพราะอะไร: จำนวนชิ้น หรือ ราคา <span class="pc-info" tabindex="0" role="note" aria-label="ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้" data-tip="ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้">i</span></h3>
+        <h3>ยอดเปลี่ยนเพราะอะไร: จำนวนชิ้น หรือ ราคา <span class="pc-info" tabindex="0" role="note" aria-label="ยอดช่วงเปรียบเทียบ → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงที่เลือก" data-tip="ยอดช่วงเปรียบเทียบ → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงที่เลือก">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_pvm" data-source="enriched"></div>
       </article>
     </div>
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-trend">
-        <h3>แนวโน้มรายวัน · ช่วงนี้เทียบช่วงก่อนหน้า <span class="pc-info" tabindex="0" role="note" aria-label="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงก่อนหน้า (เทียบวันลำดับเดียวกัน)" data-tip="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงก่อนหน้า (เทียบวันลำดับเดียวกัน)">i</span></h3>
+        <h3>แนวโน้มรายวัน · เทียบช่วงเปรียบเทียบ <span class="pc-info" tabindex="0" role="note" aria-label="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงเปรียบเทียบ (เทียบวันลำดับเดียวกัน)" data-tip="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงเปรียบเทียบ (เทียบวันลำดับเดียวกัน)">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_trend" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pareto">
@@ -619,11 +619,11 @@ body.pc-noscroll { overflow: hidden; }
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-contrib">
-        <h3>ใครทำให้ยอดเพิ่ม / ลด <span class="pc-info" tabindex="0" role="note" aria-label="ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด" data-tip="ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด">i</span></h3>
+        <h3>ใครทำให้ยอดเพิ่ม / ลด <span class="pc-info" tabindex="0" role="note" aria-label="ส่วนต่างยอด (ช่วงที่เลือก − ช่วงเปรียบเทียบา) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด" data-tip="ส่วนต่างยอด (ช่วงที่เลือก − ช่วงเปรียบเทียบา) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด">i</span></h3>
         <div class="pc-sachart" data-draw="c_sa_contrib" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-bcg">
-        <h3>จัดกลุ่มผลงาน (สัดส่วนยอดขาย × การเติบโต) <span class="pc-info" tabindex="0" role="note" aria-label="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;" data-tip="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;">i</span></h3>
+        <h3>จัดกลุ่มผลงาน (สัดส่วนยอดขาย × การเติบโต) <span class="pc-info" tabindex="0" role="note" aria-label="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงเปรียบเทียบ (Same Day LW / Week ก่อน / LMTD) · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;" data-tip="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงเปรียบเทียบ (Same Day LW / Week ก่อน / LMTD) · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_bcg" data-source="enriched"></div>
       </article>
     </div>
@@ -1609,7 +1609,7 @@ dash.draw('c_bands_net', (el) => { if (PC.failed(el, 'enriched')) return; const 
   for (const a of r) { const b = by.get(a.band) || { band: a.band, units: 0, net: 0 }; b.units += a.units; b.net += a.net; by.set(a.band, b); }
   const d = [...by.values()].filter((b) => b.units !== 0 || b.net !== 0); const tot = d.reduce((s, b) => s + (N ? b.net : b.units), 0);
   PC.hbar(el, d.sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)).map((b) => ({ ...b, share: tot ? (N ? b.net : b.units) / tot : 0 })), { label: 'band', value: N ? 'net' : 'units', share: 'share', sub: (b) => PC.mfmt(N ? b.net : b.units) + (N ? ' · QTY ' + PC.nf(b.units) : ' · ฿' + PC.nf(b.net)), color: dash.colors[2] });
-  if (!d.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงนี้'; el.append(e); } });
+  if (!d.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงที่เลือก'; el.append(e); } });
 </script>
 
 <script>
@@ -1722,7 +1722,7 @@ const noSold = () => { const r = soldRows(), s = scopeShops(); if (!r || !s) ret
 dash.draw('sold_period', (el) => { el.textContent = PERIOD_L[dash.params().period || 'today']; });
 dash.draw('sold_note', (el) => { const r = soldRows(), s = scopeShops(); if (!r || !s) { el.textContent = '—'; return; }
   const n = r.filter((x) => x.qty > 0).length; el.textContent = 'ขายได้ ' + PC.nf(n) + ' จาก ' + PC.nf(s.length) + ' สาขา'; });
-dash.draw('nosold_sum', (el) => { const r = noSold(); el.textContent = r ? 'ดูสาขาที่ยังไม่มียอดขายในช่วงนี้ (' + PC.nf(r.length) + ' สาขา)' : 'ดูสาขาที่ยังไม่มียอดขายในช่วงนี้'; });
+dash.draw('nosold_sum', (el) => { const r = noSold(); el.textContent = r ? 'ดูสาขาที่ยังไม่มียอดขายในช่วงที่เลือก (' + PC.nf(r.length) + ' สาขา)' : 'ดูสาขาที่ยังไม่มียอดขายในช่วงที่เลือก'; });
 dash.draw('tb_shopsold', (el) => {
   const N = PC.isNet();
   PC.table(el, 'tb_shopsold', soldRows(), { key: ['area', 'stype', 'group', 'period', 'shop'], def: 'rank', dir: 1, cols: [
@@ -2010,7 +2010,7 @@ for (const [name, dim] of [['bd_zone', 'zone'], ['bd_area', 'area'], ['bd_simtyp
     r = dim === 'band' ? r.sort((a, b) => bandOrderBd.indexOf(a.key) - bandOrderBd.indexOf(b.key)) : r.sort((a, b) => b[vk] - a[vk]);
     if (dim === 'simgroup') r = r.slice(0, 10);
     PC.hbar(el, r, { label: 'key', value: vk, share: sk, sub: (d) => PC.mfmt(d[vk]), color: dash.colors[bdColor[dim]] });
-    if (!r.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงนี้'; el.append(e); }
+    if (!r.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงที่เลือก'; el.append(e); }
   });
 
 /* ---------- tables ---------- */
