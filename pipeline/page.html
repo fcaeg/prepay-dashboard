@@ -275,7 +275,6 @@ body.pc-noscroll { overflow: hidden; }
     <button class="pc-tab" type="button" role="tab" data-tab="shops" aria-selected="false">สาขา</button>
     <button class="pc-tab" type="button" role="tab" data-tab="sales" aria-selected="false">Sale Analysis</button>
     <button class="pc-tab" type="button" role="tab" data-tab="ranking" aria-selected="false">Ranking Area</button>
-    <button class="pc-tab" type="button" role="tab" data-tab="staff" aria-selected="false">พนักงาน</button>
     <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock Cover Week</button>
     <button class="pc-tab" type="button" role="tab" data-tab="watch" aria-selected="false">ติดตามซิมใกล้หมดอายุ (Serial)</button>
     <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">Aging Sim</button>
@@ -600,6 +599,21 @@ body.pc-noscroll { overflow: hidden; }
       <h3>ตารางรายละเอียด · ราย <span data-draw="sa_lvl3" data-source="enriched"></span></h3>
       <div class="pc-scroll"><table data-draw="tb_sa" data-source="enriched" data-row-key="key"></table></div>
     </article>
+    <article class="pc-card" id="card-stafftable">
+      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
+      <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
+          <input id="q-staff" class="pc-q" data-q="staff" type="search" aria-label="ค้นหาพนักงาน">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_staff" data-source="enriched staff shops" data-row-key="emp"></table>
+      </div>
+      <details><summary data-draw="st_none_sum" data-source="enriched staff shops"></summary>
+        <div class="pc-scroll"><table data-draw="tb_staff_none" data-source="enriched staff shops" data-row-key="emp"></table></div>
+      </details>
+    </article>
   </section>
 
   <section class="pc-sec" id="ranking" data-page="ranking" hidden>
@@ -663,37 +677,6 @@ body.pc-noscroll { overflow: hidden; }
     </article>
   </section>
 
-  <section class="pc-sec" id="staff" data-page="staff" hidden>
-    <div class="pc-bar">
-      <label class="pc-field">ช่วงเวลา
-        <select id="f-stperiod" aria-label="ช่วงเวลาหน้าพนักงาน">
-          <option value="today">วันนี้</option>
-          <option value="week">Week</option>
-          <option value="mtd">MTD (เดือนนี้)</option>
-          <option value="ytd">YTD (ตั้งแต่ต้นปี)</option>
-        </select>
-      </label>
-      <label class="pc-field" id="wrap-stweek">สัปดาห์
-        <select id="f-stweek" data-draw="f_stweek" data-source="enriched" aria-label="เลือกสัปดาห์"></select>
-      </label>
-      <p class="pc-note" data-draw="st_range" data-source="enriched"></p>
-    </div>
-    <article class="pc-card" id="card-stafftable">
-      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
-      <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
-      <div class="pc-tools">
-        <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
-          <input id="q-staff" class="pc-q" data-q="staff" type="search" aria-label="ค้นหาพนักงาน">
-        </label>
-      </div>
-      <div class="pc-scroll">
-        <table data-draw="tb_staff" data-source="enriched staff shops" data-row-key="emp"></table>
-      </div>
-      <details><summary data-draw="st_none_sum" data-source="enriched staff shops"></summary>
-        <div class="pc-scroll"><table data-draw="tb_staff_none" data-source="enriched staff shops" data-row-key="emp"></table></div>
-      </details>
-    </article>
-  </section>
 
   <section class="pc-sec" id="stock" data-page="stock" hidden>
     <div class="pc-tiles">
