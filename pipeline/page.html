@@ -759,7 +759,7 @@ window.PC_CALCS = window.PC_CALCS || {};
 function PCzone(a) { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }
 function PCz(a) { const z = PCzone(a); return z ? [z] : []; }
 function PCin(a, sel) { return sel === 'ALL' || a === sel || PCzone(a) === sel; }
-window.PC_ZONES = ['BMA', 'UPC I', 'UPC II'];
+window.PC_ZONES = ['BMA', 'UPC I', 'UPC II']; window.PCzone = PCzone; window.PCz = PCz; window.PCin = PCin;
 function PCdef(id, spec) { window.PC_CALCS[id] = spec; return spec; }
 dash.calc('enriched', PCdef('enriched', {
   title: 'ยอดขายพร้อมกลุ่มซิม ช่วงราคา และภาค',
