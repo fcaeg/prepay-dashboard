@@ -370,21 +370,35 @@
   </section>
 
   <section class="pc-sec" id="products" data-page="products" hidden>
+    <div class="pc-bar">
+      <label class="pc-field">ช่วงเวลา
+        <select id="f-mperiod" aria-label="ช่วงเวลาของหน้า Matcode">
+          <option value="today">วันนี้</option>
+          <option value="week">Week</option>
+          <option value="mtd">MTD (เดือนนี้)</option>
+          <option value="ytd">YTD (ตั้งแต่ต้นปี)</option>
+        </select>
+      </label>
+      <label class="pc-field" id="wrap-mweek">สัปดาห์
+        <select id="f-mweek" data-draw="f_mweek" data-source="enriched" aria-label="เลือกสัปดาห์"></select>
+      </label>
+      <p class="pc-note" data-draw="m_range" data-source="enriched"></p>
+    </div>
     <article class="pc-card" id="card-bands-net">
-      <h3>Net Amount ตามช่วงราคา</h3>
-      <p>ช่วงราคาต่ำขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง เทียบทั้งสองแบบก่อนตัดสินใจเรื่องสต็อก</p>
-      <div class="pc-hbars" data-draw="c_bands_net" data-source="bands"></div>
+      <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span></h3>
+      <p>ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ</p>
+      <div class="pc-hbars" data-draw="c_bands_net" data-source="enriched"></div>
     </article>
     <article class="pc-card" id="card-matcodes">
-      <h3>Matcode ที่ขายดี</h3>
-      <p>เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · "สต็อกพอขาย" = สต็อกคงเหลือ ÷ ยอดขายเฉลี่ยต่อวันของเดือนล่าสุด</p>
+      <h3>Matcode ที่ขายดี · <span data-draw="m_plabel2" data-source="enriched"></span></h3>
+      <p>ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด</p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหา Matcode หรือชื่อสินค้า
           <input id="q-mat" class="pc-q" data-q="mat" type="search" aria-label="ค้นหา Matcode">
         </label>
       </div>
       <div class="pc-scroll">
-        <table data-draw="tb_mat" data-source="mat" data-row-key="area,stype,group,matcode"></table>
+        <table data-draw="tb_mat" data-source="enriched stock_by_shop matcodes" data-row-key="matcode"></table>
       </div>
     </article>
   </section>
@@ -1253,6 +1267,7 @@ document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('ch
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
 document.querySelectorAll('#f-ascope').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ ascope: sel.value })));
 document.querySelectorAll('#f-wstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ wstatus: sel.value })));
+document.querySelectorAll('#f-mperiod').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ mperiod: sel.value })));
 document.querySelectorAll('#f-alevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ alevel: sel.value })));
 document.querySelectorAll('#f-sstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ sstatus: sel.value })));
 dash.draw('metric_seg', (el) => { const m = PC.M(); el.replaceChildren(...[['net', 'Net Amount'], ['qty', 'QTY']].map(([k, l]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.metric = k; b.textContent = l; b.setAttribute('aria-pressed', String(k === m)); b.onclick = () => dash.setParams({ metric: k }); return b; })); });
@@ -1268,6 +1283,7 @@ dash.draw('ml_9', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_10', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_11', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_12', (el) => { el.textContent = PC.mlabel(); });
+dash.draw('ml_13', (el) => { el.textContent = PC.mlabel(); });
 
 dash.onData(() => {
   document.querySelectorAll('#f-life').forEach((sel) => { sel.value = String(dash.params().life || 365); });
@@ -1275,6 +1291,8 @@ dash.onData(() => {
   document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'group'; });
   document.querySelectorAll('#f-ascope').forEach((sel) => { sel.value = dash.params().ascope || 'current'; });
   document.querySelectorAll('#f-wstatus').forEach((sel) => { sel.value = dash.params().wstatus || 'ALL'; });
+  document.querySelectorAll('#f-mperiod').forEach((sel) => { sel.value = dash.params().mperiod || 'mtd'; });
+  document.querySelectorAll('#wrap-mweek').forEach((n) => { n.hidden = (dash.params().mperiod || 'mtd') !== 'week'; });
   document.querySelectorAll('#f-alevel').forEach((sel) => { sel.value = dash.params().alevel || 'core'; });
   document.querySelectorAll('#f-sstatus').forEach((sel) => { sel.value = dash.params().sstatus || 'ALL'; });
   const m = PC.rows('monthly');
@@ -1400,7 +1418,35 @@ dash.draw('c_groups', (el) => {
 });
 const bandOrder = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
 dash.draw('c_bands', (el) => { if (PC.failed(el, 'bands')) return; const r = PC.pick('bands'); PC.hbar(el, r && r.slice().sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)), PC.isNet() ? { label: 'band', value: 'net', share: 'share_net', sub: (d) => PC.mfmt(d.net) } : { label: 'band', value: 'units', share: 'share_units', sub: (d) => PC.mfmt(d.units) }); });
-dash.draw('c_bands_net', (el) => { if (PC.failed(el, 'bands')) return; const r = PC.pick('bands'); PC.hbar(el, r && r.slice().sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)), { label: 'band', value: 'net', share: 'share_net', sub: (d) => 'Net ฿' + PC.nf(d.net), color: dash.colors[2] }); });
+const isoWeek = (ds) => { const d = new Date(ds + 'T00:00:00Z'); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day + 3); const y = d.getUTCFullYear(); const f = new Date(Date.UTC(y, 0, 4)); return { y, w: 1 + Math.round(((d - f) / 864e5 - 3 + ((f.getUTCDay() + 6) % 7)) / 7) }; };
+const weekRange = (y, w) => { const f = new Date(Date.UTC(y, 0, 4)); const mon = new Date(f.getTime() - ((f.getUTCDay() + 6) % 7) * 864e5 + (w - 1) * 7 * 864e5); const iso = (x) => x.toISOString().slice(0, 10); return [iso(mon), iso(new Date(mon.getTime() + 6 * 864e5))]; };
+const mInfo = () => { const r = PC.rows('enriched'); if (!r || !r.length) return null; const today = r.reduce((a, x) => (x.date > a ? x.date : a), ''); const cur = isoWeek(today);
+  const pd = dash.params().mperiod || 'mtd'; const wk = +(dash.params().mweek || cur.w);
+  let from, to = today, label;
+  if (pd === 'today') { from = today; label = 'วันนี้ ' + PC.day(today); }
+  else if (pd === 'week') { const [a, b] = weekRange(cur.y, Math.min(wk, cur.w)); from = a; to = b < today ? b : today; label = 'Week ' + Math.min(wk, cur.w) + (Math.min(wk, cur.w) === cur.w ? ' (สัปดาห์นี้)' : ''); }
+  else if (pd === 'ytd') { from = today.slice(0, 4) + '-01-01'; label = 'YTD ' + (+today.slice(0, 4) + 543); }
+  else { from = today.slice(0, 7) + '-01'; label = 'MTD ' + PC.mon(today.slice(0, 7)); }
+  return { today, cur, pd, wk: Math.min(wk, cur.w), from, to, label }; };
+const mAgg = () => { const r = PC.rows('enriched'), mt = PC.rows('matcodes'), st = PC.rows('stock_by_shop'), shs = PC.rows('shops'); const I = mInfo(); if (!r || !mt || !st || !shs || !I) return null; const p = PC.P();
+  const ok = (x) => (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group);
+  const f28 = new Date(Date.parse(I.today + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+  const mm = new Map(mt.map((x) => [String(x.matcode), x])); const by = new Map(); const g = (k) => { if (!by.has(k)) { const m = mm.get(k) || {}; by.set(k, { matcode: k, name: m.name || k, sim_group: m.group || '-', price: m.price ?? null, band: m.band || 'ไม่ทราบราคา', status: m.status || '-', units: 0, net: 0, stock: 0, s28: 0 }); } return by.get(k); };
+  for (const x of r) { if (!ok(x)) continue; if (x.date >= I.from && x.date <= I.to) { const a = g(x.matcode); a.units += x.units; a.net += x.net; } if (x.date >= f28) g(x.matcode).s28 += x.units; }
+  const sh = new Map(shs.map((s) => [String(s.shop), s]));
+  for (const s of st) { const S = sh.get(String(s.shop)); if (!S) continue; const m = mm.get(String(s.matcode)) || {}; if (!((p.area === 'ALL' || S.area === p.area) && (p.stype === 'ALL' || S.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop) && (p.group === 'ALL' || m.group === p.group))) continue; g(String(s.matcode)).stock += +s.qty || 0; }
+  const rows = [...by.values()].filter((a) => a.units !== 0 || a.net !== 0 || a.stock > 0); const tu = rows.reduce((s, a) => s + a.units, 0), tn = rows.reduce((s, a) => s + a.net, 0);
+  return rows.map((a) => ({ ...a, net: Math.round(a.net), share_u: tu ? a.units / tu : 0, share_n: tn ? a.net / tn : 0, cover_wk: a.s28 > 0 ? Math.round((a.stock / (a.s28 / 4)) * 10) / 10 : null })); };
+dash.draw('f_mweek', (sel) => { const I = mInfo(); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = weekRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); }
+  sel.replaceChildren(...o); sel.value = String(I.wk); sel.onchange = () => dash.setParams({ mweek: +sel.value }); });
+dash.draw('m_range', (el) => { const I = mInfo(); el.textContent = I ? 'ข้อมูล ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + ' · สัปดาห์นับจันทร์–อาทิตย์ (ISO week)' : ''; });
+dash.draw('m_plabel', (el) => { const I = mInfo(); el.textContent = I ? I.label : ''; });
+dash.draw('m_plabel2', (el) => { const I = mInfo(); el.textContent = I ? I.label : ''; });
+dash.draw('c_bands_net', (el) => { if (PC.failed(el, 'enriched')) return; const r = mAgg(); el.replaceChildren(); if (!r) return; const N = PC.isNet(); const by = new Map();
+  for (const a of r) { const b = by.get(a.band) || { band: a.band, units: 0, net: 0 }; b.units += a.units; b.net += a.net; by.set(a.band, b); }
+  const d = [...by.values()].filter((b) => b.units !== 0 || b.net !== 0); const tot = d.reduce((s, b) => s + (N ? b.net : b.units), 0);
+  PC.hbar(el, d.sort((a, b) => bandOrder.indexOf(a.band) - bandOrder.indexOf(b.band)).map((b) => ({ ...b, share: tot ? (N ? b.net : b.units) / tot : 0 })), { label: 'band', value: N ? 'net' : 'units', share: 'share', sub: (b) => PC.mfmt(N ? b.net : b.units) + (N ? ' · QTY ' + PC.nf(b.units) : ' · ฿' + PC.nf(b.net)), color: dash.colors[2] });
+  if (!d.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มียอดขายในช่วงนี้'; el.append(e); } });
 </script>
 
 <script>
@@ -1806,10 +1852,10 @@ const tgtCols = () => { const N = PC.isNet(); const pill = (k) => (d) => achPill
     : [{ f: 'target', label: 'Target เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'mtd', label: m + ' เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach', label: '% Target', num: true, pill: pill('ach') },
       { f: 'ytd_target', label: 'Target สะสม', num: true, fmt: PC.nf }, { f: 'ytd_units', label: m + ' สะสม', num: true, fmt: PC.nf }, { f: 'ytd_ach', label: '% Target สะสม', num: true, pill: pill('ytd_ach') }]; };
 const achPill = (d) => d.ach == null ? ['mute', '–'] : [d.ach >= 0.95 ? 'ok' : d.ach >= 0.8 ? 'warn' : 'bad', PC.pf(d.ach)];
-dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', PC.pick('mat'), { key: ['area', 'stype', 'group', 'matcode'], def: PC.isNet() ? 'net' : 'units', q: 'mat', cols: [
-  { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'กลุ่ม' }, { f: 'status', label: 'สถานะ' },
+dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', mAgg(), { key: ['matcode'], def: PC.isNet() ? 'net' : 'units', q: 'mat', cols: [
+  { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'Type Sim' }, { f: 'status', label: 'สถานะ' },
   { f: 'price', label: 'ราคาป้าย', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() },
-  { f: 'share', label: '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'สต็อกคงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_days', label: 'สต็อกพอขาย (วัน)', num: true, fmt: PC.nf } ] }));
+  { f: PC.isNet() ? 'share_n' : 'share_u', label: PC.isNet() ? '% Net' : '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'Stock คงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: (v) => (v > 52 ? '> 52' : d3.format(',.1f')(v)) } ] }));
 dash.draw('tb_region', (el) => PC.table(el, 'tb_region', PC.pick('region_perf'), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
   { f: 'region', label: 'ภาค' }, ...momCols(PC.pick('region_perf')), { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, ...tgtCols(),
   { f: 'units', label: 'QTY ทั้งปี', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount ทั้งปี', num: true, fmt: PC.nf, bar: PC.isNet() } ] }));
