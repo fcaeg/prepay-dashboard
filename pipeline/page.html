@@ -424,23 +424,38 @@
   </section>
 
   <section class="pc-sec" id="shops" data-page="shops" hidden>
+    <div class="pc-bar">
+      <label class="pc-field">ช่วงเวลา
+        <select id="f-shperiod" aria-label="ช่วงเวลาหน้าสาขา">
+          <option value="today">วันนี้</option>
+          <option value="week">Week</option>
+          <option value="mtd">MTD (เดือนนี้)</option>
+          <option value="ytd">YTD (ตั้งแต่ต้นปี)</option>
+        </select>
+      </label>
+      <label class="pc-field" id="wrap-shweek">สัปดาห์
+        <select id="f-shweek" data-draw="f_shweek" data-source="enriched" aria-label="เลือกสัปดาห์"></select>
+      </label>
+      <p class="pc-note" data-draw="sh_range" data-source="enriched"></p>
+    </div>
     <article class="pc-card" id="card-regions">
-      <h3>ยอดขายตามภาค (Region)</h3>
-      <p>ภาคและ Target มาจากไฟล์ Retail WW Target รายเดือน · สาขา WW ที่ไม่อยู่ในไฟล์ Target รวมไว้ในแถว "ไม่มีในไฟล์ Target"</p>
+      <h3>ยอดขายตามภาค (Area) · <span data-draw="sh_label" data-source="enriched"></span></h3>
+      <p>Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน</p>
       <div class="pc-scroll">
-        <table data-draw="tb_region" data-source="region_perf" data-row-key="area,stype,group,region"></table>
+        <table data-draw="tb_region" data-source="enriched targets shops" data-row-key="area"></table>
       </div>
     </article>
     <article class="pc-card" id="card-shoptable">
-      <h3>ยอดขายรายสาขา</h3>
-      <p>ประเภทสาขาตามไฟล์ Target เดือนล่าสุดที่สาขาปรากฏ · Target และ % Target เปลี่ยนตามปุ่มดูยอด (Net Amount หรือ QTY) · % Target เดือนล่าสุด = ยอดเดือนล่าสุด ÷ Target PRE เดือนนั้น · % Target สะสม = ยอดในเดือนที่สาขามี Target ÷ Target รวม ม.ค. ถึงเดือนล่าสุด (คิดเมื่อเลือกทุกกลุ่มซิม) · สต็อกเก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
+      <h3>ยอดขายรายสาขา · <span data-draw="sh_label2" data-source="enriched"></span></h3>
+      <p>ประเภทสาขาตามไฟล์ Target เดือนล่าสุด · Stock = คงเหลือล่าสุด · Stock เก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
+      <p class="pc-note" data-draw="sh_sum" data-source="enriched shops"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัสหรือชื่อสาขา
           <input id="q-shop" class="pc-q" data-q="shop" type="search" aria-label="ค้นหาสาขา">
         </label>
       </div>
       <div class="pc-scroll">
-        <table data-draw="tb_shop" data-source="shop_perf" data-row-key="area,stype,group,shop"></table>
+        <table data-draw="tb_shop" data-source="enriched targets shops stock_by_shop" data-row-key="shop"></table>
       </div>
     </article>
   </section>
@@ -2034,14 +2049,6 @@ dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', mAgg(), { key: ['matcode'], d
   { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อสินค้า', wrap: true }, { f: 'sim_group', label: 'Type Sim' }, { f: 'status', label: 'สถานะ' },
   { f: 'price', label: 'ราคาป้าย', num: true, fmt: PC.nf }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() },
   { f: PC.isNet() ? 'share_n' : 'share_u', label: PC.isNet() ? '% Net' : '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'Stock คงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: (v) => (v > 52 ? '> 52' : d3.format(',.1f')(v)) } ] }));
-dash.draw('tb_region', (el) => PC.table(el, 'tb_region', (PC.pick('region_perf') || null) && PC.pick('region_perf').map((x) => ({ ...x, zone: PCzone(x.region) || '-' })), { key: ['area', 'stype', 'group', 'region'], def: PC.isNet() ? 'net' : 'units', cols: [
-  { f: 'region', label: 'ภาค' }, { f: 'zone', label: 'Region' }, ...momCols(PC.pick('region_perf')), { f: 'shops', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, ...tgtCols(),
-  { f: 'units', label: 'QTY ทั้งปี', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount ทั้งปี', num: true, fmt: PC.nf, bar: PC.isNet() } ] }));
-dash.draw('tb_shop', (el) => PC.table(el, 'tb_shop', PC.pick('shop_perf'), { key: ['area', 'stype', 'group', 'shop'], def: PC.isNet() ? 'net' : 'units', q: 'shop', cols: [
-  { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, ...momCols(PC.pick('shop_perf')), { f: 'region', label: 'ภาค' }, { f: 'type', label: 'ประเภทสาขา' },
-  ...tgtCols(),
-  { f: 'units', label: 'QTY ทั้งปี', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount ทั้งปี', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf },
-  { f: 'stock', label: 'สต็อก', num: true, fmt: PC.nf }, { f: 'aged', label: 'สต็อกเก่า', num: true, fmt: PC.nf } ] }));
 </script>
 
 <script>
