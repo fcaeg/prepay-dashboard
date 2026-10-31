@@ -623,6 +623,9 @@
       <div class="pc-scroll">
         <table data-draw="tb_staff" data-source="enriched staff shops" data-row-key="emp"></table>
       </div>
+      <details><summary data-draw="st_none_sum" data-source="enriched staff shops"></summary>
+        <div class="pc-scroll"><table data-draw="tb_staff_none" data-source="enriched staff shops" data-row-key="emp"></table></div>
+      </details>
     </article>
   </section>
 
@@ -1400,7 +1403,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], exp: ['tb_exp'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-life').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ life: +sel.value })));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));

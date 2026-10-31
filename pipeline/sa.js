@@ -239,8 +239,21 @@ dash.draw('tb_staff', (el) => { const I = stInfo(); const N = PC.isNet(); const 
     { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf },
     ...(I && I.pf ? [{ f: 'prev', label: (N ? 'Net Amount' : 'QTY') + ' ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'growth', label: 'เทียบช่วงก่อน', num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', (d.growth > 0 ? '+' : d.growth < 0 ? '−' : '') + PC.pf(Math.abs(d.growth))]) }] : []),
     { f: 'asp', label: 'ราคาเฉลี่ย/ชิ้น', num: true, fmt: PC.nf }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf }, { f: 'days', label: 'วันที่มียอด', num: true, fmt: PC.nf } ] }); });
-dash.draw('st_sum', (el) => { const r = stAgg(); if (!r) { el.textContent = ''; return; } const act = r.filter((x) => x.units > 0); const N = PC.isNet(); const tot = d3.sum(act, (x) => (N ? x.net : x.units));
-  el.textContent = 'พนักงานที่มียอด ' + PC.nf(act.length) + ' คน · ยอดรวม ' + PC.mfmt(Math.round(tot)) + ' · เฉลี่ยต่อคน ' + PC.mfmt(Math.round(tot / Math.max(1, act.length))) + ' · ค่ากลาง ' + PC.mfmt(Math.round(d3.median(act, (x) => (N ? x.net : x.units)) || 0)); });
+const stRoster = () => { const r = PC.rows('enriched'), I = stInfo(); if (!r || !I) return null; const p = PC.P(); const from = SA.add(I.to, -59);
+  const shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x])), staff = new Map((PC.rows('staff') || []).map((x) => [String(x.emp), x]));
+  const m = new Map(), sold = new Set();
+  for (const x of r) { if (!(PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group))) continue;
+    if (x.date >= I.from && x.date <= I.to && x.units > 0) sold.add(String(x.emp));
+    if (x.date >= from && x.date <= I.to && x.units > 0) { const k = String(x.emp); const a = m.get(k) || { emp: k, units: 0, net: 0, last: '', shops: new Map() }; a.units += x.units; a.net += x.net; if (x.date > a.last) a.last = x.date; a.shops.set(String(x.shop), (a.shops.get(String(x.shop)) || 0) + x.units); m.set(k, a); } }
+  const none = [...m.values()].filter((a) => !sold.has(a.emp)).map((a) => { const main = [...a.shops.entries()].sort((x, y) => y[1] - x[1])[0]; const s = shops.get(main[0]) || {};
+    return { emp: a.emp, name: (staff.get(a.emp) || {}).name || a.emp, shop: s.name || main[0], area: s.area || '-', last: a.last, idle: SA.diff(a.last, I.to), units60: a.units, net60: Math.round(a.net) }; });
+  return { roster: m.size, sold: [...m.keys()].filter((k) => sold.has(k)).length, soldAll: sold.size, none, from }; };
+dash.draw('st_sum', (el) => { const r = stAgg(), R = stRoster(); if (!r || !R) { el.textContent = ''; return; } const act = r.filter((x) => x.units > 0); const N = PC.isNet(); const tot = d3.sum(act, (x) => (N ? x.net : x.units));
+  el.textContent = 'พนักงานที่มียอด ' + PC.nf(act.length) + ' คน · ยังไม่มียอด ' + PC.nf(R.none.length) + ' คน (จากพนักงานที่เคยขายใน 60 วันล่าสุด ' + PC.nf(R.roster) + ' คน) · ยอดรวม ' + PC.mfmt(Math.round(tot)) + ' · เฉลี่ยต่อคนที่มียอด ' + PC.mfmt(Math.round(tot / Math.max(1, act.length))) + ' · ค่ากลาง ' + PC.mfmt(Math.round(d3.median(act, (x) => (N ? x.net : x.units)) || 0)); });
+dash.draw('st_none_sum', (el) => { const R = stRoster(); el.textContent = R ? 'ดูรายชื่อพนักงานที่ยังไม่มียอดในช่วงนี้ (' + PC.nf(R.none.length) + ' คน)' : 'ดูรายชื่อพนักงานที่ยังไม่มียอด'; });
+dash.draw('tb_staff_none', (el) => { const R = stRoster(); PC.table(el, 'tb_staff_none', R && R.none, { key: ['emp'], def: 'net60', q: 'staff', limit: 3000, cols: [
+  { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก (60 วัน)', wrap: true }, { f: 'area', label: 'Area' },
+  { f: 'last', label: 'ขายล่าสุด', fmt: (v) => PC.day(v) }, { f: 'idle', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf }, { f: 'units60', label: 'QTY 60 วัน', num: true, fmt: PC.nf }, { f: 'net60', label: 'Net Amount 60 วัน', num: true, fmt: PC.nf, bar: true } ] }); });
 dash.onData(() => { document.querySelectorAll('#f-stperiod').forEach((s) => { s.value = dash.params().stperiod || 'mtd'; }); document.querySelectorAll('#wrap-stweek').forEach((n) => { n.hidden = (dash.params().stperiod || 'mtd') !== 'week'; }); });
 document.querySelectorAll('#f-stperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ stperiod: s.value })));
 
