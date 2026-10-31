@@ -781,6 +781,7 @@ dash.calc('kpi', PCdef('kpi', {
   description: 'ยอดสะสม เดือนล่าสุด วันล่าสุด และเทียบ Target สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = ทั้งหมด)',
   inputs: ['enriched', 'shops', 'targets'],
   fn: (enriched, shops, targets) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), '');
     const mDays = new Set(enriched.filter((r) => r.month === lastMonth).map((r) => r.date)).size;
@@ -823,6 +824,7 @@ dash.calc('breakdown', PCdef('breakdown', {
   description: 'QTY Net Amount และสัดส่วน ตาม Area / Type Sim / ประเภทซิม / กลุ่มราคา สำหรับวันนี้ เดือนนี้ และตั้งแต่ต้นปี ทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched'],
   fn: (enriched) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''), lastMonth = today.slice(0, 7);
     const bands = ['≤ 49', '50–299', '300–599', '600–999', '1,000–1,999', '2,000+', 'ไม่ทราบราคา'];
     const base = new Map();
@@ -845,6 +847,7 @@ dash.calc('target_monthly', PCdef('target_monthly', {
   description: 'Target PRE รวมของสาขาที่มี Target ในแต่ละเดือน เทียบ QTY ของสาขาเหล่านั้น ต่อภาค (ALL = ทั้งหมด)',
   inputs: ['enriched', 'targets', 'shops'],
   fn: (enriched, targets, shops) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const sh = new Map(shops.map((r) => [r.shop, r])), tk = new Set(targets.map((r) => r.month + '|' + r.shop));
     const acc = new Map();
     const get = (c, t, m) => { const k = c + '|' + t + '|' + m; if (!acc.has(k)) acc.set(k, { area: c, stype: t, month: m, target: 0, actual: 0, target_net: 0, actual_net: 0 }); return acc.get(k); };
@@ -860,6 +863,7 @@ dash.calc('area_rank', PCdef('area_rank', {
   description: 'ต่อ Area และประเภทสาขา (ALL = รวม): Target เดือนปัจจุบัน (QTY และ Net) Target ต่อวัน = Target ÷ วันในเดือน Target ถึงวันนี้ = Target ต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
   inputs: ['enriched', 'targets', 'shops'],
   fn: (enriched, targets, shops) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''); const m = today.slice(0, 7);
     const days = new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate(), elapsed = +today.slice(8, 10), left = Math.max(0, days - elapsed);
     const sh = new Map(shops.map((r) => [r.shop, r]));
@@ -890,6 +894,7 @@ dash.calc('area_day', PCdef('area_day', {
   description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น Target ต่อวัน (Target เดือน ÷ วันในเดือน) และ % เทียบ Target ต่อวัน รวมวันที่ไม่มียอด (= 0)',
   inputs: ['area_rank', 'enriched'],
   fn: (area_rank, enriched) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     if (!area_rank.length) return [];
     const m = area_rank[0].month; const dates = [...new Set(enriched.filter((r) => r.month === m).map((r) => r.date))].sort();
     const acc = new Map();
@@ -905,6 +910,7 @@ dash.calc('shop_sales', PCdef('shop_sales', {
   description: 'QTY Net Amount และจำนวนพนักงานที่ขาย ต่อสาขา สำหรับช่วงวันนี้ (วันล่าสุดในไฟล์) เดือนนี้ และตั้งแต่ต้นปี ทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม (ALL = รวม) เฉพาะสาขาที่มียอด',
   inputs: ['enriched', 'shops'],
   fn: (enriched, shops) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), ''), m = today.slice(0, 7);
     const sh = new Map(shops.map((r) => [String(r.shop), r]));
     const acc = new Map();
@@ -975,6 +981,7 @@ dash.calc('daily', PCdef('daily', {
   description: 'QTY และ Net Amountต่อวัน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched'],
   fn: (enriched) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const acc = new Map();
     for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.date; const a = acc.get(k) || { area: c, stype: t, group: g, date: r.date, units: 0, net: 0 };
@@ -989,6 +996,7 @@ dash.calc('monthly', PCdef('monthly', {
   description: 'QTY และ Net Amountต่อเดือน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched'],
   fn: (enriched) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const acc = new Map();
     for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.month; const a = acc.get(k) || { area: c, stype: t, group: g, month: r.month, units: 0, net: 0 };
@@ -1003,6 +1011,7 @@ dash.calc('bands', PCdef('bands', {
   description: 'QTY Net Amount และสัดส่วนต่อช่วงราคาป้าย สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched'],
   fn: (enriched) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const acc = new Map(), tot = new Map();
     for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
       const k = c + '|' + t + '|' + g + '|' + r.band; const a = acc.get(k) || { area: c, stype: t, group: g, band: r.band, units: 0, net: 0 };
@@ -1019,6 +1028,7 @@ dash.calc('mat', PCdef('mat', {
   description: 'QTY Net Amount สัดส่วน สต็อกคงเหลือ และจำนวนวันที่สต็อกพอขาย ราย Matcode สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched', 'matcodes', 'stock_by_shop', 'shops'],
   fn: (enriched, matcodes, stock_by_shop, shops) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
     const mDays = new Set(enriched.filter((r) => r.month === lastMonth).map((r) => r.date)).size;
     const m = new Map(matcodes.map((r) => [r.matcode, r])), co = new Map(shops.map((r) => [r.shop, r.area])), ty = new Map(shops.map((r) => [r.shop, r.stype]));
@@ -1041,6 +1051,7 @@ dash.calc('shop_perf', PCdef('shop_perf', {
   description: 'QTY Net Amount พนักงานที่ขาย สต็อก สต็อกเก่า และ % Target ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched', 'shops', 'stock_by_shop', 'matcodes', 'targets'],
   fn: (enriched, shops, stock_by_shop, matcodes, targets) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const lastMonth = enriched.reduce((a, r) => (r.month > a ? r.month : a), '');
     const tm = new Map(targets.map((r) => [r.month + '|' + r.shop, +r.target_units])), yT = new Map();
     for (const r of targets) yT.set(r.shop, (yT.get(r.shop) || 0) + +r.target_units);
@@ -1089,6 +1100,7 @@ dash.calc('staff_perf', PCdef('staff_perf', {
   description: 'QTY Net Amount จำนวน Matcode ที่ขาย และสาขาหลัก ต่อพนักงาน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม',
   inputs: ['enriched', 'staff', 'shops'],
   fn: (enriched, staff, shops) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const st = new Map(staff.map((r) => [r.emp, r])), sh = new Map(shops.map((r) => [r.shop, r.name]));
     const acc = new Map();
     for (const r of enriched) for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) {
@@ -1117,6 +1129,7 @@ dash.calc('exp_sum', PCdef('exp_sum', {
   description: 'จำนวนและมูลค่าตามราคาป้าย แยกเกินอายุแล้ว / ภายใน 30 / 31–60 / 61–90 วัน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
   inputs: ['exp'],
   fn: (exp) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const acc = new Map();
     const st = (d) => (d <= 0 ? 'expired' : d <= 30 ? 'd30' : d <= 60 ? 'd60' : d <= 90 ? 'd90' : null);
     for (const r of exp) for (const life of [270, 365, 540]) { const s = st(r['left_' + life]); if (!s) continue;
@@ -1135,6 +1148,7 @@ dash.calc('exp_shop', PCdef('exp_shop', {
   description: 'จำนวนซิมที่เกินอายุแล้วและที่เหลือไม่เกิน 90 วัน ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
   inputs: ['exp'],
   fn: (exp) => {
+    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     const acc = new Map();
     for (const r of exp) for (const life of [270, 365, 540]) { const d = r['left_' + life]; if (d > 90) continue;
       for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + r.shop;
