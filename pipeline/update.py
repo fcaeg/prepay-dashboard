@@ -76,12 +76,44 @@ def save_sim(df, only=None):
     for mo, g in df.groupby(_month(df)):
         if only is None or mo in only: save(g.sort_values(['BILL_DATE', 'key']), f'sim_{mo}.csv.gz')
 
+WATCH_COLS = ['serial', 'list', 'area', 'shop_name', 'added']
+SOLD_COLS = ['serial', 'BILL_DATE', 'SHOP_CODE', 'PRODUCT_CODE', 'SALE_CODE', 'SALE_NAME', 'NET_AMOUNT', 'ORDER_STATUS', 'key']
+
+def watch_hits(raw):
+    """sales rows whose SERIAL is on a watch list (kept in full so the page can show who sold it, where and when)"""
+    w = load('watch_serials.csv')
+    if w is None or 'SERIAL' not in raw: return
+    hit = raw[raw.SERIAL.astype(str).str.strip().isin(set(w.serial))].copy()
+    if not len(hit): return
+    import hashlib
+    hit['key'] = hit[DEDUP].fillna('').astype(str).agg('|'.join, axis=1).map(lambda x: hashlib.sha1(x.encode()).hexdigest()[:16])
+    hit['serial'] = hit.SERIAL.astype(str).str.strip()
+    old = load('watch_sold.csv')
+    new = hit[SOLD_COLS].astype(str)
+    save(pd.concat([old, new]).drop_duplicates('key') if old is not None else new.drop_duplicates('key'), 'watch_sold.csv')
+    print(f'watch: {len(hit)} sales rows of watched serials')
+
+def add_watch(path, label):
+    """watch list file: CSV/XLSX with a Serial column (Area / Shop Name optional)"""
+    import datetime
+    df = pd.read_excel(path, dtype=str) if path.lower().endswith(('.xlsx', '.xls')) else read_csv_any(path)[0]
+    cols = {c.lower().replace(' ', '').replace('_', ''): c for c in df.columns}
+    sc = next(cols[c] for c in cols if 'serial' in c)
+    out = pd.DataFrame({'serial': df[sc].astype(str).str.strip().str.replace(r'\.0$', '', regex=True), 'list': label,
+                        'area': df[cols['area']] if 'area' in cols else '', 'shop_name': df[cols['shopname']] if 'shopname' in cols else '',
+                        'added': datetime.date.today().isoformat()})
+    out = out[out.serial.str.match(r'^\d{10,}$')]
+    old = load('watch_serials.csv')
+    if old is not None: out = pd.concat([old[~((old.list == label) & old.serial.isin(out.serial))], out])
+    save(out[WATCH_COLS], 'watch_serials.csv'); print(f'watch list "{label}": {len(out[out.list == label])} serials')
+
 def merge_sales(paths):
     """new rows are added to the state; rows already there (same bill/order/product/serial/status/amount/time) are not counted twice"""
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
     old = load_sim(); changed = set()
     for path in paths:
         raw, label = read_csv_any(path)
+        watch_hits(raw)
         new = sim_rows(raw); n0 = 0 if old is None else len(old)
         add = new if old is None else new[~new.key.isin(set(old.key))]
         changed |= set(_month(add))
@@ -195,6 +227,36 @@ def build():
         if c not in ss: ss[c] = 0
     ss['qty'] = ss[['a0_90', 'a91_180', 'a181_270', 'a271_365', 'a365p']].sum(axis=1); ss['asof'] = meta.get('stock_asof', '')
     ex = k[k.aging >= 180][['SERIAL', 'SHOP_CODE', 'PRODUCT_CODE', 'LOCATION_NAME', 'first', 'aging']].rename(columns={'SERIAL': 'serial', 'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode', 'LOCATION_NAME': 'location'}).sort_values('aging', ascending=False)
+    # watch lists (e.g. SIMs expiring in a given month) with sold / in-stock status
+    w = load('watch_serials.csv'); ws = load('watch_sold.csv')
+    wl = []
+    if w is not None:
+        kk = load('stock.csv.gz').drop_duplicates('SERIAL').set_index('SERIAL')
+        shn = shops.set_index('shop').name.to_dict(); sha = shops.set_index('shop').area.to_dict()
+        n2s = {re.sub(r'\s+', ' ', str(v)).strip().lower(): k_ for k_, v in shn.items()}
+        mname = m.set_index('matcode').name.to_dict()
+        sold = {}
+        if ws is not None:
+            ws['BD'] = pd.to_datetime(ws.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce')
+            for s_, g in ws.sort_values('BD').groupby('serial'):
+                pay = g[g.ORDER_STATUS == 'Payment']; cn = g[g.ORDER_STATUS == 'CreditNote']
+                if len(pay) > len(cn): sold[s_] = pay.iloc[-1]
+        for _, r in w.iterrows():
+            st_ = kk.loc[r.serial] if r.serial in kk.index else None
+            code = st_.SHOP_CODE if st_ is not None else n2s.get(re.sub(r'\s+', ' ', str(r.shop_name)).strip().lower())
+            x = sold.get(r.serial)
+            row = {'serial': r.serial, 'list': r.list, 'shop': code, 'shop_name': shn.get(code, r.shop_name), 'area': sha.get(code, r.area) if code else r.area,
+                   'matcode': st_.PRODUCT_CODE if st_ is not None else None, 'product': (mname.get(st_.PRODUCT_CODE) if st_ is not None else None),
+                   'aging': int(st_.FIRST_AGING) if st_ is not None else None, 'location': st_.LOCATION_NAME if st_ is not None else None,
+                   'in_stock': st_ is not None, 'status': 'sold' if x is not None else ('in_stock' if st_ is not None else 'not_found'),
+                   'sold_date': x.BD.strftime('%Y-%m-%d') if x is not None else None, 'sold_time': x.BD.strftime('%H:%M') if x is not None else None,
+                   'sold_shop': x.SHOP_CODE if x is not None else None, 'sold_shop_name': shn.get(x.SHOP_CODE, x.SHOP_CODE) if x is not None else None,
+                   'sold_emp': x.SALE_CODE if x is not None else None, 'sold_emp_name': x.SALE_NAME if x is not None else None,
+                   'sold_net': float(x.NET_AMOUNT) if x is not None else None, 'stock_asof': meta.get('stock_asof', ''), 'sales_asof': meta.get('sales_asof', '')}
+            if row['matcode'] is None and x is not None: row['matcode'] = x.PRODUCT_CODE; row['product'] = mname.get(x.PRODUCT_CODE)
+            wl.append(row)
+    json.dump(wl, open(os.path.join(OUT, 'watch_serials.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    if wl: print('  watch:', pd.DataFrame(wl).groupby(['list', 'status']).size().to_dict())
     f = f.sort_values(['date', 'shop', 'matcode', 'emp'])
     f[['date', 'shop', 'matcode', 'emp', 'units', 'amount', 'disc', 'net']].to_csv(os.path.join(OUT, 'sales_daily.csv'), index=False)
     for nmx, d in [('targets', targets[targets.shop.isin(ww)]), ('matcodes', m), ('shops', shops), ('staff', e), ('stock_by_shop', ss), ('aging_serials', ex)]:
@@ -209,7 +271,9 @@ def build():
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
+    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ')
     a = ap.parse_args()
+    if a.watch: add_watch(a.watch, a.watch_label)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')
     if a.target: merge_targets(a.target)

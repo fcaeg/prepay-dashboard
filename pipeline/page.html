@@ -98,6 +98,11 @@
 .pc-split > *, .pc-grid > *, .pc-card > *, .pc-card details { min-width: 0; max-width: 100%; }
 .pc-h4 { margin: 0 0 var(--cds-gap-sm); font-size: var(--cds-font-size-body); font-weight: 600; }
 .pc-gap { border-color: color-mix(in srgb, var(--color-bad) 35%, var(--color-border-line)); }
+.pc-wbar { display: grid; gap: 6px; }
+.pc-wbar .bar { display: flex; height: 22px; border-radius: var(--cds-radius); overflow: hidden; background: var(--cds-chart-grid); }
+.pc-wbar .bar span { display: block; height: 100%; }
+.pc-wbar .lg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pc-wbar .lg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 [data-dash-source-state=empty] { color: transparent; }
 
@@ -185,6 +190,7 @@
     <button class="pc-tab" type="button" role="tab" data-tab="ranking" aria-selected="false">Ranking Area</button>
     <button class="pc-tab" type="button" role="tab" data-tab="staff" aria-selected="false">พนักงาน</button>
     <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock พอขายไหม</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="watch" aria-selected="false">ติดตามซิมใกล้หมดอายุ (Serial)</button>
     <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">แจ้งเตือนซิมใกล้หมดอายุ</button>
   </nav>
 
@@ -574,6 +580,52 @@
         </label>
       </div>
       <div class="pc-scroll"><table data-draw="tb_stock" data-source="stock_cover" data-row-key="shop,level,key"></table></div>
+    </article>
+  </section>
+
+  <section class="pc-sec" id="watch" data-page="watch" hidden>
+    <div class="pc-tools">
+      <label class="pc-field">รายการที่ติดตาม
+        <select id="f-wlist" data-draw="f_wlist" data-source="watch_serials" aria-label="รายการซิมที่ติดตาม"></select>
+      </label>
+      <p class="pc-note" data-draw="w_asof" data-source="watch_serials"></p>
+    </div>
+    <div class="pc-tiles">
+      <div class="pc-tile"><span class="pc-tile-l">Serial ที่ติดตาม</span><span class="pc-big" data-draw="w_total" data-source="watch_serials">—</span><span class="pc-sub" data-draw="w_total_sub" data-source="watch_serials"></span></div>
+      <div class="pc-tile"><span class="pc-tile-l">ขายแล้ว</span><span class="pc-big" data-draw="w_sold" data-source="watch_serials" style="color:var(--color-ok)">—</span><span class="pc-sub" data-draw="w_sold_sub" data-source="watch_serials"></span></div>
+      <div class="pc-tile pc-alert"><span class="pc-tile-l">ยังไม่ขาย (ยังอยู่ใน Stock)</span><span class="pc-big" data-draw="w_left" data-source="watch_serials">—</span><span class="pc-sub" data-draw="w_left_sub" data-source="watch_serials"></span></div>
+      <div class="pc-tile"><span class="pc-tile-l">ไม่พบใน Stock และยังไม่พบการขาย</span><span class="pc-big" data-draw="w_nf" data-source="watch_serials">—</span><span class="pc-sub">อาจโอนออก / ตัดสต็อก / Serial ไม่ตรง ควรตรวจสอบ</span></div>
+    </div>
+    <article class="pc-card" id="card-w-progress">
+      <h3>ความคืบหน้าการขาย</h3>
+      <div class="pc-wbar" data-draw="c_w_total" data-source="watch_serials"></div>
+      <div class="pc-split">
+        <div><h4 class="pc-h4">ราย Area</h4><div class="pc-hbars" data-draw="c_w_area" data-source="watch_serials"></div></div>
+        <div><h4 class="pc-h4">ขายได้รายวัน (สะสม)</h4><div class="pc-hbars" data-draw="c_w_daily" data-source="watch_serials"></div></div>
+      </div>
+    </article>
+    <article class="pc-card" id="card-w-shop">
+      <h3>สรุปราย สาขา</h3>
+      <p>เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน</p>
+      <div class="pc-scroll"><table data-draw="tb_w_shop" data-source="watch_serials" data-row-key="shop"></table></div>
+    </article>
+    <article class="pc-card" id="card-w-serial">
+      <h3>รายการ Serial</h3>
+      <p>สถานะอัปเดตทุกครั้งที่อัปโหลดรายงานการขาย (daily_sales) และ Stock ใหม่ · ถ้าพบ Serial ในรายงานการขาย จะขึ้น "ขายแล้ว" พร้อมวันที่ สาขาที่ขาย และพนักงาน · ถ้ามีการคืนสินค้า (Credit Note) จะกลับเป็นยังไม่ขาย</p>
+      <div class="pc-tools">
+        <label class="pc-field">สถานะ
+          <select id="f-wstatus" aria-label="สถานะ Serial">
+            <option value="ALL">ทุกสถานะ</option>
+            <option value="in_stock">ยังไม่ขาย</option>
+            <option value="sold">ขายแล้ว</option>
+            <option value="not_found">ไม่พบใน Stock</option>
+          </select>
+        </label>
+        <label class="pc-field">ค้นหา Serial / สาขา
+          <input id="q-watch" class="pc-q" data-q="watch" type="search" aria-label="ค้นหา Serial หรือสาขา">
+        </label>
+      </div>
+      <div class="pc-scroll"><table data-draw="tb_w_serial" data-source="watch_serials" data-row-key="list,serial"></table></div>
     </article>
   </section>
 
@@ -1154,12 +1206,13 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], exp: ['tb_exp'], stock: ['tb_stock'], gap: ['tb_gap'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], exp: ['tb_exp'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-life').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ life: +sel.value })));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
 document.querySelectorAll('#f-ascope').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ ascope: sel.value })));
+document.querySelectorAll('#f-wstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ wstatus: sel.value })));
 document.querySelectorAll('#f-alevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ alevel: sel.value })));
 document.querySelectorAll('#f-sstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ sstatus: sel.value })));
 dash.draw('metric_seg', (el) => { const m = PC.M(); el.replaceChildren(...[['net', 'Net Amount'], ['qty', 'QTY']].map(([k, l]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.metric = k; b.textContent = l; b.setAttribute('aria-pressed', String(k === m)); b.onclick = () => dash.setParams({ metric: k }); return b; })); });
@@ -1181,6 +1234,7 @@ dash.onData(() => {
   document.querySelectorAll('#f-period').forEach((sel) => { sel.value = dash.params().period || 'today'; });
   document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'group'; });
   document.querySelectorAll('#f-ascope').forEach((sel) => { sel.value = dash.params().ascope || 'current'; });
+  document.querySelectorAll('#f-wstatus').forEach((sel) => { sel.value = dash.params().wstatus || 'ALL'; });
   document.querySelectorAll('#f-alevel').forEach((sel) => { sel.value = dash.params().alevel || 'core'; });
   document.querySelectorAll('#f-sstatus').forEach((sel) => { sel.value = dash.params().sstatus || 'ALL'; });
   const m = PC.rows('monthly');
@@ -1515,6 +1569,54 @@ dash.draw('tb_gap', (el) => {
     { f: 'sold28_shop', label: 'สาขานี้ขาย 28 วัน', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'carry_pct', label: 'สาขาที่มี Matcode นี้', num: true, fmt: PC.pf },
     { f: 'sold28_all', label: 'ขายทุกสาขา 28 วัน', num: true, fmt: PC.nf } ] });
 });
+
+/* ---------- watched serials ---------- */
+const WS = { sold: ['ขายแล้ว', 'ok', 'var(--color-ok)'], in_stock: ['ยังไม่ขาย', 'bad', 'var(--color-bad)'], not_found: ['ไม่พบใน Stock', 'warn', 'var(--color-warn)'] };
+const wLists = () => { const r = PC.rows('watch_serials'); return r ? [...new Set(r.map((x) => x.list))] : []; };
+const wList = () => { const ls = wLists(); const v = dash.params().wlist; return ls.includes(v) ? v : ls[ls.length - 1]; };
+const wRows = () => { const r = PC.rows('watch_serials'); if (!r) return null; const p = PC.P(), l = wList();
+  return r.filter((x) => x.list === l && (p.area === 'ALL' || x.area === p.area) && (p.shop === 'ALL' || String(x.shop) === p.shop || String(x.sold_shop) === p.shop)
+    && (p.stype === 'ALL' || (PC.rows('shops') || []).some((s) => String(s.shop) === String(x.shop) && s.stype === p.stype))); };
+const wCount = (r, s) => r.filter((x) => x.status === s).length;
+dash.draw('f_wlist', (sel) => { const ls = wLists(); sel.replaceChildren(...ls.map((l) => new Option(l, l))); sel.value = wList() || ''; sel.onchange = () => dash.setParams({ wlist: sel.value }); });
+dash.draw('w_asof', (el) => { const r = PC.rows('watch_serials'); const x = r && r[0]; el.textContent = x ? 'ตรวจกับรายงานการขายถึง ' + PC.day(x.sales_asof.slice(0, 10)) + ' ' + x.sales_asof.slice(11) + ' น. · Stock ณ ' + PC.day(x.stock_asof.slice(0, 10)) + ' ' + x.stock_asof.slice(11) + ' น.' : ''; });
+dash.draw('w_total', (el) => { const r = wRows(); el.textContent = r ? PC.nf(r.length) : '—'; });
+dash.draw('w_total_sub', (el) => { const r = wRows(); el.textContent = r ? PC.nf(new Set(r.map((x) => x.shop)).size) + ' สาขา · ' + PC.nf(new Set(r.map((x) => x.area)).size) + ' Area' : ''; });
+dash.draw('w_sold', (el) => { const r = wRows(); el.textContent = r ? PC.nf(wCount(r, 'sold')) : '—'; });
+dash.draw('w_sold_sub', (el) => { const r = wRows(); if (!r || !r.length) { el.textContent = ''; return; } const s = r.filter((x) => x.status === 'sold'); el.textContent = PC.pf(s.length / r.length) + ' ของทั้งหมด · Net ฿' + PC.nf(Math.round(s.reduce((a, x) => a + (x.sold_net || 0), 0))); });
+dash.draw('w_left', (el) => { const r = wRows(); el.textContent = r ? PC.nf(wCount(r, 'in_stock')) : '—'; });
+dash.draw('w_left_sub', (el) => { const r = wRows(); if (!r) { el.textContent = ''; return; } const l = r.filter((x) => x.status === 'in_stock'); el.textContent = PC.nf(new Set(l.map((x) => x.shop)).size) + ' สาขายังต้องขาย'; });
+dash.draw('w_nf', (el) => { const r = wRows(); el.textContent = r ? PC.nf(wCount(r, 'not_found')) : '—'; });
+dash.draw('c_w_total', (el) => { el.replaceChildren(); const r = wRows(); if (!r || !r.length) return;
+  const bar = document.createElement('div'); bar.className = 'bar'; const lg = document.createElement('div'); lg.className = 'lg';
+  for (const k of ['sold', 'in_stock', 'not_found']) { const n = wCount(r, k); const s = document.createElement('span'); s.style.width = (n / r.length) * 100 + '%'; s.style.background = WS[k][2]; s.title = WS[k][0] + ' ' + n; bar.append(s);
+    const g = document.createElement('span'); const i = document.createElement('i'); i.style.background = WS[k][2]; g.append(i, WS[k][0] + ' ' + PC.nf(n) + ' (' + PC.pf(n / r.length) + ')'); lg.append(g); }
+  el.append(bar, lg); });
+dash.draw('c_w_area', (el) => { el.replaceChildren(); const r = wRows(); if (!r) return; const by = new Map();
+  for (const x of r) { const a = by.get(x.area) || { area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.area, a); }
+  const d = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n); const max = Math.max(1, ...d.map((x) => x.n));
+  for (const x of d) { const row = document.createElement('div'); row.className = 'pc-hrow'; const l = document.createElement('span'); l.className = 'l'; l.textContent = x.area; l.title = x.area;
+    const t = document.createElement('span'); t.className = 't'; t.style.display = 'flex'; t.style.overflow = 'hidden';
+    for (const [v, c] of [[x.s, WS.sold[2]], [x.n - x.s - x.nf, WS.in_stock[2]], [x.nf, WS.not_found[2]]]) { const f = document.createElement('span'); f.style.cssText = 'display:block;height:100%;width:' + (v / max) * 100 + '%;background:' + c; t.append(f); }
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = 'ขายแล้ว ' + x.s + ' / ' + x.n + ' · ' + PC.pf(x.s / x.n); row.append(l, t, v); el.append(row); } });
+dash.draw('c_w_daily', (el) => { el.replaceChildren(); const r = wRows(); if (!r) return; const s = r.filter((x) => x.status === 'sold' && x.sold_date);
+  if (!s.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ยังไม่พบ Serial ในรายการนี้ในรายงานการขาย เมื่อมีการขาย กราฟจะแสดงยอดสะสมรายวัน'; el.append(e); return; }
+  const by = d3.rollup(s, (v) => v.length, (x) => x.sold_date); let c = 0;
+  const data = [...by.keys()].sort().map((d) => { c += by.get(d); return { date: PC.day(d), cum: c, n: by.get(d), share: c / r.length }; });
+  PC.hbar(el, data, { label: 'date', value: 'cum', share: 'share', sub: (d) => 'ขาย ' + d.n + ' · สะสม ' + d.cum, color: 'var(--color-ok)' }); });
+dash.draw('tb_w_shop', (el) => { const r = wRows(); const by = new Map();
+  if (r) for (const x of r) { const a = by.get(x.shop || x.shop_name) || { shop: x.shop || x.shop_name, name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.shop || x.shop_name, a); }
+  const rows = r && [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n }));
+  PC.table(el, 'tb_w_shop', rows, { key: ['shop'], def: 'left', cols: [
+    { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'n', label: 'ติดตาม', num: true, fmt: PC.nf },
+    { f: 'left', label: 'ยังไม่ขาย', num: true, fmt: PC.nf, bar: true }, { f: 's', label: 'ขายแล้ว', num: true, fmt: PC.nf }, { f: 'nf', label: 'ไม่พบใน Stock', num: true, fmt: (v) => (v ? PC.nf(v) : '–') },
+    { f: 'pct', label: 'ความคืบหน้า', num: true, pill: (d) => [d.pct >= 1 ? 'ok' : d.pct > 0 ? 'warn' : 'bad', PC.pf(d.pct)] } ] }); });
+dash.draw('tb_w_serial', (el) => { const sf = dash.params().wstatus || 'ALL'; let r = wRows(); if (r && sf !== 'ALL') r = r.filter((x) => x.status === sf);
+  const ord = { in_stock: 0, not_found: 1, sold: 2 };
+  PC.table(el, 'tb_w_serial', r && r.map((x) => ({ ...x, srank: ord[x.status] })), { key: ['list', 'serial'], def: 'srank', dir: 1, q: 'watch', limit: 5000, cols: [
+    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [WS[d.status][1], WS[d.status][0]] }, { f: 'serial', label: 'Serial' }, { f: 'area', label: 'Area' }, { f: 'shop_name', label: 'สาขา', wrap: true },
+    { f: 'product', label: 'สินค้า', wrap: true }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' },
+    { f: 'sold_date', label: 'วันที่ขาย', fmt: (v) => PC.day(v) }, { f: 'sold_shop_name', label: 'สาขาที่ขาย', wrap: true }, { f: 'sold_emp_name', label: 'พนักงาน' }, { f: 'sold_net', label: 'Net Amount', num: true, fmt: PC.nf } ] }); });
 
 /* ---------- today charts ---------- */
 dash.draw('c_today_type', (el) => {

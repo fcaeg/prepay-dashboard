@@ -2,13 +2,16 @@
 import json,gzip,base64,sys,os,datetime
 HERE=os.path.dirname(os.path.abspath(__file__)); O=HERE+'/out'; ROOT=os.path.dirname(HERE)
 page_full=open(HERE+'/page.html',encoding='utf-8').read(); page=page_full.replace('<meta name="dash-one-writer">','',1)
-raw={k:json.load(open(f'{O}/{k}.json',encoding='utf-8')) for k in ['matcodes','shops','staff','stock_by_shop','aging_serials','targets']}
+raw={k:json.load(open(f'{O}/{k}.json',encoding='utf-8')) for k in ['matcodes','shops','staff','stock_by_shop','aging_serials','targets','watch_serials']}
 raw['sales_daily_csv']=open(O+'/sales_daily.csv',encoding='utf-8').read()
 blob=base64.b64encode(gzip.compress(json.dumps(raw,ensure_ascii=False,separators=(',',':')).encode('utf-8'),9)).decode()
 d3=open(HERE+'/vendor/d3.min.js',encoding='utf-8').read()
 pako=open(HERE+'/vendor/pako_inflate.min.js',encoding='utf-8').read()
 last=max(l.split(',',1)[0] for l in raw['sales_daily_csv'].splitlines()[1:])
 meta=json.load(open(O+'/meta.json'))
+def thd(v):
+    if not v: return ''
+    y,m,d=map(int,v[:10].split('-')); return f'{d} {TH[m-1]} {y+543}' + (f' {v[11:16]} น.' if len(v)>10 else '')
 TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 y,m,d=map(int,last.split('-')); asof=f'{d} {TH[m-1]} {y+543}'
 now=datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=7)
@@ -59,7 +62,7 @@ body {{ margin: 0; background: var(--color-bg); color: var(--color-fg); font-fam
 <script>{pako}</script>
 <script>
 window.dash = (() => {{
-  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL', ascope: 'current', alevel: 'core' }};
+  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL', ascope: 'current', alevel: 'core', wstatus: 'ALL' }};
   let params = {{ ...DEF }}, ready = false, error = null;
   const RAW = {{}}, calcs = {{}}, cache = {{}}, draws = new Map(), onData = [];
   const get = (id) => {{
@@ -97,7 +100,7 @@ window.dash = (() => {{
 </script>
 </head>
 <body>
-<div class="sa-bar"><span>ข้อมูลยอดขายถึง <b>{asof}</b></span><span>ยอดขายถึง {meta.get('sales_asof','')[11:]} น. · Stock ณ {meta.get('stock_asof','')}</span><span>ไฟล์สร้างเมื่อ {built}</span><span>ไฟล์นี้เป็นข้อมูล ณ วันที่สร้าง ไม่อัปเดตเอง</span></div>
+<div class="sa-bar"><span>ข้อมูลยอดขายถึง <b>{asof}</b></span><span>ยอดขายถึง {meta.get('sales_asof','')[11:]} น. · Stock ณ {thd(meta.get('stock_asof',''))}</span><span>ไฟล์สร้างเมื่อ {built}</span><span>ไฟล์นี้เป็นข้อมูล ณ วันที่สร้าง ไม่อัปเดตเอง</span></div>
 <div class="sa-load" id="sa-load">กำลังเตรียมข้อมูล…</div>
 <div id="dash-root">
 {page}

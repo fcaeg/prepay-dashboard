@@ -4,6 +4,8 @@ Inputs Nami attaches each day (zip or csv):
 - `daily_sales - <date>.zip`  — POS sales, month-to-date (any dates in it replace the same dates in the state)
 - `stock_balance_report as of <d Mon yyyy> Time <hh.mm>.zip` — stock snapshot (replaces the previous one)
 - occasionally `..._Target_of_<Mon>_26_....xlsx` (new month's targets) or `Master Prepaid.xlsx`
+- occasionally a list of Serials to track (e.g. SIMs expiring next month): CSV/XLSX with a Serial column →
+  `python3 -I pipeline/update.py --watch <file> --watch-label "ซิมหมดอายุ <เดือน>"` (sold status is matched on every later sales file)
 
 ## 1. Update the data and the GitHub page
 ```bash
@@ -17,7 +19,7 @@ git add -A && git commit -m "Data update <date>" && git push origin main
 when the new month has no target file yet.
 
 ## 2. Update the Claude dashboard (https://claude.ai/artifact/VUVYJA9vZwTYyjQXvqKVYy)
-For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `stock_by_shop.json`, `aging_serials.json`,
+For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `watch_serials.json`, `stock_by_shop.json`, `aging_serials.json`,
 `staff.json`, `shops.json`, `matcodes.json`; `targets.json` only after a new target file —
 1. upload it as an asset: Artifact `publish` with `url` = the dashboard, `file_path` = the file, `asset: true` → returns `/_blob/<id>`
 2. ArtifactData `get` collection `datasets` doc `<id without extension>` for its version, then `update` it with
