@@ -16,16 +16,18 @@ const SA = (() => {
   const base = () => { const r = PC.rows('enriched'), I = info(); if (!r || !I) return null; const p = PC.P();
     return r.filter((x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && ((x.date >= I.from && x.date <= I.to) || (I.pf && x.date >= I.pf && x.date <= I.pt))); };
   const simList = () => { const r = base(), I = info(); if (!r) return []; const N = PC.isNet(); const m = new Map(); for (const x of r) if (x.date >= I.from && x.date <= I.to) m.set(x.group, (m.get(x.group) || 0) + (N ? x.net : x.units)); return [...m.entries()].sort((a, b) => b[1] - a[1]).map((e) => e[0]); };
-  const sim = () => { if (PC.P().group !== 'ALL') return PC.P().group; const v = dash.params().sasim; const l = simList(); return l.includes(v) ? v : 'ALL'; };
+  const sim = () => { if (PC.P().group !== 'ALL') return PC.P().group; if ((dash.params().salevel || 'zone') === 'group') return 'ALL'; const v = dash.params().sasim; const l = simList(); return l.includes(v) ? v : 'ALL'; };
+  const subList = () => { const r = base(), I = info(); if (!r) return []; const s = sim(); const N = PC.isNet(); const m = new Map(); for (const x of r) if (x.date >= I.from && x.date <= I.to && (s === 'ALL' || x.group === s)) m.set(x.simtype, (m.get(x.simtype) || 0) + (N ? x.net : x.units)); return [...m.entries()].sort((a, b) => b[1] - a[1]).map((e) => e[0]); };
+  const subSel = () => { if ((dash.params().salevel || 'zone') !== 'mat') return 'ALL'; const v = dash.params().sasub; return subList().includes(v) ? v : 'ALL'; };
   const memo = new Map();
-  const aggBy = (LVL) => { const I = info(), r = base(); if (!I || !r) return null; const s = sim(); const k = JSON.stringify([LVL, I, s, PC.P(), PC.isNet(), (PC.rows('enriched') || []).length]); if (memo.has(k)) return memo.get(k); if (memo.size > 40) memo.clear();
+  const aggBy = (LVL) => { const I = info(), r = base(); if (!I || !r) return null; const s = sim(); const k = JSON.stringify([LVL, I, s, subSel(), PC.P(), PC.isNet(), (PC.rows('enriched') || []).length]); if (memo.has(k)) return memo.get(k); const sb = subSel(); if (memo.size > 40) memo.clear();
     const staff = new Map((PC.rows('staff') || []).map((x) => [String(x.emp), x])), shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
     const lvl = LVL === 'group' && s !== 'ALL' ? 'sub' : LVL; const mats = new Map((PC.rows('matcodes') || []).map((x) => [String(x.matcode), x]));
     const key = (x) => (lvl === 'zone' ? PCzone(x.area) || '-' : lvl === 'area' ? x.area : lvl === 'shop' ? String(x.shop) : lvl === 'emp' ? String(x.emp) : lvl === 'sub' ? x.simtype : lvl === 'mat' ? String(x.matcode) : x.group);
     const lab = (k) => (lvl === 'shop' ? (shops.get(k) || {}).name || k : lvl === 'emp' ? ((staff.get(k) || {}).name || k) : lvl === 'mat' ? String((mats.get(k) || {}).name || k).replace(/^TMH\d /, '').replace(/_VAS| MULTI/g, '') : k);
     const sub = (k, x) => (lvl === 'shop' ? x.area : lvl === 'emp' ? ((shops.get(String((staff.get(k) || {}).shop || x.shop)) || {}).name || '') : lvl === 'area' ? PCzone(x.area) : lvl === 'mat' ? x.group + ' · ฿' + PC.nf((mats.get(String(x.matcode)) || {}).price || 0) : lvl === 'sub' ? x.group : '');
     const m = new Map(), dc = new Map(), dp = new Map(); const T = { cu: 0, cn: 0, pu: 0, pn: 0 };
-    for (const x of r) { if (s !== 'ALL' && x.group !== s) continue; const k = key(x); const a = m.get(k) || { key: k, label: lab(k), sub: sub(k, x), cu: 0, cn: 0, pu: 0, pn: 0, shops: new Set() };
+    for (const x of r) { if (s !== 'ALL' && x.group !== s) continue; if (sb !== 'ALL' && x.simtype !== sb) continue; const k = key(x); const a = m.get(k) || { key: k, label: lab(k), sub: sub(k, x), cu: 0, cn: 0, pu: 0, pn: 0, shops: new Set() };
       if (x.date >= I.from && x.date <= I.to) { a.cu += x.units; a.cn += x.net; T.cu += x.units; T.cn += x.net; if (x.units > 0) a.shops.add(x.shop); const d = dc.get(x.date) || { u: 0, n: 0 }; d.u += x.units; d.n += x.net; dc.set(x.date, d); }
       else { a.pu += x.units; a.pn += x.net; T.pu += x.units; T.pn += x.net; const d = dp.get(x.date) || { u: 0, n: 0 }; d.u += x.units; d.n += x.net; dp.set(x.date, d); }
       m.set(k, a); }
@@ -39,14 +41,15 @@ const SA = (() => {
       const mo = tm.get(I.today.slice(0, 7)); tgt = { tu, tn, month: mo ? (N ? mo.n : mo.u) : null, mdays: dim(I.today), el: +I.today.slice(8, 10) }; }
     const v = { I, s, lvl, rows, T, N, dc, dp, tgt }; memo.set(k, v); return v; };
   const agg = () => { const I = info(); return I ? aggBy(I.lvl) : null; };
-  return { info, period, isoW, agg, aggBy, base, simList, sim, LV, add, diff, wRange };
+  return { info, period, isoW, agg, aggBy, base, simList, sim, subList, subSel, LV, add, diff, wRange };
 })();
 const saC = (A) => (A.N ? A.T.cn : A.T.cu), saP = (A) => (A.N ? A.T.pn : A.T.pu);
 const saPct = (v) => (v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + PC.pf(Math.abs(v)));
 const saCol = (v) => (v == null ? 'var(--color-fg-muted)' : v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)');
 const saLvlName = () => { const A = SA.agg(); return A ? (A.lvl === 'sub' && A.s !== 'ALL' ? 'ประเภทซิม (รุ่นย่อย) ใน ' + A.s : SA.LV[A.lvl]) : ''; };
 dash.draw('f_saweek', (sel) => { const I = SA.info(); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = SA.wRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); } sel.replaceChildren(...o); sel.value = String(I.wk); sel.onchange = () => dash.setParams({ saweek: +sel.value }); });
-dash.draw('f_sasim', (sel) => { const l = SA.simList(); const cur = SA.sim(); sel.replaceChildren(new Option('ทุกประเภทซิม', 'ALL'), ...l.map((g, i) => new Option(g + (i === 0 ? ' (ขายดีที่สุด)' : ' (อันดับ ' + (i + 1) + ')'), g))); sel.value = cur; sel.disabled = PC.P().group !== 'ALL'; sel.onchange = () => dash.setParams({ sasim: sel.value }); });
+dash.draw('f_sasim', (sel) => { const l = SA.simList(); const cur = SA.sim(); sel.replaceChildren(new Option('ทุกประเภทซิม', 'ALL'), ...l.map((g, i) => new Option(g + (i === 0 ? ' (ขายดีที่สุด)' : ' (อันดับ ' + (i + 1) + ')'), g))); sel.value = cur; sel.disabled = PC.P().group !== 'ALL'; sel.onchange = () => dash.setParams({ sasim: sel.value, sasub: 'ALL' }); });
+dash.draw('f_sasub', (sel) => { const l = SA.subList(); const cur = SA.subSel(); sel.replaceChildren(new Option('ทุกรุ่นย่อย', 'ALL'), ...l.map((g) => new Option(g, g))); sel.value = cur; sel.onchange = () => dash.setParams({ sasub: sel.value }); });
 dash.draw('sa_range', (el) => { const I = SA.info(); el.textContent = I ? I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + (I.plabel ? ' · เทียบกับ ' + I.plabel : ' · YTD ไม่มีข้อมูลปีก่อน จึงเทียบกับ Target') + ' · สัปดาห์นับจันทร์–อาทิตย์ (ISO)' : ''; });
 for (const n of ['sa_lvl1', 'sa_lvl2', 'sa_lvl3']) dash.draw(n, (el) => { el.textContent = saLvlName(); });
 dash.draw('sa_net', (el) => { const A = SA.agg(); el.textContent = A ? '฿' + PC.nf(Math.round(A.T.cn)) : '—'; });
@@ -153,7 +156,7 @@ dash.draw('sa_alerts', (el) => { el.replaceChildren(); const S = SA.aggBy('shop'
   const box = (cls, title, items, empty) => { const b = document.createElement('div'); b.className = 'pc-abox ' + cls; const h = document.createElement('h4'); h.textContent = title; b.append(h); const ol = document.createElement('ol');
     for (const parts of items) { const li = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const x = document.createElement('b'); x.textContent = p[0]; if (p[1]) x.style.color = p[1]; li.append(x); } else if (p && p.m) { const x = document.createElement('span'); x.className = 'm'; x.textContent = p.m; li.append(x); } else li.append(p); } ol.append(li); }
     if (!items.length) { const li = document.createElement('li'); li.className = 'm'; li.textContent = empty; ol.append(li); } b.append(ol); el.append(b); };
-  const raw = SA.base() || []; const s = S.s; const inCur = (x) => x.date >= I.from && x.date <= I.to && (s === 'ALL' || x.group === s);
+  const raw = SA.base() || []; const s = S.s; const sb = SA.subSel(); const inCur = (x) => x.date >= I.from && x.date <= I.to && (s === 'ALL' || x.group === s) && (sb === 'ALL' || x.simtype === sb);
   const shopMat = new Map(), shopEmp = new Map(); for (const x of raw) { if (!inCur(x)) continue; const k = String(x.shop), v = N ? x.net : x.units; const a = shopMat.get(k) || new Map(); a.set(String(x.matcode), (a.get(String(x.matcode)) || 0) + v); shopMat.set(k, a); const e = shopEmp.get(k) || new Map(); e.set(String(x.emp), (e.get(String(x.emp)) || 0) + v); shopEmp.set(k, e); }
   const matName = new Map(M.rows.map((x) => [x.key, x.label])), matShare = new Map(M.rows.map((x) => [x.key, x.share])), empName = new Map(E.rows.map((x) => [x.key, x.label]));
   const aspAll = S.T.cu > 0 ? S.T.cn / S.T.cu : 0; const g0 = I.pf && saP(S) > 0 ? saC(S) / saP(S) - 1 : null; const med = d3.median(S.rows.filter((x) => x.c > 0), (x) => x.c) || 0;
@@ -207,7 +210,7 @@ dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A)
     if (cnt('Dog')) li([['ต้องฟื้นฟู ' + cnt('Dog'), 'var(--color-bad)'], ' (' + nm('Dog') + ') → ยอดน้อยและหดตัว ควรหาสาเหตุ (Stock / พนักงาน / ทำเล) และทำแผนแก้ไข']); }
   if (A.lvl === 'emp' || A.lvl === 'shop') { const act = A.rows.filter((x) => x.cu > 0).length; li(['ผลงานเฉลี่ย: ', [act + ' ' + lvn], ' มียอดขาย เฉลี่ย ', [PC.mfmt(Math.round(cur / Math.max(1, act)))], ' ต่อ' + (A.lvl === 'emp' ? 'คน' : 'สาขา') + ' · ค่ากลาง ', [PC.mfmt(Math.round(d3.median(A.rows.filter((x) => x.cu > 0), (x) => x.c) || 0))]]); }
 });
-dash.onData(() => { document.querySelectorAll('#f-saperiod').forEach((s) => { s.value = dash.params().saperiod || 'mtd'; }); document.querySelectorAll('#f-salevel').forEach((s) => { s.value = dash.params().salevel || 'zone'; }); document.querySelectorAll('#wrap-saweek').forEach((n) => { n.hidden = (dash.params().saperiod || 'mtd') !== 'week'; }); });
+dash.onData(() => { const lv = dash.params().salevel || 'zone'; document.querySelectorAll('#wrap-sasim').forEach((n) => { n.hidden = lv === 'group'; }); document.querySelectorAll('#wrap-sasub').forEach((n) => { n.hidden = lv !== 'mat'; }); document.querySelectorAll('#f-saperiod').forEach((s) => { s.value = dash.params().saperiod || 'mtd'; }); document.querySelectorAll('#f-salevel').forEach((s) => { s.value = dash.params().salevel || 'zone'; }); document.querySelectorAll('#wrap-saweek').forEach((n) => { n.hidden = (dash.params().saperiod || 'mtd') !== 'week'; }); });
 document.querySelectorAll('#f-saperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ saperiod: s.value })));
 document.querySelectorAll('#f-salevel').forEach((s) => s.addEventListener('change', () => dash.setParams({ salevel: s.value })));
 
