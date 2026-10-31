@@ -74,6 +74,21 @@
 .pc-split2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-lg); align-items: start; }
 .pc-split2 > * { min-width: 0; }
 @media (max-width: 900px) { .pc-split2 { grid-template-columns: minmax(0, 1fr); } }
+.pc-canfull { position: relative; }
+.pc-canfull > h3 { padding-right: 5.5rem; }
+.pc-expand { position: absolute; top: var(--cds-pad-md); right: var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-caption); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); cursor: pointer; z-index: 2; }
+.pc-expand:hover { border-color: var(--color-fg-muted); }
+.pc-expand .cl, .pc-fullnote { display: none; }
+.pc-full { position: fixed !important; inset: 0; z-index: 1000; margin: 0; border-radius: 0; border: 0; overflow: auto; max-width: none; width: 100vw; height: 100dvh; padding: clamp(12px, 3vw, 40px); background: var(--color-panel); align-content: start; }
+.pc-full > * { width: 100%; max-width: 1200px; margin-left: auto; margin-right: auto; }
+.pc-full .pc-expand { position: fixed; top: 10px; right: 10px; width: auto; margin: 0; }
+.pc-full .pc-expand .ex { display: none; } .pc-full .pc-expand .cl { display: inline; }
+.pc-full .pc-fullnote { display: block; margin: 0 auto; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pc-full > h3 { font-size: 1.25rem; }
+.pc-full .pc-info { display: none; }
+body.pc-noscroll { overflow: hidden; }
+@media (max-width: 560px) { .pc-full { padding: 10px 10px 16px; } .pc-full > h3 { font-size: 1rem; padding-right: 3.5rem; } .pc-full .pc-rrow { padding: 2px 0; row-gap: 1px; } .pc-full .pc-rrow .l { line-height: 1.15; } .pc-full .pc-rrow .l .nm { font-size: .85rem; } .pc-full .pc-rrow .l .sb { font-size: .7rem; } .pc-full .pc-rrow .t { height: 6px; } .pc-full .pc-rrow .m { top: -2px; bottom: -2px; } .pc-full .pc-fullnote { padding-right: 4.5rem; } .pc-full .pc-zcards { gap: 8px; } .pc-full .pc-zc { padding: 8px 10px; gap: 2px; } .pc-full .pc-zc .zb { font-size: 1.5rem; } .pc-full .pc-field { display: none; } }
+@media print { .pc-expand { display: none; } }
 .pc-zcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
 .pc-zc { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; border-top: 4px solid var(--zc, var(--color-border-line)); }
 .pc-zc .zt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -587,20 +602,26 @@
     </div>
     <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p>
 
-    <article class="pc-card" id="card-rank-zone">
+    <article class="pc-card pc-canfull" id="card-rank-zone">
+        <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
+        <p class="pc-fullnote" data-draw="rf_1" data-source="area_rank"></p>
       <h3>สรุปราย Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้ <span class="pc-info" tabindex="0" role="note" aria-label="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน" data-tip="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน">i</span></h3>
       <div class="pc-zcards" data-draw="c_rank_zone" data-source="area_rank area_day"></div>
     </article>
 
     <div class="pc-split2">
-      <article class="pc-card" id="card-rank-daily">
+      <article class="pc-card pc-canfull" id="card-rank-daily">
+        <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
+        <p class="pc-fullnote" data-draw="rf_2" data-source="area_rank"></p>
         <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบ Target ต่อวัน <span class="pc-info" tabindex="0" role="note" aria-label="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน" data-tip="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน">i</span></h3>
         <label class="pc-field">วันที่
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
         <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
       </article>
-      <article class="pc-card" id="card-rank">
+      <article class="pc-card pc-canfull" id="card-rank">
+        <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
+        <p class="pc-fullnote" data-draw="rf_3" data-source="area_rank"></p>
         <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้ <span class="pc-info" tabindex="0" role="note" aria-label="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย" data-tip="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย">i</span></h3>
         <div class="pc-rank" data-draw="c_rank" data-source="area_rank"></div>
       </article>
@@ -1675,6 +1696,17 @@ dash.draw('c_rank_zone', (el) => { el.replaceChildren(); const all = PC.rows('ar
     const mo = dl.children[7]; if (mom != null) mo.style.color = mom >= 0 ? 'var(--color-ok)' : 'var(--color-bad)';
     const dv = dl.children[5]; if (y[f.ach] != null) dv.style.color = rkCol(y[f.ach]);
     c.append(top, big, dl); el.append(c); }); });
+const rfNote = (el, daily) => { const all = PC.rows('area_rank'); const r = all && all[0]; const d = rDate(); const st = PC.P(); const bits = ['Prepay Dashboard', PC.isNet() ? 'Net Amount' : 'QTY'];
+  if (daily && d) bits.push('วันที่ ' + PC.day(d)); else if (r) bits.push('ข้อมูลถึง ' + PC.day(r.today) + ' (' + r.elapsed + '/' + r.days + ' วัน)');
+  if (st.area !== 'ALL') bits.push(st.area); el.textContent = bits.join(' · '); };
+dash.draw('rf_1', (el) => rfNote(el, false));
+dash.draw('rf_2', (el) => rfNote(el, true));
+dash.draw('rf_3', (el) => rfNote(el, false));
+if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
+  const close = () => { document.querySelectorAll('.pc-full').forEach((c) => c.classList.remove('pc-full')); document.body.classList.remove('pc-noscroll'); };
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.pc-expand'); if (!b) return; const c = b.closest('.pc-canfull'); const on = !c.classList.contains('pc-full'); close();
+    if (on) { c.classList.add('pc-full'); document.body.classList.add('pc-noscroll'); c.scrollTop = 0; } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); }); }
 dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
 dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้'); });
 dash.draw('c_rank_heat', (el) => {
