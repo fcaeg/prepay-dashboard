@@ -190,7 +190,7 @@ dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A)
   const T = A.T, N = A.N, I = A.I, cur = saC(A), prv = saP(A), lvn = saLvlName(); const sh = (s) => String(s).replace(/^True (Shop|shop|Move Shop) /, '');
   if (!A.rows.length) { li(['ไม่มียอดขายในช่วงที่เลือกตามตัวกรอง']); return; }
   li([I.label + (A.s !== 'ALL' ? ' · ' + A.s : '') + ': Net Amount ', ['฿' + PC.nf(Math.round(T.cn))], ' จาก ', [PC.nf(T.cu) + ' ชิ้น'], ' ราคาเฉลี่ย ', ['฿' + PC.nf(T.cu ? Math.round(T.cn / T.cu) : 0)],
-    ...(I.pf ? [' · เทียบ' + I.plabel + ' ', [saPct(prv > 0 ? cur / prv - 1 : null), saCol(prv > 0 ? cur / prv - 1 : null)], ' (' + (cur - prv >= 0 ? '+' : '−') + PC.mfmt(Math.round(Math.abs(cur - prv))) + ')'] : [])]);
+    ...(I.pf ? [' · เทียบ ' + I.ps + ' ', [saPct(prv > 0 ? cur / prv - 1 : null), saCol(prv > 0 ? cur / prv - 1 : null)], ' (' + (cur - prv >= 0 ? '+' : '−') + PC.mfmt(Math.round(Math.abs(cur - prv))) + ')'] : [])]);
   if (I.pf && T.pu > 0) { const asp0 = T.pn / T.pu, vol = (T.cu - T.pu) * asp0, pm = T.cn - T.pn - vol; const main = Math.abs(vol) >= Math.abs(pm) ? 'จำนวนชิ้นที่ขายได้' : 'ราคาเฉลี่ยต่อชิ้น/สัดส่วนสินค้า';
     li(['ยอดเปลี่ยนเพราะอะไร: ยอดขายเปลี่ยน ', [(T.cn - T.pn >= 0 ? '+' : '−') + '฿' + PC.nf(Math.round(Math.abs(T.cn - T.pn)))], ' มาจากจำนวนชิ้น ', [(vol >= 0 ? '+' : '−') + '฿' + PC.nf(Math.round(Math.abs(vol))), saCol(vol)], ' และราคา/สัดส่วนสินค้า ', [(pm >= 0 ? '+' : '−') + '฿' + PC.nf(Math.round(Math.abs(pm))), saCol(pm)], ' → ตัวขับหลักคือ ', [main],
       pm < 0 && vol > 0 ? ' (ขายได้ชิ้นมากขึ้นแต่เป็นซิมราคาต่ำลง ควรดันซิมราคาสูง/แพ็กเกจยาว)' : pm > 0 && vol < 0 ? ' (ชิ้นลดลงแต่ขายซิมราคาสูงได้มากขึ้น ควรเพิ่ม Traffic/จำนวนชิ้น)' : '']); }
