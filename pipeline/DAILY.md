@@ -25,7 +25,7 @@ For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `wat
 2. ArtifactData `get` collection `datasets` doc `<id without extension>` for its version, then `update` it with
    `{source: {kind: "file", name: "<file name>", url: "/_blob/<id>"}, updated: {at: "<ISO time +07:00>", by: "Claude จากไฟล์ <input file name>"}}` (`if_version`).
    Do several in one ArtifactData `batch`.
-3. Only if `pipeline/page.html` changed: `update` collection `files` doc `index.html` with `file_path` = `pipeline/out/page_doc.json`.
+3. Only if `pipeline/page.html` (or a `pipeline/*.js` it loads) changed: `update` collection `files` doc `index.html` with `file_path` = `pipeline/out/page_doc.json`, and doc `sa.js` with `pipeline/out/sa.js.doc.json` (each file must stay under 256 KB).
 4. Read ArtifactData collection `data/users/me` doc `check` (up to 5 reads; none or gone = passed).
 5. Delete the old blobs that are no longer referenced (Artifact `delete` with `url` + `path` = old blob id) — optional.
 

@@ -2,6 +2,12 @@
 import json,gzip,base64,sys,os,datetime
 HERE=os.path.dirname(os.path.abspath(__file__)); O=HERE+'/out'; ROOT=os.path.dirname(HERE)
 page_full=open(HERE+'/page.html',encoding='utf-8').read(); page=page_full.replace('<meta name="dash-one-writer">','',1)
+import re as _re
+EXTRA={}
+def _inline(m):
+    fn=m.group(1); src=open(HERE+'/'+fn,encoding='utf-8').read(); EXTRA[fn]=src
+    return '<script>\n'+src+'</script>'
+page=_re.sub(r'<script src="([\w.-]+\.js)"></script>',_inline,page)
 raw={k:json.load(open(f'{O}/{k}.json',encoding='utf-8')) for k in ['matcodes','shops','staff','stock_by_shop','aging_serials','targets','watch_serials']}
 raw['sales_daily_csv']=open(O+'/sales_daily.csv',encoding='utf-8').read()
 blob=base64.b64encode(gzip.compress(json.dumps(raw,ensure_ascii=False,separators=(',',':')).encode('utf-8'),9)).decode()
@@ -123,4 +129,5 @@ setTimeout(() => {{
 fn=ROOT+'/index.html'
 open(fn,'w',encoding='utf-8').write(html)
 json.dump({'text':page_full},open(O+'/page_doc.json','w'),ensure_ascii=False)
+for _fn,_src in EXTRA.items(): json.dump({'text':_src},open(O+'/'+_fn+'.doc.json','w'),ensure_ascii=False)
 print(fn, os.path.getsize(fn))
