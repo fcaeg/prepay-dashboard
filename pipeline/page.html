@@ -104,6 +104,7 @@ body.pc-noscroll { overflow: hidden; }
 .pc { --ag0: var(--color-ok); --ag1: #c9a227; --ag2: #e07b24; --ag3: var(--color-bad); --ag4: color-mix(in srgb, var(--color-bad) 65%, var(--color-fg)); }
 .pc-rkbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-export { font: inherit; font-size: var(--cds-font-size-caption); font-weight: 600; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-ok); background: var(--color-ok); color: #fff; cursor: pointer; }
+.pc-csv { align-self: end; }
 .pc-export:disabled { opacity: .6; cursor: progress; }
 .pc-xmodal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; }
 .pc-xbox { background: var(--color-panel); color: var(--color-fg); border-radius: 12px; padding: 14px; max-width: min(1200px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 10px; }
@@ -904,9 +905,13 @@ body.pc-noscroll { overflow: hidden; }
     <article class="pc-card" id="card-ag-serial">
       <h3>รายการซิมอายุเกิน 180 วัน ราย Serial <span class="pc-info" tabindex="0" role="note" data-tip="ซิมที่อยู่ในสต็อกตั้งแต่ 180 วันขึ้นไป เรียงจาก Aging มากไปน้อย แสดงสูงสุด 1,000 รายการ ค้นหาด้วย Serial สาขา หรือชื่อสินค้า">i</span></h3>
       <div class="pc-tools">
+        <label class="pc-field">Aging
+          <select id="f-agser" data-draw="f_agser" data-source="aging_serials" aria-label="เลือกช่วง Aging"></select>
+        </label>
         <label class="pc-field">ค้นหา
           <input id="q-exp" class="pc-q" data-q="exp" type="search" aria-label="ค้นหา Serial">
         </label>
+        <button class="pc-export pc-csv" id="ag-csv" type="button" title="ดาวน์โหลดรายการตาม Filter และคำค้นหาเป็นไฟล์ CSV (เปิดด้วย Excel ได้)">⬇ Export CSV</button>
       </div>
       <p class="pc-note" data-draw="ag_ser_sum" data-source="aging_serials shops matcodes"></p>
       <div class="pc-scroll"><table data-draw="tb_exp" data-source="aging_serials shops matcodes" data-row-key="serial"></table></div>
@@ -1412,7 +1417,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
