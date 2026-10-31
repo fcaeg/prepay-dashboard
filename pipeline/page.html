@@ -117,6 +117,12 @@
 .pc-gtree .sub h5 { margin: 8px 0 4px; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg); }
 .pc-quad { margin: 0; padding-left: 1.1em; display: grid; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
 .pc-quad b { font-weight: 600; }
+.pc-alerts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
+.pc-abox { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; align-content: start; }
+.pc-abox h4 { margin: 0; font-size: var(--cds-font-size-body); font-weight: 600; }
+.pc-abox.good { border-left: 4px solid var(--color-ok); } .pc-abox.watch { border-left: 4px solid var(--color-bad); } .pc-abox.info { border-left: 4px solid #3b7dd8; }
+.pc-abox ol { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: var(--cds-font-size-caption); line-height: 1.5; }
+.pc-abox ol b { font-weight: 600; color: var(--color-fg); } .pc-abox .m { color: var(--color-fg-muted); }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 [data-dash-source-state=empty] { color: transparent; }
 
@@ -458,7 +464,9 @@
           <option value="area">Area</option>
           <option value="shop">สาขา</option>
           <option value="emp">พนักงาน</option>
-          <option value="group">กลุ่มประเภทซิม</option>
+          <option value="group">กลุ่มประเภทซิม (Type Sim)</option>
+          <option value="sub">ประเภทซิม (รุ่นย่อย)</option>
+          <option value="mat">ชนิดซิม (Matcode)</option>
         </select>
       </label>
       <label class="pc-field">กลุ่มประเภทซิม
@@ -478,6 +486,12 @@
       <h3>บทวิเคราะห์ยอดขาย</h3>
       <ul class="pc-ins" data-draw="sa_text" data-source="enriched targets staff shops"></ul>
       <p class="pc-note">หลักที่ใช้: Period-over-Period (เทียบช่วงก่อนหน้า) · Price-Volume-Mix (แยกการเปลี่ยนแปลงของยอดขายเป็นผลจากจำนวนชิ้นและราคา/สัดส่วนสินค้า) · Pareto 80/20 · Contribution to Growth · Growth-Share Matrix (BCG: ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · Run-rate เทียบ Target</p>
+    </article>
+
+    <article class="pc-card" id="card-sa-alert">
+      <h3>Alert · ต้นแบบที่ทำได้ดี และกลุ่มที่ต้องจับตา</h3>
+      <p>คำนวณใหม่ตามช่วงเวลา กลุ่มประเภทซิม และ Filter ที่เลือก · ต้นแบบ = ยอดสูงและโตกว่าค่าเฉลี่ย พร้อมถอดแบบว่าขายซิมอะไรมากกว่าค่าเฉลี่ย และใครเป็นพนักงานหลัก</p>
+      <div class="pc-alerts" data-draw="sa_alerts" data-source="enriched staff shops matcodes targets"></div>
     </article>
 
     <div class="pc-split">
@@ -2041,7 +2055,7 @@ const SA = (() => {
   const D = 864e5, iso = (x) => x.toISOString().slice(0, 10), add = (ds, n) => iso(new Date(Date.parse(ds + 'T00:00:00Z') + n * D)), diff = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / D);
   const isoW = (ds) => { const d = new Date(ds + 'T00:00:00Z'); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day + 3); const y = d.getUTCFullYear(); const f = new Date(Date.UTC(y, 0, 4)); return { y, w: 1 + Math.round(((d - f) / D - 3 + ((f.getUTCDay() + 6) % 7)) / 7) }; };
   const wRange = (y, w) => { const f = new Date(Date.UTC(y, 0, 4)); const mon = new Date(f.getTime() - ((f.getUTCDay() + 6) % 7) * D + (w - 1) * 7 * D); return [iso(mon), iso(new Date(mon.getTime() + 6 * D))]; };
-  const LV = { zone: 'Region', area: 'Area', shop: 'สาขา', emp: 'พนักงาน', group: 'กลุ่มประเภทซิม' };
+  const LV = { zone: 'Region', area: 'Area', shop: 'สาขา', emp: 'พนักงาน', group: 'กลุ่มประเภทซิม', sub: 'ประเภทซิม (รุ่นย่อย)', mat: 'ชนิดซิม (Matcode)' };
   const info = () => { const r = PC.rows('enriched'); if (!r || !r.length) return null; const today = r.reduce((a, x) => (x.date > a ? x.date : a), ''); const cur = isoW(today);
     const pr = dash.params(); const pd = pr.saperiod || 'mtd'; const wk = Math.min(+(pr.saweek || cur.w), cur.w); let from, to = today, pf = null, pt = null, label, plabel;
     if (pd === 'today') { from = today; pf = pt = add(today, -7); label = 'Today ' + PC.day(today); plabel = 'วันเดียวกันสัปดาห์ก่อน (' + PC.day(pf) + ')'; }
@@ -2053,14 +2067,14 @@ const SA = (() => {
   const base = () => { const r = PC.rows('enriched'), I = info(); if (!r || !I) return null; const p = PC.P();
     return r.filter((x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && ((x.date >= I.from && x.date <= I.to) || (I.pf && x.date >= I.pf && x.date <= I.pt))); };
   const simList = () => { const r = base(), I = info(); if (!r) return []; const N = PC.isNet(); const m = new Map(); for (const x of r) if (x.date >= I.from && x.date <= I.to) m.set(x.group, (m.get(x.group) || 0) + (N ? x.net : x.units)); return [...m.entries()].sort((a, b) => b[1] - a[1]).map((e) => e[0]); };
-  const sim = () => { if (PC.P().group !== 'ALL') return PC.P().group; const v = dash.params().sasim; const l = simList(); return v === 'ALL' ? 'ALL' : l.includes(v) ? v : l[0] || 'ALL'; };
-  let memo = { k: null, v: null };
-  const agg = () => { const I = info(), r = base(); if (!I || !r) return null; const s = sim(); const k = JSON.stringify([I, s, PC.P(), (PC.rows('enriched') || []).length]); if (memo.k === k) return memo.v;
+  const sim = () => { if (PC.P().group !== 'ALL') return PC.P().group; const v = dash.params().sasim; const l = simList(); return l.includes(v) ? v : 'ALL'; };
+  const memo = new Map();
+  const aggBy = (LVL) => { const I = info(), r = base(); if (!I || !r) return null; const s = sim(); const k = JSON.stringify([LVL, I, s, PC.P(), PC.isNet(), (PC.rows('enriched') || []).length]); if (memo.has(k)) return memo.get(k); if (memo.size > 40) memo.clear();
     const staff = new Map((PC.rows('staff') || []).map((x) => [String(x.emp), x])), shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
-    const lvl = I.lvl === 'group' && s !== 'ALL' ? 'sub' : I.lvl;
-    const key = (x) => (lvl === 'zone' ? PCzone(x.area) || '-' : lvl === 'area' ? x.area : lvl === 'shop' ? String(x.shop) : lvl === 'emp' ? String(x.emp) : lvl === 'sub' ? x.simtype : x.group);
-    const lab = (k) => (lvl === 'shop' ? (shops.get(k) || {}).name || k : lvl === 'emp' ? ((staff.get(k) || {}).name || k) : k);
-    const sub = (k, x) => (lvl === 'shop' ? x.area : lvl === 'emp' ? ((shops.get(String((staff.get(k) || {}).shop || x.shop)) || {}).name || '') : lvl === 'area' ? PCzone(x.area) : '');
+    const lvl = LVL === 'group' && s !== 'ALL' ? 'sub' : LVL; const mats = new Map((PC.rows('matcodes') || []).map((x) => [String(x.matcode), x]));
+    const key = (x) => (lvl === 'zone' ? PCzone(x.area) || '-' : lvl === 'area' ? x.area : lvl === 'shop' ? String(x.shop) : lvl === 'emp' ? String(x.emp) : lvl === 'sub' ? x.simtype : lvl === 'mat' ? String(x.matcode) : x.group);
+    const lab = (k) => (lvl === 'shop' ? (shops.get(k) || {}).name || k : lvl === 'emp' ? ((staff.get(k) || {}).name || k) : lvl === 'mat' ? String((mats.get(k) || {}).name || k).replace(/^TMH\d /, '').replace(/_VAS| MULTI/g, '') : k);
+    const sub = (k, x) => (lvl === 'shop' ? x.area : lvl === 'emp' ? ((shops.get(String((staff.get(k) || {}).shop || x.shop)) || {}).name || '') : lvl === 'area' ? PCzone(x.area) : lvl === 'mat' ? x.group + ' · ฿' + PC.nf((mats.get(String(x.matcode)) || {}).price || 0) : lvl === 'sub' ? x.group : '');
     const m = new Map(), dc = new Map(), dp = new Map(); const T = { cu: 0, cn: 0, pu: 0, pn: 0 };
     for (const x of r) { if (s !== 'ALL' && x.group !== s) continue; const k = key(x); const a = m.get(k) || { key: k, label: lab(k), sub: sub(k, x), cu: 0, cn: 0, pu: 0, pn: 0, shops: new Set() };
       if (x.date >= I.from && x.date <= I.to) { a.cu += x.units; a.cn += x.net; T.cu += x.units; T.cn += x.net; if (x.units > 0) a.shops.add(x.shop); const d = dc.get(x.date) || { u: 0, n: 0 }; d.u += x.units; d.n += x.net; dc.set(x.date, d); }
@@ -2074,13 +2088,14 @@ const SA = (() => {
       for (const t of tg) { const S = shops.get(String(t.shop)); if (!S || !PCin(S.area, p.area) || (p.stype !== 'ALL' && S.stype !== p.stype) || (p.shop !== 'ALL' && String(t.shop) !== p.shop)) continue; const k = t.month; const o = tm.get(k) || { u: 0, n: 0 }; o.u += +t.target_units || 0; o.n += +t.target_net || 0; tm.set(k, o); }
       let tu = 0, tn = 0; for (let d = I.from; d <= I.to; d = add(d, 1)) { const o = tm.get(d.slice(0, 7)); if (o) { tu += o.u / dim(d); tn += o.n / dim(d); } }
       const mo = tm.get(I.today.slice(0, 7)); tgt = { tu, tn, month: mo ? (N ? mo.n : mo.u) : null, mdays: dim(I.today), el: +I.today.slice(8, 10) }; }
-    const v = { I, s, lvl, rows, T, N, dc, dp, tgt }; memo = { k, v }; return v; };
-  return { info, agg, simList, sim, LV, add, diff, wRange };
+    const v = { I, s, lvl, rows, T, N, dc, dp, tgt }; memo.set(k, v); return v; };
+  const agg = () => { const I = info(); return I ? aggBy(I.lvl) : null; };
+  return { info, agg, aggBy, base, simList, sim, LV, add, diff, wRange };
 })();
 const saC = (A) => (A.N ? A.T.cn : A.T.cu), saP = (A) => (A.N ? A.T.pn : A.T.pu);
 const saPct = (v) => (v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + PC.pf(Math.abs(v)));
 const saCol = (v) => (v == null ? 'var(--color-fg-muted)' : v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)');
-const saLvlName = () => { const A = SA.agg(); return A ? (A.lvl === 'sub' ? 'ประเภทซิม (รุ่นย่อย) ใน ' + A.s : SA.LV[A.lvl]) : ''; };
+const saLvlName = () => { const A = SA.agg(); return A ? (A.lvl === 'sub' && A.s !== 'ALL' ? 'ประเภทซิม (รุ่นย่อย) ใน ' + A.s : SA.LV[A.lvl]) : ''; };
 dash.draw('f_saweek', (sel) => { const I = SA.info(); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = SA.wRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); } sel.replaceChildren(...o); sel.value = String(I.wk); sel.onchange = () => dash.setParams({ saweek: +sel.value }); });
 dash.draw('f_sasim', (sel) => { const l = SA.simList(); const cur = SA.sim(); sel.replaceChildren(new Option('ทุกประเภทซิม', 'ALL'), ...l.map((g, i) => new Option(g + (i === 0 ? ' (ขายดีที่สุด)' : ' (อันดับ ' + (i + 1) + ')'), g))); sel.value = cur; sel.disabled = PC.P().group !== 'ALL'; sel.onchange = () => dash.setParams({ sasim: sel.value }); });
 dash.draw('sa_range', (el) => { const I = SA.info(); el.textContent = I ? I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + (I.plabel ? ' · เทียบกับ ' + I.plabel : ' · YTD ไม่มีข้อมูลปีก่อน จึงเทียบกับ Target') + ' · สัปดาห์นับจันทร์–อาทิตย์ (ISO)' : ''; });
@@ -2180,11 +2195,45 @@ dash.draw('c_sa_bcg', (el) => { const A = SA.agg(); if (!A) { el.replaceChildren
 dash.draw('tb_sa', (el) => { const A = SA.agg(); const q = A ? saQuad(A) : null; const rows = A && A.rows.map((x, i) => ({ ...x, rank: i + 1, quad: QTH[q(x)], cn: Math.round(x.cn), pn: Math.round(x.pn), asp: x.asp == null ? null : Math.round(x.asp), d: Math.round(x.delta) }));
   const lv = A ? A.lvl : 'zone';
   PC.table(el, 'tb_sa', rows, { key: ['key'], def: 'rank', dir: 1, limit: 2000, cols: [
-    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'label', label: saLvlName(), wrap: true }, ...(lv === 'shop' || lv === 'emp' || lv === 'area' ? [{ f: 'sub', label: lv === 'emp' ? 'สาขาหลัก' : lv === 'shop' ? 'Area' : 'Region', wrap: lv !== 'area' }] : []),
+    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'label', label: saLvlName(), wrap: true }, ...(['shop', 'emp', 'area', 'mat', 'sub'].includes(lv) ? [{ f: 'sub', label: lv === 'emp' ? 'สาขาหลัก' : lv === 'shop' ? 'Area' : lv === 'mat' ? 'Type Sim · ราคา' : lv === 'sub' ? 'Type Sim' : 'Region', wrap: lv === 'shop' || lv === 'emp' }] : []),
     { f: 'cn', label: 'Net Amount', num: true, fmt: PC.nf, bar: A && A.N }, { f: 'cu', label: 'QTY', num: true, fmt: PC.nf, bar: A && !A.N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf }, { f: 'asp', label: 'ASP', num: true, fmt: PC.nf },
     ...(A && A.I.pf ? [{ f: 'pn', label: 'Net ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'pu', label: 'QTY ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'growth', label: '% เปลี่ยนแปลง', num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', saPct(d.growth)]) },
       { f: 'd', label: 'ส่วนต่าง', num: true, fmt: (v) => (v > 0 ? '+' : '') + PC.nf(v) }, { f: 'quad', label: 'กลุ่ม (Matrix)' }] : []),
-    ...(lv !== 'emp' && lv !== 'group' && lv !== 'sub' ? [{ f: 'shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }] : []) ] }); });
+    ...(lv !== 'emp' ? [{ f: 'shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }] : []) ] }); });
+dash.draw('sa_alerts', (el) => { el.replaceChildren(); const S = SA.aggBy('shop'), E = SA.aggBy('emp'), M = SA.aggBy('mat'); if (!S || !E || !M) return; const I = S.I, N = S.N; const sh = (s) => String(s).replace(/^True (Shop|shop|Move Shop) /, '');
+  const box = (cls, title, items, empty) => { const b = document.createElement('div'); b.className = 'pc-abox ' + cls; const h = document.createElement('h4'); h.textContent = title; b.append(h); const ol = document.createElement('ol');
+    for (const parts of items) { const li = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const x = document.createElement('b'); x.textContent = p[0]; if (p[1]) x.style.color = p[1]; li.append(x); } else if (p && p.m) { const x = document.createElement('span'); x.className = 'm'; x.textContent = p.m; li.append(x); } else li.append(p); } ol.append(li); }
+    if (!items.length) { const li = document.createElement('li'); li.className = 'm'; li.textContent = empty; ol.append(li); } b.append(ol); el.append(b); };
+  const raw = SA.base() || []; const s = S.s; const inCur = (x) => x.date >= I.from && x.date <= I.to && (s === 'ALL' || x.group === s);
+  const shopMat = new Map(), shopEmp = new Map(); for (const x of raw) { if (!inCur(x)) continue; const k = String(x.shop), v = N ? x.net : x.units; const a = shopMat.get(k) || new Map(); a.set(String(x.matcode), (a.get(String(x.matcode)) || 0) + v); shopMat.set(k, a); const e = shopEmp.get(k) || new Map(); e.set(String(x.emp), (e.get(String(x.emp)) || 0) + v); shopEmp.set(k, e); }
+  const matName = new Map(M.rows.map((x) => [x.key, x.label])), matShare = new Map(M.rows.map((x) => [x.key, x.share])), empName = new Map(E.rows.map((x) => [x.key, x.label]));
+  const aspAll = S.T.cu > 0 ? S.T.cn / S.T.cu : 0; const g0 = I.pf && saP(S) > 0 ? saC(S) / saP(S) - 1 : null; const med = d3.median(S.rows.filter((x) => x.c > 0), (x) => x.c) || 0;
+  // 1) model shops
+  const good = S.rows.filter((x) => x.c > 0 && x.c >= med && (g0 == null || (x.growth != null && x.growth >= g0))).sort((a, b) => (I.pf ? b.delta - a.delta : b.c - a.c)).slice(0, 5);
+  box('good', 'สาขาที่ทำได้ดี (ต้นแบบ)', good.map((x) => { const mm = [...(shopMat.get(x.key) || new Map()).entries()].sort((a, b) => b[1] - a[1]); const tot = d3.sum(mm, (m) => m[1]) || 1;
+    const idx = mm.map(([k, v]) => ({ k, sh: v / tot, ix: (v / tot) / Math.max(0.001, matShare.get(k) || 0) })).filter((m) => m.sh >= 0.05).sort((a, b) => b.ix - a.ix)[0];
+    const top = mm[0]; const em = [...(shopEmp.get(x.key) || new Map()).entries()].sort((a, b) => b[1] - a[1])[0];
+    return [[sh(x.label)], ' ' + PC.mfmt(Math.round(x.c)) + (I.pf ? ' (' + saPct(x.growth) + ')' : ''), { m: ' · ASP ฿' + PC.nf(Math.round(x.asp || 0)) + (aspAll ? (x.asp > aspAll * 1.1 ? ' สูงกว่าเฉลี่ย' : x.asp < aspAll * 0.9 ? ' ต่ำกว่าเฉลี่ย' : '') : '') },
+      document.createElement('br'), { m: 'ถอดแบบ: ' + (top ? 'ขาย ' + matName.get(top[0]) + ' มากสุด ' + PC.pf(top[1] / tot) : '') + (idx && idx.ix > 1.3 && (!top || idx.k !== top[0]) ? ' · เน้น ' + matName.get(idx.k) + ' ' + PC.pf(idx.sh) + ' (ค่าเฉลี่ย ' + PC.pf(matShare.get(idx.k) || 0) + ')' : '') + (em ? ' · พนักงานหลัก ' + (empName.get(em[0]) || em[0]) + ' (' + PC.pf(em[1] / tot) + ' ของสาขา)' : '') }]; }), 'ยังไม่มีสาขาที่โดดเด่นในช่วงนี้');
+  // 2) top staff
+  const te = E.rows.filter((x) => x.c > 0).slice(0, 5);
+  box('good', 'พนักงานที่ขายได้ดี', te.map((x) => [[x.label], ' ' + PC.mfmt(Math.round(x.c)) + ' · ' + PC.nf(x.cu) + ' ชิ้น', { m: ' · ' + sh(x.sub || '') + (I.pf ? ' · ' + saPct(x.growth) : '') + ' · ASP ฿' + PC.nf(Math.round(x.asp || 0)) }]), 'ไม่มีข้อมูล');
+  // 3) SIM items
+  const minC = saC(M) * 0.01; const topM = M.rows.filter((x) => x.c > 0).slice(0, 3); const rising = I.pf ? M.rows.filter((x) => x.c >= minC && x.growth != null && x.growth > 0.1).sort((a, b) => b.growth - a.growth).slice(0, 3) : [];
+  box('info', 'ชนิดซิมที่ขายได้ดี / กำลังโต', [...topM.map((x) => [['ขายดี: ' + x.label], ' ' + PC.mfmt(Math.round(x.c)) + ' · ' + PC.pf(x.share), { m: ' · ' + x.sub + (I.pf ? ' · ' + saPct(x.growth) : '') }]),
+    ...rising.map((x) => [['กำลังโต: ' + x.label, 'var(--color-ok)'], ' ' + saPct(x.growth), { m: ' · ' + PC.mfmt(Math.round(x.c)) + ' · ' + x.sub + ' → เตรียม Stock ให้พอ' }])], 'ไม่มีข้อมูล');
+  // 4) watch / improve
+  const W = [];
+  if (I.pf) { S.rows.filter((x) => x.delta < 0 && x.pv > 0).sort((a, b) => a.delta - b.delta).slice(0, 4).forEach((x) => W.push([['สาขา ' + sh(x.label), 'var(--color-bad)'], ' ' + saPct(x.growth) + ' (−' + PC.mfmt(Math.round(-x.delta)) + ')', { m: ' → ตรวจ Stock / พนักงาน / Traffic' }]));
+    E.rows.filter((x) => x.delta < 0 && x.pv >= med / 3).sort((a, b) => a.delta - b.delta).slice(0, 2).forEach((x) => W.push([['พนักงาน ' + x.label, 'var(--color-bad)'], ' ' + saPct(x.growth), { m: ' · ' + sh(x.sub || '') + ' → โค้ช/ทบทวนเป้ารายบุคคล' }]));
+    M.rows.filter((x) => x.pv >= minC && x.growth != null && x.growth < -0.15).sort((a, b) => a.delta - b.delta).slice(0, 2).forEach((x) => W.push([['ซิม ' + x.label, 'var(--color-warn)'], ' ' + saPct(x.growth), { m: ' · ' + x.sub + ' → เช็ก Stock ขาด/ราคา/โปรโมชัน' }])); }
+  if (aspAll) S.rows.filter((x) => x.cu >= 10 && x.asp != null && x.asp < aspAll * 0.7).sort((a, b) => a.asp - b.asp).slice(0, 2).forEach((x) => W.push([['ASP ต่ำ: ' + sh(x.label), 'var(--color-warn)'], ' ฿' + PC.nf(Math.round(x.asp)) + ' (เฉลี่ย ฿' + PC.nf(Math.round(aspAll)) + ')', { m: ' → แนะนำแพ็กเกจราคาสูง/ระยะยาว' }]));
+  const tg = PC.rows('targets'), shopsD = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+  if (tg && s === 'ALL' && PC.P().group === 'ALL') { const dim = (ds) => new Date(Date.UTC(+ds.slice(0, 4), +ds.slice(5, 7), 0)).getUTCDate(); const tm = new Map(); for (const t of tg) tm.set(t.month + '|' + t.shop, N ? +t.target_net || 0 : +t.target_units || 0);
+    const low = S.rows.map((x) => { let tt = 0; for (let d = I.from; d <= I.to; d = SA.add(d, 1)) tt += (tm.get(d.slice(0, 7) + '|' + x.key) || 0) / dim(d); return { ...x, tt, at: tt > 0 ? x.c / tt : null }; }).filter((x) => x.at != null && x.tt >= 1 && x.at < 0.7).sort((a, b) => a.at - b.at).slice(0, 3);
+    low.forEach((x) => W.push([['ต่ำกว่า Target: ' + sh(x.label), 'var(--color-bad)'], ' ' + PC.pf(x.at) + ' ของ Target ช่วงนี้', { m: ' → วางแผนเร่งยอด/กระจาย Stock' }])); }
+  box('watch', 'ต้องจับตา / Improve', W, 'ไม่มีกลุ่มที่น่ากังวลในช่วงนี้');
+});
 dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A) return; const li = (parts) => { const l = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const b = document.createElement('b'); b.textContent = p[0]; if (p[1]) b.style.color = p[1]; l.append(b); } else l.append(p); } el.append(l); };
   const T = A.T, N = A.N, I = A.I, cur = saC(A), prv = saP(A), lvn = saLvlName(); const sh = (s) => String(s).replace(/^True (Shop|shop|Move Shop) /, '');
   if (!A.rows.length) { li(['ไม่มียอดขายในช่วงนี้ตามตัวกรองที่เลือก']); return; }
