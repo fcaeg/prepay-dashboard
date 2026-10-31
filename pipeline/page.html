@@ -64,7 +64,26 @@
 .pc-card details[open] summary { margin-bottom: var(--cds-gap-xs); }
 .pc-mlabel { font-weight: 600; color: var(--color-fg); }
 .pc-rank { display: grid; gap: 6px; }
-.pc-rrow { display: grid; grid-template-columns: 2rem minmax(7rem, 12rem) 1fr minmax(8.5rem, auto); gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); }
+.pc-rrow { display: grid; grid-template-columns: 1.75rem minmax(0, 1.25fr) minmax(4rem, 1fr) 4rem; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); padding: 5px 0; border-bottom: 1px solid var(--cds-chart-grid); }
+.pc-rrow:last-child { border-bottom: 0; }
+.pc-rrow .l { display: grid; line-height: 1.3; }
+.pc-rrow .l .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--cds-font-size-body, .9rem); }
+.pc-rrow .l .sb { color: var(--color-fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-rhead { display: grid; grid-template-columns: 1.75rem minmax(0, 1.25fr) minmax(4rem, 1fr) 4rem; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding-bottom: 4px; border-bottom: 1px solid var(--color-border-line); }
+.pc-rhead span:last-child { text-align: right; }
+.pc-split2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-lg); align-items: start; }
+.pc-split2 > * { min-width: 0; }
+@media (max-width: 900px) { .pc-split2 { grid-template-columns: minmax(0, 1fr); } }
+.pc-zcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
+.pc-zc { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; border-top: 4px solid var(--zc, var(--color-border-line)); }
+.pc-zc .zt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pc-zc .zn { font-weight: 600; font-size: 1.05rem; }
+.pc-zc .zr { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pc-zc .zb { font-size: 1.9rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.pc-zc .zbl { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pc-zc dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 4px 0 0; font-size: var(--cds-font-size-caption); }
+.pc-zc dt { color: var(--color-fg-muted); }
+.pc-zc dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
 .pc-rrow .n { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
 .pc-rrow .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-rrow .t { position: relative; height: 18px; background: var(--cds-chart-grid); border-radius: var(--cds-radius); }
@@ -76,7 +95,7 @@
 .pc-rrow.dim { opacity: .5; }
 .pc-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .pc-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
-@media (max-width: 560px) { .pc-rrow { grid-template-columns: 1.5rem minmax(0, 1fr) auto; row-gap: 2px; } .pc-rrow .n { grid-row: 1 / span 2; align-self: center; } .pc-rrow .l { grid-column: 2; grid-row: 1; } .pc-rrow .v { grid-column: 3; grid-row: 1; text-align: right; } .pc-rrow .t { grid-column: 2 / -1; grid-row: 2; height: 14px; } }
+@media (max-width: 560px) { .pc-rrow { grid-template-columns: 1.5rem minmax(0, 1fr) auto; row-gap: 3px; } .pc-rrow .n { grid-row: 1 / span 2; align-self: center; } .pc-rrow .l { grid-column: 2; grid-row: 1; } .pc-rrow .v { grid-column: 3; grid-row: 1; text-align: right; } .pc-rrow .t { grid-column: 2 / -1; grid-row: 2; height: 12px; } .pc-rhead { display: none; } }
 .pc-heat-wrap { overflow-x: auto; }
 .pc-heat { display: grid; gap: 2px; font-size: 11px; font-variant-numeric: tabular-nums; min-width: max-content; }
 .pc-heat .hc { min-width: 2.6rem; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 3px; cursor: pointer; color: var(--color-fg); }
@@ -568,17 +587,18 @@
     </div>
     <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p>
 
-    <div class="pc-split">
+    <article class="pc-card" id="card-rank-zone">
+      <h3>สรุปราย Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้ <span class="pc-info" tabindex="0" role="note" aria-label="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน" data-tip="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน">i</span></h3>
+      <div class="pc-zcards" data-draw="c_rank_zone" data-source="area_rank area_day"></div>
+    </article>
+
+    <div class="pc-split2">
       <article class="pc-card" id="card-rank-daily">
         <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบ Target ต่อวัน <span class="pc-info" tabindex="0" role="note" aria-label="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน" data-tip="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน">i</span></h3>
         <label class="pc-field">วันที่
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
         <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
-      </article>
-      <article class="pc-card" id="card-rank-zone">
-        <h3>Ranking Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้ <span class="pc-info" tabindex="0" role="note" aria-label="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน" data-tip="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน">i</span></h3>
-        <div class="pc-scroll"><table data-draw="tb_rank_zone" data-source="area_rank area_day" data-row-key="stype,area"></table></div>
       </article>
       <article class="pc-card" id="card-rank">
         <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้ <span class="pc-info" tabindex="0" role="note" aria-label="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย" data-tip="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย">i</span></h3>
@@ -1629,29 +1649,32 @@ dash.draw('f_rdate', (sel) => { const ds = rDates(); sel.replaceChildren(...ds.s
 const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
   el.replaceChildren(); if (!r || !r.length) return; const sel = PC.P().area;
   const max = Math.max(1.2, d3.max(r, (d) => d[achK] || 0) * 1.05);
+  const hd = document.createElement('div'); hd.className = 'pc-rhead'; for (const s of ['#', 'Area · ยอด / ' + tgtLabel, 'เทียบ Target (เส้น = 100%)', '%']) { const x = document.createElement('span'); x.textContent = s; hd.append(x); } el.append(hd);
   for (const d of r) { const row = document.createElement('div'); row.className = 'pc-rrow' + (sel !== 'ALL' && !window.PC_ZONES.includes(sel) ? (d.area === sel ? ' sel' : ' dim') : '');
     row.dataset.where = PC.where({ stype: d.stype, area: d.area, ...(extra ? extra(d) : {}) });
     const n = document.createElement('span'); n.className = 'n'; n.textContent = d[rankK];
-    const l = document.createElement('span'); l.className = 'l'; l.textContent = d.area; l.title = d.area;
+    const l = document.createElement('span'); l.className = 'l'; const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = d.area.replace(/^UPC - /, ''); const sb = document.createElement('span'); sb.className = 'sb'; sb.textContent = PC.mfmt(d[actK]) + ' / ' + PC.mfmt(d[tgtK]); l.append(nm, sb);
     const t = document.createElement('span'); t.className = 't';
     const fl = document.createElement('span'); fl.className = 'f'; fl.style.width = Math.min(100, (Math.max(0, d[achK] || 0) / max) * 100) + '%'; fl.style.background = rkCol(d[achK]);
     const mk = document.createElement('span'); mk.className = 'm'; mk.style.left = (1 / max) * 100 + '%'; t.append(fl, mk);
-    const v = document.createElement('span'); v.className = 'v'; const b = document.createElement('b'); b.textContent = d[achK] == null ? '–' : PC.pf(d[achK]); b.style.color = rkCol(d[achK]);
-    v.append(b, ' · Target ' + PC.mfmt(d[tgtK]) + ' · ยอด ' + PC.mfmt(d[actK]));
+    const v = document.createElement('span'); v.className = 'v'; const b = document.createElement('b'); b.textContent = d[achK] == null ? '–' : PC.pf(d[achK]); b.style.color = rkCol(d[achK]); v.append(b);
     row.title = d.area + ' · ยอด ' + PC.mfmt(d[actK]) + ' · ' + tgtLabel + ' ' + PC.mfmt(d[tgtK]);
     row.append(n, l, t, v); el.append(row); }
 };
-dash.draw('tb_rank_zone', (el) => { const all = PC.rows('area_rank'), ad = PC.rows('area_day'); const st = PC.P().stype, f = rkF(), N = PC.isNet(); const d = rDate();
-  const fm = (v) => (v == null ? '' : N ? PC.nf(Math.round(v)) : PC.nf(v));
-  const r = all && all.filter((x) => x.stype === st && window.PC_ZONES.includes(x.area)).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1)).map((x, i) => { const y = (ad || []).find((z) => z.stype === st && z.area === x.area && z.date === d) || {};
-    return { ...x, zrank: i + 1, areas: [...new Set(all.filter((z) => z.stype === st && PCzone(z.area) === x.area && !window.PC_ZONES.includes(z.area)).map((z) => z.area))].length, dval: y[f.d] ?? null, dach: y[f.ach] ?? null }; });
-  const pill = (k) => (dd) => (dd[k] == null ? ['mute', '–'] : [dd[k] >= 1 ? 'ok' : dd[k] >= 0.9 ? 'warn' : 'bad', PC.pf(dd[k])]);
-  PC.table(el, 'tb_rank_zone', r, { key: ['stype', 'area'], def: 'zrank', dir: 1, cols: [
-    { f: 'zrank', label: 'อันดับ', num: true, fmt: PC.nf }, { f: 'area', label: 'Region' }, { f: 'areas', label: 'Area', num: true, fmt: PC.nf }, { f: 'shops', label: 'สาขาที่มี Target', num: true, fmt: PC.nf },
-    { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'เทียบเดือนก่อน', num: true, pill: (dd) => momPill(dd[N ? 'mom_net' : 'mom_units']) },
-    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + (d ? PC.day(d) : ''), num: true, fmt: fm }, { f: 'dach', label: '% รายวัน', num: true, pill: pill('dach') },
-    { f: f.ttd, label: 'Target ถึงวันนี้', num: true, fmt: fm }, { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
-    { f: f.tgt, label: 'Target ทั้งเดือน', num: true, fmt: fm }, { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm } ] }); });
+dash.draw('c_rank_zone', (el) => { el.replaceChildren(); const all = PC.rows('area_rank'), ad = PC.rows('area_day'); if (!all) return; const st = PC.P().stype, f = rkF(), N = PC.isNet(), d = rDate();
+  const r = all.filter((x) => x.stype === st && window.PC_ZONES.includes(x.area)).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1));
+  const sel = PC.P().area;
+  r.forEach((x, i) => { const y = (ad || []).find((z) => z.stype === st && z.area === x.area && z.date === d) || {}; const areas = new Set(all.filter((z) => z.stype === st && !window.PC_ZONES.includes(z.area) && z.area !== 'ALL' && PCzone(z.area) === x.area).map((z) => z.area)).size;
+    const c = document.createElement('div'); c.className = 'pc-zc'; c.style.setProperty('--zc', rkCol(x[f.ach])); if (window.PC_ZONES.includes(sel) && sel !== x.area) c.style.opacity = '.5';
+    c.dataset.where = PC.where({ stype: st, area: x.area });
+    const top = document.createElement('div'); top.className = 'zt'; const zn = document.createElement('span'); zn.className = 'zn'; zn.textContent = '#' + (i + 1) + ' ' + x.area; const zr = document.createElement('span'); zr.className = 'zr'; zr.textContent = PC.nf(areas) + ' Area · ' + PC.nf(x.shops) + ' สาขา'; top.append(zn, zr);
+    const big = document.createElement('div'); const zb = document.createElement('span'); zb.className = 'zb'; zb.textContent = x[f.ach] == null ? '–' : PC.pf(x[f.ach]); zb.style.color = rkCol(x[f.ach]); const zbl = document.createElement('span'); zbl.className = 'zbl'; zbl.textContent = '  ยอดสะสมเทียบ Target ถึงวันนี้'; big.append(zb, zbl);
+    const dl = document.createElement('dl'); const mom = x[N ? 'mom_net' : 'mom_units'];
+    const rows = [['Target ถึงวันนี้', PC.mfmt(x[f.ttd])], ['ยอดสะสม', PC.mfmt(x[f.act])], ['ยอด ' + (d ? PC.day(d) : 'วันล่าสุด'), PC.mfmt(y[f.d] ?? 0) + (y[f.ach] == null ? '' : ' (' + PC.pf(y[f.ach]) + ')')], ['เทียบเดือนก่อน (MoM)', mom == null ? '–' : (mom > 0 ? '+' : mom < 0 ? '−' : '') + PC.pf(Math.abs(mom))], ['Target ทั้งเดือน', PC.mfmt(x[f.tgt])], ['ต้องทำต่อวัน', x[f.need] == null ? '—' : PC.mfmt(x[f.need])]];
+    for (const [a, b] of rows) { const dt = document.createElement('dt'); dt.textContent = a; const dd = document.createElement('dd'); dd.textContent = b; dl.append(dt, dd); }
+    const mo = dl.children[7]; if (mom != null) mo.style.color = mom >= 0 ? 'var(--color-ok)' : 'var(--color-bad)';
+    const dv = dl.children[5]; if (y[f.ach] != null) dv.style.color = rkCol(y[f.ach]);
+    c.append(top, big, dl); el.append(c); }); });
 dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
 dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้'); });
 dash.draw('c_rank_heat', (el) => {
