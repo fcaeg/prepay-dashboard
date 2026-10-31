@@ -88,6 +88,20 @@
 .pc-full .pc-info { display: none; }
 body.pc-noscroll { overflow: hidden; }
 @media (max-width: 560px) { .pc-full { padding: 10px 10px 16px; } .pc-full > h3 { font-size: 1rem; padding-right: 3.5rem; } .pc-full .pc-rrow { padding: 2px 0; row-gap: 1px; } .pc-full .pc-rrow .l { line-height: 1.15; } .pc-full .pc-rrow .l .nm { font-size: .85rem; } .pc-full .pc-rrow .l .sb { font-size: .7rem; } .pc-full .pc-rrow .t { height: 6px; } .pc-full .pc-rrow .m { top: -2px; bottom: -2px; } .pc-full .pc-fullnote { padding-right: 4.5rem; } .pc-full .pc-zcards { gap: 8px; } .pc-full .pc-zc { padding: 8px 10px; gap: 2px; } .pc-full .pc-zc .zb { font-size: 1.5rem; } .pc-full .pc-field { display: none; } }
+.pc-agtiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.pc-agtile { border-top: 4px solid var(--agc); }
+.pc-agtile .pc-big { color: var(--agc); }
+.pc-agtile .lv { font-weight: 600; color: var(--agc); }
+.pc-agbars { display: grid; gap: 4px; }
+.pc-agrow { display: grid; grid-template-columns: minmax(0, 10rem) minmax(4rem, 1fr) 7.5rem; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); padding: 3px 0; }
+.pc-agrow.z { font-weight: 600; border-top: 1px solid var(--color-border-line); padding-top: 8px; margin-top: 4px; }
+.pc-agrow .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-agrow .s { display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--cds-chart-grid); }
+.pc-agrow .s i { display: block; height: 100%; }
+.pc-agrow .v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 560px) { .pc-agrow { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; } .pc-agrow .s { grid-column: 1 / -1; grid-row: 2; height: 12px; } }
+.pill.ag0 { color: var(--ag0); } .pill.ag1 { color: var(--ag1); } .pill.ag2 { color: var(--ag2); } .pill.ag3 { color: var(--ag3); } .pill.ag4 { color: var(--ag4); }
+.pc { --ag0: var(--color-ok); --ag1: #c9a227; --ag2: #e07b24; --ag3: var(--color-bad); --ag4: color-mix(in srgb, var(--color-bad) 65%, var(--color-fg)); }
 .pc-rkbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-export { font: inherit; font-size: var(--cds-font-size-caption); font-weight: 600; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-ok); background: var(--color-ok); color: #fff; cursor: pointer; }
 .pc-export:disabled { opacity: .6; cursor: progress; }
@@ -230,7 +244,7 @@ body.pc-noscroll { overflow: hidden; }
         <div class="pc-seg" role="group" aria-label="เลือกตัววัดยอดขาย" data-draw="metric_seg"></div>
       </div>
     </div>
-    <p class="pc-take">วันนี้ (<b data-draw="t_today" data-source="kpi" data-field="today">—</b>) ขายซิม Prepay ได้ QTY <b data-draw="t_tqty" data-source="kpi" data-field="today_units">—</b> Net Amount <b data-draw="t_tnet" data-source="kpi" data-field="today_net">—</b> บาท · เดือนนี้ QTY <b data-draw="t_mqty" data-source="kpi" data-field="mtd_units">—</b> · ตั้งแต่ต้นปี QTY <b data-draw="t_units" data-source="kpi" data-field="units">—</b> Net Amount <b data-draw="t_net" data-source="kpi" data-field="net">—</b> บาท · ซิมในสต็อกที่เกินอายุแล้ว <b data-draw="t_expired" data-source="exp_sum" data-field="n">—</b> ชิ้น</p>
+    <p class="pc-take">วันนี้ (<b data-draw="t_today" data-source="kpi" data-field="today">—</b>) ขายซิม Prepay ได้ QTY <b data-draw="t_tqty" data-source="kpi" data-field="today_units">—</b> Net Amount <b data-draw="t_tnet" data-source="kpi" data-field="today_net">—</b> บาท · เดือนนี้ QTY <b data-draw="t_mqty" data-source="kpi" data-field="mtd_units">—</b> · ตั้งแต่ต้นปี QTY <b data-draw="t_units" data-source="kpi" data-field="units">—</b> Net Amount <b data-draw="t_net" data-source="kpi" data-field="net">—</b> บาท · ซิมค้างในระบบเกิน 180 วัน <b data-draw="t_expired" data-source="stock_by_shop shops matcodes" data-field="qty">—</b> ชิ้น</p>
     <p class="pc-note" id="one-month-note" hidden>ไฟล์ขายตอนนี้มีข้อมูลเพียงเดือนเดียว ยอดสะสมตั้งแต่ต้นปี (YTD) จึงเท่ากับยอดเดือนล่าสุด เมื่อเพิ่มไฟล์ขายเดือนก่อน ๆ กราฟรายเดือนและยอด YTD จะครบเอง วันสุดท้ายในไฟล์อาจยังไม่ครบวัน</p>
   </header>
 
@@ -263,7 +277,7 @@ body.pc-noscroll { overflow: hidden; }
     <button class="pc-tab" type="button" role="tab" data-tab="staff" aria-selected="false">พนักงาน</button>
     <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock Cover Week</button>
     <button class="pc-tab" type="button" role="tab" data-tab="watch" aria-selected="false">ติดตามซิมใกล้หมดอายุ (Serial)</button>
-    <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">แจ้งเตือนซิมใกล้หมดอายุ</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">Aging Sim</button>
   </nav>
 
   <section class="pc-sec" id="today" data-page="today">
@@ -859,54 +873,43 @@ body.pc-noscroll { overflow: hidden; }
   </section>
 
   <section class="pc-sec" id="expiry" data-page="expiry" hidden>
-    <div class="pc-bar">
-      <label class="pc-field">อายุซิมนับจากรับเข้าสต็อก
-        <select id="f-life" aria-label="อายุซิม">
-          <option value="270">270 วัน</option>
-          <option value="365">365 วัน</option>
-          <option value="540">540 วัน</option>
-        </select>
-      </label>
+    <p class="pc-take" data-draw="ag_take" data-source="stock_by_shop shops matcodes" data-field="qty"></p>
+    <div class="pc-tiles pc-agtiles" data-draw="ag_tiles" data-source="stock_by_shop shops matcodes"></div>
+    <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" data-tip="Aging = จำนวนวันที่ซิมอยู่ในสต็อกนับจากรับเข้าครั้งแรก (FIRST_AGING) จากไฟล์ stock_balance_report ล่าสุด · มูลค่า = จำนวน × ราคาป้ายใน Master · ระดับเฝ้าระวัง: 0–90 ปกติ · 91–180 เฝ้าระวัง · 181–270 เสี่ยง · 271–365 เสี่ยงสูง · เกิน 365 วิกฤต · ปรับตาม Filter Region / Area / สาขา / ประเภทสาขา / กลุ่มซิม">i</span> <span data-draw="ag_asof" data-source="stock_by_shop"></span></p>
+    <div class="pc-split2">
+      <article class="pc-card" id="card-ag-area">
+        <h3>Aging ราย Region / Area <span class="pc-info" tabindex="0" role="note" data-tip="แถบแสดงสัดส่วนซิมแต่ละช่วง Aging ของ Area · ตัวเลขด้านขวา = จำนวนซิมที่อายุเกิน 180 วัน (ระดับเสี่ยงขึ้นไป) และ % ของ Stock · เรียงตาม % เกิน 180 วันจากมากไปน้อยในแต่ละ Region">i</span></h3>
+        <div class="pc-legend" data-draw="ag_leg1" data-source="stock_by_shop"></div>
+        <div class="pc-agbars" data-draw="c_ag_area" data-source="stock_by_shop shops matcodes"></div>
+      </article>
+      <article class="pc-card" id="card-ag-group">
+        <h3>Aging ราย Type Sim <span class="pc-info" tabindex="0" role="note" data-tip="สัดส่วนซิมแต่ละช่วง Aging แยกตามกลุ่มซิม (CUSTOM_MODEL) เรียงตามจำนวนซิมที่อายุเกิน 180 วัน">i</span></h3>
+        <div class="pc-legend" data-draw="ag_leg2" data-source="stock_by_shop"></div>
+        <div class="pc-agbars" data-draw="c_ag_group" data-source="stock_by_shop shops matcodes"></div>
+      </article>
     </div>
-    <p class="pc-method">ไฟล์ Stock ไม่มีวันหมดอายุของซิมโดยตรง จึงประมาณจากจำนวนวันที่ซิมอยู่ในสต็อกนับจากรับเข้าครั้งแรก (FIRST_AGING) · วันคงเหลือ = อายุซิมที่เลือก − จำนวนวันในสต็อก · ปรับอายุซิมให้ตรงกับเงื่อนไขของซิมแต่ละล็อตได้จากตัวเลือกด้านบน</p>
-    <div class="pc-tiles">
-      <div class="pc-tile pc-alert" id="tile-expired">
-        <span class="pc-tile-l">เกินอายุแล้ว (ชิ้น)</span>
-        <span class="pc-big" data-draw="e_expired" data-source="exp_sum" data-field="n">—</span>
-        <span class="pc-sub">มูลค่าตามราคาป้าย <span data-draw="e_expired_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
+    <article class="pc-card" id="card-ag-shop">
+      <h3>สาขาที่ต้องเฝ้าระวัง <span class="pc-info" tabindex="0" role="note" data-tip="ระดับของสาขา = ช่วง Aging สูงสุดที่ยังมีซิมค้าง · ขาย 28 วัน = QTY ที่สาขาขายได้ใน 28 วันล่าสุด (ตาม Filter) ใช้ดูว่าสาขายังระบายสต็อกได้หรือควรโยกไปสาขาอื่น · เรียงตามจำนวนซิมที่อายุเกิน 180 วัน">i</span></h3>
+      <div class="pc-tools">
+        <label class="pc-field">ระดับ
+          <select id="f-aglv" data-draw="f_aglv" data-source="stock_by_shop" aria-label="ระดับเฝ้าระวัง"></select>
+        </label>
+        <label class="pc-field">ค้นหา
+          <input id="q-agshop" class="pc-q" data-q="agshop" type="search" aria-label="ค้นหาสาขา">
+        </label>
       </div>
-      <div class="pc-tile pc-alert" id="tile-d30">
-        <span class="pc-tile-l">หมดอายุภายใน 30 วัน</span>
-        <span class="pc-big" data-draw="e_d30" data-source="exp_sum" data-field="n">—</span>
-        <span class="pc-sub">มูลค่า <span data-draw="e_d30_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
-      </div>
-      <div class="pc-tile pc-warn" id="tile-d60">
-        <span class="pc-tile-l">หมดอายุใน 31–60 วัน</span>
-        <span class="pc-big" data-draw="e_d60" data-source="exp_sum" data-field="n">—</span>
-        <span class="pc-sub">มูลค่า <span data-draw="e_d60_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
-      </div>
-      <div class="pc-tile" id="tile-d90">
-        <span class="pc-tile-l">หมดอายุใน 61–90 วัน</span>
-        <span class="pc-big" data-draw="e_d90" data-source="exp_sum" data-field="n">—</span>
-        <span class="pc-sub">มูลค่า <span data-draw="e_d90_v" data-source="exp_sum" data-field="value">—</span> บาท</span>
-      </div>
-    </div>
-    <article class="pc-card" id="card-expshop">
-      <h3>สาขาที่มีซิมเสี่ยงหมดอายุ <span class="pc-info" tabindex="0" role="note" aria-label="นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย" data-tip="นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย">i</span></h3>
-      <div class="pc-scroll">
-        <table data-draw="tb_expshop" data-source="exp_shop" data-row-key="area,stype,group,life,shop"></table>
-      </div>
+      <p class="pc-note" data-draw="ag_shop_sum" data-source="stock_by_shop shops matcodes"></p>
+      <div class="pc-scroll"><table data-draw="tb_ag_shop" data-source="stock_by_shop shops matcodes enriched" data-row-key="shop"></table></div>
     </article>
-    <article class="pc-card" id="card-expserial">
-      <h3>รายการซิมใกล้หมดอายุ ราย Serial <span class="pc-info" tabindex="0" role="note" aria-label="เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า" data-tip="เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า">i</span></h3>
+    <article class="pc-card" id="card-ag-serial">
+      <h3>รายการซิมอายุเกิน 180 วัน ราย Serial <span class="pc-info" tabindex="0" role="note" data-tip="ซิมที่อยู่ในสต็อกตั้งแต่ 180 วันขึ้นไป เรียงจาก Aging มากไปน้อย แสดงสูงสุด 1,000 รายการ ค้นหาด้วย Serial สาขา หรือชื่อสินค้า">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ค้นหา
           <input id="q-exp" class="pc-q" data-q="exp" type="search" aria-label="ค้นหา Serial">
         </label>
       </div>
-      <div class="pc-scroll">
-        <table data-draw="tb_exp" data-source="exp" data-row-key="serial"></table>
-      </div>
+      <p class="pc-note" data-draw="ag_ser_sum" data-source="aging_serials shops matcodes"></p>
+      <div class="pc-scroll"><table data-draw="tb_exp" data-source="aging_serials shops matcodes" data-row-key="serial"></table></div>
     </article>
   </section>
 </div>
@@ -1271,51 +1274,6 @@ dash.calc('staff_perf', PCdef('staff_perf', {
   },
 }));
 
-dash.calc('exp', PCdef('exp', {
-  title: 'ซิมในสต็อกพร้อมวันคงเหลือ',
-  description: 'ซิมที่อยู่ในสต็อกตั้งแต่ 180 วันขึ้นไป พร้อมวันคงเหลือเมื่อนับอายุซิม 270, 365 และ 540 วัน',
-  inputs: ['aging_serials', 'matcodes', 'shops'],
-  fn: (aging_serials, matcodes, shops) => {
-    const m = new Map(matcodes.map((r) => [r.matcode, r])), s = new Map(shops.map((r) => [r.shop, r]));
-    return aging_serials.map((r) => { const mm = m.get(r.matcode) || {}, ss = s.get(r.shop) || {};
-      return { serial: r.serial, shop: r.shop, shop_name: ss.name || r.shop, area: ss.area || '-', stype: ss.stype || 'ไม่ระบุ', matcode: r.matcode, name: mm.name || r.matcode, group: mm.group || 'อื่น ๆ',
-        price: mm.price ?? null, location: r.location, first: r.first, aging: r.aging, left_270: 270 - r.aging, left_365: 365 - r.aging, left_540: 540 - r.aging }; });
-  },
-}));
-
-dash.calc('exp_sum', PCdef('exp_sum', {
-  title: 'สรุปซิมใกล้หมดอายุ',
-  description: 'จำนวนและมูลค่าตามราคาป้าย แยกเกินอายุแล้ว / ภายใน 30 / 31–60 / 61–90 วัน สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
-  inputs: ['exp'],
-  fn: (exp) => {
-    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
-    const acc = new Map();
-    const st = (d) => (d <= 0 ? 'expired' : d <= 30 ? 'd30' : d <= 60 ? 'd60' : d <= 90 ? 'd90' : null);
-    for (const r of exp) for (const life of [270, 365, 540]) { const s = st(r['left_' + life]); if (!s) continue;
-      for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + s;
-        const a = acc.get(k) || { area: c, stype: t, group: g, life, status: s, n: 0, value: 0 }; a.n += 1; a.value += r.price || 0; acc.set(k, a); } }
-    const out = [...acc.values()];
-    const keys = new Set(out.map((a) => a.area + '|' + a.stype + '|' + a.group));
-    for (const k of keys) { const [c, t, g] = k.split('|'); for (const life of [270, 365, 540]) for (const s of ['expired', 'd30', 'd60', 'd90'])
-      if (!acc.has(k + '|' + life + '|' + s)) out.push({ area: c, stype: t, group: g, life, status: s, n: 0, value: 0 }); }
-    return out;
-  },
-}));
-
-dash.calc('exp_shop', PCdef('exp_shop', {
-  title: 'สาขาที่มีซิมเสี่ยงหมดอายุ',
-  description: 'จำนวนซิมที่เกินอายุแล้วและที่เหลือไม่เกิน 90 วัน ต่อสาขา สำหรับทุกคู่ ภาค × ประเภทสาขา × กลุ่มซิม × อายุซิม',
-  inputs: ['exp'],
-  fn: (exp) => {
-    const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
-    const acc = new Map();
-    for (const r of exp) for (const life of [270, 365, 540]) { const d = r['left_' + life]; if (d > 90) continue;
-      for (const [c, t, g] of [r.area, ...PCz(r.area), 'ALL'].flatMap((c) => [r.stype, 'ALL'].flatMap((t) => [[c, t, r.group], [c, t, 'ALL']]))) { const k = c + '|' + t + '|' + g + '|' + life + '|' + r.shop;
-        const a = acc.get(k) || { area: c, stype: t, group: g, life, shop: r.shop, name: r.shop_name, expired: 0, soon: 0, value: 0 };
-        if (d <= 0) a.expired += 1; else a.soon += 1; a.value += r.price || 0; acc.set(k, a); } }
-    return [...acc.values()];
-  },
-}));
 </script>
 
 <script>
@@ -1454,9 +1412,8 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
-document.querySelectorAll('#f-life').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ life: +sel.value })));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
 document.querySelectorAll('#f-ascope').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ ascope: sel.value })));
@@ -1481,7 +1438,6 @@ dash.draw('ml_13', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_14', (el) => { el.textContent = PC.mlabel(); });
 
 dash.onData(() => {
-  document.querySelectorAll('#f-life').forEach((sel) => { sel.value = String(dash.params().life || 365); });
   document.querySelectorAll('#f-period').forEach((sel) => { sel.value = dash.params().period || 'today'; });
   document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'group'; });
   document.querySelectorAll('#f-ascope').forEach((sel) => { sel.value = dash.params().ascope || 'current'; });
@@ -1545,7 +1501,6 @@ dash.draw('t_last', (el) => PC.val(el, 'kpi', 'last_date', null, PC.day));
 const topMat = () => { const r = PC.pick('mat'); return r && r.length ? r.slice().sort((a, b) => b.units - a.units)[0] : null; };
 dash.draw('t_topname', (el) => { const t = topMat(); if (t) PC.val(el, 'mat', 'name', { matcode: t.matcode }, String); else el.textContent = '—'; });
 dash.draw('t_topunits', (el) => { const t = topMat(); if (t) PC.val(el, 'mat', 'units', { matcode: t.matcode }); else el.textContent = '—'; });
-dash.draw('t_expired', (el) => PC.val(el, 'exp_sum', 'n', { life: PC.P().life, status: 'expired' }));
 dash.draw('t_today', (el) => PC.val(el, 'kpi', 'today', null, PC.day));
 dash.draw('t_tqty', (el) => PC.val(el, 'kpi', 'today_units'));
 dash.draw('t_tnet', (el) => PC.val(el, 'kpi', 'today_net', null, money));
@@ -2083,24 +2038,6 @@ dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', mAgg(), { key: ['matcode'], d
   { f: PC.isNet() ? 'share_n' : 'share_u', label: PC.isNet() ? '% Net' : '% QTY', num: true, fmt: PC.pf }, { f: 'stock', label: 'Stock คงเหลือ', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: (v) => (v > 52 ? '> 52' : d3.format(',.1f')(v)) } ] }));
 </script>
 
-<script>
-/* ---------- expiry ---------- */
-for (const [n, st] of [['e_expired', 'expired'], ['e_d30', 'd30'], ['e_d60', 'd60'], ['e_d90', 'd90']]) {
-  dash.draw(n, (el) => PC.val(el, 'exp_sum', 'n', { life: PC.P().life, status: st }));
-  dash.draw(n + '_v', (el) => PC.val(el, 'exp_sum', 'value', { life: PC.P().life, status: st }, (v) => PC.nf(Math.round(v))));
-}
-dash.draw('tb_expshop', (el) => PC.table(el, 'tb_expshop', PC.pick('exp_shop', { life: PC.P().life }), { key: ['area', 'stype', 'group', 'life', 'shop'], def: 'expired', cols: [
-  { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'expired', label: 'เกินอายุแล้ว', num: true, bar: true },
-  { f: 'soon', label: 'เหลือ ≤ 90 วัน', num: true, fmt: PC.nf }, { f: 'value', label: 'มูลค่า (บาท)', num: true, fmt: (v) => PC.nf(Math.round(v)) } ] }));
-dash.draw('tb_exp', (el) => {
-  const all = PC.rows('exp'); const p = PC.P(), f = 'left_' + p.life;
-  const r = all && all.filter((x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && x[f] <= 90);
-  PC.table(el, 'tb_exp', r, { key: ['serial'], def: f, dir: 1, q: 'exp', limit: 1000, cols: [
-    { f: f, label: 'สถานะ', pill: (d) => d[f] <= 0 ? ['bad', 'เกินอายุ ' + PC.nf(-d[f]) + ' วัน'] : d[f] <= 30 ? ['bad', 'เหลือ ' + d[f] + ' วัน'] : d[f] <= 60 ? ['warn', 'เหลือ ' + d[f] + ' วัน'] : ['mute', 'เหลือ ' + d[f] + ' วัน'] },
-    { f: 'serial', label: 'Serial' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'สินค้า', wrap: true },
-    { f: 'first', label: 'รับเข้าครั้งแรก', fmt: PC.day }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' } ] });
-});
-</script>
 
 <script src="sa.js"></script>
 

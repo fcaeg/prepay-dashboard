@@ -363,3 +363,69 @@ const RKX = (() => {
 if (!window.PC_RKX_BOUND) { window.PC_RKX_BOUND = true;
   document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#rk-export'); if (!b) return; b.disabled = true; const t = b.textContent; b.textContent = 'กำลังสร้างรูป…';
     try { const { cv, name } = await RKX.draw(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
+
+/* ---------- Aging Sim (stock aging buckets + watch levels) ---------- */
+const AG = [
+  { k: 'a0_90', label: '0–90 วัน', lv: 'ปกติ', act: 'ขายตามปกติ', c: 'var(--ag0)' },
+  { k: 'a91_180', label: '91–180 วัน', lv: 'เฝ้าระวัง', act: 'ติดตามและดันขายก่อนเกิน 180 วัน', c: 'var(--ag1)' },
+  { k: 'a181_270', label: '181–270 วัน', lv: 'เสี่ยง', act: 'เร่งขาย / จัดโปร / โยกไปสาขาที่ขายดี', c: 'var(--ag2)' },
+  { k: 'a271_365', label: '271–365 วัน', lv: 'เสี่ยงสูง', act: 'โยกด่วน หรือวางแผนขอคืน', c: 'var(--ag3)' },
+  { k: 'a365p', label: 'เกิน 365 วัน', lv: 'วิกฤต', act: 'ตรวจสอบสถานะซิม / ขอคืนหรือตัดจำหน่าย', c: 'var(--ag4)' } ];
+const agBase = () => { const st = PC.rows('stock_by_shop'), sh = PC.rows('shops'), mt = PC.rows('matcodes'); if (!st || !sh || !mt) return null; const p = PC.P();
+  const S = new Map(sh.map((r) => [String(r.shop), r])), M = new Map(mt.map((r) => [String(r.matcode), r])); const out = [];
+  for (const r of st) { const s = S.get(String(r.shop)); if (!s) continue; const m = M.get(String(r.matcode)) || {}; const g = m.group || 'อื่น ๆ';
+    if (!PCin(s.area, p.area) || (p.stype !== 'ALL' && s.stype !== p.stype) || (p.group !== 'ALL' && g !== p.group) || (p.shop !== 'ALL' && String(r.shop) !== p.shop)) continue;
+    out.push({ shop: String(r.shop), name: s.name || r.shop, area: s.area || '-', zone: PCzone(s.area) || '-', group: g, price: +m.price || 0, b: AG.map((a) => +r[a.k] || 0), qty: +r.qty || 0 }); }
+  return out; };
+const agSum = (rows, keyf) => { const m = new Map(); for (const r of rows) { const k = keyf(r); const a = m.get(k) || { key: k, b: [0, 0, 0, 0, 0], v: [0, 0, 0, 0, 0], qty: 0 }; r.b.forEach((n, i) => { a.b[i] += n; a.v[i] += n * r.price; }); a.qty += r.qty; m.set(k, a); }
+  return [...m.values()].map((a) => ({ ...a, old: a.b[2] + a.b[3] + a.b[4], oldp: a.qty ? (a.b[2] + a.b[3] + a.b[4]) / a.qty : 0 })); };
+const agLevel = (b) => (b[4] > 0 ? 4 : b[3] > 0 ? 3 : b[2] > 0 ? 2 : b[1] > 0 ? 1 : 0);
+dash.draw('t_expired', (el) => { const r = agBase(); el.dataset.field = 'qty'; el.textContent = r ? PC.nf(d3.sum(r, (x) => x.b[2] + x.b[3] + x.b[4])) : '—'; });
+dash.draw('ag_asof', (el) => { const st = PC.rows('stock_by_shop'); const a = st && st[0] && st[0].asof; el.textContent = a ? 'Stock ณ ' + PC.day(a.slice(0, 10)) + (a.length > 10 ? ' ' + a.slice(11) + ' น.' : '') + ' · คำอธิบายระดับเฝ้าระวัง' : 'คำอธิบาย'; });
+for (const n of ['ag_leg1', 'ag_leg2']) dash.draw(n, (el) => { el.replaceChildren(...AG.map((a) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = a.c; s.append(i, a.label + ' · ' + a.lv); return s; })); });
+dash.draw('ag_take', (el) => { const r = agBase(); el.replaceChildren(); if (!r) return; const T = agSum(r, () => 'ALL')[0]; if (!T) { el.textContent = 'ไม่มีซิมในสต็อกตาม Filter'; return; }
+  const ar = agSum(r, (x) => x.area).filter((a) => a.qty >= 50).sort((a, b) => b.oldp - a.oldp)[0]; const gr = agSum(r, (x) => x.group).sort((a, b) => b.old - a.old)[0];
+  const B = (s) => { const b = document.createElement('b'); b.textContent = s; return b; };
+  el.append('ซิมในระบบ ', B(PC.nf(T.qty)), ' ชิ้น · อายุไม่เกิน 90 วัน ', B(PC.pf(T.b[0] / T.qty)), ' · ต้องเฝ้าระวัง (91–180 วัน) ', B(PC.nf(T.b[1])), ' ชิ้น · อายุเกิน 180 วัน ', B(PC.nf(T.old) + ' ชิ้น (' + PC.pf(T.oldp) + ')'), ' มูลค่า ', B('฿' + PC.nf(Math.round(T.v[2] + T.v[3] + T.v[4]))), ' · ในจำนวนนี้เกิน 365 วัน ', B(PC.nf(T.b[4])), ' ชิ้น');
+  if (ar && ar.old) el.append(' · Area ที่มีสัดส่วนซิมเกิน 180 วันสูงสุด ', B(ar.key + ' ' + PC.pf(ar.oldp)));
+  if (gr && gr.old) el.append(' · Type Sim ที่ค้างมากสุด ', B(gr.key + ' ' + PC.nf(gr.old) + ' ชิ้น')); });
+dash.draw('ag_tiles', (el) => { const r = agBase(); el.replaceChildren(); if (!r) return; const T = agSum(r, () => 'ALL')[0] || { b: [0, 0, 0, 0, 0], v: [0, 0, 0, 0, 0], qty: 0 };
+  AG.forEach((a, i) => { const d = document.createElement('div'); d.className = 'pc-tile pc-agtile'; d.style.setProperty('--agc', a.c);
+    const l = document.createElement('span'); l.className = 'pc-tile-l'; const lv = document.createElement('span'); lv.className = 'lv'; lv.textContent = a.lv; l.append(lv, ' · ' + a.label);
+    const b = document.createElement('span'); b.className = 'pc-big'; b.textContent = PC.nf(T.b[i]);
+    const s = document.createElement('span'); s.className = 'pc-sub'; s.textContent = (T.qty ? PC.pf(T.b[i] / T.qty) : '–') + ' ของ Stock · ฿' + PC.nf(Math.round(T.v[i]));
+    const s2 = document.createElement('span'); s2.className = 'pc-sub'; s2.textContent = a.act; d.append(l, b, s, s2); el.append(d); }); });
+const agBars = (el, rows, zoneHead) => { el.replaceChildren(); for (const a of rows) { const row = document.createElement('div'); row.className = 'pc-agrow' + (a.z ? ' z' : '');
+    const l = document.createElement('span'); l.className = 'l'; l.textContent = a.label; l.title = a.label; const s = document.createElement('span'); s.className = 's';
+    AG.forEach((g, i) => { if (!a.b[i]) return; const x = document.createElement('i'); x.style.width = (a.b[i] / a.qty) * 100 + '%'; x.style.background = g.c; x.title = g.label + ': ' + PC.nf(a.b[i]) + ' (' + PC.pf(a.b[i] / a.qty) + ')'; s.append(x); });
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = '>180: ' + PC.nf(a.old) + ' (' + PC.pf(a.oldp) + ')'; if (a.oldp >= 0.1) v.style.color = 'var(--ag3)'; else if (a.oldp >= 0.05) v.style.color = 'var(--ag2)';
+    row.title = a.label + ' · Stock ' + PC.nf(a.qty) + ' · ' + AG.map((g, i) => g.label + ' ' + PC.nf(a.b[i])).join(' · '); row.append(l, s, v); el.append(row); } };
+dash.draw('c_ag_area', (el) => { const r = agBase(); if (!r) { el.replaceChildren(); return; } const zs = agSum(r, (x) => x.zone).sort((a, b) => b.oldp - a.oldp), as = agSum(r, (x) => x.area); const out = [];
+  for (const z of zs) { out.push({ ...z, label: z.key + ' (รวม)', z: true }); for (const a of as.filter((x) => PCzone(x.key) === z.key).sort((a, b) => b.oldp - a.oldp)) out.push({ ...a, label: a.key.replace(/^UPC - /, '') }); }
+  agBars(el, out); });
+dash.draw('c_ag_group', (el) => { const r = agBase(); if (!r) { el.replaceChildren(); return; } agBars(el, agSum(r, (x) => x.group).sort((a, b) => b.old - a.old || b.qty - a.qty).map((a) => ({ ...a, label: a.key }))); });
+const agShops = () => { const r = agBase(), en = PC.rows('enriched'); if (!r) return null; const p = PC.P(); const lv = dash.params().aglv ?? 'risk';
+  const today = en && en.reduce((a, x) => (x.date > a ? x.date : a), ''); const from = today ? SA.add(today, -27) : ''; const sold = new Map();
+  if (en) for (const x of en) if (x.date >= from && (p.group === 'ALL' || x.group === p.group)) sold.set(String(x.shop), (sold.get(String(x.shop)) || 0) + x.units);
+  const nm = new Map(r.map((x) => [x.shop, x])); return agSum(r, (x) => x.shop).map((a) => { const s = nm.get(a.key); const L = agLevel(a.b);
+    return { shop: a.key, name: s.name, area: s.area, qty: a.qty, b0: a.b[0], b1: a.b[1], b2: a.b[2], b3: a.b[3], b4: a.b[4], old: a.old, oldp: a.oldp, oldv: Math.round(a.v[2] + a.v[3] + a.v[4]), sold28: sold.get(a.key) || 0, L, act: AG[L].act }; })
+    .filter((x) => (lv === 'all' ? true : lv === 'risk' ? x.L >= 2 : x.L === +lv)); };
+dash.draw('f_aglv', (sel) => { const o = [['risk', 'เสี่ยงขึ้นไป (เกิน 180 วัน)'], ['4', 'วิกฤต (เกิน 365 วัน)'], ['3', 'เสี่ยงสูง (271–365 วัน)'], ['2', 'เสี่ยง (181–270 วัน)'], ['1', 'เฝ้าระวัง (91–180 วัน)'], ['all', 'ทุกสาขา']];
+  sel.replaceChildren(...o.map(([v, t]) => new Option(t, v))); sel.value = String(dash.params().aglv ?? 'risk'); sel.onchange = () => dash.setParams({ aglv: sel.value }); });
+dash.draw('ag_shop_sum', (el) => { const r = agShops(); if (!r) { el.textContent = ''; return; } const c = [0, 0, 0, 0, 0]; r.forEach((x) => c[x.L]++);
+  el.textContent = PC.nf(r.length) + ' สาขา · ' + AG.map((a, i) => (c[i] ? a.lv + ' ' + PC.nf(c[i]) : '')).filter(Boolean).reverse().join(' · ') + ' · ซิมเกิน 180 วันรวม ' + PC.nf(d3.sum(r, (x) => x.old)) + ' ชิ้น มูลค่า ฿' + PC.nf(d3.sum(r, (x) => x.oldv)); });
+dash.draw('tb_ag_shop', (el) => PC.table(el, 'tb_ag_shop', agShops(), { key: ['shop'], def: 'old', q: 'agshop', cols: [
+  { f: 'L', label: 'ระดับ', num: true, pill: (d) => ['ag' + d.L, AG[d.L].lv] }, { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'qty', label: 'Stock รวม', num: true, fmt: PC.nf },
+  { f: 'b0', label: '0–90', num: true, fmt: PC.nf }, { f: 'b1', label: '91–180', num: true, fmt: PC.nf }, { f: 'b2', label: '181–270', num: true, fmt: PC.nf }, { f: 'b3', label: '271–365', num: true, fmt: PC.nf }, { f: 'b4', label: '> 365', num: true, fmt: PC.nf },
+  { f: 'old', label: 'เกิน 180 วัน', num: true, fmt: PC.nf, bar: true }, { f: 'oldp', label: '% ของ Stock', num: true, fmt: PC.pf }, { f: 'oldv', label: 'มูลค่าเกิน 180 วัน (฿)', num: true, fmt: PC.nf }, { f: 'sold28', label: 'ขาย 28 วัน (QTY)', num: true, fmt: PC.nf }, { f: 'act', label: 'สิ่งที่ควรทำ', wrap: true } ] }));
+const agSerials = () => { const a = PC.rows('aging_serials'), sh = PC.rows('shops'), mt = PC.rows('matcodes'); if (!a || !sh || !mt) return null; const p = PC.P();
+  const S = new Map(sh.map((r) => [String(r.shop), r])), M = new Map(mt.map((r) => [String(r.matcode), r])); const out = [];
+  for (const r of a) { const s = S.get(String(r.shop)); if (!s) continue; const m = M.get(String(r.matcode)) || {}; const g = m.group || 'อื่น ๆ';
+    if (!PCin(s.area, p.area) || (p.stype !== 'ALL' && s.stype !== p.stype) || (p.group !== 'ALL' && g !== p.group) || (p.shop !== 'ALL' && String(r.shop) !== p.shop)) continue;
+    const L = r.aging > 365 ? 4 : r.aging > 270 ? 3 : 2; out.push({ L, serial: r.serial, shop_name: s.name || r.shop, area: s.area, matcode: r.matcode, name: m.name || r.matcode, group: g, price: m.price ?? null, first: r.first, aging: r.aging, location: r.location }); }
+  return out; };
+dash.draw('ag_ser_sum', (el) => { const r = agSerials(); if (!r) { el.textContent = ''; return; } const c = [0, 0, 0, 0, 0]; r.forEach((x) => c[x.L]++);
+  el.textContent = PC.nf(r.length) + ' Serial · วิกฤต (เกิน 365 วัน) ' + PC.nf(c[4]) + ' · เสี่ยงสูง (271–365) ' + PC.nf(c[3]) + ' · เสี่ยง (180–270) ' + PC.nf(c[2]); });
+dash.draw('tb_exp', (el) => PC.table(el, 'tb_exp', agSerials(), { key: ['serial'], def: 'aging', q: 'exp', limit: 1000, cols: [
+  { f: 'L', label: 'ระดับ', num: true, pill: (d) => ['ag' + d.L, AG[d.L].lv] }, { f: 'aging', label: 'Aging (วัน)', num: true, fmt: PC.nf }, { f: 'serial', label: 'Serial' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
+  { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'สินค้า', wrap: true }, { f: 'group', label: 'Type Sim' }, { f: 'price', label: 'ราคาป้าย', num: true, fmt: PC.nf }, { f: 'first', label: 'รับเข้าครั้งแรก', fmt: PC.day }, { f: 'location', label: 'ที่เก็บ' } ] }));
