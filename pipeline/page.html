@@ -123,6 +123,11 @@
 .pc-abox.good { border-left: 4px solid var(--color-ok); } .pc-abox.watch { border-left: 4px solid var(--color-bad); } .pc-abox.info { border-left: 4px solid #3b7dd8; }
 .pc-abox ol { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: var(--cds-font-size-caption); line-height: 1.5; }
 .pc-abox ol b { font-weight: 600; color: var(--color-fg); } .pc-abox .m { color: var(--color-fg-muted); }
+.pc-info { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; border: 1px solid var(--color-fg-muted); color: var(--color-fg-muted); font: 600 11px/1 var(--font-anthropic-sans); font-style: italic; cursor: help; position: relative; vertical-align: middle; user-select: none; }
+.pc-info:hover, .pc-info:focus { color: var(--color-fg); border-color: var(--color-fg); outline: none; }
+.pc-info:hover::after, .pc-info:focus::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: -8px; z-index: 30; width: max-content; max-width: min(26rem, 80vw); white-space: normal; padding: 8px 10px; border-radius: var(--cds-radius); background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); color: var(--color-fg); font: 400 12.5px/1.55 var(--font-anthropic-sans); font-style: normal; text-align: left; }
+.pc-infoline { display: flex; align-items: center; gap: 4px; }
+@media (max-width: 640px), (pointer: coarse) { .pc-info:hover::after, .pc-info:focus::after { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-width: none; } }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 [data-dash-source-state=empty] { color: transparent; }
 
@@ -243,20 +248,17 @@
 
     <div class="pc-split">
       <article class="pc-card" id="card-today-chart">
-        <h3><span class="pc-mlabel" data-draw="ml_1" data-mlabel></span> วันนี้ตามประเภทสาขา</h3>
-        <p>ความยาวแท่ง = ยอดวันนี้ ตัวเลขด้านขวา = ยอดและสัดส่วนของทุกประเภทสาขา</p>
+        <h3><span class="pc-mlabel" data-draw="ml_1" data-mlabel></span> วันนี้ตามประเภทสาขา <span class="pc-info" tabindex="0" role="note" aria-label="ความยาวแท่ง = ยอดวันนี้ ตัวเลขด้านขวา = ยอดและสัดส่วนของทุกประเภทสาขา" data-tip="ความยาวแท่ง = ยอดวันนี้ ตัวเลขด้านขวา = ยอดและสัดส่วนของทุกประเภทสาขา">i</span></h3>
         <div class="pc-hbars" data-draw="c_today_type" data-source="kpi"></div>
       </article>
       <article class="pc-card" id="card-today-trend">
-        <h3><span class="pc-mlabel" data-draw="ml_2" data-mlabel></span> รายวันเดือนนี้</h3>
-        <p>แท่งสีเข้ม = วันนี้ (วันล่าสุดที่อัปโหลด) · เส้นประ = ค่าเฉลี่ยต่อวันของเดือนนี้ · ชี้ที่แท่งเพื่อดูทั้ง QTY และ Net Amount</p>
+        <h3><span class="pc-mlabel" data-draw="ml_2" data-mlabel></span> รายวันเดือนนี้ <span class="pc-info" tabindex="0" role="note" aria-label="แท่งสีเข้ม = วันนี้ (วันล่าสุดที่อัปโหลด) · เส้นประ = ค่าเฉลี่ยต่อวันของเดือนนี้ · ชี้ที่แท่งเพื่อดูทั้ง QTY และ Net Amount" data-tip="แท่งสีเข้ม = วันนี้ (วันล่าสุดที่อัปโหลด) · เส้นประ = ค่าเฉลี่ยต่อวันของเดือนนี้ · ชี้ที่แท่งเพื่อดูทั้ง QTY และ Net Amount">i</span></h3>
         <div class="pc-chart" data-draw="c_today_trend" data-source="daily"></div>
       </article>
     </div>
 
     <article class="pc-card" id="card-today-type">
-      <h3>ตารางยอดขายวันนี้ตามประเภทสาขา</h3>
-      <p>วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · Target เปลี่ยนตามปุ่มดูยอดด้านบน: Net Amount = Target Revenue ของ PRE (คอลัมน์ BA) · QTY = Target Subscribers ของ PRE (คอลัมน์ L) · % Target = ยอดเดือนนี้ของสาขาที่มี Target ÷ Target · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+      <h3>ตารางยอดขายวันนี้ตามประเภทสาขา <span class="pc-info" tabindex="0" role="note" aria-label="วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · Target เปลี่ยนตามปุ่มดูยอดด้านบน: Net Amount = Target Revenue ของ PRE (คอลัมน์ BA) · QTY = Target Subscribers ของ PRE (คอลัมน์ L) · % Target = ยอดเดือนนี้ของสาขาที่มี Target ÷ Target · วันล่าสุดในไฟล์อาจยังไม่ครบวัน" data-tip="วันนี้ = วันล่าสุดในไฟล์ยอดขายที่อัปโหลด · Net Amount จากคอลัมน์ NET_AMOUNT ในไฟล์ขาย หักคืนสินค้า (Credit Note) แล้ว · Target เปลี่ยนตามปุ่มดูยอดด้านบน: Net Amount = Target Revenue ของ PRE (คอลัมน์ BA) · QTY = Target Subscribers ของ PRE (คอลัมน์ L) · % Target = ยอดเดือนนี้ของสาขาที่มี Target ÷ Target · วันล่าสุดในไฟล์อาจยังไม่ครบวัน">i</span></h3>
       <div class="pc-scroll">
         <table data-draw="tb_today" data-source="kpi" data-row-key="area,stype,group"></table>
       </div>
@@ -281,40 +283,35 @@
     </article>
     <div class="pc-grid">
       <article class="pc-card" id="card-by-zone">
-        <h3>Region</h3>
-        <p>BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก)</p>
+        <h3>Region <span class="pc-info" tabindex="0" role="note" aria-label="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก)" data-tip="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก)">i</span></h3>
         <div class="pc-hbars" data-draw="c_bd_zone" data-source="breakdown"></div>
         <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
           <div class="pc-scroll"><table data-draw="bd_zone" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
         </details>
       </article>
       <article class="pc-card" id="card-by-area">
-        <h3>Area</h3>
-        <p>เรียงจากยอดมากไปน้อย พร้อมสัดส่วนของยอดรวม</p>
+        <h3>Area <span class="pc-info" tabindex="0" role="note" aria-label="เรียงจากยอดมากไปน้อย พร้อมสัดส่วนของยอดรวม" data-tip="เรียงจากยอดมากไปน้อย พร้อมสัดส่วนของยอดรวม">i</span></h3>
         <div class="pc-hbars" data-draw="c_bd_area" data-source="breakdown"></div>
         <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
           <div class="pc-scroll"><table data-draw="bd_area" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
         </details>
       </article>
       <article class="pc-card" id="card-by-simtype">
-        <h3>Type Sim</h3>
-        <p>Custom Model ตาม Master Prepaid (CUSTOM_MODEL) พร้อมสัดส่วนของยอดรวม</p>
+        <h3>Type Sim <span class="pc-info" tabindex="0" role="note" aria-label="Custom Model ตาม Master Prepaid (CUSTOM_MODEL) พร้อมสัดส่วนของยอดรวม" data-tip="Custom Model ตาม Master Prepaid (CUSTOM_MODEL) พร้อมสัดส่วนของยอดรวม">i</span></h3>
         <div class="pc-hbars" data-draw="c_bd_simtype" data-source="breakdown"></div>
         <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
           <div class="pc-scroll"><table data-draw="bd_simtype" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
         </details>
       </article>
       <article class="pc-card" id="card-by-simgroup">
-        <h3>ประเภทซิม (รุ่นย่อย)</h3>
-        <p>รุ่นย่อยตาม Master Prepaid (CUSTOM_SUBMODEL) เช่น READY NET 3M / 6M / 12M · แสดง 10 อันดับแรก ดูทั้งหมดในตาราง</p>
+        <h3>ประเภทซิม (รุ่นย่อย) <span class="pc-info" tabindex="0" role="note" aria-label="รุ่นย่อยตาม Master Prepaid (CUSTOM_SUBMODEL) เช่น READY NET 3M / 6M / 12M · แสดง 10 อันดับแรก ดูทั้งหมดในตาราง" data-tip="รุ่นย่อยตาม Master Prepaid (CUSTOM_SUBMODEL) เช่น READY NET 3M / 6M / 12M · แสดง 10 อันดับแรก ดูทั้งหมดในตาราง">i</span></h3>
         <div class="pc-hbars" data-draw="c_bd_simgroup" data-source="breakdown"></div>
         <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
           <div class="pc-scroll"><table data-draw="bd_simgroup" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
         </details>
       </article>
       <article class="pc-card" id="card-by-band">
-        <h3>กลุ่มราคา</h3>
-        <p>จัดกลุ่มจากราคาป้ายของ Matcode เรียงจากราคาต่ำไปสูง</p>
+        <h3>กลุ่มราคา <span class="pc-info" tabindex="0" role="note" aria-label="จัดกลุ่มจากราคาป้ายของ Matcode เรียงจากราคาต่ำไปสูง" data-tip="จัดกลุ่มจากราคาป้ายของ Matcode เรียงจากราคาต่ำไปสูง">i</span></h3>
         <div class="pc-hbars" data-draw="c_bd_band" data-source="breakdown"></div>
         <details><summary>ดูตารางเต็ม (QTY และ Net Amount)</summary>
           <div class="pc-scroll"><table data-draw="bd_band" data-source="breakdown" data-row-key="area,stype,group,period,dim,key"></table></div>
@@ -405,13 +402,11 @@
       <p class="pc-note" data-draw="m_range" data-source="enriched"></p>
     </div>
     <article class="pc-card" id="card-bands-net">
-      <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span></h3>
-      <p>ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ</p>
+      <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ" data-tip="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ">i</span></h3>
       <div class="pc-hbars" data-draw="c_bands_net" data-source="enriched"></div>
     </article>
     <article class="pc-card" id="card-matcodes">
-      <h3>Matcode ที่ขายดี · <span data-draw="m_plabel2" data-source="enriched"></span></h3>
-      <p>ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด</p>
+      <h3>Matcode ที่ขายดี · <span data-draw="m_plabel2" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด" data-tip="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ค้นหา Matcode หรือชื่อสินค้า
           <input id="q-mat" class="pc-q" data-q="mat" type="search" aria-label="ค้นหา Matcode">
@@ -439,15 +434,13 @@
       <p class="pc-note" data-draw="sh_range" data-source="enriched"></p>
     </div>
     <article class="pc-card" id="card-regions">
-      <h3>ยอดขายตามภาค (Area) · <span data-draw="sh_label" data-source="enriched"></span></h3>
-      <p>Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน</p>
+      <h3>ยอดขายตามภาค (Area) · <span data-draw="sh_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="Target ช่วงนี้ = Target รายเดือน ÷ จำนวนวันในเดือน × จำนวนวันในช่วงที่เลือก (เปลี่ยนตามปุ่มดูยอด Net Amount / QTY) · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
       <div class="pc-scroll">
         <table data-draw="tb_region" data-source="enriched targets shops" data-row-key="area"></table>
       </div>
     </article>
     <article class="pc-card" id="card-shoptable">
-      <h3>ยอดขายรายสาขา · <span data-draw="sh_label2" data-source="enriched"></span></h3>
-      <p>ประเภทสาขาตามไฟล์ Target เดือนล่าสุด · Stock = คงเหลือล่าสุด · Stock เก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน</p>
+      <h3>ยอดขายรายสาขา · <span data-draw="sh_label2" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ประเภทสาขาตามไฟล์ Target เดือนล่าสุด · Stock = คงเหลือล่าสุด · Stock เก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน" data-tip="ประเภทสาขาตามไฟล์ Target เดือนล่าสุด · Stock = คงเหลือล่าสุด · Stock เก่า = ซิมที่อยู่ในสต็อกเกิน 270 วัน">i</span></h3>
       <p class="pc-note" data-draw="sh_sum" data-source="enriched shops"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัสหรือชื่อสาขา
@@ -503,7 +496,7 @@
     <article class="pc-card pc-insight" id="card-sa-text">
       <h3>บทวิเคราะห์ยอดขาย</h3>
       <ul class="pc-ins" data-draw="sa_text" data-source="enriched targets staff shops"></ul>
-      <p class="pc-note">วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target</p>
+      <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target" data-tip="วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target">i</span> คำอธิบาย</p>
     </article>
 
     <article class="pc-card" id="card-sa-alert">
@@ -513,45 +506,33 @@
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-rank">
-        <h3>ยอดขายราย <span data-draw="sa_lvl1" data-source="enriched"></span> · เทียบช่วงก่อนหน้า</h3>
-        <p>แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงก่อนหน้า · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)</p>
+        <h3>ยอดขายราย <span data-draw="sa_lvl1" data-source="enriched"></span> · เทียบช่วงก่อนหน้า <span class="pc-info" tabindex="0" role="note" aria-label="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงก่อนหน้า · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)" data-tip="แท่งเข้ม = ช่วงที่เลือก · ขีด = ช่วงก่อนหน้า · ตัวเลข = ยอด และ % เปลี่ยนแปลง (แสดง 15 อันดับแรก)">i</span></h3>
         <div class="pc-sachart" data-draw="c_sa_rank" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pvm">
-        <h3>ยอดเปลี่ยนเพราะอะไร: จำนวนชิ้น หรือ ราคา</h3>
-        <p>ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้</p>
+        <h3>ยอดเปลี่ยนเพราะอะไร: จำนวนชิ้น หรือ ราคา <span class="pc-info" tabindex="0" role="note" aria-label="ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้" data-tip="ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_pvm" data-source="enriched"></div>
       </article>
     </div>
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-trend">
-        <h3>แนวโน้มรายวัน · ช่วงนี้เทียบช่วงก่อนหน้า</h3>
-        <p>เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงก่อนหน้า (เทียบวันลำดับเดียวกัน)</p>
+        <h3>แนวโน้มรายวัน · ช่วงนี้เทียบช่วงก่อนหน้า <span class="pc-info" tabindex="0" role="note" aria-label="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงก่อนหน้า (เทียบวันลำดับเดียวกัน)" data-tip="เส้นเข้ม = ช่วงที่เลือก · เส้นประ = ช่วงก่อนหน้า (เทียบวันลำดับเดียวกัน)">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_trend" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pareto">
-        <h3>กฎ 80/20 · ราย <span data-draw="sa_lvl2" data-source="enriched"></span></h3>
-        <p>แท่ง = ยอดของแต่ละรายการเรียงจากมากไปน้อย · เส้น = ยอดสะสม % · เส้นประ = 80%</p>
+        <h3>กฎ 80/20 · ราย <span data-draw="sa_lvl2" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="แท่ง = ยอดของแต่ละรายการเรียงจากมากไปน้อย · เส้น = ยอดสะสม % · เส้นประ = 80%" data-tip="แท่ง = ยอดของแต่ละรายการเรียงจากมากไปน้อย · เส้น = ยอดสะสม % · เส้นประ = 80%">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_pareto" data-source="enriched"></div>
       </article>
     </div>
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-contrib">
-        <h3>ใครทำให้ยอดเพิ่ม / ลด</h3>
-        <p>ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด</p>
+        <h3>ใครทำให้ยอดเพิ่ม / ลด <span class="pc-info" tabindex="0" role="note" aria-label="ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด" data-tip="ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด">i</span></h3>
         <div class="pc-sachart" data-draw="c_sa_contrib" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-bcg">
-        <h3>จัดกลุ่มผลงาน (สัดส่วนยอดขาย × การเติบโต)</h3>
-        <p>แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย</p>
-        <ul class="pc-quad">
-          <li><b style="color:var(--color-ok)">ดาวเด่น</b> (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น</li>
-          <li><b style="color:#3b7dd8">ฐานหลัก</b> (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด</li>
-          <li><b style="color:var(--color-warn)">ดาวรุ่ง</b> (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย</li>
-          <li><b style="color:var(--color-bad)">ต้องฟื้นฟู</b> (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร</li>
-        </ul>
+        <h3>จัดกลุ่มผลงาน (สัดส่วนยอดขาย × การเติบโต) <span class="pc-info" tabindex="0" role="note" aria-label="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;" data-tip="แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย • ดาวเด่น (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น ; ฐานหลัก (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด ; ดาวรุ่ง (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย ; ต้องฟื้นฟู (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร ;">i</span></h3>
         <div class="pc-chart" data-draw="c_sa_bcg" data-source="enriched"></div>
       </article>
     </div>
@@ -585,38 +566,33 @@
         <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
       </div>
     </div>
-    <p class="pc-note">Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: <span style="color:var(--color-ok)">■</span> ≥ 100% · <span style="color:var(--color-warn)">■</span> 90–99% · <span style="color:var(--color-bad)">■</span> &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY</p>
+    <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p>
 
     <div class="pc-split">
       <article class="pc-card" id="card-rank-daily">
-        <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบ Target ต่อวัน</h3>
-        <p>ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน</p>
+        <h3>Daily Ranking · <span data-draw="ml_8" data-mlabel></span> รายวันเทียบ Target ต่อวัน <span class="pc-info" tabindex="0" role="note" aria-label="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน" data-tip="ยอดของวันที่เลือกเทียบ Target ต่อวันของแต่ละ Area เรียงจาก % มากไปน้อย · วันล่าสุดในไฟล์อาจยังไม่ครบวัน">i</span></h3>
         <label class="pc-field">วันที่
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
         <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
       </article>
       <article class="pc-card" id="card-rank-zone">
-        <h3>Ranking Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้</h3>
-        <p>BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน</p>
+        <h3>Ranking Region · <span data-draw="ml_14" data-mlabel></span> เดือนนี้ <span class="pc-info" tabindex="0" role="note" aria-label="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน" data-tip="BMA · UPC I (เหนือ + อีสาน) · UPC II (ใต้ กลาง ตะวันออก ตะวันตก) · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × วันที่ผ่านไป · MoM เทียบช่วงวันเดียวกันของเดือนก่อน">i</span></h3>
         <div class="pc-scroll"><table data-draw="tb_rank_zone" data-source="area_rank area_day" data-row-key="stype,area"></table></div>
       </article>
       <article class="pc-card" id="card-rank">
-        <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้</h3>
-        <p>ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย</p>
+        <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้ <span class="pc-info" tabindex="0" role="note" aria-label="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย" data-tip="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย">i</span></h3>
         <div class="pc-rank" data-draw="c_rank" data-source="area_rank"></div>
       </article>
     </div>
 
     <article class="pc-card" id="card-rank-heat">
-      <h3>% เทียบ Target ต่อวัน ราย Area × รายวัน (<span data-draw="ml_10" data-mlabel></span>)</h3>
-      <p>แต่ละช่อง = ยอดของวันนั้น ÷ Target ต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking</p>
+      <h3>% เทียบ Target ต่อวัน ราย Area × รายวัน (<span data-draw="ml_10" data-mlabel></span>) <span class="pc-info" tabindex="0" role="note" aria-label="แต่ละช่อง = ยอดของวันนั้น ÷ Target ต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking" data-tip="แต่ละช่อง = ยอดของวันนั้น ÷ Target ต่อวัน · แถวเรียงตามอันดับยอดสะสม · คลิกที่ช่องเพื่อเปลี่ยนวันของ Daily Ranking">i</span></h3>
       <div class="pc-heat-wrap"><div class="pc-heat" data-draw="c_rank_heat" data-source="area_day"></div></div>
     </article>
 
     <article class="pc-card" id="card-rank-table">
-      <h3>ตาราง Ranking ราย Area (Daily และสะสม)</h3>
-      <p>ส่วนต่าง = ยอดสะสม − Target ถึงวันนี้ · "ต้องทำต่อวัน" = (Target ทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · Target มาจากไฟล์ Target PRE ของเดือนนี้ และเป็น Target รวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)</p>
+      <h3>ตาราง Ranking ราย Area (Daily และสะสม) <span class="pc-info" tabindex="0" role="note" aria-label="ส่วนต่าง = ยอดสะสม − Target ถึงวันนี้ · &quot;ต้องทำต่อวัน&quot; = (Target ทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · Target มาจากไฟล์ Target PRE ของเดือนนี้ และเป็น Target รวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)" data-tip="ส่วนต่าง = ยอดสะสม − Target ถึงวันนี้ · &quot;ต้องทำต่อวัน&quot; = (Target ทั้งเดือน − ยอดสะสม) ÷ จำนวนวันที่เหลือ · Target มาจากไฟล์ Target PRE ของเดือนนี้ และเป็น Target รวมทุกกลุ่มซิม (ตัวกรองกลุ่มซิมไม่มีผลกับหน้านี้)">i</span></h3>
       <div class="pc-scroll"><table data-draw="tb_rank" data-source="area_rank" data-row-key="stype,area"></table></div>
     </article>
   </section>
@@ -637,8 +613,7 @@
       <p class="pc-note" data-draw="st_range" data-source="enriched"></p>
     </div>
     <article class="pc-card" id="card-stafftable">
-      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span></h3>
-      <p>นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน</p>
+      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
       <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
@@ -674,7 +649,7 @@
         <span class="pc-sub" data-draw="s_risk_sub" data-source="stock_cover"></span>
       </div>
     </div>
-    <p class="pc-note">วิธีอ่าน: เฉลี่ยต่อสัปดาห์ = ยอดขาย 28 วันย้อนหลัง ÷ 4 · Stock Cover (สัปดาห์) = Stock ÷ เฉลี่ยต่อสัปดาห์ · แนวโน้ม = ยอด 7 วันล่าสุด เทียบค่าเฉลี่ยต่อสัปดาห์ของ 21 วันก่อนหน้า · สถานะ: <span style="color:var(--color-bad)">■</span> หมด / เสี่ยงขาด (&lt; 1 สัปดาห์) · <span style="color:var(--color-warn)">■</span> ไม่พอ 4 สัปดาห์ (1–4) · <span style="color:var(--color-ok)">■</span> พอ (4–8) · <span style="color:#6b7fd7">■</span> เกิน (&gt; 8 สัปดาห์) · <span style="color:var(--color-fg-muted)">■</span> ไม่มียอดขายใน 4 สัปดาห์ · ทุกการ์ดในหน้านี้คำนวณใหม่ตาม Filter ภาค / ประเภทสาขา / สาขา / กลุ่มซิม ด้านบน</p>
+    <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="วิธีอ่าน: เฉลี่ยต่อสัปดาห์ = ยอดขาย 28 วันย้อนหลัง ÷ 4 · Stock Cover (สัปดาห์) = Stock ÷ เฉลี่ยต่อสัปดาห์ · แนวโน้ม = ยอด 7 วันล่าสุด เทียบค่าเฉลี่ยต่อสัปดาห์ของ 21 วันก่อนหน้า · สถานะ: ■ หมด / เสี่ยงขาด (&lt; 1 สัปดาห์) · ■ ไม่พอ 4 สัปดาห์ (1–4) · ■ พอ (4–8) · ■ เกิน (&gt; 8 สัปดาห์) · ■ ไม่มียอดขายใน 4 สัปดาห์ · ทุกการ์ดในหน้านี้คำนวณใหม่ตาม Filter ภาค / ประเภทสาขา / สาขา / กลุ่มซิม ด้านบน" data-tip="วิธีอ่าน: เฉลี่ยต่อสัปดาห์ = ยอดขาย 28 วันย้อนหลัง ÷ 4 · Stock Cover (สัปดาห์) = Stock ÷ เฉลี่ยต่อสัปดาห์ · แนวโน้ม = ยอด 7 วันล่าสุด เทียบค่าเฉลี่ยต่อสัปดาห์ของ 21 วันก่อนหน้า · สถานะ: ■ หมด / เสี่ยงขาด (&lt; 1 สัปดาห์) · ■ ไม่พอ 4 สัปดาห์ (1–4) · ■ พอ (4–8) · ■ เกิน (&gt; 8 สัปดาห์) · ■ ไม่มียอดขายใน 4 สัปดาห์ · ทุกการ์ดในหน้านี้คำนวณใหม่ตาม Filter ภาค / ประเภทสาขา / สาขา / กลุ่มซิม ด้านบน">i</span> คำอธิบาย</p>
 
     <article class="pc-card pc-insight" id="card-s-insight">
       <h3>สรุปผลวิเคราะห์ Stock Cover (ตาม Filter ที่เลือก)</h3>
@@ -682,20 +657,17 @@
     </article>
 
     <article class="pc-card" id="card-s-short">
-      <h3>สาขาไหนขาดซิมประเภทใด</h3>
-      <p>ราย Type Sim: จำนวนสาขาที่หมด / เสี่ยงขาด / ไม่พอ 4 สัปดาห์ จำนวนที่ต้องเติมให้พอ 4 สัปดาห์ และสาขาที่ควรเติมก่อน (เรียงจากยอดขายต่อสัปดาห์สูงสุด)</p>
+      <h3>สาขาไหนขาดซิมประเภทใด <span class="pc-info" tabindex="0" role="note" aria-label="ราย Type Sim: จำนวนสาขาที่หมด / เสี่ยงขาด / ไม่พอ 4 สัปดาห์ จำนวนที่ต้องเติมให้พอ 4 สัปดาห์ และสาขาที่ควรเติมก่อน (เรียงจากยอดขายต่อสัปดาห์สูงสุด)" data-tip="ราย Type Sim: จำนวนสาขาที่หมด / เสี่ยงขาด / ไม่พอ 4 สัปดาห์ จำนวนที่ต้องเติมให้พอ 4 สัปดาห์ และสาขาที่ควรเติมก่อน (เรียงจากยอดขายต่อสัปดาห์สูงสุด)">i</span></h3>
       <div class="pc-scroll"><table data-draw="tb_s_short" data-source="stock_cover" data-row-key="key"></table></div>
     </article>
 
     <article class="pc-card" id="card-s-hot">
-      <h3>ซิมขายดีที่มีแนวโน้มขาดสินค้า</h3>
-      <p>ราย Matcode ที่มียอดขายใน 4 สัปดาห์ เรียงตามความเสี่ยงแล้วตามยอดขาย · <b>เร่งเติม</b> = Cover &lt; 2 สัปดาห์ หรือยอดโต &gt; 20% และ Cover &lt; 4 สัปดาห์ · <b>จับตา</b> = Cover &lt; 4 สัปดาห์ หรือมี ≥ 3 สาขาหมด/เสี่ยงขาด หรือยอดโต &gt; 20%</p>
+      <h3>ซิมขายดีที่มีแนวโน้มขาดสินค้า <span class="pc-info" tabindex="0" role="note" aria-label="ราย Matcode ที่มียอดขายใน 4 สัปดาห์ เรียงตามความเสี่ยงแล้วตามยอดขาย · เร่งเติม = Cover &lt; 2 สัปดาห์ หรือยอดโต &gt; 20% และ Cover &lt; 4 สัปดาห์ · จับตา = Cover &lt; 4 สัปดาห์ หรือมี ≥ 3 สาขาหมด/เสี่ยงขาด หรือยอดโต &gt; 20%" data-tip="ราย Matcode ที่มียอดขายใน 4 สัปดาห์ เรียงตามความเสี่ยงแล้วตามยอดขาย · เร่งเติม = Cover &lt; 2 สัปดาห์ หรือยอดโต &gt; 20% และ Cover &lt; 4 สัปดาห์ · จับตา = Cover &lt; 4 สัปดาห์ หรือมี ≥ 3 สาขาหมด/เสี่ยงขาด หรือยอดโต &gt; 20%">i</span></h3>
       <div class="pc-scroll"><table data-draw="tb_s_hot" data-source="stock_cover" data-row-key="key"></table></div>
     </article>
 
     <article class="pc-card" id="card-s-move">
-      <h3>แนะนำโอนย้าย Stock ภายใน Area</h3>
-      <p>จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์</p>
+      <h3>แนะนำโอนย้าย Stock ภายใน Area <span class="pc-info" tabindex="0" role="note" aria-label="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์" data-tip="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์">i</span></h3>
       <p class="pc-note" data-draw="s_move_sum" data-source="stock_cover"></p>
       <div class="pc-scroll"><table data-draw="tb_s_move" data-source="stock_cover" data-row-key="area,key,from,to"></table></div>
     </article>
@@ -703,26 +675,22 @@
 
     <div class="pc-split">
       <article class="pc-card" id="card-s-type">
-        <h3>Stock เทียบยอดขาย 4 สัปดาห์ ราย Type Sim</h3>
-        <p>แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 4 สัปดาห์ · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 4 สัปดาห์</p>
+        <h3>Stock เทียบยอดขาย 4 สัปดาห์ ราย Type Sim <span class="pc-info" tabindex="0" role="note" aria-label="แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 4 สัปดาห์ · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 4 สัปดาห์" data-tip="แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 4 สัปดาห์ · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 4 สัปดาห์">i</span></h3>
         <div class="pc-hbars" data-draw="c_s_type" data-source="stock_cover"></div>
       </article>
       <article class="pc-card" id="card-s-status">
-        <h3>จำนวนสาขา × Type Sim ตามสถานะ</h3>
-        <p>นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง</p>
+        <h3>จำนวนสาขา × Type Sim ตามสถานะ <span class="pc-info" tabindex="0" role="note" aria-label="นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง" data-tip="นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง">i</span></h3>
         <div class="pc-hbars" data-draw="c_s_status" data-source="stock_cover"></div>
       </article>
     </div>
 
     <article class="pc-card" id="card-s-matrix">
-      <h3>แผนผัง Stock ราย สาขา × Type Sim</h3>
-      <p>แต่ละช่อง = Stock / Cover เป็นสัปดาห์ (W) (ช่องที่หมดแสดงยอดขาย 4 สัปดาห์) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด</p>
+      <h3>แผนผัง Stock ราย สาขา × Type Sim <span class="pc-info" tabindex="0" role="note" aria-label="แต่ละช่อง = Stock / Cover เป็นสัปดาห์ (W) (ช่องที่หมดแสดงยอดขาย 4 สัปดาห์) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด" data-tip="แต่ละช่อง = Stock / Cover เป็นสัปดาห์ (W) (ช่องที่หมดแสดงยอดขาย 4 สัปดาห์) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด">i</span></h3>
       <div class="pc-heat-wrap pc-smx-wrap"><div class="pc-heat pc-smx" data-draw="c_s_matrix" data-source="stock_cover"></div></div>
     </article>
 
     <article class="pc-card pc-gap" id="card-s-gap">
-      <h3>แจ้งเตือน: สาขาที่ไม่มี Matcode ใน Stock</h3>
-      <p>เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · ระดับ: <span style="color:var(--color-bad)">■</span> ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · <span style="color:var(--color-warn)">■</span> ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · <span style="color:var(--color-fg-muted)">■</span> อื่น ๆ</p>
+      <h3>แจ้งเตือน: สาขาที่ไม่มี Matcode ใน Stock <span class="pc-info" tabindex="0" role="note" aria-label="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ" data-tip="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">Matcode ที่นำมาเทียบ
           <select id="f-ascope" aria-label="Matcode ที่นำมาเทียบ">
@@ -814,13 +782,11 @@
       </div>
     </article>
     <article class="pc-card" id="card-w-shop">
-      <h3>สรุปราย สาขา</h3>
-      <p>เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน</p>
+      <h3>สรุปราย สาขา <span class="pc-info" tabindex="0" role="note" aria-label="เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน" data-tip="เรียงสาขาที่ยังเหลือมากที่สุดขึ้นก่อน">i</span></h3>
       <div class="pc-scroll"><table data-draw="tb_w_shop" data-source="watch_serials" data-row-key="shop"></table></div>
     </article>
     <article class="pc-card" id="card-w-serial">
-      <h3>รายการ Serial</h3>
-      <p>สถานะอัปเดตทุกครั้งที่อัปโหลดรายงานการขาย (daily_sales) และ Stock ใหม่ · ถ้าพบ Serial ในรายงานการขาย จะขึ้น "ขายแล้ว" พร้อมวันที่ สาขาที่ขาย และพนักงาน · ถ้ามีการคืนสินค้า (Credit Note) จะกลับเป็นยังไม่ขาย</p>
+      <h3>รายการ Serial <span class="pc-info" tabindex="0" role="note" aria-label="สถานะอัปเดตทุกครั้งที่อัปโหลดรายงานการขาย (daily_sales) และ Stock ใหม่ · ถ้าพบ Serial ในรายงานการขาย จะขึ้น &quot;ขายแล้ว&quot; พร้อมวันที่ สาขาที่ขาย และพนักงาน · ถ้ามีการคืนสินค้า (Credit Note) จะกลับเป็นยังไม่ขาย" data-tip="สถานะอัปเดตทุกครั้งที่อัปโหลดรายงานการขาย (daily_sales) และ Stock ใหม่ · ถ้าพบ Serial ในรายงานการขาย จะขึ้น &quot;ขายแล้ว&quot; พร้อมวันที่ สาขาที่ขาย และพนักงาน · ถ้ามีการคืนสินค้า (Credit Note) จะกลับเป็นยังไม่ขาย">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">สถานะ
           <select id="f-wstatus" aria-label="สถานะ Serial">
@@ -872,15 +838,13 @@
       </div>
     </div>
     <article class="pc-card" id="card-expshop">
-      <h3>สาขาที่มีซิมเสี่ยงหมดอายุ</h3>
-      <p>นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย</p>
+      <h3>สาขาที่มีซิมเสี่ยงหมดอายุ <span class="pc-info" tabindex="0" role="note" aria-label="นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย" data-tip="นับซิมที่เกินอายุแล้วหรือเหลือไม่เกิน 90 วัน เรียงจากมากไปน้อย เพื่อวางแผนโยกหรือเร่งขาย">i</span></h3>
       <div class="pc-scroll">
         <table data-draw="tb_expshop" data-source="exp_shop" data-row-key="area,stype,group,life,shop"></table>
       </div>
     </article>
     <article class="pc-card" id="card-expserial">
-      <h3>รายการซิมใกล้หมดอายุ ราย Serial</h3>
-      <p>เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า</p>
+      <h3>รายการซิมใกล้หมดอายุ ราย Serial <span class="pc-info" tabindex="0" role="note" aria-label="เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า" data-tip="เรียงจากวันคงเหลือน้อยที่สุด แสดงสูงสุด 1,000 รายการ ค้นหาด้วยเลข Serial สาขา หรือชื่อสินค้า">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ค้นหา
           <input id="q-exp" class="pc-q" data-q="exp" type="search" aria-label="ค้นหา Serial">
