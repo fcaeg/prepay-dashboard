@@ -217,7 +217,7 @@ document.querySelectorAll('#f-salevel').forEach((s) => s.addEventListener('chang
 
 /* ---------- Staff tab: period ---------- */
 dash.draw('f_stweek', (sel) => { const I = SA.period('week', dash.params().stweek); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = SA.wRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); } sel.replaceChildren(...o); sel.value = String(I.wk); sel.onchange = () => dash.setParams({ stweek: +sel.value }); });
-const stInfo = () => SA.period(dash.params().saperiod || 'mtd', dash.params().saweek);
+const stInfo = () => SA.period(dash.params().stperiod || 'mtd', dash.params().stweek);
 dash.draw('st_range', (el) => { const I = stInfo(); el.textContent = I ? I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + (I.plabel ? ' · เทียบกับ ' + I.plabel : '') : ''; });
 dash.draw('st_label', (el) => { const I = stInfo(); el.textContent = I ? I.label : ''; });
 const stAgg = () => { const r = PC.rows('enriched'), I = stInfo(); if (!r || !I) return null; const p = PC.P();
