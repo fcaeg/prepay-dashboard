@@ -1327,7 +1327,7 @@ dash.onData(() => {
 /* ---------- filters (choices come from data) ---------- */
 dash.draw('f_zone', (sel) => {
   const z = dash.params().zone || 'ALL';
-  sel.replaceChildren(new Option('ทุก Region', 'ALL'), ...window.PC_ZONES.map((x) => new Option(x === 'BMA' ? 'BMA' : x === 'UPC I' ? 'UPC I (เหนือ + อีสาน)' : 'UPC II (ใต้ กลาง ตะวันออก ตะวันตก)', x)));
+  sel.replaceChildren(new Option('ทุก Region', 'ALL'), ...window.PC_ZONES.map((x) => new Option(x, x)));
   sel.value = z; sel.onchange = () => dash.setParams({ zone: sel.value, area: 'ALL', shop: 'ALL' });
 });
 dash.draw('f_area', (sel) => {
