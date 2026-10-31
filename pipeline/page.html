@@ -103,6 +103,10 @@
 .pc-wbar .bar span { display: block; height: 100%; }
 .pc-wbar .lg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .pc-wbar .lg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.pc-ins { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: var(--cds-font-size-body); line-height: 1.55; }
+.pc-ins b { font-weight: 600; }
+.pc-insight { border-left: 3px solid var(--color-fg); }
+.pc-trend { font-variant-numeric: tabular-nums; }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 [data-dash-source-state=empty] { color: transparent; }
 
@@ -189,7 +193,7 @@
     <button class="pc-tab" type="button" role="tab" data-tab="shops" aria-selected="false">สาขา</button>
     <button class="pc-tab" type="button" role="tab" data-tab="ranking" aria-selected="false">Ranking Area</button>
     <button class="pc-tab" type="button" role="tab" data-tab="staff" aria-selected="false">พนักงาน</button>
-    <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock พอขายไหม</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="stock" aria-selected="false">Stock Cover Week</button>
     <button class="pc-tab" type="button" role="tab" data-tab="watch" aria-selected="false">ติดตามซิมใกล้หมดอายุ (Serial)</button>
     <button class="pc-tab" type="button" role="tab" data-tab="expiry" aria-selected="false">แจ้งเตือนซิมใกล้หมดอายุ</button>
   </nav>
@@ -482,9 +486,9 @@
         <span class="pc-sub" data-draw="s_window" data-source="stock_cover"></span>
       </div>
       <div class="pc-tile" id="tile-s-cover">
-        <span class="pc-tile-l">Stock พอขายได้อีก</span>
+        <span class="pc-tile-l">Stock Cover</span>
         <span class="pc-big" data-draw="s_cover" data-source="stock_cover">—</span>
-        <span class="pc-sub">คิดจากยอดขายเฉลี่ยต่อวันใน 28 วัน</span>
+        <span class="pc-sub">Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ (4 สัปดาห์ล่าสุด)</span>
       </div>
       <div class="pc-tile pc-alert" id="tile-s-risk">
         <span class="pc-tile-l">สาขา × Type Sim ที่หมดหรือเสี่ยงขาด</span>
@@ -492,12 +496,37 @@
         <span class="pc-sub" data-draw="s_risk_sub" data-source="stock_cover"></span>
       </div>
     </div>
-    <p class="pc-note">วิธีอ่าน: เฉลี่ยต่อวัน = ยอดขาย 28 วันย้อนหลัง ÷ 28 · พอขาย (วัน) = Stock ÷ เฉลี่ยต่อวัน · สถานะ: <span style="color:var(--color-bad)">■</span> หมด / เสี่ยงขาด (&lt; 7 วัน) · <span style="color:var(--color-warn)">■</span> ไม่พอ 28 วัน (7–27 วัน) · <span style="color:var(--color-ok)">■</span> พอ (28–56 วัน) · <span style="color:#6b7fd7">■</span> เกิน (&gt; 56 วัน) · <span style="color:var(--color-fg-muted)">■</span> ไม่มียอดขายใน 28 วัน · "ควรเติม" = จำนวนที่ต้องเพิ่มให้พอขาย 28 วัน (ยอดขาย 28 วัน − Stock) · Stock จากไฟล์ stock balance ล่าสุด</p>
+    <p class="pc-note">วิธีอ่าน: เฉลี่ยต่อสัปดาห์ = ยอดขาย 28 วันย้อนหลัง ÷ 4 · Stock Cover (สัปดาห์) = Stock ÷ เฉลี่ยต่อสัปดาห์ · แนวโน้ม = ยอด 7 วันล่าสุด เทียบค่าเฉลี่ยต่อสัปดาห์ของ 21 วันก่อนหน้า · สถานะ: <span style="color:var(--color-bad)">■</span> หมด / เสี่ยงขาด (&lt; 1 สัปดาห์) · <span style="color:var(--color-warn)">■</span> ไม่พอ 4 สัปดาห์ (1–4) · <span style="color:var(--color-ok)">■</span> พอ (4–8) · <span style="color:#6b7fd7">■</span> เกิน (&gt; 8 สัปดาห์) · <span style="color:var(--color-fg-muted)">■</span> ไม่มียอดขายใน 4 สัปดาห์ · ทุกการ์ดในหน้านี้คำนวณใหม่ตาม Filter ภาค / ประเภทสาขา / สาขา / กลุ่มซิม ด้านบน</p>
+
+    <article class="pc-card pc-insight" id="card-s-insight">
+      <h3>สรุปผลวิเคราะห์ Stock Cover (ตาม Filter ที่เลือก)</h3>
+      <ul class="pc-ins" data-draw="s_insight" data-source="stock_cover"></ul>
+    </article>
+
+    <article class="pc-card" id="card-s-short">
+      <h3>สาขาไหนขาดซิมประเภทใด</h3>
+      <p>ราย Type Sim: จำนวนสาขาที่หมด / เสี่ยงขาด / ไม่พอ 4 สัปดาห์ จำนวนที่ต้องเติมให้พอ 4 สัปดาห์ และสาขาที่ควรเติมก่อน (เรียงจากยอดขายต่อสัปดาห์สูงสุด)</p>
+      <div class="pc-scroll"><table data-draw="tb_s_short" data-source="stock_cover" data-row-key="key"></table></div>
+    </article>
+
+    <article class="pc-card" id="card-s-hot">
+      <h3>ซิมขายดีที่มีแนวโน้มขาดสินค้า</h3>
+      <p>ราย Matcode ที่มียอดขายใน 4 สัปดาห์ เรียงตามความเสี่ยงแล้วตามยอดขาย · <b>เร่งเติม</b> = Cover &lt; 2 สัปดาห์ หรือยอดโต &gt; 20% และ Cover &lt; 4 สัปดาห์ · <b>จับตา</b> = Cover &lt; 4 สัปดาห์ หรือมี ≥ 3 สาขาหมด/เสี่ยงขาด หรือยอดโต &gt; 20%</p>
+      <div class="pc-scroll"><table data-draw="tb_s_hot" data-source="stock_cover" data-row-key="key"></table></div>
+    </article>
+
+    <article class="pc-card" id="card-s-move">
+      <h3>แนะนำโอนย้าย Stock ภายใน Area</h3>
+      <p>จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์</p>
+      <p class="pc-note" data-draw="s_move_sum" data-source="stock_cover"></p>
+      <div class="pc-scroll"><table data-draw="tb_s_move" data-source="stock_cover" data-row-key="area,key,from,to"></table></div>
+    </article>
+
 
     <div class="pc-split">
       <article class="pc-card" id="card-s-type">
-        <h3>Stock เทียบยอดขาย 28 วัน ราย Type Sim</h3>
-        <p>แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 28 วัน · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 28 วัน</p>
+        <h3>Stock เทียบยอดขาย 4 สัปดาห์ ราย Type Sim</h3>
+        <p>แท่งเข้ม = Stock · แท่งอ่อน = ยอดขาย 4 สัปดาห์ · ถ้าแท่ง Stock สั้นกว่าแท่งยอดขาย แปลว่าของไม่พอขายอีก 4 สัปดาห์</p>
         <div class="pc-hbars" data-draw="c_s_type" data-source="stock_cover"></div>
       </article>
       <article class="pc-card" id="card-s-status">
@@ -509,7 +538,7 @@
 
     <article class="pc-card" id="card-s-matrix">
       <h3>แผนผัง Stock ราย สาขา × Type Sim</h3>
-      <p>แต่ละช่อง = Stock / พอขายได้กี่วัน (ช่องที่หมดแสดงยอดขาย 28 วัน) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด</p>
+      <p>แต่ละช่อง = Stock / Cover เป็นสัปดาห์ (W) (ช่องที่หมดแสดงยอดขาย 4 สัปดาห์) สีตามสถานะ · เรียงสาขาที่มีช่องเสี่ยงขาดมากที่สุดขึ้นก่อน · แตะหรือชี้ที่ช่องเพื่อดูรายละเอียด</p>
       <div class="pc-heat-wrap pc-smx-wrap"><div class="pc-heat pc-smx" data-draw="c_s_matrix" data-source="stock_cover"></div></div>
     </article>
 
@@ -569,10 +598,10 @@
           <select id="f-sstatus" aria-label="สถานะ Stock">
             <option value="ALL">ทุกสถานะ</option>
             <option value="risk">หมด + เสี่ยงขาด</option>
-            <option value="short">ไม่พอ 28 วัน</option>
+            <option value="short">ไม่พอ 4 สัปดาห์</option>
             <option value="ok">พอ</option>
             <option value="over">เกิน</option>
-            <option value="idle">ไม่มียอดขาย 28 วัน</option>
+            <option value="idle">ไม่มียอดขาย 4 สัปดาห์</option>
           </select>
         </label>
         <label class="pc-field">ค้นหาสาขา / สินค้า
@@ -854,21 +883,23 @@ dash.calc('stock_cover', PCdef('stock_cover', {
   inputs: ['enriched', 'stock_by_shop', 'matcodes', 'shops'],
   fn: (enriched, stock_by_shop, matcodes, shops) => {
     const today = enriched.reduce((a, r) => (r.date > a ? r.date : a), '');
-    const from = new Date(Date.parse(today + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+    const from = new Date(Date.parse(today + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10), from7 = new Date(Date.parse(today + 'T00:00:00Z') - 6 * 864e5).toISOString().slice(0, 10);
     const mm = new Map(matcodes.map((r) => [String(r.matcode), r])), sh = new Map(shops.map((r) => [String(r.shop), r]));
     const acc = new Map();
-    const add = (shop, mat, stock, sold) => { const s = sh.get(shop); if (!s || +s.stype_order >= 90) return; const m = mm.get(mat) || {};
+    const add = (shop, mat, stock, sold, s7) => { const s = sh.get(shop); if (!s || +s.stype_order >= 90) return; const m = mm.get(mat) || {};
       const g = m.group || 'อื่น ๆ', sub = m.subgroup || g;
       for (const [level, key, label] of [['group', g, g], ['sub', sub, sub], ['mat', mat, mat + ' ' + (m.name || '')]]) {
         const k = shop + '|' + level + '|' + key;
-        const a = acc.get(k) || { shop, name: s.name, area: s.area, stype: s.stype, level, key, label, group: g, stock: 0, sold28: 0 };
-        a.stock += stock; a.sold28 += sold; acc.set(k, a); } };
+        const a = acc.get(k) || { shop, name: s.name, area: s.area, stype: s.stype, level, key, label, group: g, stock: 0, sold28: 0, sold7: 0 };
+        a.stock += stock; a.sold28 += sold; a.sold7 += s7 || 0; acc.set(k, a); } };
     for (const r of stock_by_shop) add(String(r.shop), String(r.matcode), +r.qty || 0, 0);
-    for (const r of enriched) if (r.date >= from && r.date <= today) add(String(r.shop), String(r.matcode), 0, r.units);
+    for (const r of enriched) if (r.date >= from && r.date <= today) add(String(r.shop), String(r.matcode), 0, r.units, r.date >= from7 ? r.units : 0);
     return [...acc.values()].filter((a) => a.stock > 0 || a.sold28 > 0).map((a) => {
       const avg = a.sold28 / 28, cover = avg > 0 ? a.stock / avg : null;
       const status = a.sold28 <= 0 ? 'idle' : a.stock <= 0 ? 'out' : cover < 7 ? 'low' : cover < 28 ? 'short' : cover <= 56 ? 'ok' : 'over';
-      return { ...a, from, to: today, avg_day: Math.round(avg * 100) / 100, cover_days: cover == null ? null : Math.round(cover), status, need28: Math.max(0, Math.ceil(a.sold28 - a.stock)) };
+      const prevW = (a.sold28 - a.sold7) / 3;
+      return { ...a, from, to: today, avg_day: Math.round(avg * 100) / 100, avg_week: Math.round((a.sold28 / 4) * 10) / 10, cover_days: cover == null ? null : Math.round(cover), cover_wk: cover == null ? null : Math.round((cover / 7) * 10) / 10,
+        trend: prevW > 0 ? Math.round((a.sold7 / prevW - 1) * 1000) / 1000 : (a.sold7 > 0 ? 1 : null), status, need28: Math.max(0, Math.ceil(a.sold28 - a.stock)) };
     });
   },
 }));
@@ -1461,12 +1492,72 @@ dash.draw('tb_nosold', (el) => PC.table(el, 'tb_nosold', noSold(), { key: ['shop
   { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'stype', label: 'ประเภทสาขา' }, { f: 'area', label: 'Area' } ] }));
 
 /* ---------- stock ---------- */
-const ST = { out: ['หมด', 'var(--color-bad)', 'bad'], low: ['เสี่ยงขาด (< 7 วัน)', 'var(--color-bad)', 'bad'], short: ['ไม่พอ 28 วัน', 'var(--color-warn)', 'warn'], ok: ['พอ (28–56 วัน)', 'var(--color-ok)', 'ok'], over: ['เกิน (> 56 วัน)', '#6b7fd7', 'mute'], idle: ['ไม่มียอดขาย 28 วัน', 'var(--cds-chart-muted)', 'mute'] };
+const ST = { out: ['หมด', 'var(--color-bad)', 'bad'], low: ['เสี่ยงขาด (< 1 สัปดาห์)', 'var(--color-bad)', 'bad'], short: ['ไม่พอ 4 สัปดาห์', 'var(--color-warn)', 'warn'], ok: ['พอ (4–8 สัปดาห์)', 'var(--color-ok)', 'ok'], over: ['เกิน (> 8 สัปดาห์)', '#6b7fd7', 'mute'], idle: ['ไม่มียอดขาย 4 สัปดาห์', 'var(--cds-chart-muted)', 'mute'] };
 const ST_ORDER = ['out', 'low', 'short', 'ok', 'over', 'idle'];
 const stRows = (level) => { const r = PC.rows('stock_cover'); if (!r) return null; const p = PC.P();
   return r.filter((x) => x.level === (level || 'group') && (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || x.shop === p.shop) && (p.group === 'ALL' || x.group === p.group)); };
 const stTot = () => { const r = stRows('group'); if (!r) return null; const s = r.reduce((a, x) => a + x.stock, 0), q = r.reduce((a, x) => a + x.sold28, 0); return { s, q, cover: q > 0 ? s / (q / 28) : null, r }; };
-const coverTxt = (d) => (d == null ? '–' : d > 365 ? '> 1 ปี' : PC.nf(Math.round(d)) + ' วัน');
+const coverTxt = (d) => (d == null ? '–' : d / 7 > 52 ? '> 52 สัปดาห์' : d3.format(',.1f')(d / 7) + ' สัปดาห์');
+const wkTxt = (w) => (w == null ? '–' : w > 52 ? '> 52' : d3.format(',.1f')(w));
+const trendPill = (v) => (v == null ? ['mute', '–'] : [v > 0.2 ? 'bad' : v < -0.2 ? 'mute' : 'ok', (v > 0 ? '▲ +' : v < 0 ? '▼ −' : '') + PC.pf(Math.abs(v))]);
+const stRowsArea = (level) => { const r = PC.rows('stock_cover'); if (!r) return null; const p = PC.P();
+  return r.filter((x) => x.level === level && (p.area === 'ALL' || x.area === p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group)); };
+const shortByType = () => { const r = stRows('group'); if (!r) return null; const by = new Map();
+  for (const x of r) { const a = by.get(x.key) || { key: x.key, stock: 0, sold: 0, out: [], low: [], short: [], need: 0 }; a.stock += x.stock; a.sold += x.sold28;
+    if (x.status === 'out' || x.status === 'low' || x.status === 'short') { a[x.status].push(x); a.need += x.need28; } by.set(x.key, a); }
+  return [...by.values()].map((a) => { const pri = [...a.out, ...a.low].sort((p, q) => q.avg_week - p.avg_week);
+    return { key: a.key, stock: a.stock, avg_week: Math.round((a.sold / 4) * 10) / 10, cover_wk: a.sold > 0 ? Math.round((a.stock / (a.sold / 4)) * 10) / 10 : null, n_out: a.out.length, n_low: a.low.length, n_short: a.short.length, need: a.need,
+      first: pri.slice(0, 5).map((x) => x.name.replace(/^True (Shop|shop|Move Shop) /, '') + ' (' + (x.status === 'out' ? 'หมด' : x.stock) + ', ขาย ' + d3.format(',.1f')(x.avg_week) + '/สป.)').join(' · ') + (pri.length > 5 ? ' …' : '') }; })
+    .sort((p, q) => q.n_out + q.n_low - (p.n_out + p.n_low) || q.n_short - p.n_short); };
+const hotRows = () => { const r = stRows('mat'); if (!r) return null; const by = new Map();
+  for (const x of r) { const a = by.get(x.key) || { key: x.key, label: x.label, group: x.group, stock: 0, sold28: 0, sold7: 0, risk: 0, shops: 0 }; a.stock += x.stock; a.sold28 += x.sold28; a.sold7 += x.sold7;
+    if (x.status === 'out' || x.status === 'low') a.risk++; if (x.sold28 > 0) a.shops++; by.set(x.key, a); }
+  const tot = [...by.values()].reduce((s, a) => s + a.sold28, 0);
+  return [...by.values()].filter((a) => a.sold28 > 0).map((a) => { const w = a.sold28 / 4, cw = w > 0 ? a.stock / w : null, pw = (a.sold28 - a.sold7) / 3, tr = pw > 0 ? a.sold7 / pw - 1 : null;
+    const sig = (cw != null && cw < 2) || (tr != null && tr > 0.2 && cw < 4) ? 'urgent' : (cw < 4 || a.risk >= 3 || (tr != null && tr > 0.2)) ? 'watch' : 'ok';
+    return { ...a, avg_week: Math.round(w * 10) / 10, cover_wk: cw == null ? null : Math.round(cw * 10) / 10, trend: tr == null ? null : Math.round(tr * 1000) / 1000, share: tot ? a.sold28 / tot : 0, sig, srt: { urgent: 0, watch: 1, ok: 2 }[sig] * 1e7 - a.sold28 }; }); };
+const moveRows = () => { const r = stRowsArea('mat'); if (!r) return null; const p = PC.P(); const groups = new Map();
+  for (const x of r) { const k = x.area + '|' + x.key; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(x); }
+  const out = [];
+  for (const [k, xs] of groups) { const donors = xs.filter((x) => (x.status === 'over' || x.status === 'idle') && x.stock > 0).map((x) => ({ x, left: Math.max(0, x.stock - Math.ceil(x.avg_week * 6)) })).filter((d) => d.left > 0).sort((a, b) => b.left - a.left);
+    const needs = xs.filter((x) => ['out', 'low', 'short'].includes(x.status)).map((x) => ({ x, need: Math.max(0, Math.ceil(x.avg_week * 4) - x.stock) })).filter((n) => n.need > 0).sort((a, b) => b.x.avg_week - a.x.avg_week);
+    for (const n of needs) for (const d of donors) { if (n.need <= 0) break; if (d.left <= 0) continue; const q = Math.min(n.need, d.left); n.need -= q; d.left -= q;
+      out.push({ area: n.x.area, key: n.x.key, label: n.x.label, from: d.x.shop, from_name: d.x.name, from_stock: d.x.stock, from_cover: d.x.cover_wk == null ? 999 : d.x.cover_wk, to: n.x.shop, to_name: n.x.name, to_stock: n.x.stock, to_week: n.x.avg_week, to_status: n.x.status, qty: q }); } }
+  return p.shop === 'ALL' ? out : out.filter((m) => m.from === p.shop || m.to === p.shop); };
+dash.draw('tb_s_short', (el) => PC.table(el, 'tb_s_short', shortByType(), { key: ['key'], def: 'n_out', cols: [
+  { f: 'key', label: 'Type Sim' }, { f: 'stock', label: 'Stock', num: true, fmt: PC.nf }, { f: 'avg_week', label: 'ขาย/สัปดาห์', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt },
+  { f: 'n_out', label: 'หมด (สาขา)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'n_low', label: 'เสี่ยงขาด (สาขา)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'n_short', label: 'ไม่พอ 4 สป. (สาขา)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') },
+  { f: 'need', label: 'ต้องเติมรวม', num: true, fmt: PC.nf, bar: true }, { f: 'first', label: 'สาขาที่ควรเติมก่อน (Stock, ขาย/สัปดาห์)', wrap: true } ] }));
+dash.draw('tb_s_hot', (el) => { const SG = { urgent: ['bad', 'เร่งเติม'], watch: ['warn', 'จับตา'], ok: ['ok', 'ปกติ'] };
+  PC.table(el, 'tb_s_hot', hotRows(), { key: ['key'], def: 'srt', dir: 1, limit: 300, cols: [
+    { f: 'srt', label: 'สัญญาณ', num: true, pill: (d) => SG[d.sig] }, { f: 'label', label: 'Matcode', wrap: true }, { f: 'group', label: 'Type Sim' },
+    { f: 'sold28', label: 'ขาย 4 สัปดาห์', num: true, fmt: PC.nf, bar: true }, { f: 'share', label: '% ยอดขาย', num: true, fmt: PC.pf }, { f: 'avg_week', label: 'ขาย/สัปดาห์', num: true, fmt: (v) => d3.format(',.1f')(v) },
+    { f: 'trend', label: 'แนวโน้ม 7 วัน', num: true, pill: (d) => trendPill(d.trend) }, { f: 'stock', label: 'Stock', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt },
+    { f: 'risk', label: 'สาขาหมด/เสี่ยงขาด', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'shops', label: 'สาขาที่ขายได้', num: true, fmt: PC.nf } ] }); });
+dash.draw('s_move_sum', (el) => { const m = moveRows(); if (!m) { el.textContent = ''; return; } const q = m.reduce((s, x) => s + x.qty, 0);
+  el.textContent = m.length ? 'โอนได้ ' + PC.nf(m.length) + ' รายการ รวม ' + PC.nf(q) + ' ชิ้น โดยไม่ต้องสั่งของเพิ่ม' : 'ไม่มีคู่สาขาที่โอนย้ายได้ตาม Filter นี้'; });
+dash.draw('tb_s_move', (el) => PC.table(el, 'tb_s_move', moveRows(), { key: ['area', 'key', 'from', 'to'], def: 'qty', limit: 500, cols: [
+  { f: 'area', label: 'Area' }, { f: 'label', label: 'Matcode', wrap: true }, { f: 'from_name', label: 'จากสาขา (Stock เกิน)', wrap: true }, { f: 'from_stock', label: 'Stock ต้นทาง', num: true, fmt: PC.nf },
+  { f: 'from_cover', label: 'Cover ต้นทาง (สป.)', num: true, fmt: (v) => (v >= 999 ? 'ไม่มียอดขาย' : wkTxt(v)) }, { f: 'to_name', label: 'ไปสาขา (ขาด)', wrap: true }, { f: 'to_stock', label: 'Stock ปลายทาง', num: true, fmt: PC.nf },
+  { f: 'to_week', label: 'ปลายทางขาย/สป.', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'qty', label: 'แนะนำโอน', num: true, fmt: PC.nf, bar: true } ] }));
+dash.draw('s_insight', (el) => { el.replaceChildren(); const t0 = stTot(); if (!t0) return; const r = t0.r; const li = (parts) => { const l = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const b = document.createElement('b'); b.textContent = p[0]; if (p[1]) b.style.color = p[1]; l.append(b); } else l.append(p); } el.append(l); };
+  if (!r.length) { li(['ไม่มีข้อมูล Stock หรือยอดขายตาม Filter นี้']); return; }
+  const cw = t0.cover == null ? null : t0.cover / 7;
+  li(['ภาพรวม Stock ', [PC.nf(t0.s)], ' ชิ้น ขายเฉลี่ย ', [d3.format(',.0f')(t0.q / 4)], ' ชิ้น/สัปดาห์ → Cover ', [cw == null ? '–' : d3.format(',.1f')(cw) + ' สัปดาห์', cw == null ? '' : cw < 1 ? 'var(--color-bad)' : cw < 4 ? 'var(--color-warn)' : 'var(--color-ok)'], cw == null ? '' : cw > 8 ? ' (Stock สูงเกินยอดขาย)' : cw < 4 ? ' (ไม่พอขาย 4 สัปดาห์)' : ' (อยู่ในระดับพอดี)']);
+  const sb = shortByType() || []; const worst = sb.filter((a) => a.n_out + a.n_low > 0);
+  if (worst.length) li(['ซิมที่ขาดมากที่สุด: ', ...worst.slice(0, 3).flatMap((a, i) => [(i ? ' · ' : ''), [a.key.replace(/^SIM /, '')], ' หมด ' + a.n_out + ' / เสี่ยง ' + a.n_low + ' สาขา'])]);
+  else li(['ไม่มีสาขาที่หมดหรือเสี่ยงขาดในกลุ่มที่เลือก']);
+  const low = sb.filter((a) => a.cover_wk != null).sort((a, b) => a.cover_wk - b.cover_wk)[0]; if (low) li(['Type Sim ที่ Cover ต่ำสุด: ', [low.key.replace(/^SIM /, '')], ' ' + wkTxt(low.cover_wk) + ' สัปดาห์ (Stock ' + PC.nf(low.stock) + ' / ขาย ' + d3.format(',.0f')(low.avg_week) + ' ต่อสัปดาห์)']);
+  const hot = (hotRows() || []).filter((a) => a.sig === 'urgent').sort((a, b) => b.sold28 - a.sold28);
+  if (hot.length) li(['ซิมขายดีที่ต้องเร่งเติม ', [hot.length + ' รายการ', 'var(--color-bad)'], ': ', ...hot.slice(0, 3).flatMap((a, i) => [(i ? ' · ' : ''), [a.label.replace(/^\d+ (TMH\d )?/, '')], ' (ขาย ' + d3.format(',.0f')(a.avg_week) + '/สป., Cover ' + wkTxt(a.cover_wk) + ' สป.' + (a.trend != null && a.trend > 0.2 ? ', ยอดโต +' + PC.pf(a.trend) : '') + ')'])]);
+  const up = (hotRows() || []).filter((a) => a.trend != null && a.trend > 0.2 && a.sold28 >= 20).sort((a, b) => b.trend - a.trend);
+  if (up.length) li(['ยอดขาย 7 วันล่าสุดโตเกิน 20%: ', ...up.slice(0, 3).flatMap((a, i) => [(i ? ' · ' : ''), [a.label.replace(/^\d+ (TMH\d )?/, '')], ' +' + PC.pf(a.trend)])]);
+  const shopsRisk = new Map(); for (const x of r) if (x.status === 'out' || x.status === 'low') shopsRisk.set(x.name, (shopsRisk.get(x.name) || 0) + 1);
+  const topS = [...shopsRisk.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3); if (topS.length) li([topS[0][1] > 1 ? 'สาขาที่หมด/เสี่ยงขาดหลาย Type Sim: ' : 'สาขาที่หมด/เสี่ยงขาด (' + shopsRisk.size + ' สาขา) เช่น ', ...topS.flatMap(([n, c], i) => [(i ? ' · ' : ''), [n.replace(/^True (Shop|shop|Move Shop) /, '')], ' (' + c + ' ประเภท)'])]);
+  const idle = r.filter((x) => x.status === 'idle'), over = r.filter((x) => x.status === 'over'); const idleQ = idle.reduce((s, x) => s + x.stock, 0), overQ = over.reduce((s, x) => s + x.stock, 0);
+  li(['Stock ไม่เคลื่อนไหวใน 4 สัปดาห์ ', [PC.nf(idleQ) + ' ชิ้น'], ' (' + (t0.s ? PC.pf(idleQ / t0.s) : '–') + ' ของ Stock) และ Stock เกิน 8 สัปดาห์อีก ', [PC.nf(overQ) + ' ชิ้น'], ' — ควรระบายหรือโอนย้าย']);
+  const mv = moveRows() || []; if (mv.length) li(['โอนย้ายภายใน Area ได้ ', [PC.nf(mv.reduce((s, x) => s + x.qty, 0)) + ' ชิ้น', 'var(--color-ok)'], ' (' + mv.length + ' รายการ) ช่วยลดการขาดของได้โดยไม่ต้องสั่งเพิ่ม — ดูตาราง "แนะนำโอนย้าย"']);
+});
 dash.draw('s_asof', (el) => { const r = PC.rows('stock_by_shop'); const v = r && r[0] && r[0].asof; el.textContent = v ? PC.day(v.slice(0, 10)) + (v.length > 10 ? ' ' + v.slice(11) + ' น.' : '') : '—'; });
 dash.draw('s_stock', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.s) : '—'; });
 dash.draw('s_sold', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.q) : '—'; });
@@ -1474,7 +1565,7 @@ dash.draw('s_window', (el) => { const r = PC.rows('stock_cover'); const x = r &&
 dash.draw('s_cover', (el) => { const t = stTot(); el.textContent = t ? coverTxt(t.cover) : '—'; el.style.color = !t || t.cover == null ? '' : t.cover < 7 ? 'var(--color-bad)' : t.cover < 28 ? 'var(--color-warn)' : 'var(--color-ok)'; });
 dash.draw('s_risk', (el) => { const t = stTot(); el.textContent = t ? PC.nf(t.r.filter((x) => x.status === 'out' || x.status === 'low').length) : '—'; });
 dash.draw('s_risk_sub', (el) => { const t = stTot(); if (!t) { el.textContent = ''; return; } const c = (k) => t.r.filter((x) => x.status === k).length;
-  el.textContent = 'หมด ' + PC.nf(c('out')) + ' · เสี่ยงขาด ' + PC.nf(c('low')) + ' · ไม่พอ 28 วัน ' + PC.nf(c('short')); });
+  el.textContent = 'หมด ' + PC.nf(c('out')) + ' · เสี่ยงขาด ' + PC.nf(c('low')) + ' · ไม่พอ 4 สัปดาห์ ' + PC.nf(c('short')); });
 dash.draw('c_s_type', (el) => {
   if (PC.failed(el, 'stock_cover')) return; el.replaceChildren(); const r = stRows('group'); if (!r) return;
   const by = new Map(); for (const x of r) { const a = by.get(x.key) || { key: x.key, stock: 0, sold: 0 }; a.stock += x.stock; a.sold += x.sold28; by.set(x.key, a); }
@@ -1484,7 +1575,7 @@ dash.draw('c_s_type', (el) => {
     const l = document.createElement('span'); l.className = 'l'; l.textContent = d.key; l.title = d.key;
     const dual = document.createElement('span'); dual.className = 'pc-dual';
     for (const [v, c, o] of [[d.stock, col, 1], [d.sold, 'var(--color-fg-muted)', 0.35]]) { const tr = document.createElement('span'); tr.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.display = 'block'; f.style.width = Math.max(0, (v / max) * 100) + '%'; f.style.background = c; f.style.opacity = o; tr.append(f); dual.append(tr); }
-    const v = document.createElement('span'); v.className = 'v'; v.textContent = 'Stock ' + PC.nf(d.stock) + ' · ขาย ' + PC.nf(d.sold) + ' · ' + coverTxt(cover);
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = 'Stock ' + PC.nf(d.stock) + ' · ขาย ' + PC.nf(d.sold) + ' · Cover ' + coverTxt(cover);
     row.append(l, dual, v); el.append(row); }
 });
 dash.draw('c_s_status', (el) => {
@@ -1510,8 +1601,8 @@ dash.draw('c_s_matrix', (el) => {
   for (const s of list) { const l = document.createElement('div'); l.className = 'hl'; l.textContent = s.name; l.title = s.name + ' · ' + s.shop; el.append(l);
     for (const ty of types) { const x = s.cells[ty]; const c = document.createElement('div'); c.className = 'hc';
       if (x) { const st = ST[x.status]; c.style.background = 'color-mix(in srgb, ' + st[1] + ' ' + (x.status === 'idle' ? 25 : 40) + '%, transparent)';
-        const cellTxt = () => (x.status === 'out' ? 'หมด · ขาย ' + PC.nf(x.sold28) : PC.nf(x.stock) + ' / ' + (x.cover_days == null ? '–' : (x.cover_days > 999 ? '999+' : x.cover_days) + ' วัน')); c.textContent = cellTxt();
-        c.title = s.name + ' · ' + ty + '\nStock ' + PC.nf(x.stock) + ' · ขาย 28 วัน ' + PC.nf(x.sold28) + ' · พอขาย ' + coverTxt(x.cover_days) + ' · ' + st[0] + (x.need28 ? ' · ควรเติม ' + PC.nf(x.need28) : '');
+        const cellTxt = () => (x.status === 'out' ? 'หมด · ขาย ' + PC.nf(x.sold28) : PC.nf(x.stock) + ' / ' + (x.cover_wk == null ? '–' : wkTxt(x.cover_wk) + ' W')); c.textContent = cellTxt();
+        c.title = s.name + ' · ' + ty + '\nStock ' + PC.nf(x.stock) + ' · ขาย 28 วัน ' + PC.nf(x.sold28) + ' · Cover ' + coverTxt(x.cover_days) + ' · ' + st[0] + (x.need28 ? ' · ควรเติม ' + PC.nf(x.need28) : '');
         c.onclick = () => { c.textContent = c.textContent === cellTxt() ? 'ขาย 28 วัน ' + PC.nf(x.sold28) : cellTxt(); }; }
       el.append(c); } }
 });
@@ -1524,8 +1615,8 @@ dash.draw('tb_stock', (el) => {
     { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
     { f: 'label', label: lv === 'group' ? 'Type Sim' : lv === 'sub' ? 'ประเภทซิม (รุ่นย่อย)' : 'Matcode', wrap: lv === 'mat' },
     { f: 'stock', label: 'Stock', num: true, fmt: PC.nf, bar: true }, { f: 'sold28', label: 'ขาย 28 วัน', num: true, fmt: PC.nf },
-    { f: 'avg_day', label: 'เฉลี่ย/วัน', num: true, fmt: (v) => (v > 0 && v < 0.1 ? '< 0.1' : d3.format(',.1f')(v)) }, { f: 'cover_days', label: 'พอขาย (วัน)', num: true, fmt: (v) => (v > 999 ? '999+' : PC.nf(v)) },
-    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [ST[d.status][2], ST[d.status][0]] }, { f: 'need28', label: 'ควรเติม (ให้พอ 28 วัน)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') } ] });
+    { f: 'avg_week', label: 'เฉลี่ย/สัปดาห์', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt }, { f: 'trend', label: 'แนวโน้ม 7 วัน', num: true, pill: (d) => trendPill(d.trend) },
+    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [ST[d.status][2], ST[d.status][0]] }, { f: 'need28', label: 'ควรเติม (ให้พอ 4 สัปดาห์)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') } ] });
 });
 
 /* ---------- missing matcodes ---------- */
