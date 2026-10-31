@@ -4,8 +4,9 @@ const SA = (() => {
   const isoW = (ds) => { const d = new Date(ds + 'T00:00:00Z'); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day + 3); const y = d.getUTCFullYear(); const f = new Date(Date.UTC(y, 0, 4)); return { y, w: 1 + Math.round(((d - f) / D - 3 + ((f.getUTCDay() + 6) % 7)) / 7) }; };
   const wRange = (y, w) => { const f = new Date(Date.UTC(y, 0, 4)); const mon = new Date(f.getTime() - ((f.getUTCDay() + 6) % 7) * D + (w - 1) * 7 * D); return [iso(mon), iso(new Date(mon.getTime() + 6 * D))]; };
   const LV = { zone: 'Region', area: 'Area', shop: 'สาขา', emp: 'พนักงาน', group: 'กลุ่มประเภทซิม', sub: 'ประเภทซิม (รุ่นย่อย)', mat: 'ชนิดซิม (Matcode)' };
-  const info = () => { const r = PC.rows('enriched'); if (!r || !r.length) return null; const today = r.reduce((a, x) => (x.date > a ? x.date : a), ''); const cur = isoW(today);
-    const pr = dash.params(); const pd = pr.saperiod || 'mtd'; const wk = Math.min(+(pr.saweek || cur.w), cur.w); let from, to = today, pf = null, pt = null, label, plabel;
+  const info = () => { const pr = dash.params(); return period(pr.saperiod || 'mtd', pr.saweek); };
+  const period = (pd0, wk0) => { const r = PC.rows('enriched'); if (!r || !r.length) return null; const today = r.reduce((a, x) => (x.date > a ? x.date : a), ''); const cur = isoW(today);
+    const pr = dash.params(); const pd = pd0 || 'mtd'; const wk = Math.min(+(wk0 || cur.w), cur.w); let from, to = today, pf = null, pt = null, label, plabel;
     if (pd === 'today') { from = today; pf = pt = add(today, -7); label = 'Today ' + PC.day(today); plabel = 'วันเดียวกันสัปดาห์ก่อน (' + PC.day(pf) + ')'; }
     else if (pd === 'week') { const [a, b] = wRange(cur.y, wk); from = a; to = b < today ? b : today; pf = add(a, -7); pt = add(to, -7); label = 'Week ' + wk; plabel = 'Week ' + (wk - 1) + ' (ช่วงวันเดียวกัน)'; }
     else if (pd === 'ytd') { from = today.slice(0, 4) + '-01-01'; label = 'YTD ' + (+today.slice(0, 4) + 543); plabel = null; }
@@ -38,7 +39,7 @@ const SA = (() => {
       const mo = tm.get(I.today.slice(0, 7)); tgt = { tu, tn, month: mo ? (N ? mo.n : mo.u) : null, mdays: dim(I.today), el: +I.today.slice(8, 10) }; }
     const v = { I, s, lvl, rows, T, N, dc, dp, tgt }; memo.set(k, v); return v; };
   const agg = () => { const I = info(); return I ? aggBy(I.lvl) : null; };
-  return { info, agg, aggBy, base, simList, sim, LV, add, diff, wRange };
+  return { info, period, isoW, agg, aggBy, base, simList, sim, LV, add, diff, wRange };
 })();
 const saC = (A) => (A.N ? A.T.cn : A.T.cu), saP = (A) => (A.N ? A.T.pn : A.T.pu);
 const saPct = (v) => (v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + PC.pf(Math.abs(v)));
@@ -209,3 +210,33 @@ dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A)
 dash.onData(() => { document.querySelectorAll('#f-saperiod').forEach((s) => { s.value = dash.params().saperiod || 'mtd'; }); document.querySelectorAll('#f-salevel').forEach((s) => { s.value = dash.params().salevel || 'zone'; }); document.querySelectorAll('#wrap-saweek').forEach((n) => { n.hidden = (dash.params().saperiod || 'mtd') !== 'week'; }); });
 document.querySelectorAll('#f-saperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ saperiod: s.value })));
 document.querySelectorAll('#f-salevel').forEach((s) => s.addEventListener('change', () => dash.setParams({ salevel: s.value })));
+
+
+/* ---------- Staff tab: period ---------- */
+dash.draw('f_stweek', (sel) => { const I = SA.period('week', dash.params().stweek); if (!I) return; const o = []; for (let w = I.cur.w; w >= 1; w--) { const [a, b] = SA.wRange(I.cur.y, w); o.push(new Option('Week ' + w + ' · ' + PC.day(a) + ' – ' + PC.day(b < I.today ? b : I.today), String(w))); } sel.replaceChildren(...o); sel.value = String(I.wk); sel.onchange = () => dash.setParams({ stweek: +sel.value }); });
+const stInfo = () => SA.period(dash.params().stperiod || 'mtd', dash.params().stweek);
+dash.draw('st_range', (el) => { const I = stInfo(); el.textContent = I ? I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + (I.plabel ? ' · เทียบกับ ' + I.plabel : '') : ''; });
+dash.draw('st_label', (el) => { const I = stInfo(); el.textContent = I ? I.label : ''; });
+const stAgg = () => { const r = PC.rows('enriched'), I = stInfo(); if (!r || !I) return null; const p = PC.P();
+  const staff = new Map((PC.rows('staff') || []).map((x) => [String(x.emp), x])), shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+  const m = new Map(); let tot = 0;
+  for (const x of r) { if (!(PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group))) continue;
+    const cur = x.date >= I.from && x.date <= I.to, prv = I.pf && x.date >= I.pf && x.date <= I.pt; if (!cur && !prv) continue;
+    const k = String(x.emp); const a = m.get(k) || { emp: k, units: 0, net: 0, pu: 0, pn: 0, mc: new Set(), days: new Set(), shops: new Map() };
+    if (cur) { a.units += x.units; a.net += x.net; if (x.units > 0) { a.mc.add(x.matcode); a.days.add(x.date); } a.shops.set(String(x.shop), (a.shops.get(String(x.shop)) || 0) + x.units); tot += PC.isNet() ? x.net : x.units; } else { a.pu += x.units; a.pn += x.net; }
+    m.set(k, a); }
+  const N = PC.isNet();
+  return [...m.values()].filter((a) => a.units !== 0 || a.net !== 0).map((a) => { const e = staff.get(a.emp) || {}; const main = [...a.shops.entries()].sort((x, y) => y[1] - x[1])[0]; const shop = shops.get(String(main ? main[0] : e.shop)) || {};
+    const c = N ? a.net : a.units, pv = N ? a.pn : a.pu;
+    return { emp: a.emp, name: e.name || a.emp, shop: shop.name || (main ? main[0] : '-'), area: shop.area || '-', units: a.units, net: Math.round(a.net), share: tot ? c / tot : 0, asp: a.units > 0 ? Math.round(a.net / a.units) : null,
+      matcodes: a.mc.size, days: a.days.size, prev: I.pf ? Math.round(pv) : null, growth: I.pf && pv > 0 ? c / pv - 1 : null }; }); };
+dash.draw('tb_staff', (el) => { const I = stInfo(); const N = PC.isNet(); const r = stAgg(); const rows = r && r.sort((a, b) => (N ? b.net - a.net : b.units - a.units)).map((x, i) => ({ ...x, rank: i + 1 }));
+  PC.table(el, 'tb_staff', rows, { key: ['emp'], def: 'rank', dir: 1, q: 'staff', limit: 3000, cols: [
+    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก (ช่วงนี้)', wrap: true }, { f: 'area', label: 'Area' },
+    { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf },
+    ...(I && I.pf ? [{ f: 'prev', label: (N ? 'Net Amount' : 'QTY') + ' ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'growth', label: 'เทียบช่วงก่อน', num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', (d.growth > 0 ? '+' : d.growth < 0 ? '−' : '') + PC.pf(Math.abs(d.growth))]) }] : []),
+    { f: 'asp', label: 'ราคาเฉลี่ย/ชิ้น', num: true, fmt: PC.nf }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf }, { f: 'days', label: 'วันที่มียอด', num: true, fmt: PC.nf } ] }); });
+dash.draw('st_sum', (el) => { const r = stAgg(); if (!r) { el.textContent = ''; return; } const act = r.filter((x) => x.units > 0); const N = PC.isNet(); const tot = d3.sum(act, (x) => (N ? x.net : x.units));
+  el.textContent = 'พนักงานที่มียอด ' + PC.nf(act.length) + ' คน · ยอดรวม ' + PC.mfmt(Math.round(tot)) + ' · เฉลี่ยต่อคน ' + PC.mfmt(Math.round(tot / Math.max(1, act.length))) + ' · ค่ากลาง ' + PC.mfmt(Math.round(d3.median(act, (x) => (N ? x.net : x.units)) || 0)); });
+dash.onData(() => { document.querySelectorAll('#f-stperiod').forEach((s) => { s.value = dash.params().stperiod || 'mtd'; }); document.querySelectorAll('#wrap-stweek').forEach((n) => { n.hidden = (dash.params().stperiod || 'mtd') !== 'week'; }); });
+document.querySelectorAll('#f-stperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ stperiod: s.value })));

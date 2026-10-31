@@ -604,16 +604,31 @@
   </section>
 
   <section class="pc-sec" id="staff" data-page="staff" hidden>
+    <div class="pc-bar">
+      <label class="pc-field">ช่วงเวลา
+        <select id="f-stperiod" aria-label="ช่วงเวลาหน้าพนักงาน">
+          <option value="today">วันนี้</option>
+          <option value="week">Week</option>
+          <option value="mtd">MTD (เดือนนี้)</option>
+          <option value="ytd">YTD (ตั้งแต่ต้นปี)</option>
+        </select>
+      </label>
+      <label class="pc-field" id="wrap-stweek">สัปดาห์
+        <select id="f-stweek" data-draw="f_stweek" data-source="enriched" aria-label="เลือกสัปดาห์"></select>
+      </label>
+      <p class="pc-note" data-draw="st_range" data-source="enriched"></p>
+    </div>
     <article class="pc-card" id="card-stafftable">
-      <h3>ยอดขายรายพนักงาน</h3>
-      <p>นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล สาขาหลัก = สาขาที่พนักงานขายมากที่สุด</p>
+      <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span></h3>
+      <p>นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบช่วงก่อน: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน</p>
+      <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
           <input id="q-staff" class="pc-q" data-q="staff" type="search" aria-label="ค้นหาพนักงาน">
         </label>
       </div>
       <div class="pc-scroll">
-        <table data-draw="tb_staff" data-source="staff_perf" data-row-key="area,stype,group,emp"></table>
+        <table data-draw="tb_staff" data-source="enriched staff shops" data-row-key="emp"></table>
       </div>
     </article>
   </section>
@@ -2024,9 +2039,6 @@ dash.draw('tb_shop', (el) => PC.table(el, 'tb_shop', PC.pick('shop_perf'), { key
   ...tgtCols(),
   { f: 'units', label: 'QTY ทั้งปี', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount ทั้งปี', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf },
   { f: 'stock', label: 'สต็อก', num: true, fmt: PC.nf }, { f: 'aged', label: 'สต็อกเก่า', num: true, fmt: PC.nf } ] }));
-dash.draw('tb_staff', (el) => PC.table(el, 'tb_staff', PC.pick('staff_perf'), { key: ['area', 'stype', 'group', 'emp'], def: PC.isNet() ? 'net' : 'units', q: 'staff', cols: [
-  { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก', wrap: true },
-  { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !PC.isNet() }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: PC.isNet() }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf } ] }));
 </script>
 
 <script>
