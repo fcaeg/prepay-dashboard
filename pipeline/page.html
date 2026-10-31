@@ -478,14 +478,14 @@
     <div class="pc-tiles">
       <div class="pc-tile"><span class="pc-tile-l">Net Amount</span><span class="pc-big" data-draw="sa_net" data-source="enriched">—</span><span class="pc-sub" data-draw="sa_net_sub" data-source="enriched"></span></div>
       <div class="pc-tile"><span class="pc-tile-l">QTY</span><span class="pc-big" data-draw="sa_qty" data-source="enriched">—</span><span class="pc-sub" data-draw="sa_qty_sub" data-source="enriched"></span></div>
-      <div class="pc-tile"><span class="pc-tile-l">ราคาขายเฉลี่ย (ASP)</span><span class="pc-big" data-draw="sa_asp" data-source="enriched">—</span><span class="pc-sub" data-draw="sa_asp_sub" data-source="enriched"></span></div>
+      <div class="pc-tile"><span class="pc-tile-l">ราคาเฉลี่ยต่อชิ้น</span><span class="pc-big" data-draw="sa_asp" data-source="enriched">—</span><span class="pc-sub" data-draw="sa_asp_sub" data-source="enriched"></span></div>
       <div class="pc-tile"><span class="pc-tile-l" data-draw="sa_tgt_l" data-source="enriched targets"></span><span class="pc-big" data-draw="sa_tgt" data-source="enriched targets">—</span><span class="pc-sub" data-draw="sa_tgt_sub" data-source="enriched targets"></span></div>
     </div>
 
     <article class="pc-card pc-insight" id="card-sa-text">
       <h3>บทวิเคราะห์ยอดขาย</h3>
       <ul class="pc-ins" data-draw="sa_text" data-source="enriched targets staff shops"></ul>
-      <p class="pc-note">หลักที่ใช้: Period-over-Period (เทียบช่วงก่อนหน้า) · Price-Volume-Mix (แยกการเปลี่ยนแปลงของยอดขายเป็นผลจากจำนวนชิ้นและราคา/สัดส่วนสินค้า) · Pareto 80/20 · Contribution to Growth · Growth-Share Matrix (BCG: ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · Run-rate เทียบ Target</p>
+      <p class="pc-note">วิธีวิเคราะห์: เทียบกับช่วงก่อนหน้า · แยกว่ายอดเปลี่ยนเพราะจำนวนชิ้นหรือราคา · กฎ 80/20 · ใครทำให้ยอดเพิ่ม/ลด · จัดกลุ่มผลงาน (ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · คาดการณ์ยอดสิ้นเดือนเทียบ Target</p>
     </article>
 
     <article class="pc-card" id="card-sa-alert">
@@ -500,8 +500,8 @@
         <div class="pc-sachart" data-draw="c_sa_rank" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pvm">
-        <h3>Price-Volume-Mix: ยอดเปลี่ยนเพราะอะไร</h3>
-        <p>ยอดช่วงก่อนหน้า → ผลจากจำนวนชิ้น (Volume) → ผลจากราคาเฉลี่ย/สัดส่วนสินค้า (Price-Mix) → ยอดช่วงนี้</p>
+        <h3>ยอดเปลี่ยนเพราะอะไร: จำนวนชิ้น หรือ ราคา</h3>
+        <p>ยอดช่วงก่อน → ผลจากจำนวนชิ้นที่ขายได้มากขึ้น/น้อยลง → ผลจากราคาเฉลี่ยต่อชิ้นและสัดส่วนสินค้า → ยอดช่วงนี้</p>
         <div class="pc-chart" data-draw="c_sa_pvm" data-source="enriched"></div>
       </article>
     </div>
@@ -513,7 +513,7 @@
         <div class="pc-chart" data-draw="c_sa_trend" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-pareto">
-        <h3>Pareto 80/20 · ราย <span data-draw="sa_lvl2" data-source="enriched"></span></h3>
+        <h3>กฎ 80/20 · ราย <span data-draw="sa_lvl2" data-source="enriched"></span></h3>
         <p>แท่ง = ยอดของแต่ละรายการเรียงจากมากไปน้อย · เส้น = ยอดสะสม % · เส้นประ = 80%</p>
         <div class="pc-chart" data-draw="c_sa_pareto" data-source="enriched"></div>
       </article>
@@ -521,12 +521,12 @@
 
     <div class="pc-split">
       <article class="pc-card" id="card-sa-contrib">
-        <h3>Contribution to Growth · ใครทำให้ยอดเพิ่ม/ลด</h3>
+        <h3>ใครทำให้ยอดเพิ่ม / ลด</h3>
         <p>ส่วนต่างยอด (ช่วงนี้ − ช่วงก่อนหน้า) ของแต่ละรายการ เรียงจากผลบวกมากสุดและผลลบมากสุด</p>
         <div class="pc-sachart" data-draw="c_sa_contrib" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-bcg">
-        <h3>Growth-Share Matrix · จัดกลุ่มเพื่อวางแผน</h3>
+        <h3>จัดกลุ่มผลงาน (สัดส่วนยอดขาย × การเติบโต)</h3>
         <p>แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย</p>
         <ul class="pc-quad">
           <li><b style="color:var(--color-ok)">ดาวเด่น</b> (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น</li>
@@ -1648,8 +1648,8 @@ dash.draw('tb_rank_zone', (el) => { const all = PC.rows('area_rank'), ad = PC.ro
   const pill = (k) => (dd) => (dd[k] == null ? ['mute', '–'] : [dd[k] >= 1 ? 'ok' : dd[k] >= 0.9 ? 'warn' : 'bad', PC.pf(dd[k])]);
   PC.table(el, 'tb_rank_zone', r, { key: ['stype', 'area'], def: 'zrank', dir: 1, cols: [
     { f: 'zrank', label: 'อันดับ', num: true, fmt: PC.nf }, { f: 'area', label: 'Region' }, { f: 'areas', label: 'Area', num: true, fmt: PC.nf }, { f: 'shops', label: 'สาขาที่มี Target', num: true, fmt: PC.nf },
-    { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'MoM', num: true, pill: (dd) => momPill(dd[N ? 'mom_net' : 'mom_units']) },
-    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + (d ? PC.day(d) : ''), num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
+    { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'เทียบเดือนก่อน', num: true, pill: (dd) => momPill(dd[N ? 'mom_net' : 'mom_units']) },
+    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + (d ? PC.day(d) : ''), num: true, fmt: fm }, { f: 'dach', label: '% รายวัน', num: true, pill: pill('dach') },
     { f: f.ttd, label: 'Target ถึงวันนี้', num: true, fmt: fm }, { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
     { f: f.tgt, label: 'Target ทั้งเดือน', num: true, fmt: fm }, { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm } ] }); });
 dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
@@ -1675,8 +1675,8 @@ dash.draw('tb_rank', (el) => {
   const r = r0 && r0.map((x) => { const y = dd.get(x.area) || {}; return { ...x, drank: y.drank ?? null, dval: y[f.d] ?? null, dach: y[f.ach] ?? null }; });
   const pill = (k) => (d) => (d[k] == null ? ['mute', '–'] : [d[k] >= 1 ? 'ok' : d[k] >= 0.9 ? 'warn' : 'bad', PC.pf(d[k])]);
   PC.table(el, 'tb_rank', r, { key: ['stype', 'area'], def: 'rank', dir: 1, cols: [
-    { f: 'rank', label: 'อันดับสะสม', num: true, fmt: PC.nf }, { f: 'drank', label: 'อันดับ Daily', num: true, fmt: PC.nf }, { f: 'area', label: 'Area', wrap: true }, { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'MoM', num: true, pill: (d) => momPill(d[N ? 'mom_net' : 'mom_units']) },
-    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + dl, num: true, fmt: fm }, { f: 'dach', label: '% Daily', num: true, pill: pill('dach') },
+    { f: 'rank', label: 'อันดับสะสม', num: true, fmt: PC.nf }, { f: 'drank', label: 'อันดับรายวัน', num: true, fmt: PC.nf }, { f: 'area', label: 'Area', wrap: true }, { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (ช่วงเดียวกัน)', num: true, fmt: fm }, { f: N ? 'mom_net' : 'mom_units', label: 'เทียบเดือนก่อน', num: true, pill: (d) => momPill(d[N ? 'mom_net' : 'mom_units']) },
+    { f: f.tpd, label: 'Target ต่อวัน', num: true, fmt: fm }, { f: 'dval', label: 'ยอด ' + dl, num: true, fmt: fm }, { f: 'dach', label: '% รายวัน', num: true, pill: pill('dach') },
     { f: f.ttd, label: 'Target ถึงวันนี้', num: true, fmt: fm }, { f: f.act, label: 'ยอดสะสม', num: true, fmt: fm, bar: true }, { f: f.ach, label: '% สะสม', num: true, pill: pill(f.ach) },
     { f: f.gap, label: 'ส่วนต่างสะสม', num: true, fmt: (v) => (v > 0 ? '+' : '') + fm(v) }, { f: f.tgt, label: 'Target ทั้งเดือน', num: true, fmt: fm },
     { f: f.need, label: 'ต้องทำต่อวัน', num: true, fmt: fm }, { f: f.full, label: '% ของ Target ทั้งเดือน', num: true, fmt: PC.pf } ] });
@@ -2005,7 +2005,7 @@ for (const [name, dim, label, def, dir] of [['bd_zone', 'zone', 'Region', 'm', -
 const momPill = (v) => (v == null ? ['mute', '–'] : [v >= 0 ? 'ok' : v > -0.1 ? 'warn' : 'bad', (v > 0 ? '+' : v < 0 ? '−' : '') + PC.pf(Math.abs(v))]);
 const momCols = (rows) => { const N = PC.isNet(); const r0 = rows && rows[0]; const lbl = r0 && r0.pm_to ? PC.day(r0.pm_to.slice(0, 8) + '01').replace(/^1 /, '1–' + (+r0.pm_to.slice(8)) + ' ') : 'เดือนก่อน';
   return [{ f: N ? 'mtd_all_net' : 'mtd_all', label: (N ? 'Net Amount' : 'QTY') + ' เดือนนี้', num: true, fmt: PC.nf }, { f: N ? 'pm_net' : 'pm_units', label: 'เดือนก่อน (' + lbl + ')', num: true, fmt: PC.nf },
-    { f: N ? 'mom_net' : 'mom_units', label: 'MoM', num: true, pill: (d) => momPill(d[N ? 'mom_net' : 'mom_units']) }]; };
+    { f: N ? 'mom_net' : 'mom_units', label: 'เทียบเดือนก่อน', num: true, pill: (d) => momPill(d[N ? 'mom_net' : 'mom_units']) }]; };
 const tgtCols = () => { const N = PC.isNet(); const pill = (k) => (d) => achPill({ ach: d[k] }); const m = N ? 'Net Amount' : 'QTY';
   return N ? [{ f: 'target_net', label: 'Target เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'mtd_net', label: m + ' เดือนล่าสุด', num: true, fmt: PC.nf }, { f: 'ach_net', label: '% Target', num: true, pill: pill('ach_net') },
       { f: 'ytd_target_net', label: 'Target สะสม', num: true, fmt: PC.nf }, { f: 'ytd_net', label: m + ' สะสม', num: true, fmt: PC.nf }, { f: 'ytd_ach_net', label: '% Target สะสม', num: true, pill: pill('ytd_ach_net') }]
