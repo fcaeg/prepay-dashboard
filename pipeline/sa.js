@@ -451,12 +451,12 @@ const WXP = (() => {
   const head = (g, F, W, P, title) => { g.fillStyle = C.fg; g.font = F(700, 34); g.fillText(fit(g, title, W * 0.62), P, P + 34); g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right';
     const p = PC.P(); g.fillText([asof(), p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.shop !== 'ALL' ? 'สาขา ' + p.shop : ''].filter(Boolean).join('  ·  '), W - P, P + 34); g.textAlign = 'left'; g.fillStyle = C.line; g.fillRect(P, P + 56, W - 2 * P, 2); return P + 100; };
   const foot = (g, F, P, H) => { g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว = ขายแล้ว · แดง = ยังไม่ขาย (ยังอยู่ใน Stock) · ส้ม = ไม่พบใน Stock และยังไม่พบการขาย  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6); };
-  const fname = (k) => 'Watch_' + k + '_' + String(wList() || '').replace(/[^\w฀-๿]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.png';
+  const fname = (k) => 'Watch_Serial_' + k + '_' + new Date().toISOString().slice(0, 10) + '.png';
   const overview = async () => { const r = wRows() || []; const N = r.length || 1; const cnt = (s) => wCount(r, s);
     const by = new Map(); for (const x of r) { const a = by.get(x.area) || { area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.area, a); }
     const areas = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n);
     const sold = r.filter((x) => x.status === 'sold' && x.sold_date); const dmap = d3.rollup(sold, (v) => v.length, (x) => x.sold_date); let cum = 0; const days = [...dmap.keys()].sort().map((d) => { cum += dmap.get(d); return { d, n: dmap.get(d), c: cum }; });
-    const W = 2000, P = 48, ROW = 40, nr = Math.max(areas.length, days.length, 1); const H = P + 100 + 170 + 40 + 120 + 60 + nr * ROW + 50 + P;
+    const W = 2000, P = 48, ROW = 40, nr = Math.max(areas.length, days.length, 1); const H = P + 100 + 170 + 40 + 120 + 60 + nr * ROW + 10 + P;
     const { cv, g, F } = await setup(W, H); let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · ' + (wList() || ''));
     // tiles
     const sv = sold.reduce((a, x) => a + (x.sold_net || 0), 0); const left = r.filter((x) => x.status === 'in_stock');
@@ -487,7 +487,7 @@ const WXP = (() => {
   const shops = async () => { const r = wRows() || []; const by = new Map();
     for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(k, a); }
     const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
-    const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + 40 + P; const { cv, g, F } = await setup(W, H);
+    const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + P; const { cv, g, F } = await setup(W, H);
     let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() || ''));
     const tot = { n: r.length, s: wCount(r, 'sold'), nf: wCount(r, 'not_found') }; g.font = F(400, 22); g.fillStyle = C.fg;
     g.fillText(PC.nf(rows.length) + ' สาขา · ติดตาม ' + PC.nf(tot.n) + ' Serial · ขายแล้ว ' + PC.nf(tot.s) + ' (' + PC.pf(tot.s / Math.max(1, tot.n)) + ') · ยังไม่ขาย ' + PC.nf(tot.n - tot.s - tot.nf) + ' · ไม่พบใน Stock ' + PC.nf(tot.nf), P, y); y += 50;
