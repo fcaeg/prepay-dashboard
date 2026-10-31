@@ -115,6 +115,8 @@
 .pc-gtree .gs.u { color: var(--color-bad); font-weight: 600; }
 .pc-gtree .sub { margin: 4px 0 10px; }
 .pc-gtree .sub h5 { margin: 8px 0 4px; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg); }
+.pc-quad { margin: 0; padding-left: 1.1em; display: grid; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+.pc-quad b { font-weight: 600; }
 [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 [data-dash-source-state=empty] { color: transparent; }
 
@@ -475,7 +477,7 @@
     <article class="pc-card pc-insight" id="card-sa-text">
       <h3>บทวิเคราะห์ยอดขาย</h3>
       <ul class="pc-ins" data-draw="sa_text" data-source="enriched targets staff shops"></ul>
-      <p class="pc-note">หลักที่ใช้: Period-over-Period (เทียบช่วงก่อนหน้า) · Price-Volume-Mix (แยกการเปลี่ยนแปลงของยอดขายเป็นผลจากจำนวนชิ้นและราคา/สัดส่วนสินค้า) · Pareto 80/20 · Contribution to Growth · Growth-Share Matrix (BCG) · Run-rate เทียบ Target</p>
+      <p class="pc-note">หลักที่ใช้: Period-over-Period (เทียบช่วงก่อนหน้า) · Price-Volume-Mix (แยกการเปลี่ยนแปลงของยอดขายเป็นผลจากจำนวนชิ้นและราคา/สัดส่วนสินค้า) · Pareto 80/20 · Contribution to Growth · Growth-Share Matrix (BCG: ดาวเด่น / ฐานหลัก / ดาวรุ่ง / ต้องฟื้นฟู) · Run-rate เทียบ Target</p>
     </article>
 
     <div class="pc-split">
@@ -511,8 +513,14 @@
         <div class="pc-sachart" data-draw="c_sa_contrib" data-source="enriched"></div>
       </article>
       <article class="pc-card" id="card-sa-bcg">
-        <h3>Growth-Share Matrix</h3>
-        <p>แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · Star = สัดส่วนสูง+โต · Cash Cow = สัดส่วนสูง+ไม่โต · Question Mark = สัดส่วนต่ำ+โต · Dog = สัดส่วนต่ำ+ไม่โต</p>
+        <h3>Growth-Share Matrix · จัดกลุ่มเพื่อวางแผน</h3>
+        <p>แกนนอน = สัดส่วนยอดขาย · แกนตั้ง = การเติบโตเทียบช่วงก่อนหน้า · เส้นประ = ค่าเฉลี่ย</p>
+        <ul class="pc-quad">
+          <li><b style="color:var(--color-ok)">ดาวเด่น</b> (ยอดสูง + โตดี) — รักษามาตรฐาน ใช้เป็นต้นแบบ และขยายผลไปยังกลุ่มอื่น</li>
+          <li><b style="color:#3b7dd8">ฐานหลัก</b> (ยอดสูง + โตช้า) — เป็นยอดหลักที่ต้องรักษา กระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอ เพื่อไม่ให้ยอดลด</li>
+          <li><b style="color:var(--color-warn)">ดาวรุ่ง</b> (ยอดยังน้อย + โตเร็ว) — มีศักยภาพ ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย</li>
+          <li><b style="color:var(--color-bad)">ต้องฟื้นฟู</b> (ยอดน้อย + หดตัว) — หาสาเหตุ (Stock, พนักงาน, ทำเล) และทำแผนแก้ไข หรือปรับเป้า/ทรัพยากร</li>
+        </ul>
         <div class="pc-chart" data-draw="c_sa_bcg" data-source="enriched"></div>
       </article>
     </div>
@@ -2153,6 +2161,8 @@ dash.draw('c_sa_contrib', (el) => { el.replaceChildren(); const A = SA.agg(); if
     for (const x of lst) { const row = document.createElement('div'); row.className = 'pc-hrow'; const l = document.createElement('span'); l.className = 'l'; l.textContent = x.label; l.title = x.label + (x.sub ? ' · ' + x.sub : '');
       const t = document.createElement('span'); t.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.display = 'block'; f.style.width = (Math.abs(x.delta) / max) * 100 + '%'; f.style.background = x.delta >= 0 ? 'var(--color-ok)' : 'var(--color-bad)'; t.append(f);
       const v = document.createElement('span'); v.className = 'v'; v.textContent = (x.delta >= 0 ? '+' : '−') + PC.mfmt(Math.round(Math.abs(x.delta))) + (tot ? ' · ' + PC.pf(Math.abs(x.delta / tot)) + ' ของส่วนต่างรวม' : ''); row.append(l, t, v); el.append(row); } } });
+const QTH = { Star: 'ดาวเด่น', 'Cash Cow': 'ฐานหลัก', 'Question Mark': 'ดาวรุ่ง', Dog: 'ต้องฟื้นฟู', '-': '-' };
+const QADV = { Star: 'รักษามาตรฐานและขยายผล', 'Cash Cow': 'ยอดหลักแต่โตช้า ต้องกระตุ้น', 'Question Mark': 'กำลังโต ควรลงทุนเพิ่ม', Dog: 'หาสาเหตุและทำแผนแก้ไข' };
 const saQuad = (A) => { if (!A.I.pf) return () => '-'; const n = A.rows.filter((x) => x.c > 0).length || 1; const g0 = saP(A) > 0 ? saC(A) / saP(A) - 1 : 0; return (x) => { const hs = x.share >= 1 / n, hg = x.growth == null ? true : x.growth >= g0; return hs && hg ? 'Star' : hs ? 'Cash Cow' : hg ? 'Question Mark' : 'Dog'; }; };
 dash.draw('c_sa_bcg', (el) => { const A = SA.agg(); if (!A) { el.replaceChildren(); return; } if (!A.I.pf) { el.replaceChildren(Object.assign(document.createElement('p'), { className: 'pc-note', textContent: 'YTD ไม่มีช่วงก่อนหน้าให้คำนวณการเติบโต' })); return; }
   const d = A.rows.filter((x) => x.c > 0 && x.growth != null); if (!d.length) { el.replaceChildren(Object.assign(document.createElement('p'), { className: 'pc-note', textContent: 'ข้อมูลไม่พอสำหรับ Matrix' })); return; }
@@ -2162,18 +2172,18 @@ dash.draw('c_sa_bcg', (el) => { const A = SA.agg(); if (!A) { el.replaceChildren
   svg.append('g').selectAll('text').data(x.ticks(4)).join('text').attr('x', (v) => x(v)).attr('y', H - 10).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((v) => Math.round(v * 1000) / 10 + '%');
   svg.append('line').attr('x1', x(1 / n)).attr('x2', x(1 / n)).attr('y1', 12).attr('y2', H - 28).attr('stroke', 'var(--cds-chart-axis)').attr('stroke-dasharray', '4 4');
   svg.append('line').attr('x1', 56).attr('x2', W - 12).attr('y1', y(g0)).attr('y2', y(g0)).attr('stroke', 'var(--cds-chart-axis)').attr('stroke-dasharray', '4 4');
-  for (const [t, xx, yy, a] of [['Star', W - 14, 24, 'end'], ['Question Mark', 60, 24, 'start'], ['Cash Cow', W - 14, H - 34, 'end'], ['Dog', 60, H - 34, 'start']]) svg.append('text').attr('x', xx).attr('y', yy).attr('text-anchor', a).attr('font-size', 11).attr('font-weight', 600).attr('fill', 'var(--color-fg-muted)').text(t);
+  for (const [t, xx, yy, a] of [['ดาวเด่น', W - 14, 24, 'end'], ['ดาวรุ่ง', 60, 24, 'start'], ['ฐานหลัก', W - 14, H - 34, 'end'], ['ต้องฟื้นฟู', 60, H - 34, 'start']]) svg.append('text').attr('x', xx).attr('y', yy).attr('text-anchor', a).attr('font-size', 11).attr('font-weight', 600).attr('fill', 'var(--color-fg-muted)').text(t);
   const QC = { Star: 'var(--color-ok)', 'Cash Cow': dash.colors[0], 'Question Mark': 'var(--color-warn)', Dog: 'var(--color-bad)' };
   svg.append('g').selectAll('circle').data(d).join('circle').attr('cx', (v) => x(v.share)).attr('cy', (v) => y(Math.max(-1, Math.min(2, v.growth)))).attr('r', (v) => r(v.c)).attr('fill', (v) => QC[q(v)]).attr('fill-opacity', 0.55).attr('stroke', (v) => QC[q(v)])
-    .on('pointerdown pointermove', (ev, v) => tip(ev, [v.label, q(v) + ' · สัดส่วน ' + PC.pf(v.share) + ' · โต ' + saPct(v.growth), PC.mfmt(Math.round(v.c))])).on('pointerleave', (ev) => { if (ev.pointerType === 'mouse') tip(ev, null); });
+    .on('pointerdown pointermove', (ev, v) => tip(ev, [v.label, QTH[q(v)] + ' — ' + QADV[q(v)], 'สัดส่วน ' + PC.pf(v.share) + ' · โต ' + saPct(v.growth) + ' · ' + PC.mfmt(Math.round(v.c))])).on('pointerleave', (ev) => { if (ev.pointerType === 'mouse') tip(ev, null); });
   if (d.length <= 25) svg.append('g').selectAll('text').data(d.slice(0, 10)).join('text').attr('x', (v) => x(v.share) + r(v.c) + 3).attr('y', (v) => y(Math.max(-1, Math.min(2, v.growth))) + 4).attr('font-size', 10).attr('fill', 'var(--color-fg)').text((v) => String(v.label).replace(/^True (Shop|shop|Move Shop) /, '').slice(0, 18)); });
-dash.draw('tb_sa', (el) => { const A = SA.agg(); const q = A ? saQuad(A) : null; const rows = A && A.rows.map((x, i) => ({ ...x, rank: i + 1, quad: q(x), cn: Math.round(x.cn), pn: Math.round(x.pn), asp: x.asp == null ? null : Math.round(x.asp), d: Math.round(x.delta) }));
+dash.draw('tb_sa', (el) => { const A = SA.agg(); const q = A ? saQuad(A) : null; const rows = A && A.rows.map((x, i) => ({ ...x, rank: i + 1, quad: QTH[q(x)], cn: Math.round(x.cn), pn: Math.round(x.pn), asp: x.asp == null ? null : Math.round(x.asp), d: Math.round(x.delta) }));
   const lv = A ? A.lvl : 'zone';
   PC.table(el, 'tb_sa', rows, { key: ['key'], def: 'rank', dir: 1, limit: 2000, cols: [
     { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'label', label: saLvlName(), wrap: true }, ...(lv === 'shop' || lv === 'emp' || lv === 'area' ? [{ f: 'sub', label: lv === 'emp' ? 'สาขาหลัก' : lv === 'shop' ? 'Area' : 'Region', wrap: lv !== 'area' }] : []),
     { f: 'cn', label: 'Net Amount', num: true, fmt: PC.nf, bar: A && A.N }, { f: 'cu', label: 'QTY', num: true, fmt: PC.nf, bar: A && !A.N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf }, { f: 'asp', label: 'ASP', num: true, fmt: PC.nf },
     ...(A && A.I.pf ? [{ f: 'pn', label: 'Net ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'pu', label: 'QTY ช่วงก่อน', num: true, fmt: PC.nf }, { f: 'growth', label: '% เปลี่ยนแปลง', num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', saPct(d.growth)]) },
-      { f: 'd', label: 'ส่วนต่าง', num: true, fmt: (v) => (v > 0 ? '+' : '') + PC.nf(v) }, { f: 'quad', label: 'Matrix' }] : []),
+      { f: 'd', label: 'ส่วนต่าง', num: true, fmt: (v) => (v > 0 ? '+' : '') + PC.nf(v) }, { f: 'quad', label: 'กลุ่ม (Matrix)' }] : []),
     ...(lv !== 'emp' && lv !== 'group' && lv !== 'sub' ? [{ f: 'shops', label: 'สาขาที่ขาย', num: true, fmt: PC.nf }] : []) ] }); });
 dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A) return; const li = (parts) => { const l = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const b = document.createElement('b'); b.textContent = p[0]; if (p[1]) b.style.color = p[1]; l.append(b); } else l.append(p); } el.append(l); };
   const T = A.T, N = A.N, I = A.I, cur = saC(A), prv = saP(A), lvn = saLvlName(); const sh = (s) => String(s).replace(/^True (Shop|shop|Move Shop) /, '');
@@ -2192,8 +2202,11 @@ dash.draw('sa_text', (el) => { el.replaceChildren(); const A = SA.agg(); if (!A)
     if (up.length) li(['ดันยอดขึ้นมากที่สุด: ', ...up.flatMap((x, i) => [(i ? ' · ' : ''), [sh(x.label)], ' +' + PC.mfmt(Math.round(x.delta)) + (x.growth != null ? ' (' + saPct(x.growth) + ')' : '')])]);
     if (dn.length) li(['ฉุดยอดลงมากที่สุด: ', ...dn.flatMap((x, i) => [(i ? ' · ' : ''), [sh(x.label), 'var(--color-bad)'], ' −' + PC.mfmt(Math.round(-x.delta)) + (x.growth != null ? ' (' + saPct(x.growth) + ')' : '')]), ' → ควรตรวจสาเหตุ (Stock, พนักงาน, Traffic)']);
     const q = saQuad(A); const grp = d3.group(A.rows.filter((x) => x.c > 0), q); const nm = (g) => (grp.get(g) || []).slice(0, 3).map((x) => sh(x.label)).join(', ');
-    li(['Growth-Share: Star ', [String((grp.get('Star') || []).length)], (grp.get('Star') || []).length ? ' (' + nm('Star') + ') — รักษาและขยายผล' : '', ' · Cash Cow ', [String((grp.get('Cash Cow') || []).length)], (grp.get('Cash Cow') || []).length ? ' (' + nm('Cash Cow') + ') — ยอดหลักแต่โตช้ากว่าค่าเฉลี่ย ต้องกระตุ้น' : '',
-      ' · Question Mark ', [String((grp.get('Question Mark') || []).length)], ' — กำลังโต ควรลงทุนต่อ · Dog ', [String((grp.get('Dog') || []).length)], (grp.get('Dog') || []).length ? ' (' + nm('Dog') + ') — ทบทวนแผน' : '']); }
+    const cnt = (g) => (grp.get(g) || []).length;
+    li(['Growth-Share Matrix: ', ['ดาวเด่น ' + cnt('Star'), 'var(--color-ok)'], cnt('Star') ? ' (' + nm('Star') + ') → รักษามาตรฐาน ใช้เป็นต้นแบบและขยายผล' : '']);
+    if (cnt('Cash Cow')) li([['ฐานหลัก ' + cnt('Cash Cow'), '#3b7dd8'], ' (' + nm('Cash Cow') + ') → ยอดใหญ่แต่โตช้ากว่าค่าเฉลี่ย ควรกระตุ้นด้วยโปรโมชันและดูแล Stock ให้พอขาย']);
+    if (cnt('Question Mark')) li([['ดาวรุ่ง ' + cnt('Question Mark'), 'var(--color-warn)'], ' (' + nm('Question Mark') + ') → กำลังโตเร็ว ควรลงทุนเพิ่ม เช่น เติม Stock เพิ่มกำลังขาย']);
+    if (cnt('Dog')) li([['ต้องฟื้นฟู ' + cnt('Dog'), 'var(--color-bad)'], ' (' + nm('Dog') + ') → ยอดน้อยและหดตัว ควรหาสาเหตุ (Stock / พนักงาน / ทำเล) และทำแผนแก้ไข']); }
   if (A.lvl === 'emp' || A.lvl === 'shop') { const act = A.rows.filter((x) => x.cu > 0).length; li(['Productivity: ', [act + ' ' + lvn], ' มียอดขาย เฉลี่ย ', [PC.mfmt(Math.round(cur / Math.max(1, act)))], ' ต่อ' + (A.lvl === 'emp' ? 'คน' : 'สาขา') + ' · ค่ากลาง (Median) ', [PC.mfmt(Math.round(d3.median(A.rows.filter((x) => x.cu > 0), (x) => x.c) || 0))]]); }
 });
 dash.onData(() => { document.querySelectorAll('#f-saperiod').forEach((s) => { s.value = dash.params().saperiod || 'mtd'; }); document.querySelectorAll('#f-salevel').forEach((s) => { s.value = dash.params().salevel || 'zone'; }); document.querySelectorAll('#wrap-saweek').forEach((n) => { n.hidden = (dash.params().saperiod || 'mtd') !== 'week'; }); });
