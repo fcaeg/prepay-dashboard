@@ -369,8 +369,8 @@ const AG = [
   { k: 'a0_90', label: '0–90 วัน', lv: 'ปกติ', act: 'ขายตามปกติ', c: 'var(--ag0)' },
   { k: 'a91_180', label: '91–180 วัน', lv: 'เฝ้าระวัง', act: 'ติดตามและดันขายก่อนเกิน 180 วัน', c: 'var(--ag1)' },
   { k: 'a181_270', label: '181–270 วัน', lv: 'เสี่ยง', act: 'เร่งขาย / จัดโปร / โยกไปสาขาที่ขายดี', c: 'var(--ag2)' },
-  { k: 'a271_365', label: '271–365 วัน', lv: 'เสี่ยงสูง', act: 'โยกด่วน หรือวางแผนขอคืน', c: 'var(--ag3)' },
-  { k: 'a365p', label: 'เกิน 365 วัน', lv: 'วิกฤต', act: 'ตรวจสอบสถานะซิม / ขอคืนหรือตัดจำหน่าย', c: 'var(--ag4)' } ];
+  { k: 'a271_365', label: '271–365 วัน', lv: 'เสี่ยงสูง', act: 'โยกด่วนไปสาขาที่ขายได้ / ให้พนักงานเสนอขายก่อน', c: 'var(--ag3)' },
+  { k: 'a365p', label: 'เกิน 365 วัน', lv: 'วิกฤต', act: 'ตรวจสอบว่าซิมยังเปิดใช้งานได้ / ระบายเป็นลำดับแรก (ขายก่อนล็อตใหม่ จัดโปร หรือโยกสาขา)', c: 'var(--ag4)' } ];
 const agBase = () => { const st = PC.rows('stock_by_shop'), sh = PC.rows('shops'), mt = PC.rows('matcodes'); if (!st || !sh || !mt) return null; const p = PC.P();
   const S = new Map(sh.map((r) => [String(r.shop), r])), M = new Map(mt.map((r) => [String(r.matcode), r])); const out = [];
   for (const r of st) { const s = S.get(String(r.shop)); if (!s) continue; const m = M.get(String(r.matcode)) || {}; const g = m.group || 'อื่น ๆ';
