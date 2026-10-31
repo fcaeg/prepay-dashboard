@@ -88,6 +88,16 @@
 .pc-full .pc-info { display: none; }
 body.pc-noscroll { overflow: hidden; }
 @media (max-width: 560px) { .pc-full { padding: 10px 10px 16px; } .pc-full > h3 { font-size: 1rem; padding-right: 3.5rem; } .pc-full .pc-rrow { padding: 2px 0; row-gap: 1px; } .pc-full .pc-rrow .l { line-height: 1.15; } .pc-full .pc-rrow .l .nm { font-size: .85rem; } .pc-full .pc-rrow .l .sb { font-size: .7rem; } .pc-full .pc-rrow .t { height: 6px; } .pc-full .pc-rrow .m { top: -2px; bottom: -2px; } .pc-full .pc-fullnote { padding-right: 4.5rem; } .pc-full .pc-zcards { gap: 8px; } .pc-full .pc-zc { padding: 8px 10px; gap: 2px; } .pc-full .pc-zc .zb { font-size: 1.5rem; } .pc-full .pc-field { display: none; } }
+.pc-rkbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pc-export { font: inherit; font-size: var(--cds-font-size-caption); font-weight: 600; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-ok); background: var(--color-ok); color: #fff; cursor: pointer; }
+.pc-export:disabled { opacity: .6; cursor: progress; }
+.pc-xmodal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; }
+.pc-xbox { background: var(--color-panel); color: var(--color-fg); border-radius: 12px; padding: 14px; max-width: min(1200px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 10px; }
+.pc-xbox img { width: 100%; height: auto; border: 1px solid var(--color-border-line); border-radius: 6px; }
+.pc-xbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pc-xbtns button, .pc-xbtns a { font: inherit; font-size: var(--cds-font-size-caption); padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); cursor: pointer; text-decoration: none; }
+.pc-xbtns .pri { background: var(--color-ok); border-color: var(--color-ok); color: #fff; font-weight: 600; }
+.pc-xbtns .hint { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 @media print { .pc-expand { display: none; } }
 .pc-zcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
 .pc-zc { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; border-top: 4px solid var(--zc, var(--color-border-line)); }
@@ -600,7 +610,7 @@ body.pc-noscroll { overflow: hidden; }
         <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
       </div>
     </div>
-    <p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p>
+    <div class="pc-rkbar"><p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p><button class="pc-export" id="rk-export" type="button" title="ดาวน์โหลดรูป (แนวนอน) รวม Region · Daily Ranking · Ranking สะสม">⬇ Export รูป (Region + Daily + สะสม)</button></div>
 
     <article class="pc-card pc-canfull" id="card-rank-zone">
         <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>

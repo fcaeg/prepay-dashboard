@@ -293,3 +293,73 @@ dash.draw('sh_sum', (el) => { const r = shAgg(); if (!r) { el.textContent = ''; 
   el.textContent = 'สาขาที่มียอด ' + PC.nf(sold.length) + ' สาขา · ยอดรวม ' + PC.mfmt(Math.round(tc)) + (tt ? ' · Target ' + PC.mfmt(Math.round(tt)) + ' (' + PC.pf(tc / tt) + ') · ถึง Target ' + PC.nf(hit) + ' จาก ' + PC.nf(wt) + ' สาขา' : ''); });
 dash.onData(() => { document.querySelectorAll('#f-shperiod').forEach((s) => { s.value = dash.params().shperiod || 'mtd'; }); document.querySelectorAll('#wrap-shweek').forEach((n) => { n.hidden = (dash.params().shperiod || 'mtd') !== 'week'; }); });
 document.querySelectorAll('#f-shperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ shperiod: s.value })));
+
+/* ---------- Ranking Area: export landscape image (Region + Daily + cumulative) ---------- */
+const RKX = (() => {
+  const C = { bg: '#ffffff', fg: '#1d1d1b', mu: '#6b6a66', line: '#e4e2dc', grid: '#ecebe6', ok: '#23874f', warn: '#b7791f', bad: '#c63d36' };
+  const col = (a) => (a == null ? C.mu : a >= 1 ? C.ok : a >= 0.9 ? C.warn : C.bad);
+  const zoneRows = () => { const all = PC.rows('area_rank'), ad = PC.rows('area_day'); if (!all) return []; const st = PC.P().stype, f = rkF(), N = PC.isNet(), d = rDate();
+    return all.filter((x) => x.stype === st && window.PC_ZONES.includes(x.area)).sort((a, b) => (b[f.ach] ?? -1) - (a[f.ach] ?? -1)).map((x) => { const y = (ad || []).find((z) => z.stype === st && z.area === x.area && z.date === d) || {};
+      return { ...x, areas: new Set(all.filter((z) => z.stype === st && !window.PC_ZONES.includes(z.area) && z.area !== 'ALL' && PCzone(z.area) === x.area).map((z) => z.area)).size, dval: y[f.d] ?? 0, dach: y[f.ach] ?? null, mom: x[N ? 'mom_net' : 'mom_units'] }; }); };
+  const fit = (g, s, w) => { if (g.measureText(s).width <= w) return s; while (s.length > 1 && g.measureText(s + '…').width > w) s = s.slice(0, -1); return s + '…'; };
+  const rr = (g, x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  const draw = async () => {
+    try { await document.fonts.ready; } catch (e) {}
+    const FF = getComputedStyle(document.body).fontFamily || 'sans-serif'; const F = (w, s) => w + ' ' + s + 'px ' + FF;
+    const f = rkF(), N = PC.isNet(), d = rDate(), rk = rkRows() || [], rd = rdRows() || [], zr = zoneRows(); const ar = PC.rows('area_rank'); const r0 = ar && ar[0];
+    const W = 2000, P = 48, GAP = 32, ROW = 46; const n = Math.max(rk.length, rd.length);
+    const H = P + 110 + 50 + 250 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
+    const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S); g.textBaseline = 'alphabetic';
+    g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+    // header
+    let y = P + 34; g.fillStyle = C.fg; g.font = F(700, 34); g.fillText('Prepay Dashboard · Ranking Area · ' + (N ? 'Net Amount' : 'QTY'), P, y);
+    const p = PC.P(); const meta = [r0 ? 'ข้อมูลถึง ' + PC.day(r0.today) + ' (' + r0.elapsed + '/' + r0.days + ' วัน)' : '', d ? 'Daily: ' + PC.day(d) : '', p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.stype !== 'ALL' ? 'ประเภทสาขา: ' + p.stype : ''].filter(Boolean).join('  ·  ');
+    g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(meta, W - P, y); g.textAlign = 'left';
+    const tot = rkTot('area_rank'), dtot = rkTot('area_day'); y += 44;
+    if (tot) { g.font = F(400, 22); g.fillStyle = C.fg; let x = P; const seg = (s, c, w) => { g.fillStyle = c || C.fg; g.font = F(w || 400, 22); g.fillText(s, x, y); x += g.measureText(s).width; };
+      seg('รวม  สะสม '); seg(PC.pf(tot[f.ach]), col(tot[f.ach]), 700); seg('  (' + PC.mfmt(tot[f.act]) + ' / Target ถึงวันนี้ ' + PC.mfmt(tot[f.ttd]) + ')', C.mu);
+      if (dtot) { seg('     Daily '); seg(PC.pf(dtot[f.ach]), col(dtot[f.ach]), 700); seg('  (' + PC.mfmt(dtot[f.d]) + ' / Target ต่อวัน ' + PC.mfmt(dtot[f.tpd]) + ')', C.mu); }
+      seg('     Target ทั้งเดือน ' + PC.mfmt(tot[f.tgt]), C.mu); }
+    y += 26; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2);
+    // region cards
+    y += 46; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('สรุปราย Region', P, y); y += 18;
+    const cw = (W - 2 * P - 2 * GAP) / 3, ch = 236;
+    zr.forEach((z, i) => { const x = P + i * (cw + GAP); g.fillStyle = C.bg; rr(g, x, y, cw, ch, 10); g.fill(); g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
+      g.save(); rr(g, x, y, cw, ch, 10); g.clip(); g.fillStyle = col(z[f.ach]); g.fillRect(x, y, cw, 7); g.restore();
+      g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('#' + (i + 1) + ' ' + z.area, x + 22, y + 46);
+      g.font = F(400, 17); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(PC.nf(z.areas) + ' Area · ' + PC.nf(z.shops) + ' สาขา', x + cw - 22, y + 46); g.textAlign = 'left';
+      g.font = F(700, 50); g.fillStyle = col(z[f.ach]); const big = PC.pf(z[f.ach]); g.fillText(big, x + 22, y + 104); const bw = g.measureText(big).width; g.font = F(400, 17); g.fillStyle = C.mu; g.fillText('ยอดสะสมเทียบ Target ถึงวันนี้', x + 34 + bw, y + 102);
+      const items = [['Target ถึงวันนี้', PC.mfmt(z[f.ttd])], ['ยอดสะสม', PC.mfmt(z[f.act])], ['ยอดรายวัน', PC.mfmt(z.dval) + (z.dach == null ? '' : ' (' + PC.pf(z.dach) + ')'), col(z.dach)], ['MoM', z.mom == null ? '–' : (z.mom > 0 ? '+' : z.mom < 0 ? '−' : '') + PC.pf(Math.abs(z.mom)), z.mom == null ? C.fg : z.mom >= 0 ? C.ok : C.bad], ['Target ทั้งเดือน', PC.mfmt(z[f.tgt])], ['ต้องทำต่อวัน', z[f.need] == null ? '—' : PC.mfmt(z[f.need])]];
+      const hw = (cw - 44 - 24) / 2; items.forEach((it, k) => { const cx = x + 22 + (k % 2) * (hw + 24), cy = y + 146 + Math.floor(k / 2) * 30; g.font = F(400, 17); g.fillStyle = C.mu; g.fillText(it[0], cx, cy); g.font = F(600, 18); g.fillStyle = it[2] || C.fg; g.textAlign = 'right'; g.fillText(it[1], cx + hw, cy); g.textAlign = 'left'; }); });
+    y += ch + 40;
+    // two rankings
+    const lw = (W - 2 * P - GAP) / 2;
+    const list = (x, title, rows, rankK, actK, tgtK, tgtL) => { let yy = y + 10; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText(fit(g, title, lw), x, yy); yy += 34;
+      g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('#', x, yy); g.fillText('Area · ยอด / ' + tgtL, x + 40, yy); const bx = x + lw * 0.47, bwid = lw * 0.4; g.fillText('เทียบ Target (เส้น = 100%)', bx, yy); g.textAlign = 'right'; g.fillText('%', x + lw, yy); g.textAlign = 'left';
+      yy += 10; g.fillStyle = C.line; g.fillRect(x, yy, lw, 2); const mx = Math.max(1.2, d3.max(rows, (r) => r[f.ach] || 0) * 1.05);
+      rows.forEach((r, i) => { const top = yy + i * ROW; if (i) { g.fillStyle = C.grid; g.fillRect(x, top, lw, 1); }
+        g.font = F(600, 18); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(String(r[rankK]), x + 26, top + 30); g.textAlign = 'left';
+        g.font = F(500, 19); g.fillStyle = C.fg; g.fillText(fit(g, r.area.replace(/^UPC - /, ''), bx - x - 56), x + 40, top + 22); g.font = F(400, 15); g.fillStyle = C.mu; g.fillText(PC.mfmt(r[actK]) + ' / ' + PC.mfmt(r[tgtK]), x + 40, top + 40);
+        const by = top + 15; g.fillStyle = C.grid; rr(g, bx, by, bwid, 16, 8); g.fill(); const a = Math.max(0, r[f.ach] || 0); const fw = Math.max(0, Math.min(1, a / mx)) * bwid; if (fw > 0) { g.fillStyle = col(r[f.ach]); rr(g, bx, by, Math.max(fw, 16), 16, 8); g.fill(); }
+        g.fillStyle = C.fg; g.fillRect(bx + bwid / mx - 1, by - 4, 2.5, 24);
+        g.font = F(700, 19); g.fillStyle = col(r[f.ach]); g.textAlign = 'right'; g.fillText(r[f.ach] == null ? '–' : PC.pf(r[f.ach]), x + lw, top + 30); g.textAlign = 'left'; }); };
+    const ml = N ? 'Net Amount' : 'QTY';
+    list(P, 'Daily Ranking · ' + ml + ' ' + (d ? PC.day(d) : '') + ' เทียบ Target ต่อวัน', rd, 'drank', f.d, f.tpd, 'Target ต่อวัน');
+    list(P + lw + GAP, 'Ranking ยอดสะสม · ' + ml + ' เดือนนี้เทียบ Target ถึงวันนี้', rk, 'rank', f.act, f.ttd, 'Target ถึงวันนี้');
+    g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว ≥ 100% · ส้ม 90–99% · แดง < 90%  ·  Target ต่อวัน = Target เดือน ÷ จำนวนวันในเดือน  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6);
+    return { cv, name: 'Prepay_Ranking_' + (N ? 'Net' : 'QTY') + '_' + (d || 'latest') + (p.area !== 'ALL' ? '_' + p.area.replace(/[^\w]+/g, '') : '') + '.png' };
+  };
+  const show = (cv, name) => cv.toBlob((blob) => { const url = URL.createObjectURL(blob); const m = document.createElement('div'); m.className = 'pc-xmodal';
+    const box = document.createElement('div'); box.className = 'pc-xbox'; const bt = document.createElement('div'); bt.className = 'pc-xbtns';
+    const a = document.createElement('a'); a.className = 'pri'; a.href = url; a.download = name; a.textContent = '⬇ ดาวน์โหลด PNG';
+    const file = new File([blob], name, { type: 'image/png' }); const sh = document.createElement('button'); sh.type = 'button'; sh.textContent = 'แชร์ / บันทึกลงรูปภาพ'; sh.onclick = () => navigator.share({ files: [file], title: name }).catch(() => {});
+    const cl = document.createElement('button'); cl.type = 'button'; cl.textContent = '✕ ปิด'; const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = 'ถ้าดาวน์โหลดไม่ได้: กดค้างที่รูป (มือถือ) หรือคลิกขวา › บันทึกรูปภาพ (PC)';
+    bt.append(a); if (navigator.canShare && navigator.canShare({ files: [file] })) bt.append(sh); bt.append(cl, hint);
+    const img = new Image(); img.src = url; img.alt = name; box.append(bt, img); m.append(box); document.body.append(m);
+    const close = () => { m.remove(); URL.revokeObjectURL(url); }; cl.onclick = close; m.onclick = (e) => { if (e.target === m) close(); };
+    try { a.click(); } catch (e) {} }, 'image/png');
+  return { draw, show };
+})();
+if (!window.PC_RKX_BOUND) { window.PC_RKX_BOUND = true;
+  document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#rk-export'); if (!b) return; b.disabled = true; const t = b.textContent; b.textContent = 'กำลังสร้างรูป…';
+    try { const { cv, name } = await RKX.draw(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
