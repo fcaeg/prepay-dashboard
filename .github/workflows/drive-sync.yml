@@ -1,0 +1,41 @@
+name: Update from Google Drive
+
+on:
+  schedule:
+    - cron: '5 2-15 * * *'   # every hour 09:05–22:05 Bangkok time
+  workflow_dispatch: {}       # "Run workflow" button for an immediate update
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drive-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: pip install pandas openpyxl google-auth requests
+      - name: Pull new files from Drive and rebuild
+        id: sync
+        env:
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
+        run: python pipeline/drive_sync.py
+      - name: Commit and push
+        if: always() && steps.sync.outputs.changed == 'true'
+        run: |
+          git config user.name "prepay-dashboard-bot"
+          git config user.email "prepay-dashboard-bot@users.noreply.github.com"
+          git add -A pipeline/state index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Data update from Google Drive $(TZ=Asia/Bangkok date '+%Y-%m-%d %H:%M')"
+          git pull --rebase -q origin main
+          git push origin main

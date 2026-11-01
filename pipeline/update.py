@@ -131,7 +131,7 @@ def merge_stock(path):
     save(k, 'stock.csv.gz')
     m = re.search(r'as of (\d{1,2}) (\w{3}) (\d{4})(?: Time (\d{1,2})[.:](\d{2}))?', label)
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
-    meta['stock_asof'] = f'{m.group(3)}-{MON[m.group(2)]:02d}-{int(m.group(1)):02d}' + (f' {int(m.group(4)):02d}:{m.group(5)}' if m and m.group(4) else '') if m else meta.get('sales_asof', '')
+    meta['stock_asof'] = f'{m.group(3)}-{MON[m.group(2)]:02d}-{int(m.group(1)):02d}' + (f' {int(m.group(4)):02d}:{m.group(5)}' if m and m.group(4) else '') if m else (os.environ.get('STOCK_ASOF') or meta.get('sales_asof', ''))
     meta['stock_file'] = label
     json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
@@ -139,7 +139,7 @@ def merge_stock(path):
 def merge_targets(paths):
     old = load('targets_all.csv')
     for fp in paths:
-        mm = re.search(r'Target_of_(\w{3})_(\d{2})', os.path.basename(fp))
+        mm = re.search(r'Target[_ ]of[_ ](\w{3})[_ ](\d{2})', os.path.basename(fp))
         if not mm: sys.exit('target file name must look like Target_of_Nov_26...xlsx: ' + fp)
         month = '20%s-%02d' % (mm.group(2), MON[mm.group(1)])
         td = pd.read_excel(fp, header=None, dtype=str)
@@ -306,7 +306,7 @@ def merge_manpower(fp):
 def merge_indtarget(fp):
     """Individual target file (sheet 'Indy Target') -> state/ind_targets.csv (PRE unit + PRE revenue per employee x shop, by month)"""
     d = pd.read_excel(fp, sheet_name='Indy Target', header=1, dtype=str); d = d[d.emp_id8.notna()]
-    m = re.search(r'of ([A-Za-z]{3})[a-z]* (\d{2})', os.path.basename(fp)); MON = {k: i + 1 for i, k in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+    m = re.search(r'of[ _]([A-Za-z]{3})[a-z]*[ _](\d{2})', os.path.basename(fp)); MON = {k: i + 1 for i, k in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
     month = f"20{m.group(2)}-{MON[m.group(1).title()]:02d}"
     pos = lambda r: 'RR Multi' if re.match(r'^RR_(Multi|Sales)', str(r)) else 'ITF Apple' if str(r).startswith('RR_ITF_Apple') else 'ITF' if str(r).startswith('RR_ITF') else 'Retention Champion' if str(r).startswith('Ret_chpn') else None
     out = pd.DataFrame({'month': month, 'emp': d.emp_id8.str.strip(), 'shop': d.shop_code.str.strip(), 'role': d.emp_type_2, 'pos': d.emp_type_2.map(pos),

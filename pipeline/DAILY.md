@@ -36,3 +36,11 @@ For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `sal
 ## 3. Tell Nami
 One short message: data as of <latest sales time>, stock as of <stock time>, today's QTY / Net Amount, and the link
 https://fcaeg.github.io/prepay-dashboard/ (GitHub Pages refreshes in 1–2 minutes).
+
+## Automatic updates from Google Drive (GitHub Actions)
+`.github/workflows/drive-sync.yml` runs every hour 09:05–22:05 Bangkok (and on demand: Actions → "Update from Google Drive" → Run workflow).
+It runs `pipeline/drive_sync.py`, which lists the Drive inbox folder (`vars.DRIVE_FOLDER_ID`, read with the service account in
+`secrets.GDRIVE_SA_JSON`), recognises files by name (daily_sales*, stock_balance_report*, *Target of <Mon> <yy>*, *Individual Target of*,
+Manpower*, Master Prepaid*), runs update.py + build_page.py, moves the files to the sub-folder Done (or Error) and commits
+`pipeline/state` + `index.html`. Processed file ids are kept in `pipeline/state/drive_done.json`.
+This updates GitHub Pages only; the Claude dashboard still needs step 2 above (pull first: `git pull origin main`).
