@@ -508,3 +508,34 @@ const WXP = (() => {
 if (!window.PC_WXP_BOUND) { window.PC_WXP_BOUND = true;
   document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#w-exp-ov, #w-exp-shop'); if (!b) return; b.disabled = true; const t = b.textContent; b.textContent = 'กำลังสร้างรูป…';
     try { const { cv, name } = await (b.id === 'w-exp-ov' ? WXP.overview() : WXP.shops()); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
+
+/* ---------- missing matcodes: simplified view (by shop / by matcode, chips) ---------- */
+const gShort = (n) => String(n || '').replace(/^TMH\d /, '').replace(/_VAS| MULTI/g, '').trim();
+const gShop = (n) => String(n || '').replace(/^True (Shop|shop|Move Shop) /, '');
+const gQ = (r) => { const q = (PC.queries.gap || '').trim().toLowerCase(); return q ? r.filter((x) => [x.name, x.shop, x.matcode, x.mname, x.group, x.area].some((v) => String(v ?? '').toLowerCase().includes(q))) : r; };
+const gTot = (lvl) => { const r = gapRows(false); if (!r) return null; const u = r.filter((x) => x.level === lvl); return { shops: new Set(u.map((x) => x.shop)).size, mats: new Set(u.map((x) => x.matcode)).size, n: u.length, sold: u.reduce((a, x) => a + (x.sold28_shop || 0), 0) }; };
+dash.draw('g_urgent', (el) => { const g = gTot('urgent'); el.textContent = g ? PC.nf(g.shops) : '—'; });
+dash.draw('g_urgent_sub', (el) => { const g = gTot('urgent'); el.textContent = g ? 'รวม ' + PC.nf(g.n) + ' รายการที่ต้องเติม (' + PC.nf(g.mats) + ' Matcode) · เคยขายรวม ' + PC.nf(g.sold) + ' ชิ้นใน 28 วัน' : ''; });
+dash.draw('g_core', (el) => { const g = gTot('core'); el.textContent = g ? PC.nf(g.shops) : '—'; });
+dash.draw('g_core_sub', (el) => { const g = gTot('core'); el.textContent = g ? 'รวม ' + PC.nf(g.n) + ' รายการที่ควรมี (' + PC.nf(g.mats) + ' Matcode)' : ''; });
+dash.draw('g_shops', (el) => { const r = gapRows(true); el.textContent = r ? PC.nf(new Set(r.map((x) => x.shop)).size) : '—'; });
+dash.draw('g_shops_sub', (el) => { const r = gapRows(true), s = gapScope(); el.textContent = r && s ? 'จาก ' + PC.nf(s.length) + ' สาขาที่เลือก' : ''; });
+dash.draw('f_gview', (sel) => { sel.replaceChildren(new Option('ตามสาขา (สาขานี้ขาดอะไร)', 'shop'), new Option('ตาม Matcode (Matcode นี้ขาดที่สาขาไหน)', 'mat')); sel.value = dash.params().gview || 'shop'; sel.onchange = () => dash.setParams({ gview: sel.value }); });
+const gChip = (cls, txt, tip) => { const c = document.createElement('span'); c.className = 'gchip ' + cls; c.textContent = txt; if (tip) c.title = tip; return c; };
+const gGroups = () => { const r = gapRows(true); if (!r) return null; const v = dash.params().gview || 'shop'; const ord = { urgent: 0, core: 1, other: 2 };
+  const by = new Map(); for (const x of gQ(r)) { const k = v === 'shop' ? x.shop : x.matcode; const a = by.get(k) || { k, x, items: [], u: 0, sold: 0 }; a.items.push(x); if (x.level === 'urgent') { a.u++; a.sold += x.sold28_shop || 0; } by.set(k, a); }
+  const out = [...by.values()].sort((a, b) => b.u - a.u || b.items.length - a.items.length || b.sold - a.sold); out.forEach((a) => a.items.sort((p, q) => ord[p.level] - ord[q.level] || (q.sold28_shop || 0) - (p.sold28_shop || 0) || gapSort(p, q))); return { v, out }; };
+const G_LIMIT = 150;
+dash.draw('g_list_note', (el) => { const G = gGroups(); el.textContent = G ? (G.v === 'shop' ? PC.nf(G.out.length) + ' สาขา' : PC.nf(G.out.length) + ' Matcode') + ' · เรียงจากรายการด่วนมากสุด' + (G.out.length > G_LIMIT ? ' · แสดง ' + G_LIMIT + ' แรก (ค้นหาหรือดูตารางด้านล่างเพื่อดูทั้งหมด)' : '') : ''; });
+dash.draw('c_gap_list', (el) => { el.replaceChildren(); const G = gGroups(); if (!G) return;
+  if (!G.out.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.style.padding = '12px'; e.textContent = 'ไม่มีสาขาที่ขาด Matcode ตามตัวกรองนี้ 👍'; el.append(e); return; }
+  for (const a of G.out.slice(0, G_LIMIT)) { const row = document.createElement('div'); row.className = 'pc-grow'; const h = document.createElement('div'); h.className = 'h'; const b = document.createElement('b'); const s1 = document.createElement('span'); const s2 = document.createElement('span'); s2.className = 'cnt';
+    const n = a.items.length, c = n - a.u;
+    if (G.v === 'shop') { b.textContent = gShop(a.x.name); s1.textContent = a.x.area + ' · รหัส ' + a.x.shop; s2.append('ขาด ' + n + ' Matcode'); if (a.u) { const em = document.createElement('em'); em.textContent = ' · ด่วน ' + a.u; s2.append(em); } }
+    else { b.textContent = gShort(a.x.mname); s1.textContent = a.x.group + ' · ' + priceTxt(a.x.price) + ' · มีใน ' + PC.pf(a.x.carry_pct) + ' ของสาขา · ขายทุกสาขา ' + PC.nf(a.x.sold28_all) + ' ชิ้น/28 วัน'; s2.append('ขาด ' + n + ' สาขา'); if (a.u) { const em = document.createElement('em'); em.textContent = ' · ด่วน ' + a.u; s2.append(em); } }
+    h.append(b, s1, s2); const ch = document.createElement('div');
+    for (const x of a.items) { const cls = x.level === 'urgent' ? 'u' : x.level === 'core' ? 'c' : 'o';
+      const name = G.v === 'shop' ? gShort(x.mname) : gShop(x.name); const txt = name + (x.level === 'urgent' ? ' · เคยขาย ' + x.sold28_shop : '');
+      const tip = (G.v === 'shop' ? x.group + ' · ' + priceTxt(x.price) + ' · Matcode ' + x.matcode : x.area + ' · รหัส ' + x.shop) + ' · ' + GL[x.level][0] + (x.level === 'urgent' ? ' (สาขานี้ขาย ' + x.sold28_shop + ' ชิ้นใน 28 วัน แต่ Stock = 0)' : '');
+      ch.append(gChip(cls, txt, tip)); }
+    row.append(h, ch); el.append(row); } });
