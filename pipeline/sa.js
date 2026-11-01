@@ -398,7 +398,8 @@ const RKX = (() => {
     g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
     // header
     let y = P + 34; g.fillStyle = C.fg; g.font = F(700, 34); g.fillText('Prepay Dashboard · Ranking Area · ' + (N ? 'Net Amount' : 'QTY'), P, y);
-    const p = PC.P(); const meta = [r0 ? 'ข้อมูลถึง ' + PC.day(r0.today) + ' (' + r0.elapsed + '/' + r0.days + ' วัน)' : '', d ? 'Daily: ' + PC.day(d) : '', p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.stype !== 'ALL' ? 'ประเภทสาขา: ' + p.stype : ''].filter(Boolean).join('  ·  ');
+    const p = PC.P(); const ws = (PC.rows('watch_serials') || [])[0]; const sa = ws && ws.sales_asof ? String(ws.sales_asof) : ''; const upd = r0 ? (sa && sa.slice(0, 10) === r0.today ? 'อัปเดตถึง ' + PC.day(sa.slice(0, 10)) + ' ' + sa.slice(11, 16) + ' น. (บิลล่าสุด)' : 'ข้อมูลถึง ' + PC.day(r0.today)) + ' · วันที่ ' + r0.elapsed + '/' + r0.days : '';
+    const meta = [upd, d ? 'Daily: ' + PC.day(d) : '', p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.stype !== 'ALL' ? 'ประเภทสาขา: ' + p.stype : ''].filter(Boolean).join('  ·  ');
     g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(meta, W - P, y); g.textAlign = 'left';
     const tot = rkTot('area_rank'), dtot = rkTot('area_day'); y += 44;
     if (tot) { g.font = F(400, 22); g.fillStyle = C.fg; let x = P; const seg = (s, c, w) => { g.fillStyle = c || C.fg; g.font = F(w || 400, 22); g.fillText(s, x, y); x += g.measureText(s).width; };
