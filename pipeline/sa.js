@@ -275,9 +275,10 @@ dash.draw('pr_tiles', (el) => { el.replaceChildren(); const D = prData0(); if (!
   const ix = D.base.ph ? D.scope.ph / D.base.ph : null; tile('ตาม Filter ที่เลือก ต่อคน', F(D.scope.ph), (ix == null ? '' : 'Index ' + Math.round(ix * 100) + ' (Retail = 100) · ') + PC.nf(D.scope.t) + ' คน', ix == null ? '' : rkCol(ix));
   tile('No Sale', PC.nf(D.scope.n) + ' คน', PC.pf(D.scope.nr) + ' ของพนักงาน · Retail ' + PC.pf(D.base.nr), 'var(--color-bad)');
   tile('No Sale ที่ต้องติดตาม', PC.nf(c('lapsed') + c('never')) + ' คน', 'เคยขายแต่ช่วงนี้ไม่มียอด ' + PC.nf(c('lapsed')) + ' · ยังไม่เคยขายปีนี้ ' + PC.nf(c('never')) + ' · ลา ' + PC.nf(c('leave')) + ' · เริ่มงานไม่ถึง 30 วัน ' + PC.nf(c('newbie'))); });
-dash.draw('pr_legend', (el) => { el.replaceChildren(); const L = [['h-3', '< 50%'], ['h-2', '50–75%'], ['h-1', '75–95%'], ['h0', '95–105%'], ['h1', '105–125%'], ['h2', '125–175%'], ['h3', '> 175%']]; const s = document.createElement('span'); s.textContent = 'สีเทียบค่าเฉลี่ย Retail ของตำแหน่งเดียวกัน (= 100%):'; el.append(s); for (const [c, l] of L) { const x = document.createElement('span'); x.className = 'pill tn ' + c; x.textContent = l; el.append(x); } });
-dash.draw('pr_note', (el) => { const D = prStaff(); if (!D) { el.textContent = ''; return; } const n = D.rows.length, up = D.rows.filter((x) => x.vArea != null && x.vArea >= 1).length;
-  el.textContent = PC.nf(n) + ' คน · สูงกว่าค่าเฉลี่ย Area ของตำแหน่งเดียวกัน ' + PC.nf(up) + ' คน (' + PC.pf(up / Math.max(1, n)) + ') · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
+dash.draw('f_pcmp', (sel) => { sel.replaceChildren(...Object.entries(PCMPS).map(([k, v]) => new Option('ค่าเฉลี่ย' + v[1], k))); sel.value = PCMPS[dash.params().pcmp] ? dash.params().pcmp : 'retail'; sel.onchange = () => dash.setParams({ pcmp: sel.value }); });
+dash.draw('pr_legend', (el) => { el.replaceChildren(); const L = [['h-3', '< 50%'], ['h-2', '50–75%'], ['h-1', '75–95%'], ['h0', '95–105%'], ['h1', '105–125%'], ['h2', '125–175%'], ['h3', '> 175%']]; const s = document.createElement('span'); s.textContent = 'สี PDT ส่วนบุคคล เทียบค่าเฉลี่ย' + PCMP()[1] + ' ของตำแหน่งเดียวกัน (= 100%):'; el.append(s); for (const [c, l] of L) { const x = document.createElement('span'); x.className = 'pill tn ' + c; x.textContent = l; el.append(x); } });
+dash.draw('pr_note', (el) => { const D = prStaff(); if (!D) { el.textContent = ''; return; } const ck = { aS: 'vShop', aA: 'vArea', aZ: 'vZone', aR: 'vRetail' }[PCMP()[0]]; const n = D.rows.length, up = D.rows.filter((x) => x[ck] != null && x[ck] >= 1).length;
+  el.textContent = PC.nf(n) + ' คน · สูงกว่าค่าเฉลี่ย' + PCMP()[1] + ' ของตำแหน่งเดียวกัน ' + PC.nf(up) + ' คน (' + PC.pf(up / Math.max(1, n)) + ') · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
 const prStaff = () => { const R = stRoster(); if (!R) return null; const acc = new Map(); const add = (k, v) => { const a = acc.get(k) || [0, 0]; a[0] += v; a[1]++; acc.set(k, a); };
   for (const x of R.all) { const v = PV(x); add('R|' + x.role, v); add('Z|' + x.role + '|' + x.zone, v); add('A|' + x.role + '|' + x.area, v); add('S|' + x.role + '|' + x.shop, v); }
   const avg = (k) => { const a = acc.get(k); return a && a[1] ? a[0] / a[1] : null; }; const rt = (v, a) => (a ? v / a : null);
@@ -287,14 +288,15 @@ const prStaff = () => { const R = stRoster(); if (!R) return null; const acc = n
   if (q) rows = rows.filter((x) => [x.emp, x.name, x.shop_name, x.area, x.role].some((v) => String(v ?? '').toLowerCase().includes(q)));
   return { R, rows }; };
 const HXB = [[0.5, 'h-3'], [0.75, 'h-2'], [0.95, 'h-1'], [1.05, 'h0'], [1.25, 'h1'], [1.75, 'h2'], [Infinity, 'h3']];
-const hx = (k, fm) => (d) => { const v = d[k], b = d.aR; if (v == null || !b) return ['tn t0', fm(v)]; const r = v / b; return ['tn ' + HXB.find(([x]) => r < x)[1], fm(v)]; };
+const PCMPS = { retail: ['aR', ' Retail'], zone: ['aZ', ' Region'], area: ['aA', ' Area'], shop: ['aS', 'สาขา'] };
+const PCMP = () => PCMPS[dash.params().pcmp] || PCMPS.retail;
+const hx = (k, fm, bk) => (d) => { const v = d[k], b = d[bk || 'aR']; if (v == null || !b) return ['tn t0', fm(v)]; const r = v / b; return ['tn ' + HXB.find(([x]) => r < x)[1], fm(v)]; };
 const tone = (rk, ak, fm) => (d) => { const r = d[rk]; return [r == null ? 'tn t0' : r >= 1.2 ? 'tn t4' : r >= 1 ? 'tn t3' : r >= 0.9 ? 'tn t2' : 'tn t1', fm(d[ak])]; };
 const vsPill = (k) => (d) => { const r = d[k]; if (r == null) return ['mute', '–']; const p = r - 1; return [r >= 1 ? 'ok' : r >= 0.9 ? 'warn' : 'bad', (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%']; };
 dash.draw('tb_prod', (el) => { const D = prStaff(); const N = PC.isNet(); const fm = (v) => (v == null ? '–' : N ? PC.nf(Math.round(v)) : d3.format(',.1f')(v));
   PC.table(el, 'tb_prod', D && D.rows, { key: ['emp'], def: 'pdt', limit: 3000, cols: [
     { f: 'name', label: 'ชื่อ', wrap: true }, { f: 'emp', label: 'รหัส' }, { f: 'role', label: 'ตำแหน่ง' }, { f: 'aff', label: 'สังกัด' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
-    { f: 'pdt', label: 'PDT ส่วนบุคคล', num: true, pill: hx('pdt', fm) }, { f: 'aS', label: 'เฉลี่ยสาขา', num: true, pill: hx('aS', fm) }, { f: 'aA', label: 'เฉลี่ย Area', num: true, pill: hx('aA', fm) },
-    { f: 'aZ', label: 'เฉลี่ย Region', num: true, pill: hx('aZ', fm) }, { f: 'aR', label: 'เฉลี่ย Retail (ฐาน)', num: true, pill: (d) => ['tn hb', fm(d.aR)] } ] }); });
+    { f: 'pdt', label: 'PDT ส่วนบุคคล', num: true, pill: hx('pdt', fm, PCMP()[0]) }, { f: PCMP()[0], label: 'เฉลี่ย' + PCMP()[1], num: true, pill: (d) => ['tn hb', fm(d[PCMP()[0]])] } ] }); });
 if (!window.PC_PR_BOUND) { window.PC_PR_BOUND = true;
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#pr-csv'); if (!b) return; const D = prStaff(); if (!D) return; const I = stInfo(); const N = PC.isNet();
     const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100); const pc = (v) => (v == null ? '' : Math.round((v - 1) * 1000) / 10);
