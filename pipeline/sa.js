@@ -284,13 +284,15 @@ dash.draw('pr_tiles', (el) => { el.replaceChildren(); const D = prData0(); if (!
   tile('No Sale', PC.nf(D.scope.n) + ' คน', PC.pf(D.scope.nr) + ' ของพนักงาน · Retail ' + PC.pf(D.base.nr), 'var(--color-bad)');
   tile('No Sale ที่ต้องติดตาม', PC.nf(c('lapsed') + c('never')) + ' คน', 'เคยขายแต่ช่วงนี้ไม่มียอด ' + PC.nf(c('lapsed')) + ' · ยังไม่เคยขายปีนี้ ' + PC.nf(c('never')) + ' · เริ่มงานไม่ถึง 30 วัน ' + PC.nf(c('newbie')) + (D.R.onLeave ? ' · ไม่นับพนักงานที่ลา ' + PC.nf(D.R.onLeave) + ' คน' : '')); });
 dash.draw('f_pcmp', (sel) => { sel.replaceChildren(...Object.entries(PCMPS).map(([k, v]) => new Option(PCMPL(v), k))); sel.value = PCMPS[dash.params().pcmp] ? dash.params().pcmp : 'retail'; sel.onchange = () => dash.setParams({ pcmp: sel.value }); });
-dash.draw('pr_legend', (el) => { el.replaceChildren(); const L = [['h-3', '< 50%'], ['h-2', '50–75%'], ['h-1', '75–95%'], ['h0', '95–105%'], ['h1', '105–125%'], ['h2', '125–175%'], ['h3', '> 175%']]; const s = document.createElement('span'); s.textContent = 'สี PDT ส่วนบุคคล เทียบ' + (PCMP()[0] === 'tg' ? ' Target ส่วนบุคคล' : 'ค่าเฉลี่ย' + PCMP()[1] + ' ของตำแหน่งเดียวกัน') + ' (= 100%):'; el.append(s); for (const [c, l] of L) { const x = document.createElement('span'); x.className = 'pill tn ' + c; x.textContent = l; el.append(x); } });
+dash.draw('pr_legend', (el) => { el.replaceChildren(); const s = document.createElement('span'); s.textContent = 'เทียบค่าเฉลี่ย' + PCMP()[1] + ' ของตำแหน่งเดียวกัน · AVERAGE = ห่างไม่เกิน ±5% · สีเข้มขึ้นตามระยะห่าง:'; el.append(s);
+  for (const [c, l] of [['d3', 'BELOW > 50%'], ['d2', 'BELOW 25–50%'], ['d1', 'BELOW 5–25%'], ['a0', 'AVERAGE ±5%'], ['u1', 'ABOVE 5–25%'], ['u2', 'ABOVE 25–50%'], ['u3', 'ABOVE 50–100%'], ['u4', 'ABOVE > 100%']]) { const x = document.createElement('span'); x.className = 'pill tn aba ' + c; x.textContent = l; el.append(x); } });
 dash.draw('pr_note', (el) => { const D = prStaff(); if (!D) { el.textContent = ''; return; } const n = D.rows.length;
   if (PCMP()[0] === 'tg') { if (!D.T || D.T.none) { el.textContent = 'ยังไม่มีไฟล์ Target รายบุคคลของช่วงเวลานี้ (มี Target ของ ' + [...new Set((PC.rows('ind_targets') || []).map((x) => x.month))].map((m) => PC.mon(m)).join(', ') + ') · เลือกช่วง MTD / Week / วันนี้ ของเดือนที่มี Target'; return; }
     const w = D.rows.filter((x) => x.tg != null); const hit = w.filter((x) => x.pdt >= x.tg).length; const fb = w.filter((x) => x.tgsrc === 'ตามตำแหน่งในสาขา').length;
     el.textContent = PC.nf(n) + ' คน · ทำได้ตาม Target ส่วนบุคคล ' + PC.nf(hit) + ' คน (' + PC.pf(hit / Math.max(1, w.length)) + ') · Target ช่วงนี้ = Target เดือน ÷ วันในเดือน × วันในช่วงที่เลือก · ไม่มีชื่อในไฟล์ Target ใช้ค่าเฉลี่ยตำแหน่งเดียวกันในสาขา ' + PC.nf(fb) + ' คน' + (n - w.length ? ' · ไม่มี Target ' + PC.nf(n - w.length) + ' คน' : ''); return; }
   const ck = { aS: 'vShop', aA: 'vArea', aZ: 'vZone', aR: 'vRetail' }[PCMP()[0]]; const up = D.rows.filter((x) => x[ck] != null && x[ck] >= 1).length;
-  el.textContent = PC.nf(n) + ' คน · สูงกว่า' + PCMPL(PCMP()) + ' ของตำแหน่งเดียวกัน ' + PC.nf(up) + ' คน (' + PC.pf(up / Math.max(1, n)) + ') · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
+  const cnt = (f) => D.rows.filter((x) => x[ck] != null && f(x[ck] - 1)).length; const ab = cnt((v) => v > 0.05), av = cnt((v) => Math.abs(v) <= 0.05), be = cnt((v) => v < -0.05);
+  el.textContent = PC.nf(n) + ' คน · เทียบ' + PCMPL(PCMP()) + ': ABOVE ' + PC.nf(ab) + ' · AVERAGE ' + PC.nf(av) + ' · BELOW ' + PC.nf(be) + ' คน · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
 const itTarget = () => { const it = PC.rows('ind_targets'), I = stInfo(); if (!it || !I) return null; const N = PC.isNet();
   const months = []; for (let d = I.from.slice(0, 7); d <= I.to.slice(0, 7);) { months.push(d); const y = +d.slice(0, 4), m = +d.slice(5, 7); d = m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0'); }
   const have = new Set(it.map((x) => x.month)); if (!months.every((m) => have.has(m))) return { none: true, months };
@@ -310,8 +312,10 @@ const prStaff = () => { const R = stRoster(); if (!R) return null; const T = itT
   if (q) rows = rows.filter((x) => [x.emp, x.name, x.shop_name, x.area, x.role].some((v) => String(v ?? '').toLowerCase().includes(q)));
   return { R, rows, T }; };
 const HXB = [[0.5, 'h-3'], [0.75, 'h-2'], [0.95, 'h-1'], [1.05, 'h0'], [1.25, 'h1'], [1.75, 'h2'], [Infinity, 'h3']];
-const PCMPS = { target: ['tg', ' Target ส่วนบุคคล'], retail: ['aR', ' Retail'], zone: ['aZ', ' Region'], area: ['aA', ' Area'], shop: ['aS', 'สาขา'] };
+const PCMPS = { retail: ['aR', ' Retail'], zone: ['aZ', ' Region'], area: ['aA', ' Area'], shop: ['aS', 'สาขา'] };
 const PCMP = () => PCMPS[dash.params().pcmp] || PCMPS.retail;
+const CMPK = () => ({ aS: 'vShop', aA: 'vArea', aZ: 'vZone', aR: 'vRetail' })[PCMP()[0]];
+const ABA = (r) => { if (r == null) return ['tn t0', '–']; const p = r - 1; if (Math.abs(p) <= 0.05) return ['tn aba a0', 'AVERAGE']; const lv = Math.abs(p) <= 0.25 ? 1 : Math.abs(p) <= 0.5 ? 2 : Math.abs(p) <= 1 ? 3 : 4; return p > 0 ? ['tn aba u' + lv, 'ABOVE'] : ['tn aba d' + Math.min(lv, 3), 'BELOW']; };
 const PCMPL = (v) => (v[0] === 'tg' ? 'Target ส่วนบุคคล' : 'ค่าเฉลี่ย' + v[1]);
 const hx = (k, fm, bk) => (d) => { const v = d[k], b = d[bk || 'aR']; if (v == null || !b) return ['tn t0', fm(v)]; const r = v / b; return ['tn ' + HXB.find(([x]) => r < x)[1], fm(v)]; };
 const tone = (rk, ak, fm) => (d) => { const r = d[rk]; return [r == null ? 'tn t0' : r >= 1.2 ? 'tn t4' : r >= 1 ? 'tn t3' : r >= 0.9 ? 'tn t2' : 'tn t1', fm(d[ak])]; };
@@ -319,7 +323,9 @@ const vsPill = (k) => (d) => { const r = d[k]; if (r == null) return ['mute', '�
 dash.draw('tb_prod', (el) => { const D = prStaff(); const N = PC.isNet(); const fm = (v) => (v == null ? '–' : N ? PC.nf(Math.round(v)) : d3.format(',.1f')(v));
   PC.table(el, 'tb_prod', D && D.rows, { key: ['emp'], def: 'pdt', limit: 3000, cols: [
     { f: 'name', label: 'ชื่อ', wrap: true }, { f: 'emp', label: 'รหัส' }, { f: 'role', label: 'ตำแหน่ง' }, { f: 'aff', label: 'สังกัด' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
-    { f: 'pdt', label: 'PDT ส่วนบุคคล', num: true, pill: hx('pdt', fm, PCMP()[0]) }, ...(PCMP()[0] !== 'tg' ? [{ f: PCMP()[0], label: 'เฉลี่ย' + PCMP()[1], num: true, pill: (d) => ['tn hb', fm(d[PCMP()[0]])] }] : []), ...(D && D.T && !D.T.none ? [{ f: 'tg', label: 'Target ส่วนบุคคล', num: true, pill: (d) => ['tn hb', fm(d.tg)] }, { f: 'vTarget', label: '% Achievement', num: true, pill: (d) => (d.vTarget == null ? ['tn t0', '–'] : ['tn ' + HXB.find(([x]) => d.vTarget < x)[1], PC.pf(d.vTarget)]) }] : []) ] }); });
+    ...(D && D.T && !D.T.none ? [{ f: 'tg', label: 'Target ส่วนบุคคล', num: true, fmt: fm }] : []), { f: 'pdt', label: 'PDT ส่วนบุคคล', num: true, fmt: fm },
+    ...(D && D.T && !D.T.none ? [{ f: 'vTarget', label: '% Achievement', num: true, pill: (d) => (d.vTarget == null ? ['tn t0', '–'] : ['tn ' + HXB.find(([x]) => d.vTarget < x)[1], PC.pf(d.vTarget)]) }] : []),
+    { f: CMPK(), label: 'เทียบค่าเฉลี่ย' + PCMP()[1], num: true, pill: (d) => ABA(d[CMPK()]) } ] }); });
 if (!window.PC_PR_BOUND) { window.PC_PR_BOUND = true;
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#pr-csv'); if (!b) return; const D = prStaff(); if (!D) return; const I = stInfo(); const N = PC.isNet();
     const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100); const pc = (v) => (v == null ? '' : Math.round((v - 1) * 1000) / 10);
