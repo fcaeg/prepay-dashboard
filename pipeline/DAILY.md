@@ -4,6 +4,8 @@ Inputs Nami attaches each day (zip or csv):
 - `daily_sales - <date>.zip`  — POS sales, month-to-date (any dates in it replace the same dates in the state)
 - `stock_balance_report as of <d Mon yyyy> Time <hh.mm>.zip` — stock snapshot (replaces the previous one)
 - occasionally `..._Target_of_<Mon>_26_....xlsx` (new month's targets) or `Master Prepaid.xlsx`
+- occasionally `Manpower_Update_<d Mon yyyy>.xlsx` (current staff roster for No Sale analysis) →
+  `python3 -I pipeline/update.py --manpower <file>` (keeps only ID, Thai name, company, role, shop, area, type, leave, DOJ), then upload `manpower.json`
 - occasionally a list of Serials to track (e.g. SIMs expiring next month): CSV/XLSX with a Serial column →
   `python3 -I pipeline/update.py --watch <file> --watch-label "ซิมหมดอายุ <เดือน>"` (sold status is matched on every later sales file)
 

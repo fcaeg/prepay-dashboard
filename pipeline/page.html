@@ -574,7 +574,7 @@ body.pc-noscroll { overflow: hidden; }
     </div>
     <article class="pc-card" id="card-stafftable">
       <h3>ยอดขายรายพนักงาน · <span data-draw="st_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน" data-tip="นับตามรหัสพนักงานขาย (SALE_CODE) ในบิล · สาขาหลัก = สาขาที่พนักงานขายมากที่สุดในช่วงที่เลือก · เทียบกับ: วันนี้เทียบวันเดียวกันสัปดาห์ก่อน, Week เทียบสัปดาห์ก่อน, MTD เทียบเดือนก่อนช่วงเดียวกัน">i</span></h3>
-      <p class="pc-note" data-draw="st_sum" data-source="enriched staff"></p>
+      <p class="pc-note" data-draw="st_sum" data-source="enriched staff shops manpower"></p>
       <div class="pc-tools">
         <label class="pc-field">ค้นหารหัส ชื่อ หรือสาขา
           <input id="q-staff" class="pc-q" data-q="staff" type="search" aria-label="ค้นหาพนักงาน">
@@ -583,9 +583,33 @@ body.pc-noscroll { overflow: hidden; }
       <div class="pc-scroll">
         <table data-draw="tb_staff" data-source="enriched staff shops" data-row-key="emp"></table>
       </div>
-      <details><summary data-draw="st_none_sum" data-source="enriched staff shops"></summary>
-        <div class="pc-scroll"><table data-draw="tb_staff_none" data-source="enriched staff shops" data-row-key="emp"></table></div>
-      </details>
+    </article>
+    <article class="pc-card" id="card-nosale">
+      <h3>วิเคราะห์ No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="No Sale = พนักงานที่ทำงานอยู่ปัจจุบัน (ตามไฟล์ Manpower ล่าสุด) ที่ไม่มียอดขายซิม Prepay ในช่วงเวลาที่เลือก · นับเฉพาะพนักงานที่ประจำสาขา WW (ไม่รวมสาขาประเภท Lotus's) · ค่าเริ่มต้นนับเฉพาะตำแหน่งกลุ่มขาย (RR_Sales_OS, RR_Multi, Ret_chpn_1, ITF ฯลฯ · ไม่รวม ASST_Sales) เปลี่ยนได้ที่ช่องตำแหน่ง · สาเหตุ: ลา = มีสถานะลา/Project ในไฟล์ Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ = ไม่พบยอดตั้งแต่ 1 ม.ค. · เคยขาย แต่ช่วงนี้ไม่มียอด · ปรับตาม Filter Region / Area / สาขา / ประเภทสาขา / กลุ่มซิม">i</span></h3>
+      <div class="pc-tools">
+        <label class="pc-field">ตำแหน่ง
+          <select id="f-strole" data-draw="f_strole" data-source="manpower" aria-label="ตำแหน่ง"></select>
+        </label>
+      </div>
+      <div class="pc-tiles" data-draw="ns_tiles" data-source="enriched shops manpower"></div>
+      <div class="pc-split2">
+        <div><h4 class="pc-h4">% No Sale ราย Area</h4><div class="pc-hbars" data-draw="c_ns_area" data-source="enriched shops manpower"></div></div>
+        <div><h4 class="pc-h4">% No Sale ราย ตำแหน่ง</h4><div class="pc-hbars" data-draw="c_ns_role" data-source="enriched shops manpower"></div></div>
+      </div>
+      <h4 class="pc-h4">สาขาที่มีพนักงาน No Sale</h4>
+      <div class="pc-scroll pc-mqtb"><table data-draw="tb_ns_shop" data-source="enriched shops manpower" data-row-key="shop"></table></div>
+      <h4 class="pc-h4">รายชื่อพนักงาน No Sale</h4>
+      <div class="pc-tools">
+        <label class="pc-field">สาเหตุ
+          <select id="f-nsr" data-draw="f_nsr" data-source="manpower" aria-label="สาเหตุ"></select>
+        </label>
+        <label class="pc-field">ค้นหารหัส ชื่อ สาขา
+          <input id="q-nosale" class="pc-q" data-q="nosale" type="search" aria-label="ค้นหาพนักงาน No Sale">
+        </label>
+        <button class="pc-export pc-csv" id="ns-csv" type="button">⬇ Export CSV</button>
+      </div>
+      <p class="pc-note" data-draw="ns_list_sum" data-source="enriched shops manpower"></p>
+      <div class="pc-scroll pc-mqtb"><table data-draw="tb_ns" data-source="enriched shops manpower" data-row-key="emp"></table></div>
     </article>
   </section>
 
@@ -1461,7 +1485,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff', 'tb_staff_none'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));

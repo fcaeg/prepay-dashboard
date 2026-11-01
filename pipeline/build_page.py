@@ -8,7 +8,7 @@ def _inline(m):
     fn=m.group(1); src=open(HERE+'/'+fn,encoding='utf-8').read(); EXTRA[fn]=src
     return '<script>\n'+src+'</script>'
 page=_re.sub(r'<script src="([\w.-]+\.js)"></script>',_inline,page)
-raw={k:json.load(open(f'{O}/{k}.json',encoding='utf-8')) for k in ['matcodes','shops','staff','stock_by_shop','aging_serials','targets','watch_serials','sales_hourly']}
+raw={k:json.load(open(f'{O}/{k}.json',encoding='utf-8')) for k in ['matcodes','shops','staff','stock_by_shop','aging_serials','targets','watch_serials','sales_hourly','manpower']}
 raw['sales_daily_csv']=open(O+'/sales_daily.csv',encoding='utf-8').read()
 blob=base64.b64encode(gzip.compress(json.dumps(raw,ensure_ascii=False,separators=(',',':')).encode('utf-8'),9)).decode()
 d3=open(HERE+'/vendor/d3.min.js',encoding='utf-8').read()
@@ -68,7 +68,7 @@ body {{ margin: 0; background: var(--color-bg); color: var(--color-fg); font-fam
 <script>{pako}</script>
 <script>
 window.dash = (() => {{
-  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL', ascope: 'current', alevel: 'core', wstatus: 'ALL', mperiod: 'mtd', zone: 'ALL', saperiod: 'mtd', salevel: 'zone', stperiod: 'mtd', shperiod: 'mtd', aglv: 'risk', agser: 'all', gview: 'shop', mq: '' }};
+  const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'group', sstatus: 'ALL', ascope: 'current', alevel: 'core', wstatus: 'ALL', mperiod: 'mtd', zone: 'ALL', saperiod: 'mtd', salevel: 'zone', stperiod: 'mtd', shperiod: 'mtd', aglv: 'risk', agser: 'all', gview: 'shop', mq: '', strole: 'sales', nsr: 'all' }};
   let params = {{ ...DEF }}, ready = false, error = null;
   const RAW = {{}}, calcs = {{}}, cache = {{}}, draws = new Map(), onData = [];
   const get = (id) => {{

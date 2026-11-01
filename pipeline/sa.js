@@ -239,21 +239,55 @@ dash.draw('tb_staff', (el) => { const I = stInfo(); const N = PC.isNet(); const 
     { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf },
     ...(I && I.pf ? [{ f: 'prev', label: (N ? 'Net Amount' : 'QTY') + ' ' + I.ps, num: true, fmt: PC.nf }, { f: 'growth', label: 'vs ' + I.ps, num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', (d.growth > 0 ? '+' : d.growth < 0 ? '−' : '') + PC.pf(Math.abs(d.growth))]) }] : []),
     { f: 'asp', label: 'ราคาเฉลี่ย/ชิ้น', num: true, fmt: PC.nf }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf }, { f: 'days', label: 'วันที่มียอด', num: true, fmt: PC.nf } ] }); });
-const stRoster = () => { const r = PC.rows('enriched'), I = stInfo(); if (!r || !I) return null; const p = PC.P(); const from = SA.add(I.to, -59);
-  const shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x])), staff = new Map((PC.rows('staff') || []).map((x) => [String(x.emp), x]));
-  const m = new Map(), sold = new Set();
-  for (const x of r) { if (!(PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group))) continue;
-    if (x.date >= I.from && x.date <= I.to && x.units > 0) sold.add(String(x.emp));
-    if (x.date >= from && x.date <= I.to && x.units > 0) { const k = String(x.emp); const a = m.get(k) || { emp: k, units: 0, net: 0, last: '', shops: new Map() }; a.units += x.units; a.net += x.net; if (x.date > a.last) a.last = x.date; a.shops.set(String(x.shop), (a.shops.get(String(x.shop)) || 0) + x.units); m.set(k, a); } }
-  const none = [...m.values()].filter((a) => !sold.has(a.emp)).map((a) => { const main = [...a.shops.entries()].sort((x, y) => y[1] - x[1])[0]; const s = shops.get(main[0]) || {};
-    return { emp: a.emp, name: (staff.get(a.emp) || {}).name || a.emp, shop: s.name || main[0], area: s.area || '-', last: a.last, idle: SA.diff(a.last, I.to), units60: a.units, net60: Math.round(a.net) }; });
-  return { roster: m.size, sold: [...m.keys()].filter((k) => sold.has(k)).length, soldAll: sold.size, none, from }; };
-dash.draw('st_sum', (el) => { const r = stAgg(), R = stRoster(); if (!r || !R) { el.textContent = ''; return; } const act = r.filter((x) => x.units > 0); const N = PC.isNet(); const tot = d3.sum(act, (x) => (N ? x.net : x.units));
-  el.textContent = 'พนักงานที่มียอด ' + PC.nf(act.length) + ' คน · ยังไม่มียอด ' + PC.nf(R.none.length) + ' คน (จากพนักงานที่เคยขายใน 60 วันล่าสุด ' + PC.nf(R.roster) + ' คน) · ยอดรวม ' + PC.mfmt(Math.round(tot)) + ' · เฉลี่ยต่อคนที่มียอด ' + PC.mfmt(Math.round(tot / Math.max(1, act.length))) + ' · ค่ากลาง ' + PC.mfmt(Math.round(d3.median(act, (x) => (N ? x.net : x.units)) || 0)); });
-dash.draw('st_none_sum', (el) => { const R = stRoster(); el.textContent = R ? 'ดูรายชื่อพนักงานที่ยังไม่มียอด ' + ((stInfo() || {}).cs || '') + ' (' + PC.nf(R.none.length) + ' คน)' : 'ดูรายชื่อพนักงานที่ยังไม่มียอด'; });
-dash.draw('tb_staff_none', (el) => { const R = stRoster(); PC.table(el, 'tb_staff_none', R && R.none, { key: ['emp'], def: 'net60', q: 'staff', limit: 3000, cols: [
-  { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก (60 วัน)', wrap: true }, { f: 'area', label: 'Area' },
-  { f: 'last', label: 'ขายล่าสุด', fmt: (v) => PC.day(v) }, { f: 'idle', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf }, { f: 'units60', label: 'QTY 60 วัน', num: true, fmt: PC.nf }, { f: 'net60', label: 'Net Amount 60 วัน', num: true, fmt: PC.nf, bar: true } ] }); });
+const NS_REASON = { leave: ['ลา', 'mute'], newbie: ['เริ่มงานไม่ถึง 30 วัน', 'mute'], never: ['ยังไม่เคยขายปีนี้', 'bad'], lapsed: ['เคยขาย แต่ช่วงนี้ไม่มียอด', 'warn'] };
+const stRoster = () => { const mp = PC.rows('manpower'), r = PC.rows('enriched'), sh = PC.rows('shops'), I = stInfo(); if (!mp || !r || !sh || !I) return null; const p = PC.P(); const rl = dash.params().strole || 'sales';
+  const S = new Map(sh.map((x) => [String(x.shop), x])); const from60 = SA.add(I.to, -59);
+  const inScope = (m) => { const s = S.get(String(m.shop)); return s && +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(m.shop) === p.shop); };
+  const ros = mp.filter((m) => inScope(m) && (rl === 'all' ? true : rl === 'sales' ? String(m.sales_role) === '1' : m.role === rl));
+  const A = new Map(); const soldAny = new Set();
+  for (const x of r) { if (p.group !== 'ALL' && x.group !== p.group) continue; const k = String(x.emp); if (x.date > I.to) continue;
+    const a = A.get(k) || { units: 0, net: 0, last: '', u60: 0, n60: 0 }; if (x.date >= I.from && x.units) { a.units += x.units; a.net += x.net; } if (x.units > 0 && x.date > a.last) a.last = x.date; if (x.date >= from60) { a.u60 += x.units; a.n60 += x.net; } A.set(k, a);
+    if (x.date >= I.from && x.units > 0 && PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype)) soldAny.add(k); }
+  const asof = (mp[0] && mp[0].asof) || ''; const all = new Set(mp.map((m) => String(m.emp)));
+  const rows = ros.map((m) => { const k = String(m.emp), a = A.get(k) || { units: 0, net: 0, last: '', u60: 0, n60: 0 }, s = S.get(String(m.shop)); const sold = a.units > 0;
+    const newbie = m.doj && m.doj > SA.add(I.to, -30); const reason = sold ? null : m.leave ? 'leave' : newbie ? 'newbie' : !a.last ? 'never' : 'lapsed';
+    return { emp: k, name: m.name, role: m.role, company: m.company, shop: String(m.shop), shop_name: String(s.name || m.shop_name || m.shop).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area, leave: m.leave || '', doj: m.doj || '', sold, reason,
+      units: a.units, net: Math.round(a.net), last: a.last || '', idle: a.last ? SA.diff(a.last, I.to) : null, u60: a.u60, n60: Math.round(a.n60) }; });
+  const extra = [...soldAny].filter((k) => !all.has(k)).length;
+  return { rows, none: rows.filter((x) => !x.sold), sold: rows.filter((x) => x.sold).length, extra, asof, rl }; };
+dash.draw('st_sum', (el) => { const r = stAgg(), R = stRoster(); if (!r) { el.textContent = ''; return; } const act = r.filter((x) => x.units > 0); const N = PC.isNet(); const tot = d3.sum(act, (x) => (N ? x.net : x.units));
+  el.textContent = 'พนักงานที่มียอด ' + PC.nf(act.length) + ' คน' + (R ? ' · No Sale ' + PC.nf(R.none.length) + ' คน จากพนักงานกลุ่มขายปัจจุบัน ' + PC.nf(R.rows.length) + ' คน (Manpower ' + (R.asof ? PC.day(R.asof) : '') + ' · ดูการ์ดวิเคราะห์ No Sale ด้านล่าง)' : '') + ' · ยอดรวม ' + PC.mfmt(Math.round(tot)) + ' · เฉลี่ยต่อคนที่มียอด ' + PC.mfmt(Math.round(tot / Math.max(1, act.length))) + ' · ค่ากลาง ' + PC.mfmt(Math.round(d3.median(act, (x) => (N ? x.net : x.units)) || 0)); });
+dash.draw('ns_label', (el) => { const I = stInfo(); el.textContent = I ? I.label : ''; });
+dash.draw('f_strole', (sel) => { const mp = PC.rows('manpower') || []; const roles = [...d3.rollup(mp, (v) => v.length, (m) => m.role).entries()].filter(([k]) => k).sort((a, b) => b[1] - a[1]);
+  sel.replaceChildren(new Option('กลุ่มขาย (RR / Ret_chpn / ITF)', 'sales'), new Option('ทุกตำแหน่ง', 'all'), ...roles.map(([k, n]) => new Option(k + ' (' + n + ')', k))); sel.value = dash.params().strole || 'sales'; sel.onchange = () => dash.setParams({ strole: sel.value }); });
+dash.draw('f_nsr', (sel) => { sel.replaceChildren(new Option('ทุกสาเหตุ', 'all'), ...Object.entries(NS_REASON).map(([k, v]) => new Option(v[0], k))); sel.value = dash.params().nsr || 'all'; sel.onchange = () => dash.setParams({ nsr: sel.value }); });
+dash.draw('ns_tiles', (el) => { el.replaceChildren(); const R = stRoster(); if (!R) return; const T = R.rows.length || 1; const c = (k) => R.none.filter((x) => x.reason === k).length;
+  const tile = (l, v, sub, color) => { const d = document.createElement('div'); d.className = 'pc-tile'; const a = document.createElement('span'); a.className = 'pc-tile-l'; a.textContent = l; const b = document.createElement('span'); b.className = 'pc-big'; b.textContent = v; if (color) b.style.color = color; const s = document.createElement('span'); s.className = 'pc-sub'; s.textContent = sub; d.append(a, b, s); el.append(d); };
+  tile('พนักงานปัจจุบัน (ตาม Filter)', PC.nf(R.rows.length), 'Manpower ' + (R.asof ? PC.day(R.asof) : '') + ' · ' + (R.rl === 'sales' ? 'กลุ่มขาย' : R.rl === 'all' ? 'ทุกตำแหน่ง' : R.rl));
+  tile('มียอด', PC.nf(R.sold), PC.pf(R.sold / T) + ' ของพนักงาน' + (R.extra ? ' · มียอดแต่ไม่อยู่ใน Manpower ' + PC.nf(R.extra) + ' คน' : ''), 'var(--color-ok)');
+  tile('No Sale', PC.nf(R.none.length), PC.pf(R.none.length / T) + ' ของพนักงาน', 'var(--color-bad)');
+  tile('No Sale ที่ต้องติดตาม (ไม่นับลา / พนักงานใหม่)', PC.nf(c('lapsed') + c('never')), 'เคยขายแต่ช่วงนี้ไม่มียอด ' + PC.nf(c('lapsed')) + ' · ยังไม่เคยขายปีนี้ ' + PC.nf(c('never')) + ' · ลา ' + PC.nf(c('leave')) + ' · เริ่มงานไม่ถึง 30 วัน ' + PC.nf(c('newbie'))); });
+const nsBars = (el, keyf, sortBy) => { const R = stRoster(); el.replaceChildren(); if (!R) return; const g = [...d3.rollup(R.rows, (v) => ({ t: v.length, n: v.filter((x) => !x.sold).length }), keyf).entries()].map(([k, v]) => ({ k: k || '-', ...v, rate: v.t ? v.n / v.t : 0 })).filter((x) => x.t > 0).sort(sortBy || ((a, b) => b.rate - a.rate || b.n - a.n));
+  PC.hbar(el, g, { label: 'k', value: 'rate', sub: (d) => 'No Sale ' + PC.nf(d.n) + ' / ' + PC.nf(d.t) + ' คน · ' + PC.pf(d.rate), color: 'var(--color-bad)' }); };
+dash.draw('c_ns_area', (el) => nsBars(el, (x) => x.area));
+dash.draw('c_ns_role', (el) => nsBars(el, (x) => x.role, (a, b) => b.t - a.t));
+dash.draw('tb_ns_shop', (el) => { const R = stRoster(); const N = PC.isNet(); const rows = R && [...d3.group(R.rows, (x) => x.shop).values()].map((v) => { const ns = v.filter((x) => !x.sold);
+    return { shop: v[0].shop, name: v[0].shop_name, area: v[0].area, t: v.length, s: v.length - ns.length, n: ns.length, rate: ns.length / v.length, sales: N ? d3.sum(v, (x) => x.net) : d3.sum(v, (x) => x.units), who: ns.map((x) => x.name + (x.reason === 'leave' ? ' (ลา)' : x.reason === 'newbie' ? ' (ใหม่)' : '')).join(', ') }; }).filter((x) => x.n > 0);
+  PC.table(el, 'tb_ns_shop', rows, { key: ['shop'], def: 'n', limit: 400, cols: [{ f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 't', label: 'พนักงาน', num: true, fmt: PC.nf }, { f: 's', label: 'มียอด', num: true, fmt: PC.nf },
+    { f: 'n', label: 'No Sale', num: true, fmt: PC.nf, bar: true }, { f: 'rate', label: '% No Sale', num: true, pill: (d) => [d.rate >= 0.5 ? 'bad' : d.rate >= 0.25 ? 'warn' : 'mute', PC.pf(d.rate)] }, { f: 'sales', label: (N ? 'Net Amount' : 'QTY') + ' ของพนักงานสาขา', num: true, fmt: PC.nf }, { f: 'who', label: 'รายชื่อ No Sale', wrap: true }] }); });
+const nsList = () => { const R = stRoster(); if (!R) return null; const f = dash.params().nsr || 'all'; let r = f === 'all' ? R.none : R.none.filter((x) => x.reason === f); const q = (PC.queries.nosale || '').trim().toLowerCase();
+  if (q) r = r.filter((x) => [x.emp, x.name, x.shop_name, x.area, x.role, x.company].some((v) => String(v ?? '').toLowerCase().includes(q))); return r; };
+const NS_COLS = [{ f: 'reason', label: 'สาเหตุ', pill: (d) => [NS_REASON[d.reason][1], NS_REASON[d.reason][0] + (d.reason === 'leave' && d.leave ? ' · ' + d.leave.replace(/\s*\(.*\)/, '') : '')] }, { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'role', label: 'ตำแหน่ง' }, { f: 'company', label: 'บริษัท' },
+  { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'doj', label: 'เริ่มงาน', fmt: (v) => (v ? PC.day(v) : '') }, { f: 'last', label: 'ขายล่าสุด (ปีนี้)', fmt: (v) => (v ? PC.day(v) : 'ไม่เคย') }, { f: 'idle', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf },
+  { f: 'u60', label: 'QTY 60 วัน', num: true, fmt: PC.nf }, { f: 'n60', label: 'Net 60 วัน', num: true, fmt: PC.nf }];
+dash.draw('ns_list_sum', (el) => { const r = nsList(); el.textContent = r ? PC.nf(r.length) + ' คน · เรียงจากคนที่เคยขายได้มากใน 60 วัน (ช่วงนี้หายไป) ก่อน' : ''; });
+dash.draw('tb_ns', (el) => PC.table(el, 'tb_ns', nsList(), { key: ['emp'], def: 'n60', limit: 3000, cols: NS_COLS }));
+if (!window.PC_NS_BOUND) { window.PC_NS_BOUND = true;
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ns-csv'); if (!b) return; const r = nsList() || []; const I = stInfo();
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const head = ['สาเหตุ', 'รหัส', 'ชื่อ', 'ตำแหน่ง', 'บริษัท', 'รหัสสาขา', 'สาขา', 'Area', 'สถานะลา', 'เริ่มงาน', 'ขายล่าสุด (ปีนี้)', 'ไม่มียอดมาแล้ว (วัน)', 'QTY 60 วัน', 'Net 60 วัน'];
+    const lines = [head.join(',')].concat(r.map((d) => [NS_REASON[d.reason][0], '="' + d.emp + '"', d.name, d.role, d.company, '="' + d.shop + '"', d.shop_name, d.area, d.leave, d.doj, d.last, d.idle, d.u60, d.n60].map((v, i) => (i === 1 || i === 5 ? v : esc(v))).join(',')));
+    const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'No_Sale_' + (I ? I.cs + '_' + I.to : '') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
 dash.onData(() => { document.querySelectorAll('#f-stperiod').forEach((s) => { s.value = dash.params().stperiod || 'mtd'; }); document.querySelectorAll('#wrap-stweek').forEach((n) => { n.hidden = (dash.params().stperiod || 'mtd') !== 'week'; }); });
 document.querySelectorAll('#f-stperiod').forEach((s) => s.addEventListener('change', () => dash.setParams({ stperiod: s.value })));
 

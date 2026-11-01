@@ -270,6 +270,11 @@ def build():
         d = d.astype(object).where(d.notna(), None)
         json.dump(d.to_dict('records'), open(os.path.join(OUT, nmx + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     json.dump(hourly.to_dict('records'), open(os.path.join(OUT, 'sales_hourly.json'), 'w'), separators=(',', ':'))
+    mp = load('manpower.csv')
+    if mp is not None:
+        mp = mp[mp.type.fillna('') != "Lotus's"].copy(); mp['asof'] = meta.get('manpower_asof', '')
+        mp = mp.astype(object).where(mp.notna(), None)
+        json.dump(mp.to_dict('records'), open(os.path.join(OUT, 'manpower.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     json.dump(meta, open(os.path.join(OUT, 'meta.json'), 'w'))
     tot = f[f.date.str[:7] == f.date.max()[:7]]
     print(f"built: sales to {f.date.max()} ({meta.get('sales_asof')}), stock as of {meta.get('stock_asof')}, targets to {lastm}")
@@ -277,11 +282,30 @@ def build():
     print(f"  shops {len(shops)} matcodes {len(m)} staff {len(e)} stock {int(ss.qty.sum()):,} aged>=180 {len(ex)}")
     if lastm < f.date.max()[:7]: print(f'  WARNING: no target file for {f.date.max()[:7]} yet (latest target month {lastm}); attach Target_of_<Mon>_26 to update % target')
 
+MP_SALES_ROLES = {'RR_Sales_OS', 'RR_Multi', 'Ret_chpn_1', 'Ret_chpn_1_OS', 'ITF', 'ITF_Apple', 'ITF_OS', 'ITF_Apple_OS', 'RR_Sales'}  # ASST_Sales excluded: assistants rarely sell SIM
+def merge_manpower(fp):
+    """Manpower roster (current staff) -> state/manpower.csv (only the columns the dashboard needs; no personal details)"""
+    d = pd.read_excel(fp, dtype=str); d.columns = [re.sub(r'\s+', ' ', str(c)).strip() for c in d.columns]
+    col = lambda pre: next(c for c in d.columns if c.startswith(pre))
+    out = pd.DataFrame({'emp': d['Employee ID'].str.strip(), 'name': (d[col('First Name [TH]')].fillna('') + ' ' + d[col('Last Name [TH]')].fillna('')).str.strip(),
+        'company': d[col('Company')], 'role': d[col('Role Report')], 'shop': d[col('shop code WW')].fillna(d[col('shop code TUC')]), 'shop_name': d[col('ชื่อสาขา')],
+        'area': d[col('เขต 1')], 'type': d[col('type')], 'leave': d[col('Project /ลา 6')].fillna(d[col('Project /ลา/Training')]),
+        'doj': pd.to_datetime(d[col('Date Of Join (DOJ) (1)')], errors='coerce').dt.strftime('%Y-%m-%d')})
+    out = out[out.emp.notna() & (out.emp != '')].drop_duplicates('emp')
+    out['sales_role'] = out.role.isin(MP_SALES_ROLES).map({True: 1, False: 0})
+    save(out, 'manpower.csv')
+    m = re.search(r'(\d{1,2})[ _-]?([A-Za-z]{3})[a-z]*[ _-]?(\d{4})', os.path.basename(fp)); meta = json.load(open(os.path.join(ST, 'meta.json')))
+    MON = {k: i + 1 for i, k in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+    meta['manpower_asof'] = f"{m.group(3)}-{MON[m.group(2).title()]:02d}-{int(m.group(1)):02d}" if m else ''
+    json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
+    print('manpower:', len(out), 'staff,', int(out.sales_role.sum()), 'in sales roles, as of', meta['manpower_asof'])
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
-    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ')
+    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)')
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
+    if a.manpower: merge_manpower(a.manpower)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')
     if a.target: merge_targets(a.target)
