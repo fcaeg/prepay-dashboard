@@ -586,10 +586,13 @@ body.pc-noscroll { overflow: hidden; }
       </div>
     </article>
     <article class="pc-card" id="card-nosale">
-      <h3>Staff Productivity &amp; No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="Productivity = ยอดขายซิม Prepay ของพนักงาน ÷ จำนวนพนักงาน (รวมคนที่ไม่มียอด) ในช่วงเวลาที่เลือก · ค่าเฉลี่ย Retail = พนักงานทุกสาขา WW ทุก Area (ไม่ขึ้นกับ Filter พื้นที่) = Index 100 · พนักงานตามไฟล์ Manpower ล่าสุด ตำแหน่ง RR ทุกแบบ, ITF ทุกแบบ และ Ret Champion · ยอดของพนักงานนับให้สาขาที่ประจำตาม Manpower · No Sale = ไม่มียอดในช่วงเวลาที่เลือก · สาเหตุ: ลา = มีสถานะลา/Project ใน Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ · เคยขายแต่ช่วงนี้ไม่มียอด · ปุ่ม Net Amount / QTY และ Filter กลุ่มซิมมีผลกับทุกส่วน">i</span></h3>
+      <h3>Staff Productivity &amp; No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="Productivity = ยอดขายซิม Prepay ของพนักงาน ÷ จำนวนพนักงาน (รวมคนที่ไม่มียอด) ในช่วงเวลาที่เลือก · ค่าเฉลี่ย Retail = พนักงานทุกสาขา WW ทุก Area (ไม่ขึ้นกับ Filter พื้นที่) = Index 100 · พนักงานตามไฟล์ Manpower ล่าสุด ตำแหน่ง RR ทุกแบบ (ไม่รวม RR_Services), ITF ทุกแบบ และ Ret Champion · ตำแหน่งที่ลงท้าย _OS รวมกับตำแหน่งหลัก และระบุสังกัดเป็น OS (Outsource) ส่วนที่เหลือเป็น WW · ยอดของพนักงานนับให้สาขาที่ประจำตาม Manpower · No Sale = ไม่มียอดในช่วงเวลาที่เลือก · สาเหตุ: ลา = มีสถานะลา/Project ใน Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ · เคยขายแต่ช่วงนี้ไม่มียอด · ปุ่ม Net Amount / QTY และ Filter กลุ่มซิมมีผลกับทุกส่วน">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ตำแหน่ง
           <select id="f-prole" data-draw="f_prole" data-source="manpower" aria-label="ตำแหน่ง"></select>
+        </label>
+        <label class="pc-field">สังกัด
+          <select id="f-paff" data-draw="f_paff" data-source="manpower" aria-label="สังกัด"></select>
         </label>
         <label class="pc-field">ระดับ
           <select id="f-plevel" data-draw="f_plevel" data-source="manpower" aria-label="ระดับการเปรียบเทียบ"></select>
