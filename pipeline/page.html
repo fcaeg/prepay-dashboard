@@ -169,6 +169,7 @@ body.pc-noscroll { overflow: hidden; }
 .pc-mqf input { min-width: min(100%, 22rem); }
 .pc-mqtb { max-height: 34rem; overflow: auto; }
 .pc-h5 { margin: 10px 0 4px; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg); }
+.pc-prodbars { max-height: 34rem; overflow: auto; }
 .pc-gleg { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 2; }
 .gchip { display: inline-block; padding: 1px 9px; margin: 2px 4px 2px 0; border-radius: 999px; font-size: var(--cds-font-size-caption); line-height: 1.6; border: 1px solid; white-space: nowrap; }
 .gchip.u { color: var(--color-bad); border-color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 10%, transparent); font-weight: 600; }
@@ -585,19 +586,21 @@ body.pc-noscroll { overflow: hidden; }
       </div>
     </article>
     <article class="pc-card" id="card-nosale">
-      <h3>วิเคราะห์ No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="No Sale = พนักงานที่ทำงานอยู่ปัจจุบัน (ตามไฟล์ Manpower ล่าสุด) ที่ไม่มียอดขายซิม Prepay ในช่วงเวลาที่เลือก · นับเฉพาะพนักงานที่ประจำสาขา WW (ไม่รวมสาขาประเภท Lotus's) · ค่าเริ่มต้นนับเฉพาะตำแหน่งกลุ่มขาย (RR_Sales_OS, RR_Multi, Ret_chpn_1, ITF ฯลฯ · ไม่รวม ASST_Sales) เปลี่ยนได้ที่ช่องตำแหน่ง · สาเหตุ: ลา = มีสถานะลา/Project ในไฟล์ Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ = ไม่พบยอดตั้งแต่ 1 ม.ค. · เคยขาย แต่ช่วงนี้ไม่มียอด · ปรับตาม Filter Region / Area / สาขา / ประเภทสาขา / กลุ่มซิม">i</span></h3>
+      <h3>Staff Productivity &amp; No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="Productivity = ยอดขายซิม Prepay ของพนักงาน ÷ จำนวนพนักงาน (รวมคนที่ไม่มียอด) ในช่วงเวลาที่เลือก · ค่าเฉลี่ย Retail = พนักงานทุกสาขา WW ทุก Area (ไม่ขึ้นกับ Filter พื้นที่) = Index 100 · พนักงานตามไฟล์ Manpower ล่าสุด ตำแหน่ง RR ทุกแบบ, ITF ทุกแบบ และ Ret Champion · ยอดของพนักงานนับให้สาขาที่ประจำตาม Manpower · No Sale = ไม่มียอดในช่วงเวลาที่เลือก · สาเหตุ: ลา = มีสถานะลา/Project ใน Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ · เคยขายแต่ช่วงนี้ไม่มียอด · ปุ่ม Net Amount / QTY และ Filter กลุ่มซิมมีผลกับทุกส่วน">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ตำแหน่ง
-          <select id="f-strole" data-draw="f_strole" data-source="manpower" aria-label="ตำแหน่ง"></select>
+          <select id="f-prole" data-draw="f_prole" data-source="manpower" aria-label="ตำแหน่ง"></select>
+        </label>
+        <label class="pc-field">ระดับ
+          <select id="f-plevel" data-draw="f_plevel" data-source="manpower" aria-label="ระดับการเปรียบเทียบ"></select>
         </label>
       </div>
-      <div class="pc-tiles" data-draw="ns_tiles" data-source="enriched shops manpower"></div>
+      <div class="pc-tiles" data-draw="pr_tiles" data-source="enriched shops manpower"></div>
+      <p class="pc-note" data-draw="pr_note" data-source="enriched shops manpower"></p>
       <div class="pc-split2">
-        <div><h4 class="pc-h4">% No Sale ราย Area</h4><div class="pc-hbars" data-draw="c_ns_area" data-source="enriched shops manpower"></div></div>
-        <div><h4 class="pc-h4">% No Sale ราย ตำแหน่ง</h4><div class="pc-hbars" data-draw="c_ns_role" data-source="enriched shops manpower"></div></div>
+        <div class="pc-prodbars"><div class="pc-rank" data-draw="c_prod" data-source="enriched shops manpower"></div></div>
+        <div class="pc-scroll pc-mqtb"><table data-draw="tb_prod" data-source="enriched shops manpower" data-row-key="key"></table></div>
       </div>
-      <h4 class="pc-h4">สาขาที่มีพนักงาน No Sale</h4>
-      <div class="pc-scroll pc-mqtb"><table data-draw="tb_ns_shop" data-source="enriched shops manpower" data-row-key="shop"></table></div>
       <h4 class="pc-h4">รายชื่อพนักงาน No Sale</h4>
       <div class="pc-tools">
         <label class="pc-field">สาเหตุ
