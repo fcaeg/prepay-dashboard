@@ -539,3 +539,66 @@ dash.draw('c_gap_list', (el) => { el.replaceChildren(); const G = gGroups(); if 
       const tip = (G.v === 'shop' ? x.group + ' · ' + priceTxt(x.price) + ' · Matcode ' + x.matcode : x.area + ' · รหัส ' + x.shop) + ' · ' + GL[x.level][0] + (x.level === 'urgent' ? ' (สาขานี้ขาย ' + x.sold28_shop + ' ชิ้นใน 28 วัน แต่ Stock = 0)' : '');
       ch.append(gChip(cls, txt, tip)); }
     row.append(h, ch); el.append(row); } });
+
+/* ---------- Matcode lookup: shops that sold + when it sells best ---------- */
+const MQ = (() => {
+  const TH_WD = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  const sel = () => { const mt = PC.rows('matcodes'); if (!mt) return null; const v = String(dash.params().mq || ''); let m = mt.find((x) => String(x.matcode) === v);
+    if (!m) { const r = PC.rows('enriched'); if (!r) return null; const I = mInfo(); const by = d3.rollup(r.filter((x) => x.date >= (I ? I.from : '') && x.date <= (I ? I.to : '9')), (a) => d3.sum(a, (x) => x.units), (x) => x.matcode); const top = [...by.entries()].sort((a, b) => b[1] - a[1])[0]; m = top && mt.find((x) => String(x.matcode) === String(top[0])); if (m) m = { ...m, auto: true }; }
+    return m || null; };
+  const rows = (m, from, to) => { const r = PC.rows('enriched'); if (!r || !m) return []; const p = PC.P();
+    return r.filter((x) => String(x.matcode) === String(m.matcode) && x.date >= from && x.date <= to && PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.shop === 'ALL' || String(x.shop) === p.shop)); };
+  const ytd = (m) => { const I = mInfo(); return I ? rows(m, I.today.slice(0, 4) + '-01-01', I.today) : []; };
+  return { TH_WD, sel, rows, ytd };
+})();
+const mqInput = () => document.getElementById('q-mq');
+dash.draw('dl_mq', (el) => { const mt = PC.rows('matcodes'); if (!mt) return; el.replaceChildren(...mt.filter((m) => m.status !== 'EOL' || true).map((m) => { const o = document.createElement('option'); o.value = m.matcode; o.label = m.name + ' · ' + (m.group || ''); o.textContent = m.matcode + ' · ' + m.name; return o; })); });
+if (!window.PC_MQ_BOUND) { window.PC_MQ_BOUND = true;
+  const apply = (inp) => { const v = inp.value.trim(); if (!v) { dash.setParams({ mq: '' }); return; } const mt = PC.rows('matcodes') || []; const lv = v.toLowerCase();
+    const m = mt.find((x) => String(x.matcode) === v) || mt.find((x) => String(x.matcode).startsWith(v)) || mt.find((x) => String(x.name).toLowerCase() === lv) || mt.find((x) => String(x.name).toLowerCase().includes(lv));
+    if (m) dash.setParams({ mq: String(m.matcode) }); };
+  document.addEventListener('change', (e) => { if (e.target && e.target.id === 'q-mq') apply(e.target); });
+  document.addEventListener('keydown', (e) => { if (e.target && e.target.id === 'q-mq' && e.key === 'Enter') apply(e.target); }); }
+dash.draw('mq_hint', (el) => { const m = MQ.sel(); el.textContent = m ? (m.auto ? 'ยังไม่ได้เลือก · แสดง Matcode ที่ขายดีที่สุดของช่วงนี้ก่อน: ' : 'กำลังดู: ') + m.matcode + ' · ' + m.name : 'พิมพ์ Matcode หรือชื่อสินค้า แล้วกด Enter'; });
+dash.draw('mq_plabel', (el) => { const I = mInfo(); el.textContent = I ? I.label : ''; });
+const mqShops = () => { const m = MQ.sel(), I = mInfo(); if (!m || !I) return null; const r = MQ.rows(m, I.from, I.to); const sh = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+  const st = new Map(); for (const x of PC.rows('stock_by_shop') || []) if (String(x.matcode) === String(m.matcode)) st.set(String(x.shop), (st.get(String(x.shop)) || 0) + (+x.qty || 0));
+  const by = new Map(); for (const x of r) { const k = String(x.shop); const a = by.get(k) || { shop: k, units: 0, net: 0, last: '', emps: new Set(), days: new Set() }; a.units += x.units; a.net += x.net; if (x.units > 0) { if (x.date > a.last) a.last = x.date; a.emps.add(x.emp); a.days.add(x.date); } by.set(k, a); }
+  const tot = d3.sum([...by.values()], (a) => a.units) || 1; const N = PC.isNet(); const totN = d3.sum([...by.values()], (a) => a.net) || 1;
+  return [...by.values()].filter((a) => a.units > 0).map((a) => { const s = sh.get(a.shop) || {}; return { shop: a.shop, name: String(s.name || a.shop).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area || '-', units: a.units, net: Math.round(a.net), share: N ? a.net / totN : a.units / tot, last: a.last, emps: a.emps.size, days: a.days.size, stock: st.get(a.shop) || 0 }; })
+    .sort((a, b) => (N ? b.net - a.net : b.units - a.units)).map((x, i) => ({ ...x, rank: i + 1 })); };
+dash.draw('mq_take', (el) => { el.replaceChildren(); const m = MQ.sel(), I = mInfo(), r = mqShops(); if (!m || !I || !r) return; const B = (s) => { const b = document.createElement('b'); b.textContent = s; return b; };
+  const p = PC.P(); const scope = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).length;
+  const stk = d3.sum((PC.rows('stock_by_shop') || []).filter((x) => String(x.matcode) === String(m.matcode)), (x) => +x.qty || 0);
+  el.append(B(m.name), ' (' + m.matcode + ' · ' + (m.group || '') + (m.price ? ' · ฿' + PC.nf(m.price) : '') + (m.status === 'EOL' ? ' · EOL' : '') + ') · ' + I.label + ': ขายได้ ', B(PC.nf(d3.sum(r, (x) => x.units)) + ' ชิ้น'), ' Net ', B('฿' + PC.nf(d3.sum(r, (x) => x.net))), ' จาก ', B(PC.nf(r.length) + ' สาขา'), ' (จาก ' + PC.nf(scope) + ' สาขาที่เลือก)');
+  if (r[0]) el.append(' · ขายมากสุด ', B(r[0].name + ' ' + PC.nf(r[0].units) + ' ชิ้น'));
+  el.append(' · Stock คงเหลือทุกสาขา ', B(PC.nf(stk) + ' ชิ้น')); });
+dash.draw('tb_mq_shop', (el) => { const r = mqShops(); const N = PC.isNet();
+  PC.table(el, 'tb_mq_shop', r, { key: ['shop'], def: 'rank', dir: 1, limit: 500, cols: [
+    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount', num: true, fmt: PC.nf, bar: N },
+    { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf }, { f: 'days', label: 'วันที่ขายได้', num: true, fmt: PC.nf }, { f: 'last', label: 'ขายล่าสุด', fmt: PC.day }, { f: 'emps', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf }, { f: 'stock', label: 'Stock ตอนนี้', num: true, fmt: PC.nf } ] }); });
+const mqWhen = () => { const m = MQ.sel(); if (!m) return null; const r = MQ.ytd(m); const I = mInfo(); if (!I) return null; const y0 = I.today.slice(0, 4) + '-01-01';
+  const byD = d3.rollup(r, (a) => ({ units: d3.sum(a, (x) => x.units), net: d3.sum(a, (x) => x.net) }), (x) => x.date);
+  const days = []; for (let d = y0; d <= I.today; d = SA.add(d, 1)) { const v = byD.get(d) || { units: 0, net: 0 }; days.push({ d, ...v, wd: new Date(d + 'T00:00:00Z').getUTCDay(), dom: +d.slice(8, 10), w: SA.isoW(d).w }); }
+  const wk = [...d3.rollup(days, (a) => ({ units: d3.sum(a, (x) => x.units), net: d3.sum(a, (x) => x.net), n: a.length }), (x) => x.w).entries()].map(([w, v]) => ({ w, ...v })).sort((a, b) => a.w - b.w);
+  const wd = [1, 2, 3, 4, 5, 6, 0].map((k) => { const a = days.filter((x) => x.wd === k); return { k, label: MQ.TH_WD[k], avg: a.length ? d3.sum(a, (x) => x.units) / a.length : 0, avgN: a.length ? d3.sum(a, (x) => x.net) / a.length : 0 }; });
+  const md = [['ต้นเดือน (1–10)', 1, 10], ['กลางเดือน (11–20)', 11, 20], ['ปลายเดือน (21–สิ้นเดือน)', 21, 31]].map(([label, a, b]) => { const x = days.filter((d) => d.dom >= a && d.dom <= b); return { label, avg: x.length ? d3.sum(x, (d) => d.units) / x.length : 0, avgN: x.length ? d3.sum(x, (d) => d.net) / x.length : 0 }; });
+  const mo = [...d3.rollup(days, (a) => [d3.sum(a, (x) => x.units), d3.sum(a, (x) => x.net)], (x) => x.d.slice(0, 7)).entries()].map(([k, v]) => [k, v[0], v[1]]);
+  return { m, days, wk, wd, md, mo, tot: d3.sum(days, (x) => x.units) }; };
+dash.draw('c_mq_week', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet(); const best = W.wk.reduce((a, b) => ((N ? b.net : b.units) > (N ? a.net : a.units) ? b : a), W.wk[0]);
+  PC.vbar(el, W.wk.map((x) => ({ w: x.w, units: x.units, net: Math.round(x.net) })), { xk: 'w', xf: (w) => 'W' + w, tipf: (w) => 'Week ' + w, hl: best.w, avg: d3.mean(W.wk, (x) => (N ? x.net : x.units)) }); });
+dash.draw('c_mq_wd', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet(); const tot = d3.sum(W.wd, (x) => (N ? x.avgN : x.avg)) || 1;
+  PC.hbar(el, W.wd.map((x) => ({ ...x, v: N ? x.avgN : x.avg, s: (N ? x.avgN : x.avg) / tot })), { label: 'label', value: 'v', sub: (d) => (N ? '฿' + PC.nf(Math.round(d.v)) : d3.format(',.1f')(d.v) + ' ชิ้น') }); });
+dash.draw('c_mq_md', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet();
+  PC.hbar(el, W.md.map((x) => ({ ...x, v: N ? x.avgN : x.avg })), { label: 'label', value: 'v', sub: (d) => (N ? '฿' + PC.nf(Math.round(d.v)) : d3.format(',.1f')(d.v) + ' ชิ้น') }); });
+dash.draw('mq_when', (el) => { el.replaceChildren(); const W = mqWhen(); if (!W) return; if (!W.tot) { el.textContent = 'ยังไม่มียอดขาย Matcode นี้ตั้งแต่ต้นปีตาม Filter ที่เลือก'; return; }
+  const B = (s) => { const b = document.createElement('b'); b.textContent = s; return b; }; const N = PC.isNet(); const V = (x) => (N ? x.net : x.units);
+  const bw = W.wk.reduce((a, b) => (V(b) > V(a) ? b : a), W.wk[0]); const [wa, wb] = SA.wRange(+W.days[0].d.slice(0, 4), bw.w);
+  const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(v) + ' ชิ้น'); const A = (x) => (N ? x.avgN : x.avg); const avgAll = d3.mean(W.wd, A) || 0; const wdS = W.wd.slice().sort((a, b) => A(b) - A(a)); const mdS = W.md.slice().sort((a, b) => A(b) - A(a));
+  const bm = W.mo.reduce((a, b) => ((N ? b[2] > a[2] : b[1] > a[1]) ? b : a), W.mo[0]); const top3 = W.days.slice().sort((a, b) => V(b) - V(a)).slice(0, 3).filter((x) => x.units > 0);
+  const last4 = W.wk.slice(-5, -1), prev4 = W.wk.slice(-9, -5); const g = d3.sum(prev4, V) ? d3.sum(last4, V) / d3.sum(prev4, V) - 1 : null;
+  el.append('สัปดาห์ที่ขายดีที่สุด ', B('Week ' + bw.w + ' (' + PC.day(wa) + ' – ' + PC.day(wb) + ') ' + F(V(bw))), ' · เดือนที่ขายดีสุด ', B(PC.mon(bm[0]) + ' ' + F(N ? bm[2] : bm[1])),
+    ' · วันที่ขายดีในสัปดาห์ ', B(wdS[0].label + (avgAll ? ' (' + (A(wdS[0]) / avgAll - 1 >= 0 ? '+' : '') + PC.pf(A(wdS[0]) / avgAll - 1) + ' จากค่าเฉลี่ย)' : '')), ' รองลงมา ', B(wdS[1].label),
+    ' · ช่วงของเดือนที่ขายดี ', B(mdS[0].label));
+  if (top3.length) el.append(' · วันที่ขายได้มากที่สุด ', B(top3.map((x) => PC.day(x.d) + ' (' + F(V(x)) + ')').join(', ')));
+  if (g != null) el.append(' · 4 สัปดาห์ล่าสุด (ไม่นับสัปดาห์นี้) เทียบ 4 สัปดาห์ก่อนหน้า ', B((g >= 0 ? '+' : '') + PC.pf(g))); });

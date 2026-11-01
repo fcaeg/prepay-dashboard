@@ -166,6 +166,9 @@ body.pc-noscroll { overflow: hidden; }
 .pc-ins b { font-weight: 600; }
 .pc-insight { border-left: 3px solid var(--color-fg); }
 .pc-trend { font-variant-numeric: tabular-nums; }
+.pc-mqf input { min-width: min(100%, 22rem); }
+.pc-mqtb { max-height: 34rem; overflow: auto; }
+.pc-h5 { margin: 10px 0 4px; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--color-fg); }
 .pc-gleg { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 2; }
 .gchip { display: inline-block; padding: 1px 9px; margin: 2px 4px 2px 0; border-radius: 999px; font-size: var(--cds-font-size-caption); line-height: 1.6; border: 1px solid; white-space: nowrap; }
 .gchip.u { color: var(--color-bad); border-color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 10%, transparent); font-weight: 600; }
@@ -473,6 +476,32 @@ body.pc-noscroll { overflow: hidden; }
       </label>
       <p class="pc-note" data-draw="m_range" data-source="enriched"></p>
     </div>
+    <article class="pc-card" id="card-mq">
+      <h3>ค้นหา Matcode: ขายที่สาขาไหน และขายดีช่วงไหน <span class="pc-info" tabindex="0" role="note" data-tip="พิมพ์ Matcode หรือชื่อสินค้าแล้วเลือกจากรายการ · ตารางสาขาใช้ช่วงเวลาที่เลือกด้านบน (วันนี้ / Week / MTD / YTD) · ส่วน &quot;ขายดีช่วงไหน&quot; ใช้ยอดตั้งแต่ต้นปี (YTD) เพื่อให้เห็นรูปแบบชัดขึ้น · ข้อมูลการขายเป็นรายวัน จึงวิเคราะห์ได้ถึงระดับวัน / วันในสัปดาห์ / ช่วงของเดือน / สัปดาห์ (ไม่มีข้อมูลรายชั่วโมง) · ทุกส่วนปรับตาม Filter Region / Area / สาขา / ประเภทสาขา">i</span></h3>
+      <div class="pc-tools">
+        <label class="pc-field pc-mqf">Matcode / ชื่อสินค้า
+          <input id="q-mq" type="search" list="dl-mq" autocomplete="off" placeholder="เช่น 3000106113 หรือ GOTRAVEL" aria-label="ใส่ Matcode">
+          <datalist id="dl-mq" data-draw="dl_mq" data-source="matcodes enriched"></datalist>
+        </label>
+        <p class="pc-note" data-draw="mq_hint" data-source="enriched matcodes shops stock_by_shop"></p>
+      </div>
+      <p class="pc-take" data-draw="mq_take" data-source="enriched matcodes shops stock_by_shop"></p>
+      <div class="pc-split2">
+        <div>
+          <h4 class="pc-h4">สาขาที่ขายได้ · <span data-draw="mq_plabel" data-source="enriched"></span></h4>
+          <div class="pc-scroll pc-mqtb"><table data-draw="tb_mq_shop" data-source="enriched matcodes shops stock_by_shop" data-row-key="shop"></table></div>
+        </div>
+        <div>
+          <h4 class="pc-h4">ขายดีช่วงไหน (YTD)</h4>
+          <p class="pc-note" data-draw="mq_when" data-source="enriched"></p>
+          <div class="pc-chart" data-draw="c_mq_week" data-source="enriched"></div>
+          <div class="pc-split">
+            <div><h5 class="pc-h5">วันในสัปดาห์ (ยอดเฉลี่ยต่อวัน)</h5><div class="pc-hbars" data-draw="c_mq_wd" data-source="enriched"></div></div>
+            <div><h5 class="pc-h5">ช่วงของเดือน (ยอดเฉลี่ยต่อวัน)</h5><div class="pc-hbars" data-draw="c_mq_md" data-source="enriched"></div></div>
+          </div>
+        </div>
+      </div>
+    </article>
     <article class="pc-card" id="card-bands-net">
       <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ" data-tip="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ">i</span></h3>
       <div class="pc-hbars" data-draw="c_bands_net" data-source="enriched"></div>
@@ -1423,7 +1452,7 @@ const showTab = (id) => {
   document.querySelectorAll('[data-page]').forEach((s) => { s.hidden = s.dataset.page !== id; });
   dash.setLink(id);
   const sel = tabs.find((x) => x.dataset.tab === id); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  requestAnimationFrame(() => ['c_target', 'c_monthly', 'c_daily', 'c_today_trend', 'c_rank_heat', 'c_s_matrix', 'c_sa_pvm', 'c_sa_trend', 'c_sa_pareto', 'c_sa_bcg'].forEach((n) => { try { dash.draw(n); } catch (e) {} }));
+  requestAnimationFrame(() => ['c_target', 'c_monthly', 'c_daily', 'c_today_trend', 'c_rank_heat', 'c_s_matrix', 'c_mq_week', 'c_sa_pvm', 'c_sa_trend', 'c_sa_pareto', 'c_sa_bcg'].forEach((n) => { try { dash.draw(n); } catch (e) {} }));
 };
 tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
