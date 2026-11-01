@@ -2,7 +2,7 @@ name: Update from Google Drive
 
 on:
   schedule:
-    - cron: '5 2-15 * * *'   # every hour 09:05–22:05 Bangkok time
+    - cron: '7,22,37,52 2-15 * * *'   # every 15 min, 09:07–22:52 Bangkok time (GitHub may start a run late)
   workflow_dispatch: {}       # "Run workflow" button for an immediate update
 
 permissions:
