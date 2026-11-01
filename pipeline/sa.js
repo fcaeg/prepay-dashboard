@@ -392,7 +392,7 @@ const RKX = (() => {
     try { await document.fonts.ready; } catch (e) {}
     const FF = getComputedStyle(document.body).fontFamily || 'sans-serif'; const F = (w, s) => w + ' ' + s + 'px ' + FF;
     const f = rkF(), N = PC.isNet(), d = rDate(), rk = rkRows() || [], rd = rdRows() || [], zr = zoneRows(); const ar = PC.rows('area_rank'); const r0 = ar && ar[0];
-    const W = 2000, P = 48, GAP = 32, ROW = 46; const n = Math.max(rk.length, rd.length);
+    const W = 2000, P = 48, GAP = 32, ROW = 64; const n = Math.max(rk.length, rd.length);
     const H = P + 110 + 50 + 250 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
     const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S); g.textBaseline = 'alphabetic';
     g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
@@ -420,18 +420,18 @@ const RKX = (() => {
     y += ch + 40;
     // two rankings
     const lw = (W - 2 * P - GAP) / 2;
-    const list = (x, title, rows, rankK, actK, tgtK, tgtL) => { let yy = y + 10; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText(fit(g, title, lw), x, yy); yy += 34;
+    const list = (x, title, rows, rankK, actK, tgtK, tgtL, win) => { let yy = y + 10; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText(fit(g, title, lw), x, yy); yy += 34;
       g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('#', x, yy); g.fillText('Area · ยอด / ' + tgtL, x + 40, yy); const bx = x + lw * 0.47, bwid = lw * 0.4; g.fillText('เทียบ Target (เส้น = 100%)', bx, yy); g.textAlign = 'right'; g.fillText('%', x + lw, yy); g.textAlign = 'left';
       yy += 10; g.fillStyle = C.line; g.fillRect(x, yy, lw, 2); const mx = Math.max(1.2, d3.max(rows, (r) => r[f.ach] || 0) * 1.05);
       rows.forEach((r, i) => { const top = yy + i * ROW; if (i) { g.fillStyle = C.grid; g.fillRect(x, top, lw, 1); }
-        g.font = F(600, 18); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(String(r[rankK]), x + 26, top + 30); g.textAlign = 'left';
-        g.font = F(500, 19); g.fillStyle = C.fg; g.fillText(fit(g, r.area.replace(/^UPC - /, ''), bx - x - 56), x + 40, top + 22); g.font = F(400, 15); g.fillStyle = C.mu; g.fillText(PC.mfmt(r[actK]) + ' / ' + PC.mfmt(r[tgtK]), x + 40, top + 40);
-        const by = top + 15; g.fillStyle = C.grid; rr(g, bx, by, bwid, 16, 8); g.fill(); const a = Math.max(0, r[f.ach] || 0); const fw = Math.max(0, Math.min(1, a / mx)) * bwid; if (fw > 0) { g.fillStyle = col(r[f.ach]); rr(g, bx, by, Math.max(fw, 16), 16, 8); g.fill(); }
+        g.font = F(600, 18); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(String(r[rankK]), x + 26, top + 37); g.textAlign = 'left';
+        g.font = F(500, 19); g.fillStyle = C.fg; g.fillText(fit(g, r.area.replace(/^UPC - /, ''), bx - x - 56), x + 40, top + 22); g.font = F(400, 15); g.fillStyle = C.mu; g.fillText(PC.mfmt(r[actK]) + ' / ' + PC.mfmt(r[tgtK]), x + 40, top + 40); if (win && window.RKSUB) { g.font = F(400, 14); g.fillStyle = C.mu; g.fillText(fit(g, window.RKSUB(r.area, win).replace(/^ · /, ''), bx - x - 56), x + 40, top + 57); }
+        const by = top + 22; g.fillStyle = C.grid; rr(g, bx, by, bwid, 16, 8); g.fill(); const a = Math.max(0, r[f.ach] || 0); const fw = Math.max(0, Math.min(1, a / mx)) * bwid; if (fw > 0) { g.fillStyle = col(r[f.ach]); rr(g, bx, by, Math.max(fw, 16), 16, 8); g.fill(); }
         g.fillStyle = C.fg; g.fillRect(bx + bwid / mx - 1, by - 4, 2.5, 24);
-        g.font = F(700, 19); g.fillStyle = col(r[f.ach]); g.textAlign = 'right'; g.fillText(r[f.ach] == null ? '–' : PC.pf(r[f.ach]), x + lw, top + 30); g.textAlign = 'left'; }); };
+        g.font = F(700, 19); g.fillStyle = col(r[f.ach]); g.textAlign = 'right'; g.fillText(r[f.ach] == null ? '–' : PC.pf(r[f.ach]), x + lw, top + 37); g.textAlign = 'left'; }); };
     const ml = N ? 'Net Amount' : 'QTY';
-    list(P, 'Daily Ranking · ' + ml + ' ' + (d ? PC.day(d) : '') + ' เทียบ Target ต่อวัน', rd, 'drank', f.d, f.tpd, 'Target ต่อวัน');
-    list(P + lw + GAP, 'Ranking ยอดสะสม · ' + ml + ' เดือนนี้เทียบ Target ถึงวันนี้', rk, 'rank', f.act, f.ttd, 'Target ถึงวันนี้');
+    list(P, 'Daily Ranking · ' + ml + ' ' + (d ? PC.day(d) : '') + ' เทียบ Target ต่อวัน', rd, 'drank', f.d, f.tpd, 'Target ต่อวัน', d ? [d, d] : null);
+    list(P + lw + GAP, 'Ranking ยอดสะสม · ' + ml + ' เดือนนี้เทียบ Target ถึงวันนี้', rk, 'rank', f.act, f.ttd, 'Target ถึงวันนี้', r0 ? [r0.today.slice(0, 8) + '01', r0.today] : null);
     g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว ≥ 100% · ส้ม 90–99% · แดง < 90%  ·  Target ต่อวัน = Target เดือน ÷ จำนวนวันในเดือน  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6);
     return { cv, name: 'Prepay_Ranking_' + (N ? 'Net' : 'QTY') + '_' + (d || 'latest') + (p.area !== 'ALL' ? '_' + p.area.replace(/[^\w]+/g, '') : '') + '.png' };
   };
