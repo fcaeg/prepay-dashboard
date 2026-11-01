@@ -233,10 +233,15 @@ const stAgg = () => { const r = PC.rows('enriched'), I = stInfo(); if (!r || !I)
     const c = N ? a.net : a.units, pv = N ? a.pn : a.pu;
     return { emp: a.emp, name: e.name || a.emp, shop: shop.name || (main ? main[0] : '-'), area: shop.area || '-', units: a.units, net: Math.round(a.net), share: tot ? c / tot : 0, asp: a.units > 0 ? Math.round(a.net / a.units) : null,
       matcodes: a.mc.size, days: a.days.size, prev: I.pf ? Math.round(pv) : null, growth: I.pf && pv > 0 ? c / pv - 1 : null }; }); };
-dash.draw('tb_staff', (el) => { const I = stInfo(); const N = PC.isNet(); const r = stAgg(); const rows = r && r.sort((a, b) => (N ? b.net - a.net : b.units - a.units)).map((x, i) => ({ ...x, rank: i + 1 }));
+dash.draw('tb_staff', (el) => { const I = stInfo(); const N = PC.isNet(); const r = stAgg(); const T = itTarget(); const hasT = T && !T.none;
+  const mp = new Map((PC.rows('manpower') || []).map((m) => [String(m.emp), m]));
+  const rows = r && r.sort((a, b) => (N ? b.net - a.net : b.units - a.units)).map((x, i) => { let tg = null; if (hasT) { tg = T.byEmp.get(String(x.emp)); if (tg == null) { const m = mp.get(String(x.emp)); if (m && POS(m.role)) tg = T.posAvg(m.shop, POS(m.role)); } } const v = N ? x.net : x.units;
+    return { ...x, rank: i + 1, tg: tg == null ? null : Math.round(tg * (N ? 1 : 10)) / (N ? 1 : 10), ach: tg ? v / tg : null }; });
   PC.table(el, 'tb_staff', rows, { key: ['emp'], def: 'rank', dir: 1, q: 'staff', limit: 3000, cols: [
     { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'emp', label: 'รหัส' }, { f: 'name', label: 'ชื่อ' }, { f: 'shop', label: 'สาขาหลัก (' + ((I && I.cs) || '') + ')', wrap: true }, { f: 'area', label: 'Area' },
-    { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N }, { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf },
+    ...(hasT ? [{ f: 'tg', label: 'Target ' + (N ? 'Net' : 'QTY') + ' ' + I.cs, num: true, fmt: (v) => (v == null ? '–' : N ? PC.nf(v) : d3.format(',.1f')(v)) }] : []),
+    { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount (บาท)', num: true, fmt: PC.nf, bar: N },
+    ...(hasT ? [{ f: 'ach', label: '% Target', num: true, pill: (d) => (d.ach == null ? ['mute', '–'] : [d.ach >= 1 ? 'ok' : d.ach >= 0.9 ? 'warn' : 'bad', PC.pf(d.ach)]) }] : []), { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf },
     ...(I && I.pf ? [{ f: 'prev', label: (N ? 'Net Amount' : 'QTY') + ' ' + I.ps, num: true, fmt: PC.nf }, { f: 'growth', label: 'vs ' + I.ps, num: true, pill: (d) => (d.growth == null ? ['mute', 'ใหม่'] : [d.growth >= 0 ? 'ok' : d.growth > -0.1 ? 'warn' : 'bad', (d.growth > 0 ? '+' : d.growth < 0 ? '−' : '') + PC.pf(Math.abs(d.growth))]) }] : []),
     { f: 'asp', label: 'ราคาเฉลี่ย/ชิ้น', num: true, fmt: PC.nf }, { f: 'matcodes', label: 'จำนวน Matcode', num: true, fmt: PC.nf }, { f: 'days', label: 'วันที่มียอด', num: true, fmt: PC.nf } ] }); });
 const NS_REASON = { leave: ['ลา', 'mute'], newbie: ['เริ่มงานไม่ถึง 30 วัน', 'mute'], never: ['ยังไม่เคยขายปีนี้', 'bad'], lapsed: ['เคยขาย แต่ช่วงนี้ไม่มียอด', 'warn'] };
