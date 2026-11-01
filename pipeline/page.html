@@ -58,6 +58,8 @@
 .pc-seg button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
 .pc-seg-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-right: var(--cds-gap-xs); }
 .pc-metricwrap { display: inline-flex; align-items: center; }
+.pc-headctl { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: center; justify-content: flex-end; }
+.pc-monthsel { font: inherit; font-size: var(--cds-font-size-body); padding: 6px 12px; border: 1px solid var(--color-border-line); border-radius: 999px; background: var(--color-panel); color: var(--color-fg); font-weight: 600; }
 .pc-tile.on { border-color: var(--color-fg); }
 .pc-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-lg); align-items: start; }
 .pc-card details summary { cursor: pointer; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding: var(--cds-pad-xs) 0; }
@@ -240,7 +242,7 @@ body.pc-noscroll { overflow: hidden; }
   .pc { gap: var(--cds-gap-md); }
   .pc-title { font-size: calc(var(--cds-font-size-title) * 0.8); }
   .pc-headrow { align-items: stretch; }
-  .pc-metricwrap { width: 100%; justify-content: space-between; }
+  .pc-metricwrap { width: 100%; justify-content: space-between; } .pc-headctl { width: 100%; } .pc-monthsel { flex: 1; margin-left: var(--cds-gap-sm); }
   .pc-seg { flex: 1; } .pc-seg button { flex: 1; padding-left: var(--cds-pad-sm); padding-right: var(--cds-pad-sm); }
   .pc-bar { display: grid; grid-template-columns: 1fr 1fr; align-items: end; }
   .pc-bar .pc-field select, .pc-bar .pc-field input { width: 100%; }
@@ -265,8 +267,13 @@ body.pc-noscroll { overflow: hidden; }
   <header class="pc-head" id="top">
     <div class="pc-headrow">
       <h1 class="pc-title">Prepay Dashboard · ยอดขายซิม Prepay สาขา WW</h1>
-      <div class="pc-metricwrap"><span class="pc-seg-l">ดูยอดเป็น</span>
-        <div class="pc-seg" role="group" aria-label="เลือกตัววัดยอดขาย" data-draw="metric_seg"></div>
+      <div class="pc-headctl">
+        <div class="pc-metricwrap pc-monthwrap"><span class="pc-seg-l">เดือน</span>
+          <select id="f-vmonth" class="pc-monthsel" data-draw="f_vmonth" data-source="sales_daily targets" aria-label="เลือกเดือนที่ดู"></select>
+        </div>
+        <div class="pc-metricwrap"><span class="pc-seg-l">ดูยอดเป็น</span>
+          <div class="pc-seg" role="group" aria-label="เลือกตัววัดยอดขาย" data-draw="metric_seg"></div>
+        </div>
       </div>
     </div>
     <p class="pc-take">วันนี้ (<b data-draw="t_today" data-source="kpi" data-field="today">—</b>) ขายซิม Prepay ได้ QTY <b data-draw="t_tqty" data-source="kpi" data-field="today_units">—</b> Net Amount <b data-draw="t_tnet" data-source="kpi" data-field="today_net">—</b> บาท · เดือนนี้ QTY <b data-draw="t_mqty" data-source="kpi" data-field="mtd_units">—</b> · ตั้งแต่ต้นปี QTY <b data-draw="t_units" data-source="kpi" data-field="units">—</b> Net Amount <b data-draw="t_net" data-source="kpi" data-field="net">—</b> บาท · ซิมค้างในระบบเกิน 180 วัน <b data-draw="t_expired" data-source="stock_by_shop shops matcodes" data-field="qty">—</b> ชิ้น</p>
@@ -315,7 +322,7 @@ body.pc-noscroll { overflow: hidden; }
       <div class="pc-tile" id="tile-today-net">
         <span class="pc-tile-l">Net Amount วันนี้ (บาท)</span>
         <span class="pc-big" data-draw="d_net" data-source="kpi" data-field="today_net">—</span>
-        <span class="pc-sub">ข้อมูลวันที่ <span data-draw="d_tdate" data-source="kpi" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
+        <span class="pc-sub">ข้อมูลวันที่ <span data-draw="d_tdate" data-source="kpi" data-field="today">—</span></span>
       </div>
       <div class="pc-tile" id="tile-today-shops">
         <span class="pc-tile-l">สาขาที่มียอดขายวันนี้</span>
@@ -744,7 +751,7 @@ body.pc-noscroll { overflow: hidden; }
       <div class="pc-tile" id="tile-r-days">
         <span class="pc-tile-l">วันที่ผ่านไปของเดือน</span>
         <span class="pc-big" data-draw="r_days" data-source="area_rank" data-field="elapsed">—</span>
-        <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span> (วันล่าสุดที่อัปโหลด)</span>
+        <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span></span>
       </div>
     </div>
     <div class="pc-rkbar"><p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p><button class="pc-export" id="rk-export" type="button" title="ดาวน์โหลดรูป (แนวนอน) รวม Region · Daily Ranking · Ranking สะสม">⬇ Export รูป (Region + Daily + สะสม)</button></div>
@@ -1387,26 +1394,31 @@ window.PC = (() => {
   const where = (o) => Object.entries(o).map(([k, v]) => enc(k) + '=' + enc(v)).join('&');
   // one shop selected: recompute that view from only that shop's rows (Ranking Area stays all Areas)
   const SHOP_BASE = { sales_daily: 'shop', stock_by_shop: 'shop', targets: 'shop', aging_serials: 'shop' };
+  const VBASE = { sales_daily: 'date', sales_hourly: 'date' };
   const SHOP_SKIP = new Set(['area_rank', 'area_day']);
   let shopCache = new Map(), shopToken = null;
-  const shopGet = (id, sh) => {
-    const k = sh + '|' + id; if (shopCache.has(k)) return shopCache.get(k);
+  const lastMonth = () => { const d = dash.data('sales_daily'); if (d.status !== 'ok') return ''; let m = ''; for (const r of d.data) if (r.date > m) m = r.date; return m.slice(0, 7); };
+  const vEnd = () => { const vm = String(dash.params().vmonth || ''); if (!/^\d{4}-\d{2}$/.test(vm)) return ''; const lm = lastMonth(); return lm && vm < lm ? vm + '-31' : ''; };
+  const shopGet = (id, sh, ve) => {
+    const k = sh + '|' + ve + '|' + id; if (shopCache.has(k)) return shopCache.get(k);
     let v = null;
-    if (id in SHOP_BASE) { const d = dash.data(id); if (d.status !== 'ok') return null;
-      v = d.data.filter((r) => String(r[SHOP_BASE[id]]) === sh);
-      if (id === 'sales_daily') { const maxD = d.data.reduce((a, r) => (r.date > a ? r.date : a), '');
-        if (v.length && !v.some((r) => r.date === maxD)) { const last = v[v.length - 1]; v = v.concat([{ ...last, date: maxD, units: '0', amount: '0', disc: '0', net: '0' }]); } } }
-    else { const c = window.PC_CALCS[id]; if (!c) return null; const args = [];
-      for (const i of c.inputs) { const a = (i in SHOP_BASE || (window.PC_CALCS[i] && !SHOP_SKIP.has(i))) ? shopGet(i, sh) : (dash.data(i).status === 'ok' ? dash.data(i).data : null); if (a == null) return null; args.push(a); }
-      try { v = c.fn(...args); } catch (e) { console.error('shop calc', id, e); return null; } }
+    if (id in SHOP_BASE || id in VBASE) { const d = dash.data(id); if (d.status !== 'ok') return null; v = d.data;
+      if (ve && id in VBASE) v = v.filter((r) => String(r.date) <= ve);
+      if (sh !== 'ALL' && id in SHOP_BASE) { const all = v; v = v.filter((r) => String(r[SHOP_BASE[id]]) === sh);
+        if (id === 'sales_daily') { const maxD = all.reduce((a, r) => (r.date > a ? r.date : a), '');
+          if (v.length && !v.some((r) => r.date === maxD)) { const last = v[v.length - 1]; v = v.concat([{ ...last, date: maxD, units: '0', amount: '0', disc: '0', net: '0' }]); } } } }
+    else { const c = window.PC_CALCS[id]; if (!c) return null; const args = []; const shc = SHOP_SKIP.has(id) ? 'ALL' : sh;
+      for (const i of c.inputs) { const a = (i in SHOP_BASE || i in VBASE || window.PC_CALCS[i]) ? shopGet(i, SHOP_SKIP.has(i) ? 'ALL' : shc, ve) : (dash.data(i).status === 'ok' ? dash.data(i).data : null); if (a == null) return null; args.push(a); }
+      try { v = c.fn(...args); } catch (e) { console.error('view calc', id, e); return null; } }
     shopCache.set(k, v); return v;
   };
   const rows = (id) => {
-    const sh = String(dash.params().shop || 'ALL');
-    if (sh !== 'ALL' && window.PC_CALCS && window.PC_CALCS[id] && !SHOP_SKIP.has(id)) {
+    const sh = String(dash.params().shop || 'ALL'); const ve = vEnd();
+    const isCalc = window.PC_CALCS && window.PC_CALCS[id];
+    if ((ve && (isCalc || id in VBASE)) || (sh !== 'ALL' && isCalc && !SHOP_SKIP.has(id))) {
       const d0 = dash.data('sales_daily'); const tok = d0.status === 'ok' ? d0.data : null;
       if (tok !== shopToken) { shopCache = new Map(); shopToken = tok; }
-      const v = shopGet(id, sh); if (v) return v;
+      const v = shopGet(id, SHOP_SKIP.has(id) ? 'ALL' : sh, ve); if (v) return v;
     }
     const d = dash.data(id); return d.status === 'ok' ? d.data : null; };
   const pick = (id, extra) => { const r = rows(id); if (!r) return null; const p = P(); return r.filter((x) => x.area === p.area && x.stype === p.stype && x.group === p.group && Object.entries(extra || {}).every(([k, v]) => x[k] === v)); };
@@ -1515,6 +1527,10 @@ document.querySelectorAll('#f-wstatus').forEach((sel) => sel.addEventListener('c
 document.querySelectorAll('#f-mperiod').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ mperiod: sel.value })));
 document.querySelectorAll('#f-alevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ alevel: sel.value })));
 document.querySelectorAll('#f-sstatus').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ sstatus: sel.value })));
+dash.draw('f_vmonth', (sel) => { const d = dash.data('sales_daily'); if (d.status !== 'ok') return; const ms = new Set(); for (const r of d.data) ms.add(String(r.date).slice(0, 7)); const lm = [...ms].sort().pop() || '';
+  const tg = dash.data('targets'); const extra = tg.status === 'ok' ? [...new Set(tg.data.map((r) => String(r.month)))].filter((m) => m > lm) : [];
+  const opts = [...extra.sort().reverse().map((m) => { const o = new Option(PC.mon(m) + ' (ยังไม่มียอดขาย)', m); o.disabled = true; return o; }), ...[...ms].filter((m) => m.slice(0, 4) === lm.slice(0, 4)).sort().reverse().map((m) => new Option(PC.mon(m) + (m === lm ? ' (ล่าสุด)' : ''), m))];
+  sel.replaceChildren(...opts); const v = String(dash.params().vmonth || ''); sel.value = ms.has(v) ? v : lm; sel.onchange = () => dash.setParams({ vmonth: sel.value === lm ? '' : sel.value }); });
 dash.draw('metric_seg', (el) => { const m = PC.M(); el.replaceChildren(...[['net', 'Net Amount'], ['qty', 'QTY']].map(([k, l]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.metric = k; b.textContent = l; b.setAttribute('aria-pressed', String(k === m)); b.onclick = () => dash.setParams({ metric: k }); return b; })); });
 dash.draw('ml_1', (el) => { el.textContent = PC.mlabel(); });
 dash.draw('ml_2', (el) => { el.textContent = PC.mlabel(); });
