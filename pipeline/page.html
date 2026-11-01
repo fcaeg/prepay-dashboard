@@ -749,7 +749,7 @@ body.pc-noscroll { overflow: hidden; }
         <div class="pc-hbars" data-draw="c_s_type" data-source="stock_cover"></div>
       </article>
       <article class="pc-card" id="card-s-status">
-        <h3>จำนวนสาขา × Type Sim ตามสถานะ <span class="pc-info" tabindex="0" role="note" aria-label="นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง" data-tip="นับทุกคู่สาขากับ Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง">i</span></h3>
+        <h3>จำนวนสาขา × Type Sim ตามสถานะ <span class="pc-info" tabindex="0" role="note" aria-label="นับทุกรายการ สาขา + Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง" data-tip="นับทุกรายการ สาขา + Type Sim ที่มี Stock หรือมียอดขายใน 28 วัน คลิกสถานะเพื่อกรองตารางด้านล่าง">i</span></h3>
         <div class="pc-hbars" data-draw="c_s_status" data-source="stock_cover"></div>
       </article>
     </div>
@@ -760,7 +760,7 @@ body.pc-noscroll { overflow: hidden; }
     </article>
 
     <article class="pc-card pc-gap" id="card-s-gap">
-      <h3>แจ้งเตือน: สาขาที่ไม่มี Matcode ใน Stock <span class="pc-info" tabindex="0" role="note" aria-label="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ" data-tip="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ">i</span></h3>
+      <h3>แจ้งเตือน: สาขาที่ไม่มี Matcode ใน Stock <span class="pc-info" tabindex="0" role="note" aria-label="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · 1 รายการขาด = 1 สาขาที่ไม่มี 1 Matcode (เช่น 12 รายการ ใน 9 สาขา = บางสาขาขาดมากกว่า 1 Matcode) · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ" data-tip="เทียบ Matcode ที่มีใน Stock ของสาขาใดสาขาหนึ่ง กับ Stock ของแต่ละสาขา ถ้าสาขาไม่มี Matcode นั้นเลย (Stock = 0) จะขึ้นเตือน · 1 รายการขาด = 1 สาขาที่ไม่มี 1 Matcode (เช่น 12 รายการ ใน 9 สาขา = บางสาขาขาดมากกว่า 1 Matcode) · ระดับ: ■ ด่วน = สาขานี้เคยขาย Matcode นี้ใน 28 วันแต่ตอนนี้ไม่มี · ■ ควรมี = Matcode ที่สาขาส่วนใหญ่ (≥ 50%) มี · ■ อื่น ๆ">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">Matcode ที่นำมาเทียบ
           <select id="f-ascope" aria-label="Matcode ที่นำมาเทียบ">
@@ -787,7 +787,7 @@ body.pc-noscroll { overflow: hidden; }
       </div>
       <div class="pc-split">
         <div>
-          <h4 class="pc-h4">ราย Type Sim (จำนวนคู่ สาขา × Matcode ที่ขาด)</h4>
+          <h4 class="pc-h4">ราย Type Sim (จำนวนรายการขาด · 1 รายการ = 1 สาขาที่ไม่มี Matcode นั้น)</h4>
           <div class="pc-hbars" data-draw="c_gap_mat" data-source="assort_gap"></div>
         </div>
         <div>
@@ -1778,7 +1778,7 @@ dash.draw('tb_s_hot', (el) => { const SG = { urgent: ['bad', 'เร่งเต
     { f: 'trend', label: 'แนวโน้ม 7 วัน', num: true, pill: (d) => trendPill(d.trend) }, { f: 'stock', label: 'Stock', num: true, fmt: PC.nf }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt },
     { f: 'risk', label: 'สาขาหมด/เสี่ยงขาด', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'shops', label: 'สาขาที่ขายได้', num: true, fmt: PC.nf } ] }); });
 dash.draw('s_move_sum', (el) => { const m = moveRows(); if (!m) { el.textContent = ''; return; } const q = m.reduce((s, x) => s + x.qty, 0);
-  el.textContent = m.length ? 'โอนได้ ' + PC.nf(m.length) + ' รายการ รวม ' + PC.nf(q) + ' ชิ้น โดยไม่ต้องสั่งของเพิ่ม' : 'ไม่มีคู่สาขาที่โอนย้ายได้ตาม Filter นี้'; });
+  el.textContent = m.length ? 'โอนได้ ' + PC.nf(m.length) + ' รายการ รวม ' + PC.nf(q) + ' ชิ้น โดยไม่ต้องสั่งของเพิ่ม' : 'ไม่มีสาขาที่โอนย้ายระหว่างกันได้ตาม Filter นี้'; });
 dash.draw('tb_s_move', (el) => PC.table(el, 'tb_s_move', moveRows(), { key: ['area', 'key', 'from', 'to'], def: 'qty', limit: 500, cols: [
   { f: 'area', label: 'Area' }, { f: 'label', label: 'Matcode', wrap: true }, { f: 'from_name', label: 'จากสาขา (Stock เกิน)', wrap: true }, { f: 'from_stock', label: 'Stock ต้นทาง', num: true, fmt: PC.nf },
   { f: 'from_cover', label: 'Cover ต้นทาง (สป.)', num: true, fmt: (v) => (v >= 999 ? 'ไม่มียอดขาย' : wkTxt(v)) }, { f: 'to_name', label: 'ไปสาขา (ขาด)', wrap: true }, { f: 'to_stock', label: 'Stock ปลายทาง', num: true, fmt: PC.nf },
@@ -1828,7 +1828,7 @@ dash.draw('c_s_status', (el) => {
     const row = document.createElement('div'); row.className = 'pc-hrow click' + (cur === fk ? ' on' : ''); row.tabIndex = 0; row.setAttribute('role', 'button');
     const l = document.createElement('span'); l.className = 'l'; l.textContent = ST[k][0];
     const tr = document.createElement('span'); tr.className = 't'; const f = document.createElement('span'); f.className = 'f'; f.style.display = 'block'; f.style.width = (n / max) * 100 + '%'; f.style.background = ST[k][1]; tr.append(f);
-    const v = document.createElement('span'); v.className = 'v'; v.textContent = PC.nf(n) + ' คู่ · ' + (r.length ? PC.pf(n / r.length) : '–');
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = PC.nf(n) + ' รายการ · ' + (r.length ? PC.pf(n / r.length) : '–');
     const go = () => dash.setParams({ sstatus: cur === fk ? 'ALL' : fk }); row.onclick = go; row.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
     row.append(l, tr, v); el.append(row); }
 });
@@ -1870,9 +1870,9 @@ const gapRows = (useLevel) => { const r = PC.rows('assort_gap'); if (!r) return 
     && (!useLevel || lv === 'ALL' || (lv === 'urgent' ? x.level === 'urgent' : x.level !== 'other'))); };
 const gapScope = () => { const s = PC.rows('shops'); if (!s) return null; const p = PC.P(); return s.filter((r) => +r.stype_order < 90 && PCin(r.area, p.area) && (p.stype === 'ALL' || r.stype === p.stype) && (p.shop === 'ALL' || String(r.shop) === p.shop)); };
 dash.draw('g_urgent', (el) => { const r = gapRows(false); el.textContent = r ? PC.nf(r.filter((x) => x.level === 'urgent').length) : '—'; });
-dash.draw('g_urgent_sub', (el) => { const r = gapRows(false); if (!r) { el.textContent = ''; return; } const u = r.filter((x) => x.level === 'urgent'); el.textContent = 'คู่ สาขา × Matcode · ' + PC.nf(new Set(u.map((x) => x.shop)).size) + ' สาขา · เคยขายรวม ' + PC.nf(u.reduce((a, x) => a + x.sold28_shop, 0)) + ' ชิ้นใน 28 วัน'; });
+dash.draw('g_urgent_sub', (el) => { const r = gapRows(false); if (!r) { el.textContent = ''; return; } const u = r.filter((x) => x.level === 'urgent'); el.textContent = 'รายการขาด · ' + PC.nf(new Set(u.map((x) => x.shop)).size) + ' สาขา · เคยขายรวม ' + PC.nf(u.reduce((a, x) => a + x.sold28_shop, 0)) + ' ชิ้นใน 28 วัน'; });
 dash.draw('g_core', (el) => { const r = gapRows(false); el.textContent = r ? PC.nf(r.filter((x) => x.level === 'core').length) : '—'; });
-dash.draw('g_core_sub', (el) => { const r = gapRows(false); if (!r) { el.textContent = ''; return; } const u = r.filter((x) => x.level === 'core'); el.textContent = 'คู่ สาขา × Matcode · ' + PC.nf(new Set(u.map((x) => x.shop)).size) + ' สาขา'; });
+dash.draw('g_core_sub', (el) => { const r = gapRows(false); if (!r) { el.textContent = ''; return; } const u = r.filter((x) => x.level === 'core'); el.textContent = 'รายการขาด · ' + PC.nf(new Set(u.map((x) => x.shop)).size) + ' สาขา'; });
 dash.draw('g_shops', (el) => { const r = gapRows(true); el.textContent = r ? PC.nf(new Set(r.map((x) => x.shop)).size) : '—'; });
 dash.draw('g_shops_sub', (el) => { const r = gapRows(true), s = gapScope(); el.textContent = r && s ? 'จาก ' + PC.nf(s.length) + ' สาขาที่เลือก · ตามระดับที่เลือก' : ''; });
 dash.draw('c_gap_mat', (el) => {
@@ -1883,7 +1883,7 @@ dash.draw('c_gap_mat', (el) => {
     const l = document.createElement('span'); l.className = 'l'; l.textContent = x.key; l.title = x.key;
     const t = document.createElement('span'); t.className = 't'; t.style.display = 'flex'; t.style.overflow = 'hidden';
     for (const [v, c] of [[x.u, GL.urgent[2]], [x.n - x.u, GL.core[2]]]) { const f = document.createElement('span'); f.style.cssText = 'display:block;height:100%;width:' + (v / max) * 100 + '%;background:' + c; t.append(f); }
-    const v = document.createElement('span'); v.className = 'v'; v.textContent = PC.nf(x.n) + ' คู่' + (x.u ? ' · ด่วน ' + PC.nf(x.u) : '') + ' · ' + x.shops.size + ' สาขา · ' + x.mats.size + ' Matcode';
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = PC.nf(x.n) + ' รายการ' + (x.u ? ' · ด่วน ' + PC.nf(x.u) : '') + ' · ' + x.shops.size + ' สาขา · ' + x.mats.size + ' Matcode';
     row.append(l, t, v); el.append(row); }
   if (!d.length) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = 'ไม่มีสาขาที่ขาด Matcode ตามตัวกรองนี้'; el.append(e); }
 });
@@ -1898,14 +1898,14 @@ dash.draw('c_gap_tree', (el) => {
   gl.forEach((G, gi) => { const det = document.createElement('details'); if (gi === 0) det.open = true;
     const sm = document.createElement('summary'); const b = document.createElement('b'); b.textContent = G.g; sm.append(b);
     const mk = (txt, cls) => { const s = document.createElement('span'); s.className = 'gs' + (cls ? ' ' + cls : ''); s.textContent = txt; sm.append(s); };
-    mk(PC.nf(G.xs.length) + ' คู่ สาขา × Matcode'); mk(PC.nf(new Set(G.xs.map((x) => x.shop)).size) + ' สาขา'); if (G.u) mk('ด่วน ' + PC.nf(G.u), 'u');
+    mk(PC.nf(G.xs.length) + ' รายการขาด'); mk(PC.nf(new Set(G.xs.map((x) => x.shop)).size) + ' สาขา'); if (G.u) mk('ด่วน ' + PC.nf(G.u), 'u');
     det.append(sm);
     const rows = [...d3.group(G.xs, (x) => x.sub + '|' + x.price + '|' + x.matcode).values()].map((xs) => { const x = xs[0]; const urg = xs.filter((y) => y.level === 'urgent');
       return { sub: x.sub, price: x.price, matcode: x.matcode, mname: shortName(x.mname), n: xs.length, u: urg.length, carry: x.carry_pct, sold_all: x.sold28_all,
         shops_u: ((l) => l.slice(0, 10).join(' · ') + (l.length > 10 ? ' · +' + (l.length - 10) + ' สาขา (ดูในตารางด้านล่าง)' : ''))(urg.sort((p, q) => q.sold28_shop - p.sold28_shop).map((y) => y.name.replace(/^True (Shop|shop|Move Shop) /, '') + ' (ขาย ' + y.sold28_shop + ')')),
         shops_o: xs.filter((y) => y.level !== 'urgent').map((y) => y.name.replace(/^True (Shop|shop|Move Shop) /, '')).slice(0, 8).join(' · ') + (xs.filter((y) => y.level !== 'urgent').length > 8 ? ' …' : '') }; }).sort(gapSort);
     const box = document.createElement('div'); box.className = 'sub';
-    for (const [sub, xs] of d3.group(rows, (x) => x.sub)) { const h = document.createElement('h5'); h.textContent = 'ประเภทซิม: ' + sub + ' · ' + xs.reduce((s, x) => s + x.n, 0) + ' คู่'; box.append(h);
+    for (const [sub, xs] of d3.group(rows, (x) => x.sub)) { const h = document.createElement('h5'); h.textContent = 'ประเภทซิม: ' + sub + ' · ' + xs.reduce((s, x) => s + x.n, 0) + ' รายการ'; box.append(h);
       const wrap = document.createElement('div'); wrap.className = 'pc-scroll'; const tb = document.createElement('table'); wrap.append(tb); box.append(wrap);
       PC.table(tb, 'tb_gt_' + G.g + sub, xs, { key: ['matcode'], def: 'price', dir: 1, cols: [
         { f: 'price', label: 'ราคา', num: true, fmt: priceTxt }, { f: 'mname', label: 'Matcode', wrap: true }, { f: 'n', label: 'สาขาที่ไม่มี', num: true, fmt: PC.nf, bar: true }, { f: 'u', label: 'ด่วน', num: true, fmt: (v) => (v ? PC.nf(v) : '–') },
