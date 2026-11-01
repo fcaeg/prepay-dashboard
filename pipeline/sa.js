@@ -276,7 +276,7 @@ dash.draw('pr_tiles', (el) => { el.replaceChildren(); const D = prData0(); if (!
   tile('No Sale', PC.nf(D.scope.n) + ' คน', PC.pf(D.scope.nr) + ' ของพนักงาน · Retail ' + PC.pf(D.base.nr), 'var(--color-bad)');
   tile('No Sale ที่ต้องติดตาม', PC.nf(c('lapsed') + c('never')) + ' คน', 'เคยขายแต่ช่วงนี้ไม่มียอด ' + PC.nf(c('lapsed')) + ' · ยังไม่เคยขายปีนี้ ' + PC.nf(c('never')) + ' · ลา ' + PC.nf(c('leave')) + ' · เริ่มงานไม่ถึง 30 วัน ' + PC.nf(c('newbie'))); });
 dash.draw('pr_note', (el) => { const D = prStaff(); if (!D) { el.textContent = ''; return; } const n = D.rows.length, up = D.rows.filter((x) => x.vArea != null && x.vArea >= 1).length;
-  el.textContent = PC.nf(n) + ' คน · สูงกว่าค่าเฉลี่ย Area ของตำแหน่งเดียวกัน ' + PC.nf(up) + ' คน (' + PC.pf(up / Math.max(1, n)) + ') · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
+  el.textContent = PC.nf(n) + ' คน · สูงกว่าค่าเฉลี่ย Area ของตำแหน่งเดียวกัน ' + PC.nf(up) + ' คน (' + PC.pf(up / Math.max(1, n)) + ') · สีช่องค่าเฉลี่ย = PDT ของพนักงานเทียบค่าเฉลี่ยนั้น: เขียวเข้ม สูงกว่า ≥ 20% · เขียว สูงกว่า · เหลือง ต่ำกว่าไม่เกิน 10% · แดง ต่ำกว่าเกิน 10% · ค่าเฉลี่ย = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · คลิกหัวคอลัมน์เพื่อเรียง'; });
 const prStaff = () => { const R = stRoster(); if (!R) return null; const acc = new Map(); const add = (k, v) => { const a = acc.get(k) || [0, 0]; a[0] += v; a[1]++; acc.set(k, a); };
   for (const x of R.all) { const v = PV(x); add('R|' + x.role, v); add('Z|' + x.role + '|' + x.zone, v); add('A|' + x.role + '|' + x.area, v); add('S|' + x.role + '|' + x.shop, v); }
   const avg = (k) => { const a = acc.get(k); return a && a[1] ? a[0] / a[1] : null; }; const rt = (v, a) => (a ? v / a : null);
@@ -285,15 +285,14 @@ const prStaff = () => { const R = stRoster(); if (!R) return null; const acc = n
     return { ...x, pdt: v, aR, aZ, aA, aS, vRetail: rt(v, aR), vZone: rt(v, aZ), vArea: rt(v, aA), vShop: rt(v, aS), nS: (acc.get('S|' + x.role + '|' + x.shop) || [0, 0])[1] }; });
   if (q) rows = rows.filter((x) => [x.emp, x.name, x.shop_name, x.area, x.role].some((v) => String(v ?? '').toLowerCase().includes(q)));
   return { R, rows }; };
+const tone = (rk, ak, fm) => (d) => { const r = d[rk]; return [r == null ? 'tn t0' : r >= 1.2 ? 'tn t4' : r >= 1 ? 'tn t3' : r >= 0.9 ? 'tn t2' : 'tn t1', fm(d[ak])]; };
 const vsPill = (k) => (d) => { const r = d[k]; if (r == null) return ['mute', '–']; const p = r - 1; return [r >= 1 ? 'ok' : r >= 0.9 ? 'warn' : 'bad', (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%']; };
 dash.draw('tb_prod', (el) => { const D = prStaff(); const N = PC.isNet(); const fm = (v) => (v == null ? '–' : N ? PC.nf(Math.round(v)) : d3.format(',.1f')(v));
   PC.table(el, 'tb_prod', D && D.rows, { key: ['emp'], def: 'pdt', limit: 3000, cols: [
     { f: 'name', label: 'ชื่อ', wrap: true }, { f: 'emp', label: 'รหัส' }, { f: 'role', label: 'ตำแหน่ง' }, { f: 'aff', label: 'สังกัด' }, { f: 'shop_name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' },
     { f: 'pdt', label: 'PDT ส่วนบุคคล (' + (N ? 'Net' : 'QTY') + ')', num: true, fmt: fm, bar: true },
-    { f: 'aS', label: 'เฉลี่ยสาขา', num: true, fmt: fm }, { f: 'vShop', label: 'vs สาขา', num: true, pill: vsPill('vShop') },
-    { f: 'aA', label: 'เฉลี่ย Area', num: true, fmt: fm }, { f: 'vArea', label: 'vs Area', num: true, pill: vsPill('vArea') },
-    { f: 'aZ', label: 'เฉลี่ย Region', num: true, fmt: fm }, { f: 'vZone', label: 'vs Region', num: true, pill: vsPill('vZone') },
-    { f: 'aR', label: 'เฉลี่ย Retail', num: true, fmt: fm }, { f: 'vRetail', label: 'vs Retail', num: true, pill: vsPill('vRetail') } ] }); });
+    { f: 'aS', label: 'เฉลี่ยสาขา', num: true, pill: tone('vShop', 'aS', fm) }, { f: 'aA', label: 'เฉลี่ย Area', num: true, pill: tone('vArea', 'aA', fm) },
+    { f: 'aZ', label: 'เฉลี่ย Region', num: true, pill: tone('vZone', 'aZ', fm) }, { f: 'aR', label: 'เฉลี่ย Retail', num: true, pill: tone('vRetail', 'aR', fm) } ] }); });
 if (!window.PC_PR_BOUND) { window.PC_PR_BOUND = true;
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#pr-csv'); if (!b) return; const D = prStaff(); if (!D) return; const I = stInfo(); const N = PC.isNet();
     const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; const r2 = (v) => (v == null ? '' : Math.round(v * 100) / 100); const pc = (v) => (v == null ? '' : Math.round((v - 1) * 1000) / 10);
