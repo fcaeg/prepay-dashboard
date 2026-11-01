@@ -558,6 +558,10 @@ if (!window.PC_MQ_BOUND) { window.PC_MQ_BOUND = true;
     const m = mt.find((x) => String(x.matcode) === v) || mt.find((x) => String(x.matcode).startsWith(v)) || mt.find((x) => String(x.name).toLowerCase() === lv) || mt.find((x) => String(x.name).toLowerCase().includes(lv));
     if (m) dash.setParams({ mq: String(m.matcode) }); };
   document.addEventListener('change', (e) => { if (e.target && e.target.id === 'q-mq') apply(e.target); });
+  let mqT = 0; document.addEventListener('input', (e) => { if (!e.target || e.target.id !== 'q-mq') return; const inp = e.target; const v = inp.value.trim(); clearTimeout(mqT);
+    if (!v) { dash.setParams({ mq: '' }); return; } const mt = PC.rows('matcodes') || [];
+    if (mt.some((x) => String(x.matcode) === v)) { apply(inp); return; } mqT = setTimeout(() => { const lv = v.toLowerCase(); const hits = mt.filter((x) => String(x.matcode).startsWith(v) || String(x.name).toLowerCase().includes(lv)); if (hits.length === 1 || (v.length >= 4 && hits.length)) apply(inp); }, 600); });
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#mq-go'); if (b) { const inp = document.getElementById('q-mq'); if (inp) apply(inp); } });
   document.addEventListener('keydown', (e) => { if (e.target && e.target.id === 'q-mq' && e.key === 'Enter') apply(e.target); }); }
 dash.draw('mq_hint', (el) => { const m = MQ.sel(); el.textContent = m ? (m.auto ? 'ยังไม่ได้เลือก · แสดง Matcode ที่ขายดีที่สุดของช่วงนี้ก่อน: ' : 'กำลังดู: ') + m.matcode + ' · ' + m.name : 'พิมพ์ Matcode หรือชื่อสินค้า แล้วกด Enter'; });
 dash.draw('mq_plabel', (el) => { const I = mInfo(); el.textContent = I ? I.label : ''; });
