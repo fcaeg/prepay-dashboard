@@ -476,6 +476,21 @@ body.pc-noscroll { overflow: hidden; }
       </label>
       <p class="pc-note" data-draw="m_range" data-source="enriched"></p>
     </div>
+    <article class="pc-card" id="card-bands-net">
+      <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ" data-tip="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ">i</span></h3>
+      <div class="pc-hbars" data-draw="c_bands_net" data-source="enriched"></div>
+    </article>
+    <article class="pc-card" id="card-matcodes">
+      <h3>Matcode ที่ขายดี · <span data-draw="m_plabel2" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด" data-tip="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด">i</span></h3>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหา Matcode หรือชื่อสินค้า
+          <input id="q-mat" class="pc-q" data-q="mat" type="search" aria-label="ค้นหา Matcode">
+        </label>
+      </div>
+      <div class="pc-scroll">
+        <table data-draw="tb_mat" data-source="enriched stock_by_shop matcodes" data-row-key="matcode"></table>
+      </div>
+    </article>
     <article class="pc-card" id="card-mq">
       <h3>ค้นหา Matcode: ขายที่สาขาไหน และขายดีช่วงไหน <span class="pc-info" tabindex="0" role="note" data-tip="พิมพ์ Matcode หรือชื่อสินค้าแล้วเลือกจากรายการ · ตารางสาขาใช้ช่วงเวลาที่เลือกด้านบน (วันนี้ / Week / MTD / YTD) · ส่วน &quot;ขายดีช่วงไหน&quot; ใช้ยอดตั้งแต่ต้นปี (YTD) เพื่อให้เห็นรูปแบบชัดขึ้น · ข้อมูลการขายเป็นรายวัน จึงวิเคราะห์ได้ถึงระดับวัน / วันในสัปดาห์ / ช่วงของเดือน / สัปดาห์ (ไม่มีข้อมูลรายชั่วโมง) · ทุกส่วนปรับตาม Filter Region / Area / สาขา / ประเภทสาขา">i</span></h3>
       <div class="pc-tools">
@@ -500,21 +515,6 @@ body.pc-noscroll { overflow: hidden; }
             <div><h5 class="pc-h5">ช่วงของเดือน (ยอดเฉลี่ยต่อวัน)</h5><div class="pc-hbars" data-draw="c_mq_md" data-source="enriched"></div></div>
           </div>
         </div>
-      </div>
-    </article>
-    <article class="pc-card" id="card-bands-net">
-      <h3><span data-draw="ml_13" data-mlabel></span> ตามช่วงราคา · <span data-draw="m_plabel" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ" data-tip="ช่วงราคาต่ำมักขายได้ QTY มาก แต่ Net Amount มาจากซิมราคาสูง ใช้ปุ่มดูยอดด้านบนสลับ Net Amount / QTY เพื่อเทียบ">i</span></h3>
-      <div class="pc-hbars" data-draw="c_bands_net" data-source="enriched"></div>
-    </article>
-    <article class="pc-card" id="card-matcodes">
-      <h3>Matcode ที่ขายดี · <span data-draw="m_plabel2" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" aria-label="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด" data-tip="ยอดตามช่วงเวลาที่เลือก เรียงตามตัววัดที่เลือกด้านบน คลิกหัวคอลัมน์เพื่อเรียงใหม่ · Stock = คงเหลือล่าสุด · Cover = Stock ÷ ยอดขายเฉลี่ยต่อสัปดาห์ของ 4 สัปดาห์ล่าสุด">i</span></h3>
-      <div class="pc-tools">
-        <label class="pc-field">ค้นหา Matcode หรือชื่อสินค้า
-          <input id="q-mat" class="pc-q" data-q="mat" type="search" aria-label="ค้นหา Matcode">
-        </label>
-      </div>
-      <div class="pc-scroll">
-        <table data-draw="tb_mat" data-source="enriched stock_by_shop matcodes" data-row-key="matcode"></table>
       </div>
     </article>
   </section>
