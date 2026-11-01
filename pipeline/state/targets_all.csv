@@ -2983,3 +2983,292 @@ month,shop,name,region,type,province,dm,target_units,target_net
 2026-03,80001579,True 7-11 ตลาดเจริญ (สาย 5),UPC - West,SIS GROUP2,สมุทรสาคร,Jumrat In-eaim,0.0,0.0
 2026-03,80101416,WW 7-11 ท่ารถปากท่อ,UPC - West,SIS GROUP2,ราชบุรี,Jumrat In-eaim,0.0,0.0
 2026-03,80101549,WW 7-11 ตลาดชุมชนบ้านหมอ,UPC - Central,SIS GROUP2,สระบุรี,Jumrat In-eaim,0.0,0.0
+2026-11,10055254,True Shop Lotus's Ladprao,BMA I - North West,Lotus's,กรุงเทพมหานคร,Jirawat Taweesuwannakul,1.3409090909090908,228.8636363636364
+2026-11,10055275,True Shop Lotus's Tiwanon,BMA I - North West,Lotus's,นนทบุรี,Jirawat Taweesuwannakul,1.3409090909090908,228.8636363636364
+2026-11,10055262,True Shop Lotus's Bangkae,BMA II - South West,Lotus's,กรุงเทพมหานคร,Samavee Katekasem,1.3409090909090908,228.8636363636364
+2026-11,10055258,True Shop Lotus's Charan 70,BMA II - South West,Lotus's,กรุงเทพมหานคร,Samavee Katekasem,1.3409090909090908,228.8636363636364
+2026-11,10055247,True Shop Lotus's Minburi,BMA III - North East,Lotus's,กรุงเทพมหานคร,Sorntanit Wangsriprasert,0.0,0.0
+2026-11,10055253,True Shop Lotus's Ban Fah,BMA III - North East,Lotus's,ปทุมธานี,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055273,True Shop Lotus's Liab Klong Song,BMA III - North East,Lotus's,กรุงเทพมหานคร,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055284,True Shop Lotus's Bangkadi,BMA III - North East,Lotus's,ปทุมธานี,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055289,True Shop Lotus's Sukhapiban1,BMA III - North East,Lotus's,กรุงเทพมหานคร,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055257,True Shop Onnut 80,BMA IV - South East,Lotus's,กรุงเทพมหานคร,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055255,True Shop Lotus's Bang Plee,BMA IV - South East,Lotus's,สมุทรปราการ,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055285,True Shop Lotus's Sriwaree,BMA IV - South East,Lotus's,สมุทรปราการ,Sorntanit Wangsriprasert,1.3409090909090908,228.8636363636364
+2026-11,10055248,True Shop Lotus's Kosumphisai,UPC - Central Northeast,Lotus's,มหาสารคาม,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055265,True Shop Lotus's Khukhan,UPC - Central Northeast,Lotus's,ศรีษะเกษ,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055279,True Shop Lotus's Srisaket,UPC - Central Northeast,Lotus's,ศรีษะเกษ,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055282,True Shop Lotus's Warinchamrab,UPC - Central Northeast,Lotus's,อุบลราชธานี,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055249,True Shop Lotus's Wang NamYen,UPC - East,Lotus's,สระแก้ว,Archiraya Jiraakkrapan,1.3409090909090908,228.8636363636364
+2026-11,10055256,True Shop Lotus's Sri Mahaphoe,UPC - East,Lotus's,ปราจีนบุรี,Archiraya Jiraakkrapan,1.3409090909090908,228.8636363636364
+2026-11,10055260,True Shop Lotus's Prachinburi,UPC - East,Lotus's,ปราจีนบุรี,Archiraya Jiraakkrapan,1.3409090909090908,228.8636363636364
+2026-11,10055287,True Shop Lotus's Chonburi,UPC - East,Lotus's,ชลบุรี,Archiraya Jiraakkrapan,1.3409090909090908,228.8636363636364
+2026-11,10055259,True Shop Lotus's Kanuworaluk,UPC - Lower North,Lotus's,กำแพงเพชร,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055264,True Shop Lotus's Maesod Tak,UPC - Lower North,Lotus's,ตาก,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055271,True Shop Lotus's Tak,UPC - Lower North,Lotus's,ตาก,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055277,True Shop Lotus's Bueng Samphan,UPC - Lower North,Lotus's,เพชรบูรณ์,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055278,True Shop Lotus's Korat,UPC - Lower Northeast,Lotus's,นครราชสีมา,Suneerat Sirimontree,1.3409090909090908,228.8636363636364
+2026-11,10055281,True Shop Lotus's Surin,UPC - Lower Northeast,Lotus's,สุรินทร์,Suneerat Sirimontree,1.3409090909090908,228.8636363636364
+2026-11,10055290,True Shop Lotus's Sikhio,UPC - Lower Northeast,Lotus's,นครราชสีมา,Suneerat Sirimontree,1.3409090909090908,228.8636363636364
+2026-11,10055280,True Shop Lotus's Mae Khri,UPC - Lower South,Lotus's,พัทลุง,Phatnicha Wongpanich,1.3409090909090908,228.8636363636364
+2026-11,10055291,True Shop Lotus's Satun,UPC - Lower South,Lotus's,สตูล,Phatnicha Wongpanich,1.3409090909090908,228.8636363636364
+2026-11,10055263,True Shop Lotus's Nan,UPC - Upper North,Lotus's,น่าน,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055268,True Shop Lotus's Hangdong,UPC - Upper North,Lotus's,เชียงใหม่,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055269,True Shop Lotus's Chiang Khong,UPC - Upper North,Lotus's,เชียงใหม่,Kriengsak Chivaprawat,1.3409090909090908,228.8636363636364
+2026-11,10055261,True Shop Lotus's Thabor Nong Khai,UPC - Upper Northeast,Lotus's,หนองคาย,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055272,True Shop Lotus's Udonthani-Nadee,UPC - Upper Northeast,Lotus's,อุดรธานี,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055274,True Shop Lotus's Loei,UPC - Upper Northeast,Lotus's,เลย,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055283,True Shop Lotus's Sakhon Nakorn,UPC - Upper Northeast,Lotus's,สกลนคร,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055286,True Shop Lotus's Thatphanom,UPC - Upper Northeast,Lotus's,นครพนม,Pranee Preewat,1.3409090909090908,228.8636363636364
+2026-11,10055266,True Shop Lotus's Samui,UPC - Upper South,Lotus's,สุราษฎร์ธานี,Phatnicha Wongpanich,1.3409090909090908,228.8636363636364
+2026-11,10055267,True Shop Lotus's Samui - Lamai,UPC - Upper South,Lotus's,สุราษฎร์ธานี,Phatnicha Wongpanich,1.3409090909090908,228.8636363636364
+2026-11,10055270,True Shop Lotus's Chalong Phuket,UPC - Upper South,Lotus's,ภูเก็ต,Phatnicha Wongpanich,1.3409090909090908,228.8636363636364
+2026-11,10055252,True Shop Lotus's Tha Yang,UPC - West,Lotus's,เพชรบุรี,Jumrat In-eaim,1.3409090909090908,228.8636363636364
+2026-11,10055251,True Shop Lotus's Supanburi,UPC - West,Lotus's,สุพรรณบุรี,Jumrat In-eaim,1.3409090909090908,228.8636363636364
+2026-11,10055250,True Shop Lotus's Banglen,UPC - West,Lotus's,นครปฐม,Jumrat In-eaim,1.3409090909090908,228.8636363636364
+2026-11,10055276,True Shop Nakornchaisri,UPC - West,Lotus's,นครปฐม,Jumrat In-eaim,1.3409090909090908,228.8636363636364
+2026-11,10055288,True Shop Lotus's Samutsakhon,UPC - West,Lotus's,สมุทรสาคร,Jumrat In-eaim,1.3409090909090908,228.8636363636364
+2026-11,80100477,True Shop Central Ladprao,BMA I - North West,matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,193.6827847062362,126818.501443979
+2026-11,80100480,True Shop The Mall Ngamwongwan 6Fl.,BMA I - North West,matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,105.84692349727666,103760.59209052824
+2026-11,80101182,True Shop Central Chaengwattana,BMA I - North West,matching,นนทบุรี,Jirawat Taweesuwannakul,86.4270383788404,92231.63741380288
+2026-11,80101185,True Shop Central West Gate,BMA I - North West,matching,นนทบุรี,Jirawat Taweesuwannakul,210.4750500392288,126818.501443979
+2026-11,80101627,True Shop Central Westville,BMA I - North West,matching,นนทบุรี,Jirawat Taweesuwannakul,90.76731456387412,69173.72806035216
+2026-11,80101713,True Shop Central North Ville,BMA I - North West,matching,นนทบุรี,Jirawat Taweesuwannakul,48.59682036141684,57644.77338362681
+2026-11,80100484,True Shop The Mall Bangkae 2Fl.,BMA II - South West,matching,กรุงเทพมหานคร,Samavee Katekasem,156.54081725882185,152488.07191437745
+2026-11,80100565,True Shop Central Rama 2,BMA II - South West,matching,กรุงเทพมหานคร,Samavee Katekasem,136.4126663261567,168539.44790536453
+2026-11,80100626,True Shop Central Pinklao 3Fl.,BMA II - South West,matching,กรุงเทพมหานคร,Samavee Katekasem,192.2255391635501,144462.38391888392
+2026-11,80100566,True Shop Central Rama 2 (H),BMA II - South West,matching,กรุงเทพมหานคร,Samavee Katekasem,53.49537193375226,64205.50396394842
+2026-11,80100483,True Shop The Mall Thapra,BMA II - South West,matching,กรุงเทพมหานคร,Samavee Katekasem,115.44395221069055,112359.63193690972
+2026-11,80101340,True Shop Future Park Rangsit,BMA III - North East,matching,ปทุมธานี,Sorntanit Wangsriprasert,97.25422094885909,100058.87108744885
+2026-11,80100925,True Shop Fashion Island,BMA III - North East,matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,118.76997655083942,119799.40137729191
+2026-11,80101341,True Shop Future Park Rangsit (H),BMA III - North East,matching,ปทุมธานี,Sorntanit Wangsriprasert,81.95870087043599,88003.58541426224
+2026-11,80101066,True Shop Central Bangna,BMA IV - South East,matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,92.71110241005684,69167.20154990816
+2026-11,80100481,True Shop The Mall Bangkapi,BMA IV - South East,matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,213.99358015771884,186555.5457925628
+2026-11,80101296,True Shop Paradise Park Srinakarin,BMA IV - South East,matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,128.46222577488865,78057.9747338833
+2026-11,80101070,True Shop Mega Bangna,BMA IV - South East,matching,สมุทรปราการ,Sorntanit Wangsriprasert,211.60996363007257,199213.5957494087
+2026-11,80101071,True Shop Seacon Square 2,BMA IV - South East,matching,สมุทรปราการ,Sorntanit Wangsriprasert,240.1962822535365,165760.1780063159
+2026-11,80100715,True Shop Fortune Town 1Fl.,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,109.16925264689124,77018.2870347109
+2026-11,80101068,True Shop Central Rama 3,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,146.34802612424423,123737.07213708496
+2026-11,80101363,True Shop at Chamchuri Square 1,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,88.12067684061644,46888.05606288993
+2026-11,80100623,True Shop Central Rama 9,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,179.2888792377019,121875.09157141062
+2026-11,80100836,True Shop Central World 4Fl.,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,302.59828672206737,200924.6301323117
+2026-11,80100478,True Shop Terminal 21,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,192.4633624896613,130507.9105577189
+2026-11,80100622,True Shop Central Rama 9 4Fl.,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,260.2449518117064,221237.14539421347
+2026-11,80101269,True Shop Mahboon Krong 4Fl.,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,137.04294339351995,125429.78174224346
+2026-11,80101221,True Shop Emquartier,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,381.0522465715052,254414.25365531968
+2026-11,80101186,True Shop Central Festival East Ville,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,339.8108656089306,171979.2958841017
+2026-11,80101349,True Shop Silom Complex,BMA V - Central,matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,256.5908171596141,159453.24480592893
+2026-11,80100926,True Shop Ayudhaya Park,UPC - Central,matching,พระนครศรีอยุธยา,Jumrat In-eaim,81.69062443390992,98044.43372726608
+2026-11,80101628,True Shop Central Nakhonsawan,UPC - Central,matching,นครสวรรค์,Jumrat In-eaim,85.92538411087914,54899.9847473659
+2026-11,80101358,True shop Central Ayutthaya,UPC - Central,matching,พระนครศรีอยุธยา,Jumrat In-eaim,137.91817568633536,81472.39372174152
+2026-11,80101266,True Shop Central Ubonratchathani,UPC - Central Northeast,matching,อุบลราชธานี,Pranee Preewat,41.75957936855082,34604.2590851957
+2026-11,80100837,True Shop Central Chonburi,UPC - East,matching,ชลบุรี 1,Archiraya Jiraakkrapan,120.17620007237564,125313.68532918987
+2026-11,80100625,True Shop Central Plaza Rayong,UPC - East,matching,ระยอง,Archiraya Jiraakkrapan,104.41917166102722,113504.94142334498
+2026-11,80100615,True Shop Central Festival Pattaya Beach,UPC - East,matching,ชลบุรี 2,Archiraya Jiraakkrapan,435.8785783221296,158889.29300177874
+2026-11,80101189,True shop Central Plaza Si Racha,UPC - East,matching,ชลบุรี 1,Archiraya Jiraakkrapan,69.42381379603087,66974.96543613524
+2026-11,80101391,True Shop Central Chanthaburi,UPC - East,matching,จันทบุรี,Archiraya Jiraakkrapan,92.9004245631164,60453.718801564166
+2026-11,80101198,True Shop Central Phitsanulok,UPC - Lower North,matching,พิษณุโลก,Kriengsak Chivaprawat,57.60042906787575,67213.98384367877
+2026-11,80100487,True Shop The Mall Nakhonratchasima 3Fl.,UPC - Lower Northeast,matching,นครราชสีมา,Suneerat Sirimontree,49.53881205683613,49719.70282887533
+2026-11,80101119,True Shop Central Plaza Nakhonratchasima,UPC - Lower Northeast,matching,นครราชสีมา,Suneerat Sirimontree,40.68594992559128,43504.739975265904
+2026-11,80101222,True Shop Central Festival Hadyai Songkhla,UPC - Lower South,matching,สงขลา,Phatnicha Wongpanich,59.80612418978884,45168.23576256833
+2026-11,80100839,True Shop Central Plaza Nakhonsithammarat,UPC - Lower South,matching,นครศรีธรรมราช,Phatnicha Wongpanich,46.82949199975799,20470.002834447758
+2026-11,80101067,True Shop Central Airport Plaza Chiangmai,UPC - Upper North,matching,เชียงใหม่,Kriengsak Chivaprawat,84.82669947953978,94507.52352586624
+2026-11,80100621,True Shop Central Chiangrai,UPC - Upper North,matching,เชียงราย,Kriengsak Chivaprawat,72.64824214076263,80035.14839189495
+2026-11,80101117,True Shop Central Lampang,UPC - Upper North,matching,ลำปาง,Kriengsak Chivaprawat,60.32321132206758,65854.1633612922
+2026-11,80100486,True Shop Central Festival Chiangmai,UPC - Upper North,matching,เชียงใหม่,Kriengsak Chivaprawat,45.32753077461682,44291.29571201954
+2026-11,80101263,True Shop Maya Chiangmai,UPC - Upper North,matching,เชียงใหม่,Kriengsak Chivaprawat,53.32214073321386,27779.189854468397
+2026-11,80101196,True Shop Central Plaza Udonthani,UPC - Upper Northeast,matching,อุดรธานี,Pranee Preewat,115.68289473151876,113188.8485826253
+2026-11,80101183,True Shop Central Khonkaen,UPC - Upper Northeast,matching,ขอนแก่น,Pranee Preewat,100.27535307189623,113188.8485826253
+2026-11,80100476,True Shop Central Festival Phuket,UPC - Upper South,matching,ภูเก็ต,Phatnicha Wongpanich,173.4139946121642,173894.3519477185
+2026-11,80101115,True Shop Central Suratthani,UPC - Upper South,matching,สุราษฎร์ธานี,Phatnicha Wongpanich,146.13873453109417,89329.75007426218
+2026-11,80100838,True Shop Central Festival Samui Suratthani,UPC - Upper South,matching,สุราษฎร์ธานี,Phatnicha Wongpanich,52.39081333674224,56913.31935610393
+2026-11,80101647,True Shop Central Krabi,UPC - Upper South,matching,กระบี่,Phatnicha Wongpanich,62.767765698255566,27114.36441021932
+2026-11,80101214,True Shop Central Plaza Salaya,UPC - West,matching,นครปฐม,Jumrat In-eaim,122.52081785760168,129840.41274475398
+2026-11,80100840,True Shop Central Plaza Mahachai,UPC - West,matching,สมุทรสาคร,Jumrat In-eaim,129.92287575201453,113051.23242759371
+2026-11,80101629,True Shop Central Nakhonpathom,UPC - West,matching,นครปฐม,Jumrat In-eaim,64.51502961828065,66237.6055578476
+2026-11,80101180,True Shop Wongsawang Town Center,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,76.33968653106484,69173.72806035216
+2026-11,80101271,True Shop Big C Chaengwattana,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,42.11327541951063,34586.86403017608
+2026-11,80101305,True Shop Robinson Srisaman,BMA I - North West,non_matching,นนทบุรี,Jirawat Taweesuwannakul,90.9856913862336,80702.68273707754
+2026-11,80101264,True Shop Central Plaza Ramindra 1FL.,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,79.8136674967539,80702.68273707754
+2026-11,80101223,True Shop Gateway Bangsue,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,19.446783627450703,11528.95467672536
+2026-11,80101217,True Shop Big C Sukhapibal 5,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,20.602210128433928,23057.909353450723
+2026-11,80101218,True Shop Big C Sainoi Nonthaburi,BMA I - North West,non_matching,นนทบุรี,Jirawat Taweesuwannakul,15.093453566519177,11528.95467672536
+2026-11,80100807,True Shop Lotus's Nakhon In,BMA I - North West,non_matching,นนทบุรี,Jirawat Taweesuwannakul,19.59968014130869,11528.95467672536
+2026-11,80101584,True Shop Robinson Ratchapruek,BMA I - North West,non_matching,นนทบุรี,Jirawat Taweesuwannakul,62.92678530948288,57644.77338362681
+2026-11,80101623,True Shop Chaeng Watthana Government Complex,BMA I - North West,non_matching,กรุงเทพมหานคร,Jirawat Taweesuwannakul,22.1892067804558,11528.95467672536
+2026-11,80100736,True Shop Lotus's Bangpakok,BMA II - South West,non_matching,กรุงเทพมหานคร,Samavee Katekasem,52.76841457933288,32102.75198197421
+2026-11,80100928,True Shop Seacon Bangkae,BMA II - South West,non_matching,กรุงเทพมหานคร,Samavee Katekasem,87.71051370725819,80256.87995493552
+2026-11,80101123,True Shop Lotus's Sukhapibal 3,BMA III - North East,non_matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,31.56706397058113,21699.514211735896
+2026-11,80101350,True Shop iPlace Latkrabang,BMA III - North East,non_matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,22.392069719610323,17480.16422612058
+2026-11,80100805,True Shop Lotus's Phatthanakan,BMA IV - South East,non_matching,กรุงเทพมหานคร,Sorntanit Wangsriprasert,35.42774823794912,25014.71777186221
+2026-11,80101418,True Shop Imperial World Samrong,BMA IV - South East,non_matching,สมุทรปราการ,Sorntanit Wangsriprasert,73.67804968670085,59522.97301135888
+2026-11,80101632,True Shop Lotus's Bangna-trad,BMA IV - South East,non_matching,สมุทรปราการ,Sorntanit Wangsriprasert,70.28685002598588,47467.68733817228
+2026-11,80101201,True Kiosk The Eight Thonglor,BMA V - Central,non_matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,0.0,0.0
+2026-11,80100729,True Shop Station Lotus's Rama 4,BMA V - Central,non_matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,32.219151416772284,26914.08272201985
+2026-11,80101630,Kiosk Lotus's Ramindra,BMA V - Central,non_matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,4.4318054672049305,4739.586894443748
+2026-11,80101633,True Shop Makro Sri Ayutthaya,BMA V - Central,non_matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,28.43889568305405,10664.07051249843
+2026-11,80101347,True Shop U Chu Liang Building,BMA V - Central,non_matching,กรุงเทพมหานคร,Piyawan Teachaboonpisal,0.0,0.0
+2026-11,80100841,True Move Shop Taweekit Complex Saraburi,UPC - Central,non_matching,สระบุรี,Jumrat In-eaim,0.0,0.0
+2026-11,80100725,True Shop Lotus's Bang Pa-In Ayudhaya,UPC - Central,non_matching,พระนครศรีอยุธยา,Jumrat In-eaim,16.053214644702564,7632.934682347527
+2026-11,80100763,True Shop The Walk Nakornsawan,UPC - Central,non_matching,นครสวรรค์,Jumrat In-eaim,70.69226315135256,38001.40208163395
+2026-11,80100856,True Shop Uthaithani,UPC - Central,non_matching,อุทัยธานี,Jumrat In-eaim,12.927189755962752,7183.938524562379
+2026-11,80101307,True Shop Robinson Lopburi,UPC - Central,non_matching,ลพบุรี,Jumrat In-eaim,36.26520837449166,48532.40287332198
+2026-11,80101329,True Shop Big C Nongbua Nakhonsawan,UPC - Central,non_matching,นครสวรรค์,Jumrat In-eaim,3.745484332678083,4204.236750170028
+2026-11,80100796,True Shop Lotus's Khok Samrong Lopburi,UPC - Central,non_matching,ลพบุรี,Jumrat In-eaim,11.798731559290385,8857.469658125205
+2026-11,80101351,True Shop Lotus's Keangkoi Saraburi,UPC - Central,non_matching,สระบุรี,Jumrat In-eaim,18.574883812607613,11388.175274732408
+2026-11,80101626,Kiosk Lotus's Sena Ayutthaya,UPC - Central,non_matching,พระนครศรีอยุธยา,Jumrat In-eaim,20.39232298757074,5918.585716258778
+2026-11,80101227,True Shop Lotus's Ubonratchathani,UPC - Central Northeast,non_matching,อุบลราชธานี,Pranee Preewat,17.756875851480935,17302.12954259785
+2026-11,80100847,True Shop Mini Senangkhanikhom Amnatcharoen,UPC - Central Northeast,non_matching,อำนาจเจริญ,Pranee Preewat,8.189783794830177,13457.211866464995
+2026-11,80100852,True Shop Khamcha-I Mukdahan,UPC - Central Northeast,non_matching,มุกดาหาร,Pranee Preewat,8.99790208659774,11534.753028398563
+2026-11,80101303,True Shop Robinson Roi-Et,UPC - Central Northeast,non_matching,ร้อยเอ็ด,Pranee Preewat,64.51731196552723,30759.341409062843
+2026-11,80100771,True Shop Lotus's Chiangyuen Mahasarakham,UPC - Central Northeast,non_matching,มหาสารคาม,Pranee Preewat,43.94403990483163,11534.753028398563
+2026-11,80100778,True Shop Lotus's Yasothon,UPC - Central Northeast,non_matching,ยโสธร,Pranee Preewat,15.383298335128906,23069.50605679713
+2026-11,80101309,True Shop Robinson Mukdahan,UPC - Central Northeast,non_matching,มุกดาหาร,Pranee Preewat,47.56436778417573,28836.88257099641
+2026-11,80100783,True Shop Lotus's Phonthong Roiet,UPC - Central Northeast,non_matching,ร้อยเอ็ด,Pranee Preewat,20.89649038601714,19224.58838066428
+2026-11,80100790,True Shop Lotus's Phibunmangsahan Ubonratchathani,UPC - Central Northeast,non_matching,อุบลราชธานี,Pranee Preewat,10.796303500414902,19224.58838066428
+2026-11,80100797,True Shop Lotus's Trakan Phuet Phon Ubonratchathani,UPC - Central Northeast,non_matching,อุบลราชธานี,Pranee Preewat,34.4852331091728,21147.047218730702
+2026-11,80100861,True Shop Kasetwisai Roiet,UPC - Central Northeast,non_matching,ร้อยเอ็ด,Pranee Preewat,6.073963309072124,12303.736563625136
+2026-11,80100802,True Shop Lotus's Borabue Mahasarakham,UPC - Central Northeast,non_matching,มหาสารคาม,Pranee Preewat,101.85704613702696,11534.753028398563
+2026-11,80100864,True Shop Buntharik Ubonratchathan,UPC - Central Northeast,non_matching,อุบลราชธานี,Pranee Preewat,10.423865785625935,11534.753028398563
+2026-11,80100832,True Shop Lotus's Det Udom Ubonratchathani,UPC - Central Northeast,non_matching,อุบลราชธานี,Pranee Preewat,23.67277364472993,20762.55545111742
+2026-11,80101378,True Shop South Pattaya,UPC - East,non_matching,ชลบุรี 2,Archiraya Jiraakkrapan,81.71807260309228,72967.46234357893
+2026-11,80101184,True Shop Chonburi,UPC - East,non_matching,ชลบุรี 1,Archiraya Jiraakkrapan,22.61671197937963,20092.489630840573
+2026-11,80100859,True Shop Trad,UPC - East,non_matching,ตราด,Archiraya Jiraakkrapan,17.5273095219007,22207.488539350103
+2026-11,80100479,True Shop Terminal 21 Pattaya,UPC - East,non_matching,ชลบุรี 2,Archiraya Jiraakkrapan,120.61299199188262,98083.07438212962
+2026-11,80100854,True Shop Mini Lomsak Phetchabun,UPC - Lower North,non_matching,เพชรบูรณ์,Kriengsak Chivaprawat,12.777815975512478,21077.21747699175
+2026-11,80101306,True Shop Robinson Mae Sot,UPC - Lower North,non_matching,ตาก,Kriengsak Chivaprawat,48.6200335800206,89359.63169968854
+2026-11,80101308,True Shop Robinson Khamphaengphet,UPC - Lower North,non_matching,กำแพงเพชร,Kriengsak Chivaprawat,18.426843625583214,17483.406202112972
+2026-11,80100782,True Shop Lotus's Thaluang Phichit,UPC - Lower North,non_matching,พิจิตร,Kriengsak Chivaprawat,28.267602796924947,46719.54657342412
+2026-11,80100865,True Shop Taphan Hin Phichit,UPC - Lower North,non_matching,พิจิตร,Kriengsak Chivaprawat,9.313687220797927,15443.675478533129
+2026-11,80101225,True Shop Kao Yai Market Village,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,21.56838933300866,31074.814268047077
+2026-11,80101377,True Shop Big C Chaiyaphum,UPC - Lower Northeast,non_matching,ชัยภูมิ,Suneerat Sirimontree,23.999471793342227,12429.925707218832
+2026-11,80101345,True Shop Down Town Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,8.954097904096237,12429.925707218832
+2026-11,80100758,True Shop Lotus's Buayai Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,0.0,0.0
+2026-11,80100872,True Shop Chatturat Chaiyaphum,UPC - Lower Northeast,non_matching,ชัยภูมิ,Suneerat Sirimontree,6.136258874669434,12429.925707218832
+2026-11,80100845,True Shop Kaset Sombun Chaiyaphum,UPC - Lower Northeast,non_matching,ชัยภูมิ,Suneerat Sirimontree,28.799366152010663,18644.888560828243
+2026-11,80101265,True Shop Chumphuang Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,20.1025031552573,18644.888560828243
+2026-11,80100851,True Shop Nongbunmak Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,9.204388312004149,18644.888560828243
+2026-11,80100764,True Shop Lotus's Sungkha Surin,UPC - Lower Northeast,non_matching,สุรินทร์,Suneerat Sirimontree,11.678557099875194,18644.888560828243
+2026-11,80101304,True Shop Robinson Buriram,UPC - Lower Northeast,non_matching,บุรีรัมย์,Suneerat Sirimontree,15.293619417064567,24859.851414437664
+2026-11,80100765,True Shop Lotus's Prasat Surin,UPC - Lower Northeast,non_matching,สุรินทร์,Suneerat Sirimontree,12.789484616943827,15537.407134023537
+2026-11,80100769,True Shop Lotus's Thatum Surin,UPC - Lower Northeast,non_matching,สุรินทร์,Suneerat Sirimontree,8.08095330106394,12429.925707218832
+2026-11,80100772,True Shop Lotus's Kaengkhro Chaiyaphum,UPC - Lower Northeast,non_matching,ชัยภูมิ,Suneerat Sirimontree,23.7191454020802,18644.888560828243
+2026-11,80100860,True Shop Sikhoraphum Surin,UPC - Lower Northeast,non_matching,สุรินทร์,Suneerat Sirimontree,17.434118394616554,18644.888560828243
+2026-11,80100774,True Shop Lotus's Phimai Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,14.617699738775958,24859.851414437664
+2026-11,80100776,True Shop Lotus's JorHor Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,11.83014648142908,12429.925707218832
+2026-11,80100842,True Shop Terminal 21 Korat,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,21.92977315265205,18644.888560828243
+2026-11,80101290,True Shop Big C Korat 2,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,4.832482778381164,6214.962853609416
+2026-11,80100780,True Shop Lotus's Prakonchai Buriram,UPC - Lower Northeast,non_matching,บุรีรัมย์,Suneerat Sirimontree,25.12667770936507,21752.369987632952
+2026-11,80100781,True Shop Lotus's Lamplaimat Buriram,UPC - Lower Northeast,non_matching,บุรีรัมย์,Suneerat Sirimontree,33.62048130650176,18644.888560828243
+2026-11,80101331,True Shop Big C Nongki Buriram,UPC - Lower Northeast,non_matching,บุรีรัมย์,Suneerat Sirimontree,12.121429951595909,18644.888560828243
+2026-11,80100793,True Shop Lotus's Satuek Buriram,UPC - Lower Northeast,non_matching,บุรีรัมย์,Suneerat Sirimontree,35.282672103208384,12429.925707218832
+2026-11,80100794,True Shop Lotus's Nonthai Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,22.3671190559813,12429.925707218832
+2026-11,80101313,True Shop Robinson Chaiyaphum,UPC - Lower Northeast,non_matching,ชัยภูมิ,Suneerat Sirimontree,22.089509664949123,24859.851414437664
+2026-11,80100862,True Shop Pakthongchai Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,6.97560404902447,12429.925707218832
+2026-11,80100863,True Shop Huai Thalaeng Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,8.2787388713697,6214.962853609416
+2026-11,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,9.984358566555509,12429.925707218832
+2026-11,80100869,True Shop Khon Buri Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,12.71154229685274,12429.925707218832
+2026-11,80100870,True Shop Soeng Sang Nakhonratchasima,UPC - Lower Northeast,non_matching,นครราชสีมา,Suneerat Sirimontree,3.068129437334717,6214.962853609416
+2026-11,80100853,True Shop Mini Mueang Satun,UPC - Lower South,non_matching,สตูล,Phatnicha Wongpanich,14.60851419509964,9060.49305787032
+2026-11,80101281,True Shop Big C Chiangmai,UPC - Upper North,non_matching,เชียงใหม่,Kriengsak Chivaprawat,62.69852392209421,47593.71688352977
+2026-11,80100750,True Shop Lotus's Fang Chiangmai,UPC - Upper North,non_matching,เชียงใหม่,Kriengsak Chivaprawat,40.39017367335086,53227.2588819884
+2026-11,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC - Upper North,non_matching,เชียงใหม่,Kriengsak Chivaprawat,70.52089483716227,27584.929785556025
+2026-11,80100849,True Shop Mini Mueang Phayao,UPC - Upper North,non_matching,พะเยา,Kriengsak Chivaprawat,14.967791231848976,17483.406202112972
+2026-11,80101013,True Shop Mini Mueang Maehongson,UPC - Upper North,non_matching,แม่ฮ่องสอน,Kriengsak Chivaprawat,9.67446292037146,12044.124272566713
+2026-11,80100858,True Shop Mini Mae Sai ChiangRai,UPC - Upper North,non_matching,เชียงราย,Kriengsak Chivaprawat,40.21491493328119,46622.41653896793
+2026-11,80100792,True Shop Lotus's Phayao,UPC - Upper North,non_matching,พะเยา,Kriengsak Chivaprawat,12.737737840197752,21757.12771818503
+2026-11,80100798,True Shop Lotus's Chiangkham Phayao,UPC - Upper North,non_matching,พะเยา,Kriengsak Chivaprawat,11.6998019289966,23699.728407308696
+2026-11,80100804,True Shop Lotus's Jomthong Chiangmai,UPC - Upper North,non_matching,เชียงใหม่,Kriengsak Chivaprawat,18.62131383395552,32247.171439452814
+2026-11,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC - Upper Northeast,non_matching,หนองคาย,Pranee Preewat,215.00289062337595,119146.1564027635
+2026-11,80100727,True Shop Lotus's Udonthani,UPC - Upper Northeast,non_matching,อุดรธานี,Pranee Preewat,40.785789684187904,55601.53965462297
+2026-11,80100749,True Shop Lotus's Kalasin,UPC - Upper Northeast,non_matching,กาฬสินธ์,Pranee Preewat,10.568383120779837,15886.154187035136
+2026-11,80100756,True Shop Lotus's Nongbualamphu,UPC - Upper Northeast,non_matching,หนองบัวลำภู,Pranee Preewat,47.60013823444877,39715.38546758783
+2026-11,80100848,True Shop Wangsaphung Loei,UPC - Upper Northeast,non_matching,เลย,Pranee Preewat,9.889151525871329,7943.077093517568
+2026-11,80100628,True Shop Regional Office Khonkaen,UPC - Upper Northeast,non_matching,ขอนแก่น,Pranee Preewat,0.0,0.0
+2026-11,80100760,True Shop Lotus's Nakhonphanom,UPC - Upper Northeast,non_matching,นครพนม,Pranee Preewat,87.55881700983073,55601.53965462297
+2026-11,80100873,True Shop Mueang Loei,UPC - Upper Northeast,non_matching,เลย,Pranee Preewat,38.831462086922784,15886.154187035136
+2026-11,80100770,True Shop Lotus's Buengkan,UPC - Upper Northeast,non_matching,บึงกาฬ,Pranee Preewat,48.33994196352438,39715.38546758783
+2026-11,80101289,True Shop Big C Banphai Khon Kaen,UPC - Upper Northeast,non_matching,ขอนแก่น,Pranee Preewat,10.969737218237382,15886.154187035136
+2026-11,80101292,True Shop Big C Bandung Udonthani,UPC - Upper Northeast,non_matching,อุดรธานี,Pranee Preewat,13.313992814843736,15886.154187035136
+2026-11,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC - Upper Northeast,non_matching,สกลนคร,Pranee Preewat,10.858397871855846,15886.154187035136
+2026-11,80101328,True Shop Big C Khamtakla Sakonnakhon,UPC - Upper Northeast,non_matching,สกลนคร,Pranee Preewat,84.73025027366553,15886.154187035136
+2026-11,80100786,True Shop Lotus's Somdet Kalasin,UPC - Upper Northeast,non_matching,กาฬสินธ์,Pranee Preewat,14.85453195541121,15886.154187035136
+2026-11,80100799,True Shop Lotus's Phon Khonkaen,UPC - Upper Northeast,non_matching,ขอนแก่น,Pranee Preewat,0.0,0.0
+2026-11,80100801,True Shop Lotus's Banphue Udonthani,UPC - Upper Northeast,non_matching,อุดรธานี,Pranee Preewat,4.47005573322208,7943.077093517568
+2026-11,80101346,True Shop Asawann Phonphisai Nong Khai,UPC - Upper Northeast,non_matching,หนองคาย,Pranee Preewat,5.06154422184382,7943.077093517568
+2026-11,80100803,True Shop Lotus's Nongruea  Khonkaen,UPC - Upper Northeast,non_matching,ขอนแก่น,Pranee Preewat,6.300583750272573,7943.077093517568
+2026-11,80101293,True Shop Big C Khonkaen 2,UPC - Upper Northeast,non_matching,ขอนแก่น,Pranee Preewat,3.921244459166306,7943.077093517568
+2026-11,80101294,True Shop Big C Loei,UPC - Upper Northeast,non_matching,เลย,Pranee Preewat,48.30186323643868,39715.38546758783
+2026-11,80101648,True Shop UD Town Udonthani,UPC - Upper Northeast,non_matching,อุดรธานี,Pranee Preewat,9.77581535347268,7943.077093517568
+2026-11,80100822,True Shop Lotus's Ranong,UPC - Upper South,non_matching,ระนอง,Phatnicha Wongpanich,12.178851149293951,6845.705865946464
+2026-11,80101122,True Shop  Ocean Complex Chumphon,UPC - Upper South,non_matching,ชุมพร,Phatnicha Wongpanich,8.154259589785699,10469.90308909459
+2026-11,80100627,True Shop Hua Hin,UPC - West,non_matching,ประจวบคีรีขันธ์,Jumrat In-eaim,24.395681596026986,23345.53905415349
+2026-11,80100721,True Shop Lotus's Nakhonpathom,UPC - West,non_matching,นครปฐม,Jumrat In-eaim,15.125963794186024,16176.43650996463
+2026-11,80100821,True Shop Station Lotus's Pranburi Prachuapkhirikhan,UPC - West,non_matching,ประจวบคีรีขันธ์,Jumrat In-eaim,18.35693889580491,15257.320799171184
+2026-11,80100733,True Shop Lotus's Sampran Nakhonpathom,UPC - West,non_matching,นครปฐม,Jumrat In-eaim,14.11493602874583,17279.375362916762
+2026-11,80100784,True Shop Lotus's U-Thong Suphanburi,UPC - West,non_matching,สุพรรณบุรี,Jumrat In-eaim,7.138814119686575,14460.753849816863
+2026-11,80101312,True Shop Robinson Kanchanaburi,UPC - West,non_matching,กาญจนบุรี,Jumrat In-eaim,91.65257821417984,51409.20542371335
+2026-11,80100806,True Shop Lotus's Samchuk Suphanburi,UPC - West,non_matching,สุพรรณบุรี,Jumrat In-eaim,42.24544660174905,12071.05300175391
+2026-11,80101650,True Shop Lotus's Pakthongchai (D),UPC - Lower Northeast,COCO,นครราชสีมา,Suneerat Sirimontree,4.517727208926624,6214.962853609416
+2026-11,80101651,True Shop Lotus's Banphue (D),UPC - Upper Northeast,COCO,อุดรธานี,Pranee Preewat,5.1639596705061885,7943.077093517568
+2026-11,80101652,True Shop Big C Kranuan (D),UPC - Upper Northeast,COCO,ขอนแก่น,Pranee Preewat,1.960622229583153,3971.538546758784
+2026-11,80101653,True Shop Robinson Chaiyaphum (D),UPC - Lower Northeast,COCO,ชัยภูมิ,Suneerat Sirimontree,4.602194156002074,9322.444280414122
+2026-11,80101654,True Shop Lotus's Bua Yai (D),UPC - Lower Northeast,COCO,นครราชสีมา,Suneerat Sirimontree,0.0,0.0
+2026-11,80101655,True Shop Lotus's Fang Chiangmai (D),UPC - Upper North,COCO,เชียงใหม่,Kriengsak Chivaprawat,13.83327044317764,16414.97582309496
+2026-11,80101656,True Shop Lotus's Pitsanulok (D),UPC - Lower North,COCO,พิษณุโลก,Kriengsak Chivaprawat,9.733851604861924,19717.396994605184
+2026-11,80101657,True Shop Assawan Phonpisai (D),UPC - Upper Northeast,COCO,หนองคาย,Pranee Preewat,3.0460975795824536,3971.538546758784
+2026-11,80101658,True Shop Lotus's Lomsak (D),UPC - Lower North,COCO,เพชรบูรณ์,Kriengsak Chivaprawat,46.62466968720956,8741.703101056486
+2026-11,80101659,True Shop Robinson Mae Sot (D),UPC - Lower North,COCO,ตาก,Kriengsak Chivaprawat,5.514250909158233,11169.953962461068
+2026-11,80101660,True Shop Lotus's Phimai Nakhon (D),UPC - Lower Northeast,COCO,นครราชสีมา,Suneerat Sirimontree,7.488268924916629,9322.444280414122
+2026-11,80101661,True Shop Lotus's Chom Thong (D),UPC - Upper North,COCO,เชียงใหม่,Kriengsak Chivaprawat,9.684605278076951,12626.904479303814
+2026-11,80101662,True Shop Ocean Shopping Mall (D),UPC - Upper South,COCO,ชุมพร,Phatnicha Wongpanich,3.4789044664705187,7047.050156121359
+2026-11,80101663,True Shop Lotus's Muang Sam Sib (D),UPC - Central Northeast,COCO,อุบลราชธานี,Pranee Preewat,3.8293356390414206,6536.360049425854
+2026-11,80101664,True Shop Big C Loei (D),UPC - Upper Northeast,COCO,เลย,Pranee Preewat,2.1280452650609187,3971.538546758784
+2026-11,80101665,True Shop Salokbat Kamphaengphet (D),UPC - Lower North,COCO,กำแพงเพชร,Kriengsak Chivaprawat,6.763586520670312,8644.573066600304
+2026-11,80101666,True Shop Lotus's Sangkha (D),UPC - Lower Northeast,COCO,สุรินทร์,Suneerat Sirimontree,54.880911326099806,6214.962853609416
+2026-11,80101667,True Shop Supreme Complex (D),BMA V - Central,COCO,กรุงเทพมหานคร,Piyawan Teachaboonpisal,14.189366384791263,16927.09605158481
+2026-11,80101668,True Shop Lotus's Nong Ruea (D),UPC - Upper Northeast,COCO,ขอนแก่น,Pranee Preewat,35.07046782850395,3971.538546758784
+2026-11,80101669,True Shop Lotus's Sam Chuk (D),UPC - West,COCO,สุพรรณบุรี,Jumrat In-eaim,19.230513905614227,11090.662910240904
+2026-11,80101670,True Shop Lotus's Ruam Choke (D),UPC - Upper North,COCO,เชียงใหม่,Kriengsak Chivaprawat,6.631688292190116,8256.052928775573
+2026-11,80101671,True Shop Lotus's Sawandandin (D),UPC - Upper Northeast,COCO,สกลนคร,Pranee Preewat,2.326731389325174,3971.538546758784
+2026-11,80101672,True Shop Big C Korat 2 (D),UPC - Lower Northeast,COCO,นครราชสีมา,Suneerat Sirimontree,3.654424934693989,6214.962853609416
+2026-11,80101673,True Shop Lotus's Prasat (D),UPC - Lower Northeast,COCO,สุรินทร์,Suneerat Sirimontree,6.919302207270584,6214.962853609416
+2026-11,80101674,True Shop Lotus's Nakhon Phanom (D),UPC - Upper Northeast,COCO,นครพนม,Pranee Preewat,2.7069214391399363,3971.538546758784
+2026-11,80101675,True Shop Big C Ranong (D),UPC - Upper South,COCO,ระนอง,Phatnicha Wongpanich,3.843361124862668,7785.31255342931
+2026-11,80101676,True Shop Big C Phibun Mangsahan (D),UPC - Central Northeast,COCO,อุบลราชธานี,Pranee Preewat,7.931366888912636,10765.769493171996
+2026-11,80101677,True Shop Lotus's Ubon Ratchathani (D),UPC - Central Northeast,COCO,อุบลราชธานี,Pranee Preewat,11.160391086941363,8458.818887492282
+2026-11,80101678,True Shop Big C Market Puwieng (D),UPC - Upper Northeast,COCO,ขอนแก่น,Pranee Preewat,3.72277022292028,3971.538546758784
+2026-11,80101679,True Shop Seacon Bangkae (D),BMA II - South West,COCO,กรุงเทพมหานคร,Samavee Katekasem,33.05367853006863,48154.12797296131
+2026-11,80101680,True Shop Lotus's Talad Khunhan (D),UPC - Central Northeast,COCO,ศรีษะเกษ,Pranee Preewat,9.856008950073289,8458.818887492282
+2026-11,80101681,True Shop Lotus's Trakan Phuet Phon (D),UPC - Central Northeast,COCO,อุบลราชธานี,Pranee Preewat,11.488637883616112,9227.802422718853
+2026-11,80101682,True Shop Lotus's Pran Buri (D),UPC - West,COCO,ประจวบคีรีขันธ์,Jumrat In-eaim,24.547449008595443,22548.972104799177
+2026-11,80101683,True Shop Big C Nong Khai (D),UPC - Upper Northeast,COCO,หนองคาย,Pranee Preewat,9.25118155595924,3971.538546758784
+2026-11,80101684,True Shop Lotus's Kantharalak (D),UPC - Central Northeast,COCO,ศรีษะเกษ,Pranee Preewat,7.686815741106811,13072.720098851709
+2026-11,80101685,True Shop Lotus's Det Udom (D),UPC - Central Northeast,COCO,อุบลราชธานี,Pranee Preewat,12.71692473130176,10381.27772555871
+2026-11,80101686,True Shop Lotus's Amphur U-Thong (D),UPC - West,COCO,สุพรรณบุรี,Jumrat In-eaim,6.412833022769297,12990.168712547356
+2026-11,80101687,True Shop Ampur Ranot Songkhla (D),UPC - Lower South,COCO,สงขลา,Phatnicha Wongpanich,20.5891003006038,18255.2156425239
+2026-11,80101688,True Shop Lotus's Chaiya (D),UPC - Upper South,COCO,สุราษฎร์ธานี,Phatnicha Wongpanich,7.384418297826293,8188.001133779102
+2026-11,80101689,True Shop Big C Sukhaphiban 5 (D),BMA I - North West,COCO,กรุงเทพมหานคร,Jirawat Taweesuwannakul,34.72370997176458,34586.86403017608
+2026-11,80101690,True Shop Big Chiang Nongkhai (D),UPC - Upper Northeast,COCO,หนองคาย,Pranee Preewat,3.7907234374402985,3971.538546758784
+2026-11,80101691,True Shop Ayutthaya (D),UPC - Central,HALL,พระนครศรีอยุธยา,Jumrat In-eaim,187.2429409684756,42042.36750170028
+2026-11,80101692,True Shop Central Nakorn Sithammarat (D),UPC - Lower South,HALL,นครศรีธรรมราช,Phatnicha Wongpanich,39.2183900864628,30671.44686997582
+2026-11,80101693,True Shop Central Plaza Mahachai (D),UPC - West,HALL,สมุทรสาคร,Jumrat In-eaim,30.3236580350739,51531.75418515247
+2026-11,80101694,True Shop Central Rama 9 (D),BMA V - Central,HALL,กรุงเทพมหานคร,Piyawan Teachaboonpisal,0.0,0.0
+2026-11,80101695,True Shop Central Rayong (D),UPC - East,HALL,ระยอง,Archiraya Jiraakkrapan,21.44677381651862,32606.23317285532
+2026-11,80101696,True Shop Central Salaya (D),UPC - West,HALL,นครปฐม,Jumrat In-eaim,35.18397666835352,55453.31455120452
+2026-11,80101697,True Shop Central Udon Thani (D),UPC - Upper Northeast,HALL,อุดรธานี,Pranee Preewat,9.110898346772077,7943.077093517568
+2026-11,80101698,True Shop Central West Gate (D),BMA I - North West,HALL,นนทบุรี,Jirawat Taweesuwannakul,91.97196276443454,92231.63741380288
+2026-11,80101699,True Shop Central Festival Hat Yai (D),UPC - Lower South,HALL,สงขลา,Phatnicha Wongpanich,32.35017871719335,43624.5962045608
+2026-11,80101700,True Shop Central Festival Pattaya (D),UPC - East,HALL,ชลบุรี 2,Archiraya Jiraakkrapan,89.96731483409621,110156.19315153825
+2026-11,80101701,True Shop Central Festival Samui (D),UPC - Upper South,HALL,สุราษฎร์ธานี,Phatnicha Wongpanich,58.71613510711639,36778.890338614336
+2026-11,80101702,True Shop Central Plaza Chaengwattana (D),BMA I - North West,HALL,นนทบุรี,Jirawat Taweesuwannakul,47.38103627545792,57644.77338362681
+2026-11,80101703,True Shop Central Plaza Khon Kaen (D),UPC - Upper Northeast,HALL,ขอนแก่น,Pranee Preewat,5.822875556092068,7943.077093517568
+2026-11,80101704,True Shop Central Plaza Phitsanulok (D),UPC - Lower North,HALL,พิษณุโลก,Kriengsak Chivaprawat,21.418325299471405,33704.12195629557
+2026-11,80101705,True Shop Central Plaza Suratthani (D),UPC - Upper South,HALL,สุราษฎร์ธานี,Phatnicha Wongpanich,19.280619123003547,33825.84074938252
+2026-11,80101706,True Shop Fashion Island (D),BMA III - North East,HALL,กรุงเทพมหานคร,Sorntanit Wangsriprasert,128.9546205128645,154458.34768770344
+2026-11,80101707,True Shop Future Park Rangsit (2 nd.) (D),BMA III - North East,HALL,ปทุมธานี,Sorntanit Wangsriprasert,73.39417253901797,102620.619293001
+2026-11,80101708,True Shop Future Park Rangsit (G Fl.) (D),BMA III - North East,HALL,ปทุมธานี,Sorntanit Wangsriprasert,21.99341190883767,29535.449899307197
+2026-11,80101709,True Shop Mega Bangna (D),BMA IV - South East,HALL,สมุทรปราการ,Sorntanit Wangsriprasert,34.83763317806316,42494.88199798279
+2026-11,80101710,True Shop Phuket (D),UPC - Upper South,HALL,ภูเก็ต,Phatnicha Wongpanich,31.83809988684218,45705.15386970138
+2026-11,80101711,True Shop The Mall Korat (D),UPC - Lower Northeast,HALL,นครราชสีมา,Suneerat Sirimontree,18.139140748024147,31074.814268047077
+2026-11,80101712,True Shop Central Plaza Ubon Ratchathani (D),UPC - Central Northeast,HALL,อุบลราชธานี,Pranee Preewat,17.341209272261814,30759.341409062843
