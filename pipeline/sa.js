@@ -779,3 +779,13 @@ dash.draw('sa_below', (el) => { el.replaceChildren(); const B = BELOW(); if (!B)
     if (P) { const nsSh = new Map(); for (const x of P.rows) if (!x.c) nsSh.set(x.shop, (nsSh.get(x.shop) || 0) + 1); const w = bl.filter((x) => nsSh.get(x.key)).length; ins.push(['มีพนักงาน No Sale อยู่ด้วย ', [PC.nf(w) + ' สาขา'], ' จาก ' + PC.nf(bl.length)]); }
     el.append(box('ร้าน (สาขา)', R.mode === 'target' ? '% Target ต่ำกว่าภาพรวม' : 'ยอดต่อสาขาต่ำกว่าค่าเฉลี่ย', bl.length, R.rows.length, d3.sum(bl, (x) => x.gap), ins, bl, (x) => (R.mode === 'target' ? PC.pf(x.r) : PC.pf(x.r || 0)))); }
 });
+
+/* ---------- Ranking Area: shops without sales + No Sale staff per area ---------- */
+window.RKSUB = (() => { const memo = new Map(); return (area, win) => { const en = PC.rows('enriched'), sh = PC.rows('shops'), mp = PC.rows('manpower'); if (!en || !sh || !win || !win[0]) return '';
+  const p = PC.P(); const k = win.join('|') + '|' + p.stype + '|' + en.length + '|' + (mp ? mp.length : 0); let M = memo.get(k);
+  if (!M) { M = new Map(); const S = new Map(sh.filter((s) => +s.stype_order < 90 && (p.stype === 'ALL' || s.stype === p.stype)).map((s) => [String(s.shop), s])); const soldSh = new Set(), soldEmp = new Set();
+    for (const x of en) if (x.date >= win[0] && x.date <= win[1] && x.units > 0) { soldSh.add(String(x.shop)); soldEmp.add(String(x.emp)); }
+    for (const [c, s] of S) { const a = M.get(s.area) || { sh: 0, ns: 0, st: 0, nst: 0 }; a.sh++; if (!soldSh.has(c)) a.ns++; M.set(s.area, a); }
+    for (const m of mp || []) { if (m.leave || !POS(m.role)) continue; const s = S.get(String(m.shop)); if (!s) continue; const a = M.get(s.area); if (!a) continue; a.st++; if (!soldEmp.has(String(m.emp))) a.nst++; }
+    memo.clear(); memo.set(k, M); }
+  const a = M.get(area); if (!a) return ''; return ' · ร้านยังไม่มียอด ' + a.ns + '/' + a.sh + (mp ? ' · พนง. No Sale ' + a.nst + '/' + a.st : ''); }; })();

@@ -785,13 +785,13 @@ body.pc-noscroll { overflow: hidden; }
         <label class="pc-field">วันที่
           <select id="f-rdate" data-draw="f_rdate" data-source="area_day" aria-label="วันที่ของ Daily Ranking"></select>
         </label>
-        <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day"></div>
+        <div class="pc-rank" data-draw="c_rank_daily" data-source="area_day enriched shops manpower"></div>
       </article>
       <article class="pc-card pc-canfull" id="card-rank">
         <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
         <p class="pc-fullnote" data-draw="rf_3" data-source="area_rank"></p>
         <h3>Ranking ยอดขายสะสม · <span data-draw="ml_9" data-mlabel></span> เดือนนี้เทียบ Target ถึงวันนี้ <span class="pc-info" tabindex="0" role="note" aria-label="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย" data-tip="ยอดสะสมตั้งแต่วันที่ 1 ถึงวันล่าสุดที่อัปโหลด เทียบ Target ถึงวันนี้ เรียงจาก % มากไปน้อย">i</span></h3>
-        <div class="pc-rank" data-draw="c_rank" data-source="area_rank"></div>
+        <div class="pc-rank" data-draw="c_rank" data-source="area_rank enriched shops manpower"></div>
       </article>
     </div>
 
@@ -1756,14 +1756,14 @@ dash.draw('r_need', (el) => rkVal(el, 'area_rank', 'need'));
 dash.draw('r_days', (el) => { const all = PC.rows('area_rank'); const r = all && all[0]; el.dataset.field = 'elapsed'; el.textContent = r ? r.elapsed + ' / ' + r.days + ' วัน' : '—'; });
 dash.draw('r_date', (el) => { const all = PC.rows('area_rank'); const r = all && all[0]; el.dataset.field = 'today'; el.textContent = r ? PC.day(r.today) : '—'; });
 dash.draw('f_rdate', (sel) => { const ds = rDates(); sel.replaceChildren(...ds.slice().reverse().map((d) => new Option(PC.day(d), d))); sel.value = rDate() || ''; sel.onchange = () => dash.setParams({ rdate: sel.value }); });
-const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra) => {
+const rankList = (el, r, achK, actK, tgtK, rankK, tgtLabel, extra, win) => {
   el.replaceChildren(); if (!r || !r.length) return; const sel = PC.P().area;
   const max = Math.max(1.2, d3.max(r, (d) => d[achK] || 0) * 1.05);
   const hd = document.createElement('div'); hd.className = 'pc-rhead'; for (const s of ['#', 'Area · ยอด / ' + tgtLabel, 'เทียบ Target (เส้น = 100%)', '%']) { const x = document.createElement('span'); x.textContent = s; hd.append(x); } el.append(hd);
   for (const d of r) { const row = document.createElement('div'); row.className = 'pc-rrow' + (sel !== 'ALL' && !window.PC_ZONES.includes(sel) ? (d.area === sel ? ' sel' : ' dim') : '');
     row.dataset.where = PC.where({ stype: d.stype, area: d.area, ...(extra ? extra(d) : {}) });
     const n = document.createElement('span'); n.className = 'n'; n.textContent = d[rankK];
-    const l = document.createElement('span'); l.className = 'l'; const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = d.area.replace(/^UPC - /, ''); const sb = document.createElement('span'); sb.className = 'sb'; sb.textContent = PC.mfmt(d[actK]) + ' / ' + PC.mfmt(d[tgtK]); l.append(nm, sb);
+    const l = document.createElement('span'); l.className = 'l'; const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = d.area.replace(/^UPC - /, ''); const sb = document.createElement('span'); sb.className = 'sb'; sb.textContent = PC.mfmt(d[actK]) + ' / ' + PC.mfmt(d[tgtK]); l.append(nm, sb); if (win && window.RKSUB) { const s2 = document.createElement('span'); s2.className = 'sb'; s2.textContent = window.RKSUB(d.area, win).replace(/^ · /, ''); if (s2.textContent) l.append(s2); }
     const t = document.createElement('span'); t.className = 't';
     const fl = document.createElement('span'); fl.className = 'f'; fl.style.width = Math.min(100, (Math.max(0, d[achK] || 0) / max) * 100) + '%'; fl.style.background = rkCol(d[achK]);
     const mk = document.createElement('span'); mk.className = 'm'; mk.style.left = (1 / max) * 100 + '%'; t.append(fl, mk);
@@ -1796,8 +1796,8 @@ if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.pc-expand'); if (!b) return; const c = b.closest('.pc-canfull'); const on = !c.classList.contains('pc-full'); close();
     if (on) { c.classList.add('pc-full'); document.body.classList.add('pc-noscroll'); c.scrollTop = 0; } });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); }); }
-dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date })); });
-dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้'); });
+dash.draw('c_rank_daily', (el) => { if (PC.failed(el, 'area_day')) return; const f = rkF(); rankList(el, rdRows(), f.ach, f.d, f.tpd, 'drank', 'Target ต่อวัน', (d) => ({ date: d.date }), [rDate(), rDate()]); });
+dash.draw('c_rank', (el) => { if (PC.failed(el, 'area_rank')) return; const f = rkF(); const r0 = (PC.rows('area_rank') || [])[0]; rankList(el, rkRows(), f.ach, f.act, f.ttd, 'rank', 'Target ถึงวันนี้', null, r0 ? [r0.today.slice(0, 8) + '01', r0.today] : null); });
 dash.draw('c_rank_heat', (el) => {
   if (PC.failed(el, 'area_day')) return; el.replaceChildren();
   const all = PC.rows('area_day'), rk = rkRows(); if (!all || !rk || !rk.length) return;
