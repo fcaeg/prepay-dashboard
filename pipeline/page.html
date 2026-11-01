@@ -508,12 +508,14 @@ body.pc-noscroll { overflow: hidden; }
           <div class="pc-scroll pc-mqtb"><table data-draw="tb_mq_shop" data-source="enriched matcodes shops stock_by_shop" data-row-key="shop"></table></div>
         </div>
         <div>
-          <h4 class="pc-h4">ขายดีช่วงไหน (YTD)</h4>
+          <h4 class="pc-h4">ขายดีช่วงไหน · <span data-draw="mq_wtitle" data-source="enriched"></span></h4>
+          <p class="pc-note" data-draw="mq_now" data-source="enriched sales_hourly"></p>
+          <div class="pc-chart" data-draw="c_mq_week" data-source="enriched sales_hourly"></div>
+          <h5 class="pc-h5">รูปแบบตั้งแต่ต้นปี (YTD)</h5>
           <p class="pc-note" data-draw="mq_when" data-source="enriched"></p>
-          <div class="pc-chart" data-draw="c_mq_week" data-source="enriched"></div>
           <div class="pc-split">
-            <div><h5 class="pc-h5">วันในสัปดาห์ (ยอดเฉลี่ยต่อวัน)</h5><div class="pc-hbars" data-draw="c_mq_wd" data-source="enriched"></div></div>
-            <div><h5 class="pc-h5">ช่วงของเดือน (ยอดเฉลี่ยต่อวัน)</h5><div class="pc-hbars" data-draw="c_mq_md" data-source="enriched"></div></div>
+            <div><h5 class="pc-h5">วันในสัปดาห์ (ยอดเฉลี่ยต่อวัน · YTD)</h5><div class="pc-hbars" data-draw="c_mq_wd" data-source="enriched"></div></div>
+            <div><h5 class="pc-h5">ช่วงของเดือน (ยอดเฉลี่ยต่อวัน · YTD)</h5><div class="pc-hbars" data-draw="c_mq_md" data-source="enriched"></div></div>
           </div>
         </div>
       </div>

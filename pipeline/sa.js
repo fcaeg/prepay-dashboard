@@ -589,8 +589,37 @@ const mqWhen = () => { const m = MQ.sel(); if (!m) return null; const r = MQ.ytd
   const md = [['ต้นเดือน (1–10)', 1, 10], ['กลางเดือน (11–20)', 11, 20], ['ปลายเดือน (21–สิ้นเดือน)', 21, 31]].map(([label, a, b]) => { const x = days.filter((d) => d.dom >= a && d.dom <= b); return { label, avg: x.length ? d3.sum(x, (d) => d.units) / x.length : 0, avgN: x.length ? d3.sum(x, (d) => d.net) / x.length : 0 }; });
   const mo = [...d3.rollup(days, (a) => [d3.sum(a, (x) => x.units), d3.sum(a, (x) => x.net)], (x) => x.d.slice(0, 7)).entries()].map(([k, v]) => [k, v[0], v[1]]);
   return { m, days, wk, wd, md, mo, tot: d3.sum(days, (x) => x.units) }; };
-dash.draw('c_mq_week', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet(); const best = W.wk.reduce((a, b) => ((N ? b.net : b.units) > (N ? a.net : a.units) ? b : a), W.wk[0]);
-  PC.vbar(el, W.wk.map((x) => ({ w: x.w, units: x.units, net: Math.round(x.net) })), { xk: 'w', xf: (w) => 'W' + w, tipf: (w) => 'Week ' + w, hl: best.w, avg: d3.mean(W.wk, (x) => (N ? x.net : x.units)) }); });
+const mqTrend = () => { const m = MQ.sel(), I = mInfo(); if (!m || !I) return null; const pd = I.pd; const p = PC.P(); const shp = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+  if (pd === 'today') { const h = PC.rows('sales_hourly'); if (!h) return null; const ok = (x) => { const s = shp.get(String(x.shop)); return s && String(x.matcode) === String(m.matcode) && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(x.shop) === p.shop); };
+    const rows = h.filter(ok); const today = rows.filter((x) => x.date === I.today); const days = new Set(h.map((x) => x.date)).size || 1;
+    const hrs = rows.map((x) => +x.hour); const lo = Math.min(9, ...hrs), hi = Math.max(21, ...hrs); const data = [];
+    for (let k = lo; k <= hi; k++) { const a = today.filter((x) => +x.hour === k), b = rows.filter((x) => +x.hour === k); data.push({ k, units: d3.sum(a, (x) => +x.units), net: d3.sum(a, (x) => +x.net), au: d3.sum(b, (x) => +x.units) / days, an: d3.sum(b, (x) => +x.net) / days }); }
+    return { pd, data, xf: (k) => k + ':00', tipf: (k) => k + ':00–' + (k + 1) + ':00 น.', days }; }
+  const r = MQ.ytd(m); let keyf, xf, tipf, sel = null;
+  if (pd === 'week') { keyf = (x) => SA.isoW(x.date).w; xf = (w) => 'W' + w; tipf = (w) => 'Week ' + w; sel = I.wk; }
+  else if (pd === 'mtd') { const mo = I.today.slice(0, 7); keyf = (x) => (x.date.slice(0, 7) === mo ? x.date : null); xf = (d) => String(+d.slice(8, 10)); tipf = (d) => PC.day(d); }
+  else { keyf = (x) => x.date.slice(0, 7); xf = (d) => PC.mon(d).split(' ')[0]; tipf = (d) => PC.mon(d); }
+  const by = new Map(); for (const x of r) { const k = keyf(x); if (k == null) continue; const a = by.get(k) || { k, units: 0, net: 0 }; a.units += x.units; a.net += x.net; by.set(k, a); }
+  let keys; if (pd === 'mtd') { keys = []; for (let d = I.today.slice(0, 8) + '01'; d <= I.today; d = SA.add(d, 1)) keys.push(d); } else if (pd === 'week') { keys = []; for (let w = 1; w <= I.cur.w; w++) keys.push(w); } else { keys = []; for (let mm = 1; mm <= +I.today.slice(5, 7); mm++) keys.push(I.today.slice(0, 4) + '-' + String(mm).padStart(2, '0')); }
+  return { pd, data: keys.map((k) => ({ k, units: (by.get(k) || {}).units || 0, net: Math.round((by.get(k) || {}).net || 0) })), xf, tipf, sel }; };
+dash.draw('mq_wtitle', (el) => { const I = mInfo(); el.textContent = !I ? '' : I.pd === 'today' ? 'รายชั่วโมง วันนี้ (' + PC.day(I.today) + ')' : I.pd === 'week' ? 'รายสัปดาห์ (W1–W' + I.cur.w + ')' : I.pd === 'mtd' ? 'รายวัน ' + PC.mon(I.today.slice(0, 7)) : 'รายเดือน ' + (+I.today.slice(0, 4) + 543); });
+dash.draw('c_mq_week', (el) => { const T = mqTrend(); if (!T || !T.data.length || !d3.sum(T.data, (x) => x.units + Math.abs(x.net))) { el.replaceChildren(); if (T) { const e = document.createElement('p'); e.className = 'pc-note'; e.textContent = T.pd === 'today' ? 'วันนี้ยังไม่มียอดขาย Matcode นี้ตาม Filter' : 'ยังไม่มียอดขายในช่วงนี้'; el.append(e); } return; }
+  const N = PC.isNet(); const V = (x) => (N ? x.net : x.units); const best = T.sel != null ? T.sel : T.data.reduce((a, b) => (V(b) > V(a) ? b : a), T.data[0]).k;
+  PC.vbar(el, T.data, { xk: 'k', xf: T.xf, tipf: T.tipf, hl: best, avg: d3.mean(T.data, V) }); });
+dash.draw('mq_now', (el) => { el.replaceChildren(); const T = mqTrend(); if (!T || !T.data.length) return; const N = PC.isNet(); const V = (x) => (N ? x.net : x.units); const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10) + ' ชิ้น');
+  const B = (s) => { const b = document.createElement('b'); b.textContent = s; return b; }; const srt = T.data.slice().sort((a, b) => V(b) - V(a)).filter((x) => V(x) > 0);
+  if (T.pd === 'today') { const av = T.data.slice().sort((a, b) => (N ? b.an - a.an : b.au - a.au)); const tot = d3.sum(T.data, V);
+    el.append('วันนี้ขายแล้ว ', B(F(tot)));
+    if (srt[0]) el.append(' · ช่วงเวลาที่ขายดีวันนี้ ', B(srt.slice(0, 2).map((x) => T.tipf(x.k) + ' (' + F(V(x)) + ')').join(', ')));
+    if (av[0] && (N ? av[0].an : av[0].au) > 0) el.append(' · ช่วงเวลาที่ขายดีโดยเฉลี่ย ' + T.days + ' วันล่าสุด ', B(av.slice(0, 3).map((x) => x.k + ':00').join(', ') + ' น.'));
+    el.append(' · แท่งเข้ม = ชั่วโมงที่ขายดีที่สุด'); return; }
+  const tot = d3.sum(T.data, V), avg = d3.mean(T.data, V);
+  if (T.pd === 'week') { const cur = T.data.find((x) => x.k === T.sel) || { units: 0, net: 0 }; const prv = T.data.find((x) => x.k === T.sel - 1);
+    el.append('Week ' + T.sel + ' ขายได้ ', B(F(V(cur))), prv ? ' · W' + (T.sel - 1) + ' ' + F(V(prv)) : '', ' · ค่าเฉลี่ยต่อสัปดาห์ ', B(F(avg)));
+    if (srt[0]) el.append(' · สัปดาห์ที่ขายดีที่สุด ', B('W' + srt[0].k + ' (' + F(V(srt[0])) + ')')); el.append(' · แท่งเข้ม = สัปดาห์ที่เลือก'); return; }
+  if (T.pd === 'mtd') { el.append('เดือนนี้ขายได้ ', B(F(tot)), ' · เฉลี่ยต่อวัน ', B(F(avg)));
+    if (srt.length) el.append(' · วันที่ขายดีที่สุด ', B(srt.slice(0, 3).map((x) => PC.day(x.k) + ' (' + F(V(x)) + ')').join(', '))); el.append(' · แท่งเข้ม = วันที่ขายดีที่สุด'); return; }
+  el.append('ตั้งแต่ต้นปีขายได้ ', B(F(tot)), ' · เฉลี่ยต่อเดือน ', B(F(avg))); if (srt[0]) el.append(' · เดือนที่ขายดีที่สุด ', B(PC.mon(srt[0].k) + ' (' + F(V(srt[0])) + ')')); el.append(' · แท่งเข้ม = เดือนที่ขายดีที่สุด'); });
 dash.draw('c_mq_wd', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet(); const tot = d3.sum(W.wd, (x) => (N ? x.avgN : x.avg)) || 1;
   PC.hbar(el, W.wd.map((x) => ({ ...x, v: N ? x.avgN : x.avg, s: (N ? x.avgN : x.avg) / tot })), { label: 'label', value: 'v', sub: (d) => (N ? '฿' + PC.nf(Math.round(d.v)) : d3.format(',.1f')(d.v) + ' ชิ้น') }); });
 dash.draw('c_mq_md', (el) => { const W = mqWhen(); if (!W || !W.tot) { el.replaceChildren(); return; } const N = PC.isNet();

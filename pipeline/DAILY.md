@@ -19,7 +19,7 @@ git add -A && git commit -m "Data update <date>" && git push origin main
 when the new month has no target file yet.
 
 ## 2. Update the Claude dashboard (https://claude.ai/artifact/VUVYJA9vZwTYyjQXvqKVYy)
-For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `watch_serials.json`, `stock_by_shop.json`, `aging_serials.json`,
+For each file in `pipeline/out/` that changed — always `sales_daily.csv`, `sales_hourly.json`, `watch_serials.json`, `stock_by_shop.json`, `aging_serials.json`,
 `staff.json`, `shops.json`, `matcodes.json`; `targets.json` only after a new target file —
 1. upload it as an asset: Artifact `publish` with `url` = the dashboard, `file_path` = the file, `asset: true` → returns `/_blob/<id>`
 2. ArtifactData `get` collection `datasets` doc `<id without extension>` for its version, then `update` it with

@@ -169,7 +169,14 @@ def grp(n):
 
 def build():
     meta = json.load(open(os.path.join(ST, 'meta.json')))
-    f, staff, price, names, _ = sales_tables(load_sim())
+    _raw = load_sim(); f, staff, price, names, _ = sales_tables(_raw)
+    # hourly sales for the last 7 days (time-of-day analysis)
+    h = _raw.copy(); h['BD'] = pd.to_datetime(h.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce'); h = h[h.BD.notna()]
+    h['sign'] = h.ORDER_STATUS.map({'Payment': 1, 'CreditNote': -1}).fillna(0); h['units'] = h.sign; h['net'] = h.sign * h.NET_AMOUNT.astype(float)
+    h['date'] = h.BD.dt.strftime('%Y-%m-%d'); h['hour'] = h.BD.dt.hour
+    h = h[h.date >= (h.BD.max().normalize() - pd.Timedelta(days=6)).strftime('%Y-%m-%d')]
+    hourly = h.groupby(['date', 'hour', 'SHOP_CODE', 'PRODUCT_CODE'], as_index=False).agg(units=('units', 'sum'), net=('net', 'sum')).rename(columns={'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode'})
+    hourly['units'] = hourly.units.astype(int); hourly['net'] = hourly.net.round(0).astype(int); hourly['shop'] = hourly.shop.astype(str); hourly['matcode'] = hourly.matcode.astype(str)
     k = load('stock.csv.gz'); allt = load('targets_all.csv')
     f['units'] = f.units.astype(int)
     f = f[f.date.str[:4] == f.date.max()[:4]]  # current year only
@@ -262,6 +269,7 @@ def build():
     for nmx, d in [('targets', targets[targets.shop.isin(ww)]), ('matcodes', m), ('shops', shops), ('staff', e), ('stock_by_shop', ss), ('aging_serials', ex)]:
         d = d.astype(object).where(d.notna(), None)
         json.dump(d.to_dict('records'), open(os.path.join(OUT, nmx + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(hourly.to_dict('records'), open(os.path.join(OUT, 'sales_hourly.json'), 'w'), separators=(',', ':'))
     json.dump(meta, open(os.path.join(OUT, 'meta.json'), 'w'))
     tot = f[f.date.str[:7] == f.date.max()[:7]]
     print(f"built: sales to {f.date.max()} ({meta.get('sales_asof')}), stock as of {meta.get('stock_asof')}, targets to {lastm}")
