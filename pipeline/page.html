@@ -586,7 +586,7 @@ body.pc-noscroll { overflow: hidden; }
       </div>
     </article>
     <article class="pc-card" id="card-nosale">
-      <h3>Staff Productivity &amp; No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="Productivity = ยอดขายซิม Prepay ของพนักงาน ÷ จำนวนพนักงาน (รวมคนที่ไม่มียอด) ในช่วงเวลาที่เลือก · ค่าเฉลี่ย Retail = พนักงานทุกสาขา WW ทุก Area (ไม่ขึ้นกับ Filter พื้นที่) = Index 100 · พนักงานตามไฟล์ Manpower ล่าสุด 4 ตำแหน่ง: RR Multi (รวม RR_Multi, RR_Sales, RR_Sales_OS) · ITF (รวม ITF_OS) · ITF Apple (รวม ITF_Apple_OS) · Retention Champion (Ret_chpn_1 รวม _OS) · ไม่รวม RR_Services · สังกัด OS = ตำแหน่งที่ลงท้าย _OS (Outsource) ที่เหลือเป็น WW · ยอดของพนักงานนับให้สาขาที่ประจำตาม Manpower · No Sale = ไม่มียอดในช่วงเวลาที่เลือก · สาเหตุ: ลา = มีสถานะลา/Project ใน Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ · เคยขายแต่ช่วงนี้ไม่มียอด · ปุ่ม Net Amount / QTY และ Filter กลุ่มซิมมีผลกับทุกส่วน">i</span></h3>
+      <h3>Staff Productivity &amp; No Sale · <span data-draw="ns_label" data-source="enriched"></span> <span class="pc-info" tabindex="0" role="note" data-tip="PDT ส่วนบุคคล = ยอดขายซิม Prepay ของพนักงานในช่วงเวลาที่เลือก · ค่าเฉลี่ยสาขา / Area / Region / Retail = ยอดรวม ÷ จำนวนพนักงานตำแหน่งเดียวกันในระดับนั้น (รวมคนที่ไม่มียอด) · Retail = ทุกสาขา WW ทุก Area (ไม่ขึ้นกับ Filter พื้นที่) · พนักงานตามไฟล์ Manpower ล่าสุด 4 ตำแหน่ง: RR Multi (รวม RR_Multi, RR_Sales, RR_Sales_OS) · ITF (รวม ITF_OS) · ITF Apple (รวม ITF_Apple_OS) · Retention Champion (Ret_chpn_1 รวม _OS) · ไม่รวม RR_Services · สังกัด OS = ตำแหน่งที่ลงท้าย _OS (Outsource) ที่เหลือเป็น WW · ยอดของพนักงานนับให้สาขาที่ประจำตาม Manpower · No Sale = ไม่มียอดในช่วงเวลาที่เลือก · สาเหตุ: ลา = มีสถานะลา/Project ใน Manpower · เริ่มงานไม่ถึง 30 วัน = DOJ ภายใน 30 วันก่อนวันสุดท้ายของช่วง · ยังไม่เคยขายปีนี้ · เคยขายแต่ช่วงนี้ไม่มียอด · ปุ่ม Net Amount / QTY และ Filter กลุ่มซิมมีผลกับทุกส่วน">i</span></h3>
       <div class="pc-tools">
         <label class="pc-field">ตำแหน่ง
           <select id="f-prole" data-draw="f_prole" data-source="manpower" aria-label="ตำแหน่ง"></select>
@@ -594,16 +594,17 @@ body.pc-noscroll { overflow: hidden; }
         <label class="pc-field">สังกัด
           <select id="f-paff" data-draw="f_paff" data-source="manpower" aria-label="สังกัด"></select>
         </label>
-        <label class="pc-field">ระดับ
-          <select id="f-plevel" data-draw="f_plevel" data-source="manpower" aria-label="ระดับการเปรียบเทียบ"></select>
-        </label>
       </div>
       <div class="pc-tiles" data-draw="pr_tiles" data-source="enriched shops manpower"></div>
       <p class="pc-note" data-draw="pr_note" data-source="enriched shops manpower"></p>
-      <div class="pc-split2">
-        <div class="pc-prodbars"><div class="pc-rank" data-draw="c_prod" data-source="enriched shops manpower"></div></div>
-        <div class="pc-scroll pc-mqtb"><table data-draw="tb_prod" data-source="enriched shops manpower" data-row-key="key"></table></div>
+      <h4 class="pc-h4">PDT รายพนักงาน เทียบค่าเฉลี่ยสาขา / Area / Region / Retail</h4>
+      <div class="pc-tools">
+        <label class="pc-field">ค้นหารหัส ชื่อ สาขา
+          <input id="q-prstaff" class="pc-q" data-q="prstaff" type="search" aria-label="ค้นหาพนักงาน">
+        </label>
+        <button class="pc-export pc-csv" id="pr-csv" type="button">⬇ Export CSV</button>
       </div>
+      <div class="pc-scroll pc-mqtb"><table data-draw="tb_prod" data-source="enriched shops manpower" data-row-key="emp"></table></div>
       <h4 class="pc-h4">รายชื่อพนักงาน No Sale</h4>
       <div class="pc-tools">
         <label class="pc-field">สาเหตุ
@@ -1491,7 +1492,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], prstaff: ['tb_prod', 'pr_note'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
