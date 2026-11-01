@@ -172,6 +172,10 @@ body.pc-noscroll { overflow: hidden; }
 .pill.tn { border: 0; border-radius: 4px; padding: 2px 8px; min-width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-fg); }
 .pill.t4 { background: color-mix(in srgb, var(--color-ok) 45%, transparent); font-weight: 600; } .pill.t3 { background: color-mix(in srgb, var(--color-ok) 18%, transparent); }
 .pill.t2 { background: color-mix(in srgb, var(--color-warn) 25%, transparent); } .pill.t1 { background: color-mix(in srgb, var(--color-bad) 25%, transparent); } .pill.t0 { color: var(--color-fg-muted); }
+.pill.h-3 { background: color-mix(in srgb, var(--color-bad) 60%, transparent); font-weight: 600; } .pill.h-2 { background: color-mix(in srgb, var(--color-bad) 38%, transparent); } .pill.h-1 { background: color-mix(in srgb, var(--color-bad) 16%, transparent); }
+.pill.h0 { background: var(--cds-chart-grid); } .pill.h1 { background: color-mix(in srgb, var(--color-ok) 16%, transparent); } .pill.h2 { background: color-mix(in srgb, var(--color-ok) 38%, transparent); } .pill.h3 { background: color-mix(in srgb, var(--color-ok) 60%, transparent); font-weight: 600; }
+.pill.hb { background: transparent; border: 1px dashed var(--color-border-line); color: var(--color-fg-muted); }
+.pc-prleg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); } .pc-prleg .pill.tn { min-width: 0; }
 .pc-prodbars { max-height: 34rem; overflow: auto; }
 .pc-gleg { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 2; }
 .gchip { display: inline-block; padding: 1px 9px; margin: 2px 4px 2px 0; border-radius: 999px; font-size: var(--cds-font-size-caption); line-height: 1.6; border: 1px solid; white-space: nowrap; }
@@ -607,6 +611,7 @@ body.pc-noscroll { overflow: hidden; }
         </label>
         <button class="pc-export pc-csv" id="pr-csv" type="button">⬇ Export CSV</button>
       </div>
+      <div class="pc-prleg" data-draw="pr_legend" data-source="manpower"></div>
       <div class="pc-scroll pc-mqtb"><table data-draw="tb_prod" data-source="enriched shops manpower" data-row-key="emp"></table></div>
       <h4 class="pc-h4">รายชื่อพนักงาน No Sale</h4>
       <div class="pc-tools">
