@@ -720,3 +720,62 @@ dash.draw('mq_when', (el) => { el.replaceChildren(); const W = mqWhen(); if (!W)
     ' · ช่วงของเดือนที่ขายดี ', B(mdS[0].label));
   if (top3.length) el.append(' · วันที่ขายได้มากที่สุด ', B(top3.map((x) => PC.day(x.d) + ' (' + F(V(x)) + ')').join(', ')));
   if (g != null) el.append(' · 4 สัปดาห์ล่าสุด (ไม่นับสัปดาห์นี้) เทียบ 4 สัปดาห์ก่อนหน้า ', B((g >= 0 ? '+' : '') + PC.pf(g))); });
+
+/* ---------- Sale Analysis: below-average groups (people / product / shop) ---------- */
+const BELOW = () => { const I = SA.info(); const en = PC.rows('enriched'), sh = PC.rows('shops'), mt = PC.rows('matcodes'); if (!I || !en || !sh || !mt) return null; const p = PC.P(); const N = PC.isNet(); const V = (u, n) => (N ? n : u);
+  const S = new Map(sh.map((x) => [String(x.shop), x])); const M = new Map(mt.map((x) => [String(x.matcode), x]));
+  const inGeo = (shop) => { const s = S.get(String(shop)); return s && +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(shop) === p.shop); };
+  const okG = (x) => p.group === 'ALL' || x.group === p.group;
+  // ---- shops
+  const shopC = new Map(); for (const x of en) if (x.date >= I.from && x.date <= I.to && okG(x) && inGeo(x.shop)) { const k = String(x.shop); shopC.set(k, (shopC.get(k) || 0) + V(x.units, x.net)); }
+  const scope = sh.filter((s) => inGeo(s.shop)).map((s) => String(s.shop));
+  let tg = null; const tr = PC.rows('targets'); if (tr && p.group === 'ALL') { tg = new Map(); const dim = (ds) => new Date(Date.UTC(+ds.slice(0, 4), +ds.slice(5, 7), 0)).getUTCDate(); const days = []; for (let d = I.from; d <= I.to; d = SA.add(d, 1)) days.push(d);
+    const tm = new Map(tr.map((t) => [t.month + '|' + String(t.shop), V(+t.target_units || 0, +t.target_net || 0)])); for (const k of scope) { let v = 0; for (const d of days) v += (tm.get(d.slice(0, 7) + '|' + k) || 0) / dim(d); if (v > 0) tg.set(k, v); } }
+  let shops; if (tg && tg.size) { const tc = d3.sum([...tg.keys()], (k) => shopC.get(k) || 0), tt = d3.sum([...tg.values()]); const avg = tt ? tc / tt : 0;
+    const rows = [...tg.entries()].map(([k, t]) => { const c = shopC.get(k) || 0, s = S.get(k); return { key: k, name: String(s.name).replace(/^True (Shop|shop|Move Shop) /, ''), sub: s.area, c, t, r: c / t, rb: avg ? c / t / avg : null, gap: avg * t - c }; });
+    shops = { mode: 'target', avg, avgTxt: '% Target รวม ' + PC.pf(avg), rows, below: rows.filter((x) => x.r < avg).sort((a, b) => b.gap - a.gap) }; }
+  else { const rows = scope.map((k) => { const s = S.get(k); return { key: k, name: String(s.name).replace(/^True (Shop|shop|Move Shop) /, ''), sub: s.area, c: shopC.get(k) || 0 }; }); const avg = d3.mean(rows, (x) => x.c) || 0;
+    rows.forEach((x) => { x.r = avg ? x.c / avg : null; x.gap = avg - x.c; }); shops = { mode: 'avg', avg, avgTxt: 'ค่าเฉลี่ยต่อสาขา ' + (N ? '฿' + PC.nf(Math.round(avg)) : d3.format(',.1f')(avg)), rows, below: rows.filter((x) => x.c < avg).sort((a, b) => b.gap - a.gap) }; }
+  // ---- people
+  const mp = PC.rows('manpower'); let people = null;
+  if (mp) { const pc = new Map(); for (const x of en) if (x.date >= I.from && x.date <= I.to && okG(x)) { const k = String(x.emp); pc.set(k, (pc.get(k) || 0) + V(x.units, x.net)); }
+    const all = mp.filter((m) => !m.leave && POS(m.role) && S.get(String(m.shop)) && +S.get(String(m.shop)).stype_order < 90).map((m) => { const s = S.get(String(m.shop)); return { key: String(m.emp), name: m.name, pos: POS(m.role), aff: /_OS$/.test(m.role || '') ? 'OS' : 'WW', shop: String(m.shop), sub: POS(m.role) + ' · ' + String(s.name).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area, doj: m.doj, c: pc.get(String(m.emp)) || 0 }; });
+    const pa = d3.rollup(all, (v) => d3.mean(v, (x) => x.c), (x) => x.pos); const rows = all.filter((x) => inGeo(x.shop)); rows.forEach((x) => { const a = pa.get(x.pos) || 0; x.avg = a; x.r = a ? x.c / a : null; x.gap = a - x.c; x.tdays = x.doj ? SA.diff(x.doj, I.to) : null; });
+    people = { rows, pa, below: rows.filter((x) => x.r != null && x.r < 1).sort((a, b) => b.gap - a.gap) }; }
+  // ---- products
+  let pf = I.pf, pt = I.pt, cf = I.from, ct = I.to, cmp = I.ps; if (!pf) { cf = SA.add(I.to, -27); pf = SA.add(I.to, -55); pt = SA.add(I.to, -28); cmp = '28 วันก่อนหน้า'; }
+  const pm = new Map(); for (const x of en) { if (!okG(x) || !inGeo(x.shop)) continue; const cur = x.date >= cf && x.date <= ct, prv = x.date >= pf && x.date <= pt; if (!cur && !prv) continue; const k = String(x.matcode); const a = pm.get(k) || { c: 0, pv: 0, cu: 0, shops: new Set() }; if (cur) { a.c += V(x.units, x.net); a.cu += x.units; if (x.units > 0) a.shops.add(x.shop); } else a.pv += V(x.units, x.net); pm.set(k, a); }
+  const stock = new Map(); for (const x of PC.rows('stock_by_shop') || []) if (inGeo(x.shop)) stock.set(String(x.matcode), (stock.get(String(x.matcode)) || 0) + (+x.qty || 0));
+  const prow = [...pm.entries()].filter(([, a]) => a.pv > 0).map(([k, a]) => { const m = M.get(k) || {}; return { key: k, name: String(m.name || k).replace(/^TMH\d /, '').replace(/_VAS| MULTI/g, ''), group: m.group || 'อื่น ๆ', sub: (m.group || '') + (m.price ? ' · ฿' + PC.nf(m.price) : ''), c: a.c, pv: a.pv, cu: a.cu, g: a.c / a.pv - 1, shops: a.shops.size, stock: stock.get(k) || 0 }; });
+  const gAvg = d3.sum(prow, (x) => x.pv) ? d3.sum(prow, (x) => x.c) / d3.sum(prow, (x) => x.pv) - 1 : 0; prow.forEach((x) => { x.r = (1 + x.g) / (1 + gAvg); x.gap = x.pv * (1 + gAvg) - x.c; });
+  const products = { gAvg, cmp, curTxt: I.pf ? I.cs : '28 วันล่าสุด', rows: prow, below: prow.filter((x) => x.g < gAvg).sort((a, b) => b.gap - a.gap) };
+  return { I, N, shops, people, products }; };
+dash.draw('sa_below', (el) => { el.replaceChildren(); const B = BELOW(); if (!B) return; const N = B.N; const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10) + ' ชิ้น');
+  const E = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const box = (title, sub, big, tot, gapSum, ins, list, valTxt) => { const b = E('div', 'pc-bbox'); const h = E('h4'); h.append(title, E('span', '', sub)); b.append(h);
+    const bg = E('div', 'big', PC.nf(big)); bg.append(E('small', '', ' จาก ' + PC.nf(tot) + ' (' + PC.pf(big / Math.max(1, tot)) + ') · ส่วนที่ขาดรวม ' + F(gapSum))); b.append(bg);
+    const ul = E('ul', 'ins'); for (const it of ins) { const li = E('li'); for (const part of it) li.append(typeof part === 'string' ? part : E('b', '', part[0])); ul.append(li); } b.append(ul);
+    const rk = E('div', 'pc-rank'); list.slice(0, 8).forEach((x, i) => { const row = E('div', 'pc-rrow'); const l = E('span', 'l'); l.append(E('span', 'nm', x.name), E('span', 'sb', x.sub)); l.title = x.name + ' · ' + x.sub;
+      const tb = E('span', 't'); const f = E('span', 'f'); const rb = x.rb != null ? x.rb : x.r; f.style.width = Math.max(2, Math.min(100, ((rb || 0) / 1.5) * 100)) + '%'; f.style.background = rkCol(rb); const m = E('span', 'm'); m.style.left = (1 / 1.5) * 100 + '%'; tb.append(f, m);
+      const v = E('span', 'v'); v.append(E('b', '', valTxt(x))); row.title = x.name + ' · ' + valTxt(x) + ' · ขาด ' + F(x.gap); row.append(E('span', 'n', String(i + 1)), l, tb, v); rk.append(row); }); b.append(rk); return b; };
+  const top = (arr, kf, n) => [...d3.rollup(arr, (v) => v.length, kf).entries()].sort((a, b) => b[1] - a[1]).slice(0, n || 3);
+  // people
+  const P = B.people; if (P) { const bl = P.below; const ns = bl.filter((x) => !x.c).length; const ins = [];
+    ins.push(['ไม่มียอดเลย (No Sale) ', [PC.nf(ns) + ' คน'], ' · มียอดแต่ต่ำกว่าค่าเฉลี่ย ', [PC.nf(bl.length - ns) + ' คน']]);
+    const byPos = top(bl, (x) => x.pos, 4); ins.push(['ตามตำแหน่ง: ', ...byPos.flatMap(([k, n], i) => [(i ? ' · ' : ''), [k + ' ' + n + ' (' + PC.pf(n / Math.max(1, P.rows.filter((x) => x.pos === k).length)) + ')']])]);
+    const os = bl.filter((x) => x.aff === 'OS').length; ins.push(['สังกัด OS ', [PC.nf(os) + ' คน'], ' · WW ', [PC.nf(bl.length - os) + ' คน'], ' · อายุงานไม่ถึง 3 เดือน ', [PC.nf(bl.filter((x) => x.tdays != null && x.tdays <= 90).length) + ' คน']]);
+    const ar = top(bl, (x) => x.area, 2); ins.push(['Area ที่มีมากสุด: ', ...ar.flatMap(([k, n], i) => [(i ? ' · ' : ''), [k.replace(/^UPC - /, '') + ' ' + n + ' คน']])]);
+    ins.push(['รายชื่อด้านล่าง = คนที่มียอดแต่ขาดจากค่าเฉลี่ยมากสุด (คน No Sale ดูได้ที่แท็บพนักงาน)']); el.append(box('คน (พนักงาน)', 'ยอดต่อคนต่ำกว่าค่าเฉลี่ย Retail ของตำแหน่งเดียวกัน', bl.length, P.rows.length, d3.sum(bl, (x) => x.gap), ins, bl.filter((x) => x.c > 0), (x) => PC.pf(x.r || 0))); }
+  // products
+  const Q = B.products; { const bl = Q.below; const ins = []; ins.push(['เทียบ ', [Q.curTxt + ' vs ' + Q.cmp], ' · การเติบโตรวม ', [(Q.gAvg >= 0 ? '+' : '') + PC.pf(Q.gAvg)]]);
+    const dec = bl.filter((x) => x.g < 0); ins.push(['ยอดลดลงจริง ', [PC.nf(dec.length) + ' Matcode'], ' · โตแต่ช้ากว่าภาพรวม ', [PC.nf(bl.length - dec.length) + ' Matcode']]);
+    const bg = [...d3.rollup(bl, (v) => d3.sum(v, (x) => x.gap), (x) => x.group).entries()].sort((a, b) => b[1] - a[1]).slice(0, 3); ins.push(['Type Sim ที่ขาดมากสุด: ', ...bg.flatMap(([k, v], i) => [(i ? ' · ' : ''), [k + ' ' + F(v)]])]);
+    const lowStock = bl.filter((x) => x.stock < Math.max(5, x.cu)).slice(0, 3); if (lowStock.length) ins.push(['Stock เหลือน้อยกว่ายอดขายช่วงนี้ (อาจขายไม่ได้เพราะของไม่พอ): ', [lowStock.map((x) => x.name + ' (' + PC.nf(x.stock) + ')').join(', ')]]);
+    el.append(box('ของ (Matcode)', 'เติบโตต่ำกว่าภาพรวม', bl.length, Q.rows.length, d3.sum(bl, (x) => Math.max(0, x.gap)), ins, bl.map((x) => ({ ...x, sub: x.sub + ' · ' + F(x.pv) + ' → ' + F(x.c) })), (x) => (x.g >= 0 ? '+' : '') + PC.pf(x.g))); }
+  // shops
+  const R = B.shops; { const bl = R.below; const ins = []; ins.push(['เกณฑ์: ', [R.avgTxt]]);
+    const zero = bl.filter((x) => !x.c).length; if (zero) ins.push(['ยังไม่มียอดเลย ', [PC.nf(zero) + ' สาขา']]);
+    const ar = top(bl, (x) => x.sub, 3); ins.push(['Area ที่มีสาขาต่ำกว่าค่าเฉลี่ยมากสุด: ', ...ar.flatMap(([k, n], i) => [(i ? ' · ' : ''), [k.replace(/^UPC - /, '') + ' ' + n]])]);
+    if (P) { const nsSh = new Map(); for (const x of P.rows) if (!x.c) nsSh.set(x.shop, (nsSh.get(x.shop) || 0) + 1); const w = bl.filter((x) => nsSh.get(x.key)).length; ins.push(['มีพนักงาน No Sale อยู่ด้วย ', [PC.nf(w) + ' สาขา'], ' จาก ' + PC.nf(bl.length)]); }
+    el.append(box('ร้าน (สาขา)', R.mode === 'target' ? '% Target ต่ำกว่าภาพรวม' : 'ยอดต่อสาขาต่ำกว่าค่าเฉลี่ย', bl.length, R.rows.length, d3.sum(bl, (x) => x.gap), ins, bl, (x) => (R.mode === 'target' ? PC.pf(x.r) : PC.pf(x.r || 0)))); }
+});
