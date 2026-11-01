@@ -270,6 +270,9 @@ def build():
         d = d.astype(object).where(d.notna(), None)
         json.dump(d.to_dict('records'), open(os.path.join(OUT, nmx + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     json.dump(hourly.to_dict('records'), open(os.path.join(OUT, 'sales_hourly.json'), 'w'), separators=(',', ':'))
+    it = load('ind_targets.csv')
+    if it is not None:
+        it = it.astype(object).where(it.notna(), None); json.dump(it.to_dict('records'), open(os.path.join(OUT, 'ind_targets.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     mp = load('manpower.csv')
     if mp is not None:
         mp = mp[mp.type.fillna('') != "Lotus's"].copy(); mp['asof'] = meta.get('manpower_asof', '')
@@ -300,12 +303,24 @@ def merge_manpower(fp):
     json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
     print('manpower:', len(out), 'staff,', int(out.sales_role.sum()), 'in sales roles, as of', meta['manpower_asof'])
 
+def merge_indtarget(fp):
+    """Individual target file (sheet 'Indy Target') -> state/ind_targets.csv (PRE unit + PRE revenue per employee x shop, by month)"""
+    d = pd.read_excel(fp, sheet_name='Indy Target', header=1, dtype=str); d = d[d.emp_id8.notna()]
+    m = re.search(r'of ([A-Za-z]{3})[a-z]* (\d{2})', os.path.basename(fp)); MON = {k: i + 1 for i, k in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+    month = f"20{m.group(2)}-{MON[m.group(1).title()]:02d}"
+    pos = lambda r: 'RR Multi' if re.match(r'^RR_(Multi|Sales)', str(r)) else 'ITF Apple' if str(r).startswith('RR_ITF_Apple') else 'ITF' if str(r).startswith('RR_ITF') else 'Retention Champion' if str(r).startswith('Ret_chpn') else None
+    out = pd.DataFrame({'month': month, 'emp': d.emp_id8.str.strip(), 'shop': d.shop_code.str.strip(), 'role': d.emp_type_2, 'pos': d.emp_type_2.map(pos),
+        'pu': pd.to_numeric(d.iloc[:, 17], errors='coerce').round(2), 'pn': pd.to_numeric(d.iloc[:, 35], errors='coerce').round(0)})
+    old = load('ind_targets.csv'); out = pd.concat([old[old.month != month], out]) if old is not None else out
+    save(out, 'ind_targets.csv'); print('individual targets', month, (out.month == month).sum(), 'rows · PRE units', out[out.month == month].pu.sum(), '· PRE net', out[out.month == month].pn.sum())
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
-    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)')
+    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
     if a.manpower: merge_manpower(a.manpower)
+    if a.indtarget: merge_indtarget(a.indtarget)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')
     if a.target: merge_targets(a.target)
