@@ -1497,13 +1497,13 @@ window.PC = (() => {
   };
   // table
   const sorts = {}, queries = {};
-  const table = (el, name, data, { key, cols, def, q, limit, dir }) => {
+  const table = (el, name, data, { key, cols, def, q, limit, dir, last }) => {
     el.replaceChildren(); if (!data) return;
     let s = sorts[name];
     if (!s || !cols.some((c) => c.f === s.f) || (s.auto && (s.f !== def || s.dir !== (dir || -1)))) s = sorts[name] = { f: def, dir: dir || -1, auto: true };
     const query = (queries[q] || '').trim().toLowerCase();
     let r = query ? data.filter((d) => cols.some((c) => String(d[c.f] ?? '').toLowerCase().includes(query))) : data.slice();
-    r.sort((a, b) => { const x = a[s.f], y = b[s.f]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'th')) * s.dir; });
+    r.sort((a, b) => { if (last) { const g = (last(a) ? 1 : 0) - (last(b) ? 1 : 0); if (g) return g; } const x = a[s.f], y = b[s.f]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'th')) * s.dir; });
     if (limit) r = r.slice(0, limit);
     const thead = document.createElement('thead'), hr = document.createElement('tr');
     const barMax = {}; cols.filter((c) => c.bar).forEach((c) => (barMax[c.f] = d3.max(r, (d) => d[c.f]) || 1));
@@ -2054,7 +2054,7 @@ dash.draw('c_w_daily', (el) => { el.replaceChildren(); const r = wRows(); if (!r
 dash.draw('tb_w_shop', (el) => { const r = wRows(); const by = new Map();
   if (r) for (const x of r) { const a = by.get(x.shop || x.shop_name) || { shop: x.shop || x.shop_name, name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; else if (x.expiry && (!a.ex || x.expiry < a.ex)) a.ex = x.expiry; if (x.status === 'not_found') a.nf++; by.set(x.shop || x.shop_name, a); }
   const rows = r && [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n }));
-  PC.table(el, 'tb_w_shop', rows, { key: ['shop'], def: 'left', cols: [
+  PC.table(el, 'tb_w_shop', rows, { key: ['shop'], def: 'left', last: WLAST, cols: [
     { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'n', label: 'ติดตาม', num: true, fmt: PC.nf },
     { f: 'left', label: 'ยังไม่ขาย', num: true, fmt: PC.nf, bar: true }, { f: 's', label: 'ขายแล้ว', num: true, fmt: PC.nf }, { f: 'nf', label: 'ไม่พบใน Stock', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'ex', label: 'หมดอายุใกล้สุด (ที่ยังไม่ขาย)', fmt: WEX },
     { f: 'pct', label: 'ความคืบหน้า', num: true, pill: (d) => [d.pct >= 1 ? 'ok' : d.pct > 0 ? 'warn' : 'bad', PC.pf(d.pct)] } ] }); });

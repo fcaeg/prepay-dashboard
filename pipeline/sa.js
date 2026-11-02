@@ -538,6 +538,8 @@ if (!window.PC_AGCSV_BOUND) { window.PC_AGCSV_BOUND = true;
 /* nearest expiry of the unsold SIMs in a shop: date + days left (from the latest sales date) */
 const WEX = (v) => { if (!v) return '–'; const r = PC.rows('watch_serials'); const t = String((r && r[0] && r[0].sales_asof) || '').slice(0, 10); const d = t ? SA.diff(t, v) : null;
   return PC.day(v) + (d == null ? '' : d < 0 ? ' (เลยมา ' + -d + ' วัน)' : d === 0 ? ' (วันนี้)' : ' (อีก ' + d + ' วัน)'); };
+/* shop summary: Unidentified shops and names that are not True shops go to the bottom */
+const WLAST = (d) => d.area === 'Unidentified' || !/^True /i.test(String(d.name || ''));
 const WXP = (() => {
   const C = RKX.C, rr = RKX.rr, fit = RKX.fit; const SC = { sold: C.ok, in_stock: C.bad, not_found: C.warn };
   const setup = async (W, H) => { try { await document.fonts.ready; } catch (e) {} const FF = getComputedStyle(document.body).fontFamily || 'sans-serif';
@@ -581,7 +583,7 @@ const WXP = (() => {
     foot(g, F, P, H); return { cv, name: fname('Overview') }; };
   const shops = async () => { const r = wRows() || []; const by = new Map();
     for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; else if (x.expiry && (!a.ex || x.expiry < a.ex)) a.ex = x.expiry; if (x.status === 'not_found') a.nf++; by.set(k, a); }
-    const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
+    const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => (WLAST(a) ? 1 : 0) - (WLAST(b) ? 1 : 0) || b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
     const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + P; const { cv, g, F } = await setup(W, H);
     let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() === 'ALL' ? 'ทุกเดือน (รวม)' : wList() || ''));
     const tot = { n: r.length, s: wCount(r, 'sold'), nf: wCount(r, 'not_found') }; g.font = F(400, 22); g.fillStyle = C.fg;
