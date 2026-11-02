@@ -549,7 +549,7 @@ const WXP = (() => {
     const areas = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n);
     const sold = r.filter((x) => x.status === 'sold' && x.sold_date); const dmap = d3.rollup(sold, (v) => v.length, (x) => x.sold_date); let cum = 0; const days = [...dmap.keys()].sort().map((d) => { cum += dmap.get(d); return { d, n: dmap.get(d), c: cum }; });
     const W = 2000, P = 48, ROW = 40, nr = Math.max(areas.length, days.length, 1); const H = P + 100 + 170 + 40 + 120 + 60 + nr * ROW + 10 + P;
-    const { cv, g, F } = await setup(W, H); let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · ' + (wList() || ''));
+    const { cv, g, F } = await setup(W, H); let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · ' + (wList() === 'ALL' ? 'ทุกเดือน (รวม)' : wList() || ''));
     // tiles
     const sv = sold.reduce((a, x) => a + (x.sold_net || 0), 0); const left = r.filter((x) => x.status === 'in_stock');
     const tiles = [['Serial ที่ติดตาม', PC.nf(r.length), C.fg, PC.nf(new Set(r.map((x) => x.shop)).size) + ' สาขา · ' + PC.nf(new Set(r.map((x) => x.area)).size) + ' Area'],
@@ -580,7 +580,7 @@ const WXP = (() => {
     for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(k, a); }
     const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
     const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + P; const { cv, g, F } = await setup(W, H);
-    let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() || ''));
+    let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() === 'ALL' ? 'ทุกเดือน (รวม)' : wList() || ''));
     const tot = { n: r.length, s: wCount(r, 'sold'), nf: wCount(r, 'not_found') }; g.font = F(400, 22); g.fillStyle = C.fg;
     g.fillText(PC.nf(rows.length) + ' สาขา · ติดตาม ' + PC.nf(tot.n) + ' Serial · ขายแล้ว ' + PC.nf(tot.s) + ' (' + PC.pf(tot.s / Math.max(1, tot.n)) + ') · ยังไม่ขาย ' + PC.nf(tot.n - tot.s - tot.nf) + ' · ไม่พบใน Stock ' + PC.nf(tot.nf), P, y); y += 50;
     const cols = [['#', 50, 'r'], ['สาขา', 560, 'l'], ['Area', 330, 'l'], ['ติดตาม', 130, 'r'], ['ยังไม่ขาย', 150, 'r'], ['ขายแล้ว', 140, 'r'], ['ไม่พบใน Stock', 170, 'r'], ['ความคืบหน้า', 374, 'l']];

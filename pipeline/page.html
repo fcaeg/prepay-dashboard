@@ -947,7 +947,7 @@ body.pc-noscroll { overflow: hidden; }
   <section class="pc-sec" id="watch" data-page="watch" hidden>
     <div class="pc-tools">
       <label class="pc-field">รายการที่ติดตาม
-        <select id="f-wlist" data-draw="f_wlist" data-source="watch_serials" aria-label="รายการซิมที่ติดตาม"></select>
+        <select id="f-wlist" data-draw="f_wlist" data-source="watch_serials enriched" aria-label="รายการซิมที่ติดตาม"></select>
       </label>
       <p class="pc-note" data-draw="w_asof" data-source="watch_serials"></p>
       <button class="pc-export pc-csv" id="w-exp-ov" type="button" title="ดาวน์โหลดรูป PNG แนวนอน: การ์ดสรุป + ความคืบหน้า (ราย Area และรายวัน)">⬇ Export รูป ภาพรวม</button>
@@ -2007,13 +2007,15 @@ dash.draw('tb_gap', (el) => {
 
 /* ---------- watched serials ---------- */
 const WS = { sold: ['ขายแล้ว', 'ok', 'var(--color-ok)'], in_stock: ['ยังไม่ขาย', 'bad', 'var(--color-bad)'], not_found: ['ไม่พบใน Stock', 'warn', 'var(--color-warn)'] };
-const wLists = () => { const r = PC.rows('watch_serials'); return r ? [...new Set(r.map((x) => x.list))] : []; };
-const wList = () => { const ls = wLists(); const v = dash.params().wlist; return ls.includes(v) ? v : ls[ls.length - 1]; };
+const WTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const wKey = (l) => { const m = String(l).match(/(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2})/); return m ? (2500 + +m[2] - 543) * 100 + WTH.indexOf(m[1]) + 1 : 999999; };
+const wLists = () => { const r = PC.rows('watch_serials'); return r ? [...new Set(r.map((x) => x.list))].sort((a, b) => wKey(a) - wKey(b)) : []; };
+const wList = () => { const ls = wLists(); const v = dash.params().wlist; if (v === 'ALL' || ls.includes(v)) return v; const r = PC.rows('enriched'); const t = r ? r.reduce((a, x) => (x.date > a ? x.date : a), '') : ''; const cur = t ? +t.slice(0, 4) * 100 + +t.slice(5, 7) : 0; return ls.find((l) => wKey(l) >= cur) || ls[ls.length - 1]; };
 const wRows = () => { const r = PC.rows('watch_serials'); if (!r) return null; const p = PC.P(), l = wList();
-  return r.filter((x) => x.list === l && PCin(x.area, p.area) && (p.shop === 'ALL' || String(x.shop) === p.shop || String(x.sold_shop) === p.shop)
+  return r.filter((x) => (l === 'ALL' || x.list === l) && PCin(x.area, p.area) && (p.shop === 'ALL' || String(x.shop) === p.shop || String(x.sold_shop) === p.shop)
     && (p.stype === 'ALL' || (PC.rows('shops') || []).some((s) => String(s.shop) === String(x.shop) && s.stype === p.stype))); };
 const wCount = (r, s) => r.filter((x) => x.status === s).length;
-dash.draw('f_wlist', (sel) => { const ls = wLists(); sel.replaceChildren(...ls.map((l) => new Option(l, l))); sel.value = wList() || ''; sel.onchange = () => dash.setParams({ wlist: sel.value }); });
+dash.draw('f_wlist', (sel) => { const ls = wLists(); const cnt = d3.rollup(PC.rows('watch_serials') || [], (v) => v.length, (x) => x.list); sel.replaceChildren(...ls.map((l) => new Option(l + ' (' + PC.nf(cnt.get(l) || 0) + ')', l)), new Option('ทุกเดือน (รวม)', 'ALL')); sel.value = wList() || ''; sel.onchange = () => dash.setParams({ wlist: sel.value }); });
 dash.draw('w_asof', (el) => { const r = PC.rows('watch_serials'); const x = r && r[0]; el.textContent = x ? 'ตรวจกับรายงานการขายถึง ' + PC.day(x.sales_asof.slice(0, 10)) + ' ' + x.sales_asof.slice(11) + ' น. · Stock ณ ' + PC.day(x.stock_asof.slice(0, 10)) + ' ' + x.stock_asof.slice(11) + ' น.' : ''; });
 dash.draw('w_total', (el) => { const r = wRows(); el.textContent = r ? PC.nf(r.length) : '—'; });
 dash.draw('w_total_sub', (el) => { const r = wRows(); el.textContent = r ? PC.nf(new Set(r.map((x) => x.shop)).size) + ' สาขา · ' + PC.nf(new Set(r.map((x) => x.area)).size) + ' Area' : ''; });
@@ -2049,7 +2051,7 @@ dash.draw('tb_w_shop', (el) => { const r = wRows(); const by = new Map();
 dash.draw('tb_w_serial', (el) => { const sf = dash.params().wstatus || 'ALL'; let r = wRows(); if (r && sf !== 'ALL') r = r.filter((x) => x.status === sf);
   const ord = { in_stock: 0, not_found: 1, sold: 2 };
   PC.table(el, 'tb_w_serial', r && r.map((x) => ({ ...x, srank: ord[x.status] })), { key: ['list', 'serial'], def: 'srank', dir: 1, q: 'watch', limit: 5000, cols: [
-    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [WS[d.status][1], WS[d.status][0]] }, { f: 'serial', label: 'Serial' }, { f: 'area', label: 'Area' }, { f: 'shop_name', label: 'สาขา', wrap: true },
+    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [WS[d.status][1], WS[d.status][0]] }, ...(wList() === 'ALL' ? [{ f: 'list', label: 'เดือนหมดอายุ' }] : []), { f: 'serial', label: 'Serial' }, { f: 'area', label: 'Area' }, { f: 'shop_name', label: 'สาขา', wrap: true },
     { f: 'product', label: 'สินค้า', wrap: true }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' },
     { f: 'sold_date', label: 'วันที่ขาย', fmt: (v) => PC.day(v) }, { f: 'sold_shop_name', label: 'สาขาที่ขาย', wrap: true }, { f: 'sold_emp_name', label: 'พนักงาน' }, { f: 'sold_net', label: 'Net Amount', num: true, fmt: PC.nf } ] }); });
 
