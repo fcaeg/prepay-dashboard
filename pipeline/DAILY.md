@@ -10,6 +10,10 @@ Inputs Nami attaches each day (zip or csv):
   `python3 -I pipeline/update.py --indtarget <file>` (PRE unit col R + PRE revenue col AJ per employee), then upload `ind_targets.json`
 - occasionally a list of Serials to track (e.g. SIMs expiring next month): CSV/XLSX with a Serial column →
   `python3 -I pipeline/update.py --watch <file> --watch-label "ซิมหมดอายุ <เดือน>"` (sold status is matched on every later sales file)
+- SN expiry snapshot xlsx (sheet Detail, header row 3: Material, Serial number, SLoc, `Month/Year ที่หมดอายุ` = MM/YYYY or "New Lot"):
+  one list per expiry month labelled "ซิมหมดอายุ <ด.ด. ปป>" (Thai month, BE 2-digit year); "New Lot" rows are skipped; only serials in the WW stock file
+  (or already on a list) are kept; serials already listed take their new month; old serials not in the snapshot stay (sold history).
+  Write pipeline/state/watch_serials.csv directly (columns serial, list, area, shop_name, added), then run update.py with no args.
 
 ## 1. Update the data and the GitHub page
 ```bash
