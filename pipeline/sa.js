@@ -540,6 +540,8 @@ const WEX = (v) => { if (!v) return '–'; const r = PC.rows('watch_serials'); c
   return PC.day(v) + (d == null ? '' : d < 0 ? ' (เลยมา ' + -d + ' วัน)' : d === 0 ? ' (วันนี้)' : ' (อีก ' + d + ' วัน)'); };
 /* shop summary: Unidentified shops and names that are not True shops go to the bottom */
 const WLAST = (d) => d.area === 'Unidentified' || !/^True /i.test(String(d.name || ''));
+/* area lists: real areas first, then Unidentified, then serials with no shop (not in stock) */
+const WALAST = (a) => (!a ? 2 : a === 'Unidentified' ? 1 : 0);
 const WXP = (() => {
   const C = RKX.C, rr = RKX.rr, fit = RKX.fit; const SC = { sold: C.ok, in_stock: C.bad, not_found: C.warn };
   const setup = async (W, H) => { try { await document.fonts.ready; } catch (e) {} const FF = getComputedStyle(document.body).fontFamily || 'sans-serif';
@@ -551,7 +553,7 @@ const WXP = (() => {
   const fname = (k) => 'Watch_Serial_' + k + '_' + new Date().toISOString().slice(0, 10) + '.png';
   const overview = async () => { const r = wRows() || []; const N = r.length || 1; const cnt = (s) => wCount(r, s);
     const by = new Map(); for (const x of r) { const a = by.get(x.area) || { area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.area, a); }
-    const areas = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n);
+    const areas = [...by.values()].sort((a, b) => WALAST(a.area) - WALAST(b.area) || b.n - b.s - (a.n - a.s) || b.n - a.n);
     const sold = r.filter((x) => x.status === 'sold' && x.sold_date); const dmap = d3.rollup(sold, (v) => v.length, (x) => x.sold_date); let cum = 0; const days = [...dmap.keys()].sort().map((d) => { cum += dmap.get(d); return { d, n: dmap.get(d), c: cum }; });
     const W = 2000, P = 48, ROW = 40, nr = Math.max(areas.length, days.length, 1); const H = P + 100 + 170 + 40 + 120 + 60 + nr * ROW + 10 + P;
     const { cv, g, F } = await setup(W, H); let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · ' + (wList() === 'ALL' ? 'ทุกเดือน (รวม)' : wList() || ''));
@@ -572,7 +574,7 @@ const WXP = (() => {
     // two columns
     const cw = (W - 2 * P - 48) / 2, x1 = P, x2 = P + cw + 48;
     g.fillStyle = C.fg; g.font = F(700, 22); g.fillText('ราย Area', x1, y); g.fillText('ขายได้รายวัน (สะสม)', x2, y); y += 16;
-    const mx = Math.max(1, ...areas.map((a) => a.n)); areas.forEach((a, i) => { const ty = y + i * ROW; g.font = F(400, 18); g.fillStyle = C.fg; g.fillText(fit(g, a.area, cw * 0.32), x1, ty + 26);
+    const mx = Math.max(1, ...areas.map((a) => a.n)); areas.forEach((a, i) => { const ty = y + i * ROW; g.font = F(400, 18); g.fillStyle = C.fg; g.fillText(fit(g, a.area || 'ไม่พบใน Stock (SLoc)', cw * 0.32), x1, ty + 26);
       const bx0 = x1 + cw * 0.34, bw = cw * 0.4; g.fillStyle = C.grid; rr(g, bx0, ty + 12, bw, 18, 9); g.fill(); g.save(); rr(g, bx0, ty + 12, (a.n / mx) * bw, 18, 9); g.clip(); let xx = bx0;
       for (const [v, c] of [[a.s, C.ok], [a.n - a.s - a.nf, C.bad], [a.nf, C.warn]]) { const w = (v / mx) * bw; g.fillStyle = c; g.fillRect(xx, ty + 12, w, 18); xx += w; } g.restore();
       g.font = F(400, 17); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText('ขายแล้ว ' + a.s + ' / ' + a.n + ' · ' + PC.pf(a.s / a.n), x1 + cw, ty + 26); g.textAlign = 'left'; });

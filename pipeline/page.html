@@ -2041,8 +2041,8 @@ dash.draw('c_w_total', (el) => { el.replaceChildren(); const r = wRows(); if (!r
   el.append(bar, lg); });
 dash.draw('c_w_area', (el) => { el.replaceChildren(); const r = wRows(); if (!r) return; const by = new Map();
   for (const x of r) { const a = by.get(x.area) || { area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.area, a); }
-  const d = [...by.values()].sort((a, b) => b.n - b.s - (a.n - a.s) || b.n - a.n); const max = Math.max(1, ...d.map((x) => x.n));
-  for (const x of d) { const row = document.createElement('div'); row.className = 'pc-hrow'; const l = document.createElement('span'); l.className = 'l'; l.textContent = x.area; l.title = x.area;
+  const d = [...by.values()].sort((a, b) => WALAST(a.area) - WALAST(b.area) || b.n - b.s - (a.n - a.s) || b.n - a.n); const max = Math.max(1, ...d.map((x) => x.n));
+  for (const x of d) { const row = document.createElement('div'); row.className = 'pc-hrow'; const l = document.createElement('span'); l.className = 'l'; l.textContent = x.area || 'ไม่พบใน Stock (SLoc)'; l.title = l.textContent;
     const t = document.createElement('span'); t.className = 't'; t.style.display = 'flex'; t.style.overflow = 'hidden';
     for (const [v, c] of [[x.s, WS.sold[2]], [x.n - x.s - x.nf, WS.in_stock[2]], [x.nf, WS.not_found[2]]]) { const f = document.createElement('span'); f.style.cssText = 'display:block;height:100%;width:' + (v / max) * 100 + '%;background:' + c; t.append(f); }
     const v = document.createElement('span'); v.className = 'v'; v.textContent = 'ขายแล้ว ' + x.s + ' / ' + x.n + ' · ' + PC.pf(x.s / x.n); row.append(l, t, v); el.append(row); } });
