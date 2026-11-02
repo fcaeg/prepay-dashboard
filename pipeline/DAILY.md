@@ -10,11 +10,12 @@ Inputs Nami attaches each day (zip or csv):
   `python3 -I pipeline/update.py --indtarget <file>` (PRE unit col R + PRE revenue col AJ per employee), then upload `ind_targets.json`
 - occasionally a list of Serials to track (e.g. SIMs expiring next month): CSV/XLSX with a Serial column →
   `python3 -I pipeline/update.py --watch <file> --watch-label "ซิมหมดอายุ <เดือน>"` (sold status is matched on every later sales file)
-- SN expiry snapshot xlsx (sheet Detail, header row 3: Material, Serial number, SLoc, `Month/Year ที่หมดอายุ` = MM/YYYY or "New Lot"):
-  one list per expiry month labelled "ซิมหมดอายุ <ด.ด. ปป>" (Thai month, BE 2-digit year); "New Lot" rows are skipped; only serials at WW shops
-  (or already on a list) are kept; serials already listed take their new month; old serials not in the snapshot stay (sold history).
-  Keep only serials whose stock shop is a WW shop (out/shops.json) - the stock file also has non-WW shops - or already listed / sold at WW.
-  Write pipeline/state/watch_serials.csv directly (columns serial, list, area, shop_name, added, expiry = column อายุระบบ as YYYY-MM-DD), then run update.py with no args.
+- SN expiry snapshot xlsx (sheet Detail, header row 3: Material, Serial number, SLoc, อายุระบบ = expiry date, `Month/Year ที่หมดอายุ` = MM/YYYY or "New Lot"):
+  Nami wants EVERY serial in the file on the page (the count must match the file). One list per expiry month "ซิมหมดอายุ <ด.ด. ปป>"
+  (Thai month, BE 2-digit year) plus "ซิม New Lot". Replace pipeline/state/watch_serials.csv with the file's rows (columns serial, list,
+  area '', shop_name 'SLoc <SLoc>', added, expiry = อายุระบบ as YYYY-MM-DD; Excel serial numbers converted), keeping old rows only if sold;
+  then run update.py with no args. Shop/area come from the stock file (shops outside the target files show "<code> (นอกไฟล์เป้า)"),
+  sold serials from the sales state; serials in neither = "ไม่พบใน Stock" (shop shown as SLoc).
 
 ## 1. Update the data and the GitHub page
 ```bash
