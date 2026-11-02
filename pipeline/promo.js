@@ -26,12 +26,12 @@ window.PROMO = {
     { key: 'ready', color: '#9b3fc4', title: 'ซิมพร้อมใช้', fit: 'เหมาะกับลูกค้าที่ต้องการ “ซื้อแล้วใช้ได้ทันที”', items: [
       { label: '200 บ. · 4Mbps 50GB · 30 วัน', note: 'Pre-EOL', warn: true, matcodes: ['3000096033'] },
       { label: '299 บ. · 10Mbps 80GB · 30 วัน', note: 'FUP 1Mbps', hot: true, matcodes: ['3000143640', '3000143639'] },
-      { label: '790 บ. · 15Mbps 100GB/รอบ · 3 รอบ', matcodes: ['3000122197', '3000121749', '3000122167'] },
-      { label: '1,450 บ. · 15Mbps 100GB/รอบ · 6 รอบ', matcodes: ['3000122198', '3000121750', '3000122168'] },
+      { label: '790 บ. · 15Mbps 100GB/รอบ · 3 รอบ', matcodes: ['3000122197', '3000121749', '3000122167', '3000143083'] },
+      { label: '1,450 บ. · 15Mbps 100GB/รอบ · 6 รอบ', matcodes: ['3000122198', '3000121750', '3000122168', '3000143084'] },
       { label: '2,750 บ. · 15Mbps 100GB/รอบ · 12 รอบ', matcodes: ['3000122199', '3000122191', '3000122169', '3000143085'] },
     ], foot: 'อายุแพ็ก 3 / 6 / 12 รอบ · WiFi ไม่จำกัด' },
     { key: 'mass', color: '#d42a2a', title: 'ซิม Mass 49 บาท (เติม VAS)', fit: 'ENTRY SIM · เน้นลูกค้าเริ่มต้น / เติมแพ็กต่อ', items: [
-      { label: '49 บ. · ใช้งานเริ่มต้น 5 วัน', note: 'Max speed 3GB + WiFi', hot: true, matcodes: ['3000104161'] },
+      { label: '49 บ. · ใช้งานเริ่มต้น 5 วัน', note: 'Max speed 3GB + WiFi', hot: true, matcodes: ['3000104161', '3000142906'] },
     ], foot: 'เติมเงินสะสม 150 บาท/เดือน เพื่อรับสิทธิพิเศษต่อเนื่อง · True: On-net + WiFi 30 วัน | dtac: Social 4Mbps 30 วัน' },
     { key: 'tourist', color: '#1f9a4a', title: 'Tourist SIM · นักท่องเที่ยวต่างชาติที่มาเที่ยวไทย', fit: '8 วัน: Short Stay | 15–30 วัน: Long Stay', items: [
       { label: '499 บ. · 8 วัน', matcodes: ['3000121950', '6000017536', '6000018585'] },
@@ -44,6 +44,31 @@ window.PROMO = {
       { label: '899 บ. · 6GB / 15 วัน · Worldwide', matcodes: ['3000106114'] },
       { label: '1,499 บ. · 15GB / 30 วัน · Worldwide', note: 'โปรลด 100 บาท (ปกติ 1,599)', hot: true, matcodes: ['3000106115'] },
     ], foot: '' },
+  ],
+  // รายละเอียดซิมแต่ละแพ็ก (จาก Monthly Business Steering) — Stock / ขายต่อสัปดาห์ / Cover Week คำนวณจากข้อมูลจริง
+  sheets: [
+    { title: 'รวมซิมทรูพร้อมใช้', color: '#9b3fc4', packs: [
+      { price: 200, mat: '3000096033', desc: 'SIM,PRE,TMH2 READY 4MBPS50GB_VAS MULTI', tag: 'Pre-EOL', life: '30 วัน', net: '4Mbps 50GB', call: 'โทรในเครือข่าย (ฟรี 60 นาที/ครั้ง โทรเกินนาทีละ 25 สต. ไม่รวม VAT)', perk: 'WiFi ไม่จำกัด' },
+      { price: 299, mat: '3000143640', desc: 'SIM,PRE,TMH2 NET READY2 _VAS MUL', tag: 'ใหม่ แทน 200 บ.', life: '30 วัน', net: '10 Mbps 80GB (FUP 1 Mbps)', call: 'โทรทุกเครือข่าย (ฟรี 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT)', perk: 'WiFi ไม่จำกัด · ต่อแพ็กสำเร็จในเดือน 2–6 รับเน็ต 10Mbps เพิ่มอีก 20GB' },
+      { price: 790, mat: '3000122197', desc: 'SIM,PRE,TMH2 15MBPS100G3M SW_VAS MULTI', life: '3 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' },
+      { price: 1450, mat: '3000122198', desc: 'SIM,PRE,TMH2 15MBPS100G6M SW_VAS MULTI', life: '6 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' },
+      { price: 2750, mat: '3000122199', desc: 'SIM,PRE,TMH2 15MBPS100G12M SW_VAS MULTI', life: '12 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' } ] },
+    { title: 'รวมซิมดีแทคพร้อมใช้ (คงกระพัน+)', color: '#7a3fa8', packs: [
+      { price: 790, mat: '3000143083', desc: 'SIM,PRE,TMH3 KKP 15MB 3M 790 TSHOP_VAS', life: '3 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' },
+      { price: 1450, mat: '3000143084', desc: 'SIM,PRE,TMH3 KKP 15MB 6M 1450 TSHOP_VAS', life: '6 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' },
+      { price: 2750, mat: '3000143085', desc: 'SIM,PRE,TMH3 KKP 15MB 12M 2750 TSHOP_VAS', life: '12 รอบ (รอบละ 30 วัน)', net: '15Mbps 100 GB ต่อรอบ (FUP 128 Kbps)', call: 'โทรในเครือข่าย (ฟรีสูงสุด 15 นาที/ครั้ง โทรเกินนาทีละ 99 สต. ไม่รวม VAT) · โทรนอกเครือข่าย 60 นาทีต่อรอบ', perk: 'WiFi ไม่จำกัด' } ] },
+    { title: 'รวมซิม Mass 49 บาท (เติม VAS)', color: '#d42a2a', packs: [
+      { price: 49, mat: '3000104161', desc: 'SIM,PRE,TMH2 HELLO_VAS MULTI', tag: 'ทรู · ฮัลโหล', life: '5 วัน', net: 'Max speed 3GB + Wi-Fi', perk: 'เติมเงินสะสม 150 บาท/เดือน → โทรฟรีในเครือข่าย 30 วัน + Wi-Fi ฟรี 30 วัน' },
+      { price: 49, mat: '3000142906', desc: 'SIM,PRE,TMH3 NET TSHOP_VAS', tag: 'ดีแทค · แฮปปี้เน็ต', life: '5 วัน', net: 'Max speed 3GB + Wi-Fi', perk: 'เติมเงินสะสม 150 บาท/เดือน → เล่น FB, LINE, X, Instagram, Messenger ฟรีที่ 4Mbps 30 วัน' } ] },
+    { title: 'Tourist SIM · นักท่องเที่ยวต่างชาติที่มาเที่ยวไทย', color: '#1f9a4a', packs: [
+      { price: 499, mat: '3000121950', desc: 'SIM,PRE,TMH2 INFINITE 8D SH WW_VAS MULTI', life: '8 วัน', net: 'เน็ต 5G เต็มสปีด ไม่อั้น ไม่ลดสปีด', call: 'โทรทุกเครือข่าย 24 ชม. (ครั้งละ 15 นาที) · โทรฟรีต่างประเทศ 100 นาที', perk: 'WiFi ไม่จำกัด', who: 'กลุ่มที่อยู่สั้น 3–8 วัน เช่น Asia จีน มาเลเซีย ญี่ปุ่น' },
+      { price: 699, mat: '3000098815', desc: 'SIM,PRE,TMH2 INFINITE 15DAY_VAS MULTI', life: '15 วัน', net: 'เน็ต 5G เต็มสปีด ไม่อั้น ไม่ลดสปีด', call: 'โทรทุกเครือข่าย 24 ชม. (ครั้งละ 15 นาที) · โทรฟรีต่างประเทศ 100 นาที', perk: 'WiFi ไม่จำกัด', who: 'กลุ่มที่อยู่นาน 15 วันขึ้นไป เช่น Europe / Russia หรือ Middle East' },
+      { price: 1199, mat: '3000103252', desc: 'SIM,PRE,TMH2 INFINITE 30DAY V2_VAS MULTI', life: '30 วัน', net: 'เน็ต 5G เต็มสปีด ไม่อั้น ไม่ลดสปีด', call: 'โทรทุกเครือข่าย 24 ชม. (ครั้งละ 15 นาที) · โทรฟรีต่างประเทศ 100 นาที', perk: 'WiFi ไม่จำกัด', who: 'กลุ่มที่อยู่นาน 15 วันขึ้นไป เช่น Europe / Russia หรือ Middle East' } ] },
+    { title: 'SIM TRAVEL · ลูกค้าคนไทยเดินทางไปต่างประเทศ', color: '#2a5fd4', packs: [
+      { price: 399, mat: '3000106113', desc: 'SIM,PRE,TMH2 GOTRAVEL ASIA_VAS MULTI', zone: 'Asia · Australia', life: '6 GB | 10 วัน' },
+      { price: 549, mat: '3000114724', desc: 'SIM,PRE,TMH2 GOTRAVEL ASIA V1_VAS MULTI', zone: 'Asia · Australia', life: '12 GB | 10 วัน' },
+      { price: 899, mat: '3000106114', desc: 'SIM,PRE,TMH2 GOTRAVEL W 15D_VAS MULTI', zone: 'Worldwide', life: '6 GB | 15 วัน' },
+      { price: 1599, mat: '3000106115', desc: 'SIM,PRE,TMH2 GOTRAVEL W 30D_VAS MULTI', zone: 'Worldwide', life: '15 GB | 30 วัน', tag: 'พ.ย. ลดเหลือ 1,499' } ] },
   ],
 };
 
@@ -83,6 +108,22 @@ window.PROMO = {
 .pm-tbl td:first-child small { display: block; color: var(--color-fg-muted); font-size: 11.5px; }
 .pm-tbl tr.tot td { font-weight: 600; border-bottom: 0; }
 .pm-zero { color: var(--color-bad); }
+.pm-sheet { border-top: 5px solid var(--pm-c); }
+.pm-sheet h3 { color: var(--pm-c); }
+.pm-st { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; min-width: 640px; }
+.pm-st th, .pm-st td { border: 1px solid var(--color-border-line); padding: 6px 8px; text-align: center; vertical-align: middle; line-height: 1.45; }
+.pm-st th:first-child, .pm-st td:first-child { width: 8.5rem; text-align: left; font-weight: 600; background: color-mix(in srgb, var(--color-fg) 5%, transparent); }
+.pm-st thead th { background: var(--color-fg); color: var(--color-bg); font-size: 17px; font-weight: 700; }
+.pm-st thead th:first-child { background: var(--color-fg); color: var(--color-bg); font-size: 13px; }
+.pm-st td.mat { font-variant-numeric: tabular-nums; font-weight: 600; }
+.pm-st td small { display: block; color: var(--color-fg-muted); font-size: 11px; }
+.pm-st tr.live td { font-variant-numeric: tabular-nums; font-weight: 600; background: color-mix(in srgb, var(--pm-c) 6%, transparent); }
+.pm-st tr.live td:first-child { background: color-mix(in srgb, var(--pm-c) 12%, transparent); }
+.pm-cv-low { color: var(--color-bad); } .pm-cv-high { color: var(--color-warn); }
+.pc .pm-sheet .pm-st td, .pc .pm-sheet .pm-st th { white-space: normal !important; overflow-wrap: anywhere; }
+.pc .pm-sheet .pm-st thead th { background: var(--color-fg) !important; color: var(--color-bg) !important; text-align: center !important; font-size: 17px; font-weight: 700; }
+.pc .pm-sheet .pc-scroll { max-height: none !important; }
+.pc .pm-sheet .pm-st thead th:first-child { text-align: left !important; font-size: 13px; }
 @media (max-width: 560px) { .pm-hero { grid-template-columns: 1fr; } .pm-price { text-align: left; } }
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -117,6 +158,21 @@ window.PROMO = {
         + '<table class="pm-tbl"><thead><tr><th>แพ็ก</th><th>QTY เดือนนี้</th><th>Net (บาท)</th><th>Stock</th></tr></thead><tbody>' + c.items.map(row).join('')
         + (c.items.length > 1 ? '<tr class="tot"><td>รวม</td><td>' + nf(sum(q, all)) + '</td><td>' + nf(sum(n, all)) + '</td><td>' + nf(sum(stock, all)) + '</td></tr>' : '') + '</tbody></table>'
         + (c.foot ? '<p>' + esc(c.foot) + '</p>' : '') + '</article>'; };
+    // live stock / weekly sales / cover for product sheets
+    let maxD = ''; for (const r of sales) if (String(r.date) > maxD) maxD = String(r.date);
+    const d28 = maxD ? new Date(Date.parse(maxD + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10) : '';
+    const w28 = new Map(); if (maxD) for (const r of sales) { const d = String(r.date); if (d < d28 || d > maxD || !okShop(r.shop)) continue; w28.set(String(r.matcode), (w28.get(String(r.matcode)) || 0) + +r.units); }
+    const sheet = (S) => { const ks = S.packs; const same = (f) => ks.every((k) => (k[f] || '') === (ks[0][f] || ''));
+      const rowF = (lab, f, cls) => { if (!ks.some((k) => k[f])) return ''; if (ks.length > 1 && same(f)) return '<tr><td>' + lab + '</td><td colspan="' + ks.length + '"' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(ks[0][f]) + '</td></tr>';
+        return '<tr><td>' + lab + '</td>' + ks.map((k) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(k[f] || '–') + '</td>').join('') + '</tr>'; };
+      const live = ks.map((k) => { const s = stock.get(k.mat) || 0, w = (w28.get(k.mat) || 0) / 4; return { s, w, cv: w > 0 ? s / w : null }; });
+      return '<article class="pc-card pm-sheet" style="--pm-c:' + S.color + '"><h3>' + esc(S.title) + '</h3><div class="pc-scroll"><table class="pm-st"><thead><tr><th>ราคา</th>' + ks.map((k) => '<th>' + nf(k.price) + ' บ.</th>').join('') + '</tr></thead><tbody>'
+        + '<tr><td>Mat code</td>' + ks.map((k) => '<td class="mat">' + esc(k.mat) + (k.tag ? '<small>' + esc(k.tag) + '</small>' : '') + '</td>').join('') + '</tr>'
+        + rowF('Description', 'desc') + rowF('พื้นที่ใช้งาน', 'zone') + rowF('ใช้ได้นาน', 'life') + rowF('เน็ต', 'net') + rowF('โทร', 'call') + rowF('สิทธิพิเศษ', 'perk') + rowF('ลูกค้าเป้าหมาย', 'who')
+        + '<tr class="live"><td>Stock shop</td>' + live.map((x) => '<td class="' + (x.s === 0 ? 'pm-zero' : '') + '">' + nf(x.s) + ' unit</td>').join('') + '</tr>'
+        + '<tr class="live"><td>Sales per Week</td>' + live.map((x) => '<td>' + (x.w ? (x.w < 10 ? x.w.toFixed(1) : nf(x.w)) : '0') + ' unit</td>').join('') + '</tr>'
+        + '<tr class="live"><td>Cover Week</td>' + live.map((x) => '<td class="' + (x.cv == null ? '' : x.cv < 2 ? 'pm-cv-low' : x.cv > 26 ? 'pm-cv-high' : '') + '">' + (x.cv == null ? (x.s ? 'ยังไม่มียอด' : '–') : x.cv.toFixed(2)) + '</td>').join('') + '</tr>'
+        + '</tbody></table></div></article>'; };
     el.innerHTML = '<div class="pc-head"><h2 class="pc-title">' + esc(P.title) + '</h2><p class="pc-take">' + esc(P.sub) + ' · ตัวเลขในตาราง: ' + asof + ' · ' + scope + ' · Stock ณ ไฟล์ล่าสุด</p></div>'
       + '<div class="pm-notice" role="note"><span class="pm-tag">' + esc(N.tag) + '</span><h3>' + esc(N.head) + '<span>' + esc(N.lead) + '</span></h3>'
       + '<div class="pm-alert"><i aria-hidden="true">!</i><div><b>' + esc(N.box[0]) + '</b><small>' + esc(N.box[1]) + '</small></div></div>'
@@ -126,6 +182,8 @@ window.PROMO = {
       + '<br>เดือนนี้ขายได้ <b>' + nf(hq) + '</b> ชิ้น · Stock คงเหลือ <b class="' + (hs === 0 ? 'pm-zero' : '') + '">' + nf(hs) + '</b> ชิ้น (' + scope + ')</p></div>'
       + '<div class="pm-price"><s>' + nf(H.was) + ' บาท</s><b>' + nf(H.now) + ' บาท</b><span class="pm-badge">ลด ' + nf(H.off) + ' บาท</span></div></div>'
       + '<div class="pm-grid">' + P.cards.map(card).join('') + '</div>'
-      + '<p class="pc-note">QTY / Net = ยอดขายเดือน ' + monTH(month) + ' ของ Matcode ในแต่ละแพ็ก (รวมซิมและ eSIM ที่ราคาเดียวกัน) ตามตัวกรองด้านบน · Stock แดง = ไม่มีของในพื้นที่ที่เลือก ควรขอโยกหรือเบิกเพิ่ม · ซิม Mass dtac (แฮปปี้) ยังไม่มีในข้อมูลยอดขายนี้</p>';
+      + '<h2 class="pc-title" style="font-size:20px;margin-top:8px">รายละเอียดซิมแต่ละแพ็ก</h2><p class="pc-take">ข้อมูลแพ็กจาก Monthly Business Steering · Stock / ขายเฉลี่ยต่อสัปดาห์ (28 วันล่าสุด) / Cover Week คำนวณจากข้อมูลจริงตามตัวกรอง (' + scope + ')</p>'
+      + (P.sheets || []).map(sheet).join('')
+      + '<p class="pc-note">QTY / Net = ยอดขายเดือน ' + monTH(month) + ' ของ Matcode ในแต่ละแพ็ก (รวมซิมและ eSIM ที่ราคาเดียวกัน) ตามตัวกรองด้านบน · Stock แดง = ไม่มีของในพื้นที่ที่เลือก ควรขอโยกหรือเบิกเพิ่ม · Cover Week = Stock ÷ ขายเฉลี่ยต่อสัปดาห์ (แดง = ต่ำกว่า 2 สัปดาห์ เสี่ยงของขาด · ส้ม = เกิน 26 สัปดาห์ ของค้าง)</p>';
   });
 })();
