@@ -124,6 +124,14 @@ window.PROMO = {
 .pc .pm-sheet .pm-st thead th { background: var(--color-fg) !important; color: var(--color-bg) !important; text-align: center !important; font-size: 17px; font-weight: 700; }
 .pc .pm-sheet .pc-scroll { max-height: none !important; }
 .pc .pm-sheet .pm-st thead th:first-child { text-align: left !important; font-size: 13px; }
+.pm-sheet tr.pm-d { display: none; } .pm-sheet.open tr.pm-d { display: table-row; }
+.pm-i { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; border: 1px solid var(--pm-c); color: var(--pm-c); background: var(--color-panel); font: italic 600 11px/1 var(--font-anthropic-sans, sans-serif); cursor: pointer; vertical-align: 1px; padding: 0; }
+.pm-i.on, .pm-i:hover { background: var(--pm-c); color: #fff; }
+.pm-dbox { border: 1px solid color-mix(in srgb, var(--pm-c) 45%, var(--color-border-line)); border-left: 4px solid var(--pm-c); border-radius: var(--cds-radius); padding: 10px 14px; display: grid; grid-template-columns: 8.5rem 1fr; gap: 4px 12px; font-size: 13px; line-height: 1.5; }
+.pm-dbox h4 { grid-column: 1 / -1; margin: 0 0 4px; font-size: 15px; color: var(--pm-c); }
+.pm-dbox dt { color: var(--color-fg-muted); } .pm-dbox dd { margin: 0; }
+.pm-all { justify-self: start; font: inherit; font-size: 12px; color: var(--pm-c); background: none; border: 1px solid color-mix(in srgb, var(--pm-c) 45%, transparent); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+@media (max-width: 560px) { .pm-dbox { grid-template-columns: 1fr; } .pm-dbox dt { margin-top: 4px; } }
 @media (max-width: 560px) { .pm-hero { grid-template-columns: 1fr; } .pm-price { text-align: left; } }
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -162,17 +170,17 @@ window.PROMO = {
     let maxD = ''; for (const r of sales) if (String(r.date) > maxD) maxD = String(r.date);
     const d28 = maxD ? new Date(Date.parse(maxD + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10) : '';
     const w28 = new Map(); if (maxD) for (const r of sales) { const d = String(r.date); if (d < d28 || d > maxD || !okShop(r.shop)) continue; w28.set(String(r.matcode), (w28.get(String(r.matcode)) || 0) + +r.units); }
-    const sheet = (S) => { const ks = S.packs; const same = (f) => ks.every((k) => (k[f] || '') === (ks[0][f] || ''));
-      const rowF = (lab, f, cls) => { if (!ks.some((k) => k[f])) return ''; if (ks.length > 1 && same(f)) return '<tr><td>' + lab + '</td><td colspan="' + ks.length + '"' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(ks[0][f]) + '</td></tr>';
-        return '<tr><td>' + lab + '</td>' + ks.map((k) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(k[f] || '–') + '</td>').join('') + '</tr>'; };
+    const sheet = (S, si) => { const ks = S.packs; const same = (f) => ks.every((k) => (k[f] || '') === (ks[0][f] || ''));
+      const rowF = (lab, f, cls, vis) => { if (!ks.some((k) => k[f])) return ''; const tr = '<tr' + (vis ? '' : ' class="pm-d"') + '>'; if (ks.length > 1 && same(f)) return tr + '<td>' + lab + '</td><td colspan="' + ks.length + '"' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(ks[0][f]) + '</td></tr>';
+        return tr + '<td>' + lab + '</td>' + ks.map((k) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(k[f] || '–') + '</td>').join('') + '</tr>'; };
       const live = ks.map((k) => { const s = stock.get(k.mat) || 0, w = (w28.get(k.mat) || 0) / 4; return { s, w, cv: w > 0 ? s / w : null }; });
-      return '<article class="pc-card pm-sheet" style="--pm-c:' + S.color + '"><h3>' + esc(S.title) + '</h3><div class="pc-scroll"><table class="pm-st"><thead><tr><th>ราคา</th>' + ks.map((k) => '<th>' + nf(k.price) + ' บ.</th>').join('') + '</tr></thead><tbody>'
-        + '<tr><td>Mat code</td>' + ks.map((k) => '<td class="mat">' + esc(k.mat) + (k.tag ? '<small>' + esc(k.tag) + '</small>' : '') + '</td>').join('') + '</tr>'
-        + rowF('Description', 'desc') + rowF('พื้นที่ใช้งาน', 'zone') + rowF('ใช้ได้นาน', 'life') + rowF('เน็ต', 'net') + rowF('โทร', 'call') + rowF('สิทธิพิเศษ', 'perk') + rowF('ลูกค้าเป้าหมาย', 'who')
+      return '<article class="pc-card pm-sheet" data-si="' + si + '" style="--pm-c:' + S.color + '"><h3>' + esc(S.title) + '</h3><div class="pc-scroll"><table class="pm-st"><thead><tr><th>ราคา</th>' + ks.map((k) => '<th>' + nf(k.price) + ' บ.</th>').join('') + '</tr></thead><tbody>'
+        + '<tr><td>Mat code</td>' + ks.map((k, ki) => '<td class="mat">' + esc(k.mat) + '<button type="button" class="pm-i" data-k="' + ki + '" aria-label="ดูรายละเอียดแพ็ก ' + nf(k.price) + ' บาท" title="ดูรายละเอียด">i</button>' + (k.tag ? '<small>' + esc(k.tag) + '</small>' : '') + '</td>').join('') + '</tr>'
+        + rowF('Description', 'desc') + rowF('พื้นที่ใช้งาน', 'zone') + rowF('ใช้ได้นาน', 'life', '', true) + rowF('เน็ต', 'net') + rowF('โทร', 'call') + rowF('สิทธิพิเศษ', 'perk') + rowF('ลูกค้าเป้าหมาย', 'who')
         + '<tr class="live"><td>Stock shop</td>' + live.map((x) => '<td class="' + (x.s === 0 ? 'pm-zero' : '') + '">' + nf(x.s) + ' unit</td>').join('') + '</tr>'
         + '<tr class="live"><td>Sales per Week</td>' + live.map((x) => '<td>' + (x.w ? (x.w < 10 ? x.w.toFixed(1) : nf(x.w)) : '0') + ' unit</td>').join('') + '</tr>'
         + '<tr class="live"><td>Cover Week</td>' + live.map((x) => '<td class="' + (x.cv == null ? '' : x.cv < 2 ? 'pm-cv-low' : x.cv > 26 ? 'pm-cv-high' : '') + '">' + (x.cv == null ? (x.s ? 'ยังไม่มียอด' : '–') : x.cv.toFixed(2)) + '</td>').join('') + '</tr>'
-        + '</tbody></table></div></article>'; };
+        + '</tbody></table></div><div class="pm-dbox" hidden></div><button type="button" class="pm-all">ดูรายละเอียดทุกแพ็ก</button></article>'; };
     el.innerHTML = '<div class="pc-head"><h2 class="pc-title">' + esc(P.title) + '</h2><p class="pc-take">' + esc(P.sub) + ' · ตัวเลขในตาราง: ' + asof + ' · ' + scope + ' · Stock ณ ไฟล์ล่าสุด</p></div>'
       + '<div class="pm-notice" role="note"><span class="pm-tag">' + esc(N.tag) + '</span><h3>' + esc(N.head) + '<span>' + esc(N.lead) + '</span></h3>'
       + '<div class="pm-alert"><i aria-hidden="true">!</i><div><b>' + esc(N.box[0]) + '</b><small>' + esc(N.box[1]) + '</small></div></div>'
@@ -183,7 +191,20 @@ window.PROMO = {
       + '<div class="pm-price"><s>' + nf(H.was) + ' บาท</s><b>' + nf(H.now) + ' บาท</b><span class="pm-badge">ลด ' + nf(H.off) + ' บาท</span></div></div>'
       + '<div class="pm-grid">' + P.cards.map(card).join('') + '</div>'
       + '<h2 class="pc-title" style="font-size:20px;margin-top:8px">รายละเอียดซิมแต่ละแพ็ก</h2><p class="pc-take">ข้อมูลแพ็กจาก Monthly Business Steering · Stock / ขายเฉลี่ยต่อสัปดาห์ (28 วันล่าสุด) / Cover Week คำนวณจากข้อมูลจริงตามตัวกรอง (' + scope + ')</p>'
-      + (P.sheets || []).map(sheet).join('')
+      + (P.sheets || []).map((S, si) => sheet(S, si)).join('')
       + '<p class="pc-note">QTY / Net = ยอดขายเดือน ' + monTH(month) + ' ของ Matcode ในแต่ละแพ็ก (รวมซิมและ eSIM ที่ราคาเดียวกัน) ตามตัวกรองด้านบน · Stock แดง = ไม่มีของในพื้นที่ที่เลือก ควรขอโยกหรือเบิกเพิ่ม · Cover Week = Stock ÷ ขายเฉลี่ยต่อสัปดาห์ (แดง = ต่ำกว่า 2 สัปดาห์ เสี่ยงของขาด · ส้ม = เกิน 26 สัปดาห์ ของค้าง)</p>';
   });
 })();
+
+if (!window.PM_DET_BOUND) { window.PM_DET_BOUND = true;
+  const F = [['desc', 'Description'], ['zone', 'พื้นที่ใช้งาน'], ['life', 'ใช้ได้นาน'], ['net', 'เน็ต'], ['call', 'โทร'], ['perk', 'สิทธิพิเศษ'], ['who', 'ลูกค้าเป้าหมาย']];
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.pm-i, .pm-all'); if (!b) return; const art = b.closest('.pm-sheet'); if (!art) return;
+    if (b.classList.contains('pm-all')) { const on = art.classList.toggle('open'); b.textContent = on ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียดทุกแพ็ก'; return; }
+    const S = (window.PROMO.sheets || [])[+art.dataset.si]; const k = S && S.packs[+b.dataset.k]; const box = art.querySelector('.pm-dbox'); if (!k || !box) return;
+    const was = b.classList.contains('on'); art.querySelectorAll('.pm-i.on').forEach((x) => x.classList.remove('on'));
+    if (was) { box.hidden = true; return; }
+    b.classList.add('on'); box.replaceChildren(); const h = document.createElement('h4'); h.textContent = k.price.toLocaleString('en-US') + ' บาท · ' + k.mat + (k.tag ? ' · ' + k.tag : ''); box.append(h);
+    for (const [f, l] of F) { if (!k[f]) continue; const dt = document.createElement('dt'); dt.textContent = l; const dd = document.createElement('dd'); dd.textContent = k[f]; box.append(dt, dd); }
+    box.hidden = false; });
+}
