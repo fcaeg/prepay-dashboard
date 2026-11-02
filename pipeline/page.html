@@ -2052,11 +2052,11 @@ dash.draw('c_w_daily', (el) => { el.replaceChildren(); const r = wRows(); if (!r
   const data = [...by.keys()].sort().map((d) => { c += by.get(d); return { date: PC.day(d), cum: c, n: by.get(d), share: c / r.length }; });
   PC.hbar(el, data, { label: 'date', value: 'cum', share: 'share', sub: (d) => 'ขาย ' + d.n + ' · สะสม ' + d.cum, color: 'var(--color-ok)' }); });
 dash.draw('tb_w_shop', (el) => { const r = wRows(); const by = new Map();
-  if (r) for (const x of r) { const a = by.get(x.shop || x.shop_name) || { shop: x.shop || x.shop_name, name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(x.shop || x.shop_name, a); }
+  if (r) for (const x of r) { const a = by.get(x.shop || x.shop_name) || { shop: x.shop || x.shop_name, name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; else if (x.expiry && (!a.ex || x.expiry < a.ex)) a.ex = x.expiry; if (x.status === 'not_found') a.nf++; by.set(x.shop || x.shop_name, a); }
   const rows = r && [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n }));
   PC.table(el, 'tb_w_shop', rows, { key: ['shop'], def: 'left', cols: [
     { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'n', label: 'ติดตาม', num: true, fmt: PC.nf },
-    { f: 'left', label: 'ยังไม่ขาย', num: true, fmt: PC.nf, bar: true }, { f: 's', label: 'ขายแล้ว', num: true, fmt: PC.nf }, { f: 'nf', label: 'ไม่พบใน Stock', num: true, fmt: (v) => (v ? PC.nf(v) : '–') },
+    { f: 'left', label: 'ยังไม่ขาย', num: true, fmt: PC.nf, bar: true }, { f: 's', label: 'ขายแล้ว', num: true, fmt: PC.nf }, { f: 'nf', label: 'ไม่พบใน Stock', num: true, fmt: (v) => (v ? PC.nf(v) : '–') }, { f: 'ex', label: 'หมดอายุใกล้สุด (ที่ยังไม่ขาย)', fmt: WEX },
     { f: 'pct', label: 'ความคืบหน้า', num: true, pill: (d) => [d.pct >= 1 ? 'ok' : d.pct > 0 ? 'warn' : 'bad', PC.pf(d.pct)] } ] }); });
 dash.draw('tb_w_serial', (el) => { const sf = dash.params().wstatus || 'ALL'; let r = wRows(); if (r && sf !== 'ALL') r = r.filter((x) => x.status === sf);
   const ord = { in_stock: 0, not_found: 1, sold: 2 };

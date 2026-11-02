@@ -535,6 +535,9 @@ if (!window.PC_AGCSV_BOUND) { window.PC_AGCSV_BOUND = true;
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
 
 /* ---------- watched serials: export PNG (overview / shop summary) ---------- */
+/* nearest expiry of the unsold SIMs in a shop: date + days left (from the latest sales date) */
+const WEX = (v) => { if (!v) return '–'; const r = PC.rows('watch_serials'); const t = String((r && r[0] && r[0].sales_asof) || '').slice(0, 10); const d = t ? SA.diff(t, v) : null;
+  return PC.day(v) + (d == null ? '' : d < 0 ? ' (เลยมา ' + -d + ' วัน)' : d === 0 ? ' (วันนี้)' : ' (อีก ' + d + ' วัน)'); };
 const WXP = (() => {
   const C = RKX.C, rr = RKX.rr, fit = RKX.fit; const SC = { sold: C.ok, in_stock: C.bad, not_found: C.warn };
   const setup = async (W, H) => { try { await document.fonts.ready; } catch (e) {} const FF = getComputedStyle(document.body).fontFamily || 'sans-serif';
@@ -577,21 +580,21 @@ const WXP = (() => {
       g.font = F(400, 17); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText('ขาย ' + d.n + ' · สะสม ' + d.c + ' (' + PC.pf(d.c / N) + ')', x2 + cw, ty + 26); g.textAlign = 'left'; });
     foot(g, F, P, H); return { cv, name: fname('Overview') }; };
   const shops = async () => { const r = wRows() || []; const by = new Map();
-    for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; if (x.status === 'not_found') a.nf++; by.set(k, a); }
+    for (const x of r) { const k = x.shop || x.shop_name; const a = by.get(k) || { name: x.shop_name, area: x.area, n: 0, s: 0, nf: 0 }; a.n++; if (x.status === 'sold') a.s++; else if (x.expiry && (!a.ex || x.expiry < a.ex)) a.ex = x.expiry; if (x.status === 'not_found') a.nf++; by.set(k, a); }
     const rows = [...by.values()].map((a) => ({ ...a, left: a.n - a.s - a.nf, pct: a.s / a.n })).sort((a, b) => b.left - a.left || b.n - a.n || String(a.name).localeCompare(String(b.name), 'th'));
     const W = 2000, P = 48, ROW = 44; const H = P + 100 + 60 + 50 + rows.length * ROW + 40 + P; const { cv, g, F } = await setup(W, H);
     let y = head(g, F, W, P, 'ติดตามซิมใกล้หมดอายุ · สรุปรายสาขา · ' + (wList() === 'ALL' ? 'ทุกเดือน (รวม)' : wList() || ''));
     const tot = { n: r.length, s: wCount(r, 'sold'), nf: wCount(r, 'not_found') }; g.font = F(400, 22); g.fillStyle = C.fg;
     g.fillText(PC.nf(rows.length) + ' สาขา · ติดตาม ' + PC.nf(tot.n) + ' Serial · ขายแล้ว ' + PC.nf(tot.s) + ' (' + PC.pf(tot.s / Math.max(1, tot.n)) + ') · ยังไม่ขาย ' + PC.nf(tot.n - tot.s - tot.nf) + ' · ไม่พบใน Stock ' + PC.nf(tot.nf), P, y); y += 50;
-    const cols = [['#', 50, 'r'], ['สาขา', 560, 'l'], ['Area', 330, 'l'], ['ติดตาม', 130, 'r'], ['ยังไม่ขาย', 150, 'r'], ['ขายแล้ว', 140, 'r'], ['ไม่พบใน Stock', 170, 'r'], ['ความคืบหน้า', 374, 'l']];
+    const cols = [['#', 50, 'r'], ['สาขา', 460, 'l'], ['Area', 280, 'l'], ['ติดตาม', 120, 'r'], ['ยังไม่ขาย', 140, 'r'], ['ขายแล้ว', 120, 'r'], ['ไม่พบใน Stock', 160, 'r'], ['หมดอายุใกล้สุด', 260, 'l'], ['ความคืบหน้า', 314, 'l']];
     const xs = []; let cx = P; for (const c of cols) { xs.push(cx); cx += c[1]; }
-    g.font = F(600, 18); g.fillStyle = C.mu; cols.forEach((c, i) => { if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(c[0], xs[i] + c[1] - 12, y); } else { g.textAlign = 'left'; g.fillText(c[0], xs[i] + (i === 7 ? 24 : 0), y); } }); g.textAlign = 'left';
+    g.font = F(600, 18); g.fillStyle = C.mu; cols.forEach((c, i) => { if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(c[0], xs[i] + c[1] - 12, y); } else { g.textAlign = 'left'; g.fillText(c[0], xs[i] + (i >= 7 ? 24 : 0), y); } }); g.textAlign = 'left';
     y += 14; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2);
     rows.forEach((d, i) => { const ty = y + i * ROW; if (i % 2) { g.fillStyle = '#f7f6f2'; g.fillRect(P, ty + 2, W - 2 * P, ROW); }
-      const vals = [String(i + 1), d.name, d.area, PC.nf(d.n), PC.nf(d.left), PC.nf(d.s), d.nf ? PC.nf(d.nf) : '–'];
+      const vals = [String(i + 1), d.name, d.area, PC.nf(d.n), PC.nf(d.left), PC.nf(d.s), d.nf ? PC.nf(d.nf) : '–', WEX(d.ex)];
       vals.forEach((v, k) => { const c = cols[k]; g.font = F(k === 4 ? 700 : 400, 19); g.fillStyle = k === 4 && d.left ? C.bad : k === 5 && d.s ? C.ok : k === 0 ? C.mu : C.fg;
-        if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(v, xs[k] + c[1] - 12, ty + 30); } else { g.textAlign = 'left'; g.fillText(fit(g, v, c[1] - 16), xs[k], ty + 30); } }); g.textAlign = 'left';
-      const bx0 = xs[7] + 24, bw = 230; g.fillStyle = C.grid; rr(g, bx0, ty + 15, bw, 16, 8); g.fill(); g.save(); rr(g, bx0, ty + 15, bw, 16, 8); g.clip(); let xx = bx0;
+        if (c[2] === 'r') { g.textAlign = 'right'; g.fillText(v, xs[k] + c[1] - 12, ty + 30); } else { g.textAlign = 'left'; g.fillText(fit(g, v, c[1] - 16 - (k === 7 ? 24 : 0)), xs[k] + (k === 7 ? 24 : 0), ty + 30); } }); g.textAlign = 'left';
+      const bx0 = xs[8] + 24, bw = 170; g.fillStyle = C.grid; rr(g, bx0, ty + 15, bw, 16, 8); g.fill(); g.save(); rr(g, bx0, ty + 15, bw, 16, 8); g.clip(); let xx = bx0;
       for (const [v, c] of [[d.s, C.ok], [d.left, C.bad], [d.nf, C.warn]]) { const w = (v / d.n) * bw; g.fillStyle = c; g.fillRect(xx, ty + 15, w, 16); xx += w; } g.restore();
       g.font = F(700, 18); g.fillStyle = d.pct >= 1 ? C.ok : d.pct > 0 ? C.warn : C.bad; g.textAlign = 'right'; g.fillText(PC.pf(d.pct), W - P, ty + 30); g.textAlign = 'left'; });
     foot(g, F, P, H); return { cv, name: fname('Shops') }; };
