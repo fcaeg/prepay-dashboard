@@ -124,6 +124,9 @@ window.PROMO = {
 .pc .pm-sheet .pm-st thead th { background: var(--color-fg) !important; color: var(--color-bg) !important; text-align: center !important; font-size: 17px; font-weight: 700; }
 .pc .pm-sheet .pc-scroll { max-height: none !important; }
 .pc .pm-sheet .pm-st thead th:first-child { text-align: left !important; font-size: 13px; }
+.pc .pm-sheet .pm-st thead tr.pm-pic th { background: transparent !important; color: inherit !important; border: 0 !important; padding: 6px 4px 10px !important; vertical-align: bottom; }
+.pm-sheet tr.pm-pic img { display: block; margin: 0 auto; height: 150px; width: auto; max-width: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+@media (max-width: 700px) { .pm-sheet tr.pm-pic img { height: 96px; } }
 .pm-sheet tr.pm-d { display: none; } .pm-sheet.open tr.pm-d { display: table-row; }
 .pm-i { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; border: 1px solid var(--pm-c); color: var(--pm-c); background: var(--color-panel); font: italic 600 11px/1 var(--font-anthropic-sans, sans-serif); cursor: pointer; vertical-align: 1px; padding: 0; }
 .pm-i.on, .pm-i:hover { background: var(--pm-c); color: #fff; }
@@ -172,11 +175,12 @@ window.PROMO = {
     const w28 = new Map(), mtd = new Map(); const curM = maxD.slice(0, 7); if (maxD) for (const r of sales) { const d = String(r.date); if (!okShop(r.shop)) continue; if (d.slice(0, 7) === curM) mtd.set(String(r.matcode), (mtd.get(String(r.matcode)) || 0) + +r.units); if (d < d28 || d > maxD) continue; w28.set(String(r.matcode), (w28.get(String(r.matcode)) || 0) + +r.units); }
     const stA = String((((window.PC && PC.rows('stock_by_shop')) || [])[0] || {}).asof || ''); const dTH = (s) => (s ? (+s.slice(8, 10)) + ' ' + TH[+s.slice(5, 7) - 1] + (s.length > 10 ? ' ' + s.slice(11, 16) + ' น.' : '') : '');
     const wsA = String((((window.PC && PC.rows('watch_serials')) || [])[0] || {}).sales_asof || ''); const salesTo = wsA && wsA.slice(0, 10) === maxD ? dTH(wsA) : dTH(maxD);
+    const IMG = window.PROMO_IMG || {};
     const sheet = (S, si) => { const ks = S.packs; const same = (f) => ks.every((k) => (k[f] || '') === (ks[0][f] || ''));
       const rowF = (lab, f, cls, vis) => { if (!ks.some((k) => k[f])) return ''; const tr = '<tr' + (vis ? '' : ' class="pm-d"') + '>'; if (ks.length > 1 && same(f)) return tr + '<td>' + lab + '</td><td colspan="' + ks.length + '"' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(ks[0][f]) + '</td></tr>';
         return tr + '<td>' + lab + '</td>' + ks.map((k) => '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + esc(k[f] || '–') + '</td>').join('') + '</tr>'; };
       const live = ks.map((k) => { const s = stock.get(k.mat) || 0, w = (w28.get(k.mat) || 0) / 4; return { s, w, m: mtd.get(k.mat) || 0, cv: w > 0 ? s / w : null }; });
-      return '<article class="pc-card pm-sheet" data-si="' + si + '" style="--pm-c:' + S.color + '"><h3>' + esc(S.title) + '</h3><div class="pc-scroll"><table class="pm-st"><thead><tr><th>ราคา</th>' + ks.map((k) => '<th>' + nf(k.price) + ' บ.</th>').join('') + '</tr></thead><tbody>'
+      return '<article class="pc-card pm-sheet" data-si="' + si + '" style="--pm-c:' + S.color + '"><h3>' + esc(S.title) + '</h3><div class="pc-scroll"><table class="pm-st"><thead>' + (ks.some((k) => IMG[k.mat]) ? '<tr class="pm-pic"><th></th>' + ks.map((k) => '<th>' + (IMG[k.mat] ? '<img src="' + IMG[k.mat] + '" alt="ปกซิม ' + esc(k.mat) + '" loading="lazy">' : '') + '</th>').join('') + '</tr>' : '') + '<tr><th>ราคา</th>' + ks.map((k) => '<th>' + nf(k.price) + ' บ.</th>').join('') + '</tr></thead><tbody>'
         + '<tr><td>Mat code</td>' + ks.map((k, ki) => '<td class="mat">' + esc(k.mat) + '<button type="button" class="pm-i" data-k="' + ki + '" aria-label="ดูรายละเอียดแพ็ก ' + nf(k.price) + ' บาท" title="ดูรายละเอียด">i</button>' + (k.tag ? '<small>' + esc(k.tag) + '</small>' : '') + '</td>').join('') + '</tr>'
         + rowF('Description', 'desc') + rowF('พื้นที่ใช้งาน', 'zone') + rowF('ใช้ได้นาน', 'life', '', true) + rowF('เน็ต', 'net') + rowF('โทร', 'call') + rowF('สิทธิพิเศษ', 'perk') + rowF('ลูกค้าเป้าหมาย', 'who')
         + '<tr class="live"><td>Stock shop<small>ณ ' + esc(dTH(stA)) + '</small></td>' + live.map((x) => '<td class="' + (x.s === 0 ? 'pm-zero' : '') + '">' + nf(x.s) + ' unit</td>').join('') + '</tr>'
