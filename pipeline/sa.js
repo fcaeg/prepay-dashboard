@@ -798,15 +798,23 @@ window.RKSUB = (() => { const memo = new Map(); return (area, win) => { const en
   const a = M.get(area); if (!a) return ''; return ' · ร้านยังไม่มียอด ' + a.ns + '/' + a.sh + (mp ? ' · พนง. No Sale ' + a.nst + '/' + a.st : ''); }; })();
 
 /* ---------- Matcode lookup: shops with no sales of the Matcode in the last 8 weeks ---------- */
-const MQ8 = () => { const m = MQ.sel(), en = PC.rows('enriched'), sh = PC.rows('shops'); if (!m || !en || !sh) return null; const p = PC.P();
+const MQ8 = () => { const m = mq8Sel(), en = PC.rows('enriched'), sh = PC.rows('shops'); if (!m || !en || !sh) return null; const p = PC.P();
   const to = en.reduce((a, x) => (x.date > a ? x.date : a), ''); const from = SA.add(to, -55); const mc = String(m.matcode);
   const S = sh.filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
   const last = new Map(), u8 = new Map(); for (const x of en) { if (String(x.matcode) !== mc || x.units <= 0) continue; const k = String(x.shop); if (x.date > (last.get(k) || '')) last.set(k, x.date); if (x.date >= from) u8.set(k, (u8.get(k) || 0) + x.units); }
   const st = new Map(); for (const x of PC.rows('stock_by_shop') || []) if (String(x.matcode) === mc) st.set(String(x.shop), (st.get(String(x.shop)) || 0) + (+x.qty || 0));
   const all = S.map((s) => { const k = String(s.shop), l = last.get(k) || ''; return { shop: k, name: String(s.name).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area, stype: s.stype, stock: st.get(k) || 0, last: l, idle: l ? SA.diff(l, to) : null, u8: u8.get(k) || 0 }; });
   const none = all.filter((x) => !x.u8); return { m, to, from, all, none }; };
-dash.draw('f_mq8', (sel) => { sel.replaceChildren(new Option('มี Stock แต่ไม่มียอด (ของค้าง)', 'stock'), new Option('ไม่มี Stock และไม่มียอด (ไม่มีของขาย)', 'nostock'), new Option('ทั้งหมดที่ไม่มียอด', 'all')); sel.value = dash.params().mq8 || 'stock'; sel.onchange = () => dash.setParams({ mq8: sel.value }); });
-const mq8Rows = () => { const R = MQ8(); if (!R) return null; const f = dash.params().mq8 || 'stock'; return R.none.filter((x) => (f === 'all' ? true : f === 'stock' ? x.stock > 0 : x.stock === 0)); };
+const mq8List = () => { const mt = PC.rows('matcodes'), en = PC.rows('enriched'); if (!mt || !en) return null; const st = new Map(); for (const x of PC.rows('stock_by_shop') || []) st.set(String(x.matcode), (st.get(String(x.matcode)) || 0) + (+x.qty || 0));
+  const sold = new Map(); for (const x of en) if (x.units > 0) sold.set(String(x.matcode), (sold.get(String(x.matcode)) || 0) + x.units);
+  return mt.filter((m) => !m.esim && /^SIM/i.test(String(m.group || '')) && (st.get(String(m.matcode)) || sold.get(String(m.matcode)))).map((m) => ({ ...m, stk: st.get(String(m.matcode)) || 0, ytdU: sold.get(String(m.matcode)) || 0 }))
+    .sort((a, b) => String(a.group).localeCompare(String(b.group)) || (b.stk - a.stk) || String(a.name).localeCompare(String(b.name))); };
+const mq8Sel = () => { const L = mq8List(); if (!L || !L.length) return null; const v = String(dash.params().mq8 || ''); let m = L.find((x) => String(x.matcode) === v);
+  if (!m) { const q = MQ.sel(); m = (q && L.find((x) => String(x.matcode) === String(q.matcode))) || L.slice().sort((a, b) => b.stk - a.stk)[0]; } return m; };
+dash.draw('f_mq8', (sel) => { const L = mq8List(); if (!L) return; const by = d3.group(L, (x) => x.group); sel.replaceChildren(...[...by].map(([g, a]) => { const og = document.createElement('optgroup'); og.label = g;
+    og.append(...a.map((m) => new Option(m.matcode + ' · ' + String(m.name).replace(/^TMH\d /, '') + ' (Stock ' + PC.nf(m.stk) + ')', m.matcode))); return og; }));
+  const m = mq8Sel(); if (m) sel.value = m.matcode; sel.onchange = () => dash.setParams({ mq8: sel.value }); });
+const mq8Rows = () => { const R = MQ8(); return R ? R.none : null; };
 dash.draw('mq8_sum', (el) => { const R = MQ8(); if (!R) { el.textContent = ''; return; } const ws = R.none.filter((x) => x.stock > 0), ns = R.none.length - ws.length;
   el.textContent = String(R.m.name).replace(/^TMH\d /, '') + ' · ช่วง ' + PC.day(R.from) + ' – ' + PC.day(R.to) + ' (8 สัปดาห์) · ไม่มียอดขาย ' + PC.nf(R.none.length) + ' จาก ' + PC.nf(R.all.length) + ' สาขา: มี Stock แต่ไม่มียอด ' + PC.nf(ws.length) + ' สาขา (ค้างรวม ' + PC.nf(d3.sum(ws, (x) => x.stock)) + ' ชิ้น) · ไม่มี Stock และไม่มียอด ' + PC.nf(ns) + ' สาขา · ขายได้ ' + PC.nf(R.all.length - R.none.length) + ' สาขา'; });
 dash.draw('tb_mq8', (el) => PC.table(el, 'tb_mq8', mq8Rows(), { key: ['shop'], def: 'stock', limit: 500, cols: [
