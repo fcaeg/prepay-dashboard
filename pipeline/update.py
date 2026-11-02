@@ -238,6 +238,7 @@ def build():
     w = load('watch_serials.csv'); ws = load('watch_sold.csv')
     wl = []
     if w is not None:
+        w = w.fillna('')  # empty area / shop name must not become NaN (invalid JSON)
         kk = load('stock.csv.gz').drop_duplicates('SERIAL').set_index('SERIAL')
         shn = shops.set_index('shop').name.to_dict(); sha = shops.set_index('shop').area.to_dict()
         n2s = {re.sub(r'\s+', ' ', str(v)).strip().lower(): k_ for k_, v in shn.items()}
