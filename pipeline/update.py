@@ -76,7 +76,7 @@ def save_sim(df, only=None):
     for mo, g in df.groupby(_month(df)):
         if only is None or mo in only: save(g.sort_values(['BILL_DATE', 'key']), f'sim_{mo}.csv.gz')
 
-WATCH_COLS = ['serial', 'list', 'area', 'shop_name', 'added']
+WATCH_COLS = ['serial', 'list', 'area', 'shop_name', 'added', 'expiry']
 SOLD_COLS = ['serial', 'BILL_DATE', 'SHOP_CODE', 'PRODUCT_CODE', 'SALE_CODE', 'SALE_NAME', 'NET_AMOUNT', 'ORDER_STATUS', 'key']
 
 def watch_hits(raw):
@@ -101,7 +101,7 @@ def add_watch(path, label):
     sc = next(cols[c] for c in cols if 'serial' in c)
     out = pd.DataFrame({'serial': df[sc].astype(str).str.strip().str.replace(r'\.0$', '', regex=True), 'list': label,
                         'area': df[cols['area']] if 'area' in cols else '', 'shop_name': df[cols['shopname']] if 'shopname' in cols else '',
-                        'added': datetime.date.today().isoformat()})
+                        'added': datetime.date.today().isoformat(), 'expiry': ''})
     out = out[out.serial.str.match(r'^\d{10,}$')]
     old = load('watch_serials.csv')
     if old is not None: out = pd.concat([old[~((old.list == label) & old.serial.isin(out.serial))], out])
@@ -238,7 +238,8 @@ def build():
     w = load('watch_serials.csv'); ws = load('watch_sold.csv')
     wl = []
     if w is not None:
-        w = w.fillna('')  # empty area / shop name must not become NaN (invalid JSON)
+        w = w.fillna('')
+        if 'expiry' not in w: w['expiry'] = ''  # empty area / shop name must not become NaN (invalid JSON)
         kk = load('stock.csv.gz').drop_duplicates('SERIAL').set_index('SERIAL')
         shn = shops.set_index('shop').name.to_dict(); sha = shops.set_index('shop').area.to_dict()
         n2s = {re.sub(r'\s+', ' ', str(v)).strip().lower(): k_ for k_, v in shn.items()}
@@ -253,7 +254,7 @@ def build():
             st_ = kk.loc[r.serial] if r.serial in kk.index else None
             code = st_.SHOP_CODE if st_ is not None else n2s.get(re.sub(r'\s+', ' ', str(r.shop_name)).strip().lower())
             x = sold.get(r.serial)
-            row = {'serial': r.serial, 'list': r.list, 'shop': code, 'shop_name': shn.get(code, r.shop_name), 'area': sha.get(code, r.area) if code else r.area,
+            row = {'serial': r.serial, 'list': r.list, 'expiry': r.expiry or None, 'shop': code, 'shop_name': shn.get(code, r.shop_name), 'area': sha.get(code, r.area) if code else r.area,
                    'matcode': st_.PRODUCT_CODE if st_ is not None else None, 'product': (mname.get(st_.PRODUCT_CODE) if st_ is not None else None),
                    'aging': int(st_.FIRST_AGING) if st_ is not None else None, 'location': st_.LOCATION_NAME if st_ is not None else None,
                    'in_stock': st_ is not None, 'status': 'sold' if x is not None else ('in_stock' if st_ is not None else 'not_found'),

@@ -825,3 +825,19 @@ if (!window.PC_MQ8_BOUND) { window.PC_MQ8_BOUND = true;
     const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const lines = [['Matcode', 'สินค้า', 'รหัสสาขา', 'สาขา', 'Area', 'ประเภทสาขา', 'Stock ตอนนี้', 'ขายครั้งล่าสุด (ปีนี้)', 'ไม่มียอดมาแล้ว (วัน)'].join(',')].concat(r.map((x) => ['="' + R.m.matcode + '"', esc(R.m.name), '="' + x.shop + '"', esc(x.name), esc(x.area), esc(x.stype), x.stock, x.last, x.idle ?? ''].join(',')));
     const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'NoSale8W_' + R.m.matcode + '_' + R.to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- Watch: export the Serial list (current list / status / search) as CSV ---------- */
+if (!window.PC_WSER_BOUND) { window.PC_WSER_BOUND = true;
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#wser-csv'); if (!b) return; let r = wRows(); if (!r) return;
+    const sf = dash.params().wstatus || 'ALL'; if (sf !== 'ALL') r = r.filter((x) => x.status === sf);
+    const q = ((document.getElementById('q-watch') || {}).value || '').trim().toLowerCase();
+    if (q) r = r.filter((x) => [x.serial, x.shop_name, x.area, x.product, x.matcode, x.sold_shop_name, x.sold_emp_name, x.list].some((v) => v != null && String(v).toLowerCase().includes(q)));
+    const ST = { in_stock: 'ยังไม่ขาย', sold: 'ขายแล้ว', not_found: 'ไม่พบใน Stock' };
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const head = ['สถานะ', 'เดือนหมดอายุ', 'วันหมดอายุ', 'Serial', 'Area', 'รหัสสาขา', 'สาขา', 'Matcode', 'สินค้า', 'วันในสต็อก', 'ที่เก็บ', 'วันที่ขาย', 'เวลาขาย', 'สาขาที่ขาย', 'รหัสพนักงาน', 'พนักงาน', 'Net Amount'];
+    const ord = { in_stock: 0, not_found: 1, sold: 2 }; r = r.slice().sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.expiry || '').localeCompare(String(b.expiry || '')) || String(a.serial).localeCompare(String(b.serial)));
+    const lines = [head.join(',')].concat(r.map((x) => [ST[x.status] || x.status, esc(x.list), x.expiry || '', '="' + x.serial + '"', esc(x.area), x.shop ? '="' + x.shop + '"' : '', esc(x.shop_name), x.matcode ? '="' + x.matcode + '"' : '', esc(x.product), x.aging ?? '', esc(x.location),
+      x.sold_date || '', x.sold_time || '', esc(x.sold_shop_name), x.sold_emp ? '="' + x.sold_emp + '"' : '', esc(x.sold_emp_name), x.sold_net ?? ''].join(',')));
+    const l = wList(); const tag = l === 'ALL' ? 'ALL' : (r[0] && r[0].expiry ? r[0].expiry.slice(0, 7) : 'list');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url;
+    a.download = 'ExpiringSIM_' + tag + '_' + (sf === 'ALL' ? 'all' : sf) + '_' + String((r[0] && r[0].sales_asof) || '').slice(0, 10) + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
