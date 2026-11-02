@@ -254,7 +254,7 @@ def build():
             st_ = kk.loc[r.serial] if r.serial in kk.index else None
             code = st_.SHOP_CODE if st_ is not None else n2s.get(re.sub(r'\s+', ' ', str(r.shop_name)).strip().lower())
             x = sold.get(r.serial)
-            row = {'serial': r.serial, 'list': r.list, 'expiry': r.expiry or None, 'shop': code, 'shop_name': shn.get(code, (str(code) + ' (นอกไฟล์เป้า)') if code and st_ is not None else r.shop_name), 'area': sha.get(code, 'นอกไฟล์เป้า' if st_ is not None else r.area) if code else r.area,
+            row = {'serial': r.serial, 'list': r.list, 'expiry': r.expiry or None, 'shop': code, 'shop_name': shn.get(code, (str(code) + ' (Unidentified)') if code and st_ is not None else r.shop_name), 'area': sha.get(code, 'Unidentified' if st_ is not None else r.area) if code else r.area,
                    'matcode': st_.PRODUCT_CODE if st_ is not None else None, 'product': (mname.get(st_.PRODUCT_CODE) if st_ is not None else None),
                    'aging': int(st_.FIRST_AGING) if st_ is not None else None, 'location': st_.LOCATION_NAME if st_ is not None else None,
                    'in_stock': st_ is not None, 'status': 'sold' if x is not None else ('in_stock' if st_ is not None else 'not_found'),
@@ -262,7 +262,7 @@ def build():
                    'sold_shop': x.SHOP_CODE if x is not None else None, 'sold_shop_name': shn.get(x.SHOP_CODE, x.SHOP_CODE) if x is not None else None,
                    'sold_emp': x.SALE_CODE if x is not None else None, 'sold_emp_name': x.SALE_NAME if x is not None else None,
                    'sold_net': float(x.NET_AMOUNT) if x is not None else None, 'stock_asof': meta.get('stock_asof', ''), 'sales_asof': meta.get('sales_asof', '')}
-            if not row['shop'] and x is not None: row.update(shop=x.SHOP_CODE, shop_name=shn.get(x.SHOP_CODE, str(x.SHOP_CODE) + ' (นอกไฟล์เป้า)'), area=sha.get(x.SHOP_CODE, 'นอกไฟล์เป้า'))
+            if not row['shop'] and x is not None: row.update(shop=x.SHOP_CODE, shop_name=shn.get(x.SHOP_CODE, str(x.SHOP_CODE) + ' (Unidentified)'), area=sha.get(x.SHOP_CODE, 'Unidentified'))
             if row['matcode'] is None and x is not None: row['matcode'] = x.PRODUCT_CODE; row['product'] = mname.get(x.PRODUCT_CODE)
             wl.append(row)
     json.dump(wl, open(os.path.join(OUT, 'watch_serials.json'), 'w'), ensure_ascii=False, separators=(',', ':'))

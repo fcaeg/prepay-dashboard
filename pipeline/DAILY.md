@@ -14,7 +14,7 @@ Inputs Nami attaches each day (zip or csv):
   Nami wants EVERY serial in the file on the page (the count must match the file). One list per expiry month "ซิมหมดอายุ <ด.ด. ปป>"
   (Thai month, BE 2-digit year) plus "ซิม New Lot". Replace pipeline/state/watch_serials.csv with the file's rows (columns serial, list,
   area '', shop_name 'SLoc <SLoc>', added, expiry = อายุระบบ as YYYY-MM-DD; Excel serial numbers converted), keeping old rows only if sold;
-  then run update.py with no args. Shop/area come from the stock file (shops outside the target files show "<code> (นอกไฟล์เป้า)"),
+  then run update.py with no args. Shop/area come from the stock file (shops outside the target files show "<code> (Unidentified)", Area "Unidentified"),
   sold serials from the sales state; serials in neither = "ไม่พบใน Stock" (shop shown as SLoc).
 
 ## 1. Update the data and the GitHub page
