@@ -315,6 +315,7 @@ body.pc-noscroll { overflow: hidden; }
 
   <nav class="pc-tabs" role="tablist" aria-label="มุมมอง">
     <button class="pc-tab" type="button" role="tab" data-tab="today" aria-selected="true">วันนี้</button>
+    <button class="pc-tab" type="button" role="tab" data-tab="promo" aria-selected="false">โปรเดือนนี้</button>
     <button class="pc-tab" type="button" role="tab" data-tab="overview" aria-selected="false">แนวโน้มและ Target</button>
     <button class="pc-tab" type="button" role="tab" data-tab="products" aria-selected="false">Matcode และช่วงราคา</button>
     <button class="pc-tab" type="button" role="tab" data-tab="shops" aria-selected="false">สาขา</button>
@@ -423,6 +424,8 @@ body.pc-noscroll { overflow: hidden; }
       </article>
     </div>
   </section>
+
+  <section class="pc-sec" id="promo" data-page="promo" hidden><div class="pc-sec" data-draw="promo_board" data-source="sales_daily stock_by_shop shops"></div></section>
 
   <section class="pc-sec" id="overview" data-page="overview" hidden>
     <div class="pc-tiles">
@@ -2118,4 +2121,5 @@ dash.draw('tb_mat', (el) => PC.table(el, 'tb_mat', mAgg(), { key: ['matcode'], d
 
 
 <script src="sa.js"></script>
+<script src="promo.js"></script>
 
