@@ -796,3 +796,24 @@ window.RKSUB = (() => { const memo = new Map(); return (area, win) => { const en
     for (const m of mp || []) { if (m.leave || !POS(m.role)) continue; const s = S.get(String(m.shop)); if (!s) continue; const a = M.get(s.area); if (!a) continue; a.st++; if (!soldEmp.has(String(m.emp))) a.nst++; }
     memo.clear(); memo.set(k, M); }
   const a = M.get(area); if (!a) return ''; return ' · ร้านยังไม่มียอด ' + a.ns + '/' + a.sh + (mp ? ' · พนง. No Sale ' + a.nst + '/' + a.st : ''); }; })();
+
+/* ---------- Matcode lookup: shops with no sales of the Matcode in the last 8 weeks ---------- */
+const MQ8 = () => { const m = MQ.sel(), en = PC.rows('enriched'), sh = PC.rows('shops'); if (!m || !en || !sh) return null; const p = PC.P();
+  const to = en.reduce((a, x) => (x.date > a ? x.date : a), ''); const from = SA.add(to, -55); const mc = String(m.matcode);
+  const S = sh.filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
+  const last = new Map(), u8 = new Map(); for (const x of en) { if (String(x.matcode) !== mc || x.units <= 0) continue; const k = String(x.shop); if (x.date > (last.get(k) || '')) last.set(k, x.date); if (x.date >= from) u8.set(k, (u8.get(k) || 0) + x.units); }
+  const st = new Map(); for (const x of PC.rows('stock_by_shop') || []) if (String(x.matcode) === mc) st.set(String(x.shop), (st.get(String(x.shop)) || 0) + (+x.qty || 0));
+  const all = S.map((s) => { const k = String(s.shop), l = last.get(k) || ''; return { shop: k, name: String(s.name).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area, stype: s.stype, stock: st.get(k) || 0, last: l, idle: l ? SA.diff(l, to) : null, u8: u8.get(k) || 0 }; });
+  const none = all.filter((x) => !x.u8); return { m, to, from, all, none }; };
+dash.draw('f_mq8', (sel) => { sel.replaceChildren(new Option('มี Stock แต่ไม่มียอด (ของค้าง)', 'stock'), new Option('ไม่มี Stock และไม่มียอด (ไม่มีของขาย)', 'nostock'), new Option('ทั้งหมดที่ไม่มียอด', 'all')); sel.value = dash.params().mq8 || 'stock'; sel.onchange = () => dash.setParams({ mq8: sel.value }); });
+const mq8Rows = () => { const R = MQ8(); if (!R) return null; const f = dash.params().mq8 || 'stock'; return R.none.filter((x) => (f === 'all' ? true : f === 'stock' ? x.stock > 0 : x.stock === 0)); };
+dash.draw('mq8_sum', (el) => { const R = MQ8(); if (!R) { el.textContent = ''; return; } const ws = R.none.filter((x) => x.stock > 0), ns = R.none.length - ws.length;
+  el.textContent = String(R.m.name).replace(/^TMH\d /, '') + ' · ช่วง ' + PC.day(R.from) + ' – ' + PC.day(R.to) + ' (8 สัปดาห์) · ไม่มียอดขาย ' + PC.nf(R.none.length) + ' จาก ' + PC.nf(R.all.length) + ' สาขา: มี Stock แต่ไม่มียอด ' + PC.nf(ws.length) + ' สาขา (ค้างรวม ' + PC.nf(d3.sum(ws, (x) => x.stock)) + ' ชิ้น) · ไม่มี Stock และไม่มียอด ' + PC.nf(ns) + ' สาขา · ขายได้ ' + PC.nf(R.all.length - R.none.length) + ' สาขา'; });
+dash.draw('tb_mq8', (el) => PC.table(el, 'tb_mq8', mq8Rows(), { key: ['shop'], def: 'stock', limit: 500, cols: [
+  { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'stype', label: 'ประเภทสาขา' }, { f: 'stock', label: 'Stock ตอนนี้', num: true, fmt: PC.nf, bar: true },
+  { f: 'last', label: 'ขายครั้งล่าสุด (ปีนี้)', fmt: (v) => (v ? PC.day(v) : 'ไม่เคยขายปีนี้') }, { f: 'idle', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: (v) => (v == null ? '–' : PC.nf(v)) } ] }));
+if (!window.PC_MQ8_BOUND) { window.PC_MQ8_BOUND = true;
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#mq8-csv'); if (!b) return; const R = MQ8(), r = mq8Rows(); if (!R || !r) return;
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [['Matcode', 'สินค้า', 'รหัสสาขา', 'สาขา', 'Area', 'ประเภทสาขา', 'Stock ตอนนี้', 'ขายครั้งล่าสุด (ปีนี้)', 'ไม่มียอดมาแล้ว (วัน)'].join(',')].concat(r.map((x) => ['="' + R.m.matcode + '"', esc(R.m.name), '="' + x.shop + '"', esc(x.name), esc(x.area), esc(x.stype), x.stock, x.last, x.idle ?? ''].join(',')));
+    const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'NoSale8W_' + R.m.matcode + '_' + R.to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
