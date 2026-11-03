@@ -236,6 +236,7 @@ def build():
     ex = k[k.aging >= 180][['SERIAL', 'SHOP_CODE', 'PRODUCT_CODE', 'LOCATION_NAME', 'first', 'aging']].rename(columns={'SERIAL': 'serial', 'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode', 'LOCATION_NAME': 'location'}).sort_values('aging', ascending=False)
     # watch lists (e.g. SIMs expiring in a given month) with sold / in-stock status
     w = load('watch_serials.csv'); ws = load('watch_sold.csv')
+    xf = os.path.join(ST, 'watch_exclude_shops.txt'); WX_SHOPS = {l.split('#')[0].strip() for l in open(xf, encoding='utf-8')} - {''} if os.path.exists(xf) else set()
     wl = []
     if w is not None:
         w = w.fillna('')
@@ -264,6 +265,7 @@ def build():
                    'sold_net': float(x.NET_AMOUNT) if x is not None else None, 'stock_asof': meta.get('stock_asof', ''), 'sales_asof': meta.get('sales_asof', '')}
             if not row['shop'] and x is not None: row.update(shop=x.SHOP_CODE, shop_name=shn.get(x.SHOP_CODE, str(x.SHOP_CODE) + ' (Unidentified)'), area=sha.get(x.SHOP_CODE, 'Unidentified'))
             if row['matcode'] is None and x is not None: row['matcode'] = x.PRODUCT_CODE; row['product'] = mname.get(x.PRODUCT_CODE)
+            if str(row['shop']) in WX_SHOPS: continue  # True Shop by Partner (not WW) - see state/watch_exclude_shops.txt
             wl.append(row)
     json.dump(wl, open(os.path.join(OUT, 'watch_serials.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     if wl: print('  watch:', pd.DataFrame(wl).groupby(['list', 'status']).size().to_dict())

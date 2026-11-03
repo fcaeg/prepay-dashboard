@@ -1,0 +1,3 @@
+# shop codes left out of the expiring-SIM watch page (one per line)
+80101322  # True Shop by Partner - not WW (Nami, 3 Nov 2026)
+80101197  # True Shop by Partner - not WW (Nami, 3 Nov 2026)

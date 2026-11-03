@@ -16,6 +16,7 @@ Inputs Nami attaches each day (zip or csv):
   area '', shop_name 'SLoc <SLoc>', added, expiry = อายุระบบ as YYYY-MM-DD; Excel serial numbers converted), keeping old rows only if sold;
   then run update.py with no args. Shop/area come from the stock file (shops outside the target files show "<code> (Unidentified)", Area "Unidentified"),
   sold serials from the sales state; serials in neither = "ไม่พบใน Stock" (shop shown as SLoc).
+  Shops Nami says are not WW (e.g. True Shop by Partner) go in pipeline/state/watch_exclude_shops.txt and are dropped from the page.
 
 ## 1. Update the data and the GitHub page
 ```bash
