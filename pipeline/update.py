@@ -243,6 +243,14 @@ def build():
         if 'expiry' not in w: w['expiry'] = ''  # empty area / shop name must not become NaN (invalid JSON)
         kk = load('stock.csv.gz').drop_duplicates('SERIAL').set_index('SERIAL')
         shn = shops.set_index('shop').name.to_dict(); sha = shops.set_index('shop').area.to_dict()
+        # shop master from 'Raw Data Prepaid' (WW-operated shops): partner shops (WW_FLAG != WW) are dropped, WW shops outside the target files get their name / area
+        smf = os.path.join(ST, 'shop_master.csv')
+        if os.path.exists(smf):
+            sm = pd.read_csv(smf, dtype=str).fillna('')
+            WX_SHOPS |= set(sm.loc[sm.WW_FLAG != 'WW', 'SHOP_CODE'])
+            sm = sm[(sm.WW_FLAG == 'WW') & ~sm.SHOP_CODE.isin(set(shn))]
+            ar = lambda a: re.sub(r'\s*\((.*)\)', r' - \1', a) if a.startswith('BMA') else ('UPC - ' + a if a else 'Unidentified')
+            shn = {**dict(zip(sm.SHOP_CODE, sm.SHOP_NAME)), **shn}; sha = {**dict(zip(sm.SHOP_CODE, sm.AREA.map(ar))), **sha}
         n2s = {re.sub(r'\s+', ' ', str(v)).strip().lower(): k_ for k_, v in shn.items()}
         mname = m.set_index('matcode').name.to_dict()
         sold = {}

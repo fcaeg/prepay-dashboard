@@ -1,0 +1,390 @@
+SHOP_CODE,SHOP_NAME,CHANNEL,AREA,WW_FLAG,SHOP_STATUS
+80101066,True Shop Central Bangna,True Shop Matching,BMA IV (South East),WW,RENOVATE
+80100476,True Shop Central Festival Phuket,True Shop Matching,Upper South,WW,OPEN
+80100837,True Shop Central Chonburi,True Shop Matching,East,WW,OPEN
+80100477,True Shop Central Ladprao,True Shop Matching,BMA I (North West),WW,OPEN
+80100836,True Shop Central World 4Fl.,True Shop Matching,BMA V (Central),WW,OPEN
+80101222,True Shop Central Festival Hadyai Songkhla,True Shop Matching,Lower South,WW,OPEN
+80101119,True Shop Central Plaza Nakhonratchasima,True Shop Matching,Lower Northeast,WW,OPEN
+80100839,True Shop Central Plaza Nakhonsithammarat,True Shop Matching,Lower South,WW,OPEN
+80100565,True Shop Central Rama 2,True Shop Matching,BMA II (South West),WW,OPEN
+80101185,True Shop Central West Gate,True Shop Matching,BMA I (North West),WW,OPEN
+80101186,True Shop Central Festival East Ville,True Shop Matching,BMA V (Central),WW,OPEN
+80101183,True Shop Central Khonkaen,True Shop Matching,Upper Northeast,WW,OPEN
+80101068,True Shop Central Rama 3,True Shop Matching,BMA V (Central),WW,OPEN
+80100625,True Shop Central Plaza Rayong,True Shop Matching,East,WW,OPEN
+80100626,True Shop Central Pinklao 3Fl.,True Shop Matching,BMA II (South West),WW,OPEN
+80101182,True Shop Central Chaengwattana,True Shop Matching,BMA I (North West),WW,OPEN
+80101221,True Shop Emquartier,True Shop Matching,BMA V (Central),WW,OPEN
+80100480,True Shop The Mall Ngamwongwan 3Fl.,True Shop Matching,BMA I (North West),WW,OPEN
+80101340,True Shop Future Park Rangsit,True Shop Matching,BMA III (North East),WW,OPEN
+80100481,True Shop The Mall Bangkapi,True Shop Matching,BMA IV (South East),WW,OPEN
+80100484,True Shop The Mall Bangkae 2Fl.,True Shop Matching,BMA II (South West),WW,OPEN
+80101070,True Shop Mega Bangna,True Shop Matching,BMA IV (South East),WW,OPEN
+80100487,True Shop The Mall Nakhonratchasima 3Fl.,True Shop Matching,Lower Northeast,WW,OPEN
+80100478,True Shop Terminal 21,True Shop Matching,BMA V (Central),WW,OPEN
+80101304,True Shop Robinson Buriram,True Shop Matching,Lower Northeast,WW,OPEN
+80101303,True Shop Robinson Roi-Et,True Shop Matching,Central Northeast,WW,OPEN
+80101307,True Shop Robinson Lopburi,True Shop Matching,Central,WW,OPEN
+80100483,True Shop The Mall Thapra,True Shop Matching,BMA II (South West),WW,OPEN
+80101305,True Shop Robinson Srisaman,True Shop Matching,BMA I (North West),WW,OPEN
+80100928,True Shop Seacon Bangkae,True Shop Matching,BMA II (South West),WW,OPEN
+80100926,True Shop Ayudhaya Park,True Shop Matching,Central,WW,OPEN
+80100925,True Shop Fashion Island,True Shop Matching,BMA III (North East),WW,OPEN
+80101071,True Shop Seacon Square 2,True Shop Matching,BMA IV (South East),WW,OPEN
+80101341,True Shop Future Park Rangsit (H),True Shop Matching,BMA III (North East),WW,OPEN
+80101391,True Shop Central Chanthaburi,True Shop Matching,East,WW,OPEN
+80101358,True shop Central Ayutthaya,True Shop Matching,Central,WW,OPEN
+80101628,True Shop Central Nakhonsawan,True Shop Matching,Central,WW,OPEN
+80101627,True Shop Central Westville,True Shop Matching,BMA I (North West),WW,OPEN
+80100623,True Shop Central Rama 9,True Shop Matching,BMA V (Central),WW,OPEN
+80100622,True Shop Central Rama 9 4Fl.,True Shop Matching,BMA V (Central),WW,OPEN
+80101196,True Shop Central Plaza Udonthani,True Shop Matching,Upper Northeast,WW,OPEN
+80100615,True Shop Central Festival Pattaya Beach,True Shop Matching,East,WW,OPEN
+80101214,True Shop Central Plaza Salaya,True Shop Matching,West,WW,OPEN
+80100621,True Shop Central Chiangrai,True Shop Matching,Upper North,WW,OPEN
+80101629,True Shop Central Nakhonpathom,True Shop Matching,West,WW,OPEN
+80101266,True Shop Central Ubonratchathani,True Shop Matching,Central Northeast,WW,OPEN
+80100840,True Shop Central Plaza Mahachai,True Shop Matching,West,WW,OPEN
+80101115,True Shop Central Suratthani,True Shop Matching,Upper South,WW,OPEN
+80101189,True shop Central Plaza Si Racha,True Shop Matching,East,WW,OPEN
+80100486,True Shop Central Festival Chiangmai,True Shop Matching,Upper North,WW,OPEN
+80101198,True Shop Central Phitsanulok,True Shop Matching,Lower North,WW,OPEN
+80101117,True Shop Central Lampang,True Shop Matching,Upper North,WW,OPEN
+80101067,True Shop Central Airport Plaza Chiangmai,True Shop Matching,Upper North,WW,OPEN
+80101065,True Shop Seacon Square,True Shop Matching,BMA IV (South East),WW,OPEN
+80101313,True Shop Robinson Chaiyaphum,True Shop Matching,Lower Northeast,WW,OPEN
+80100838,True Shop Central Festival Samui Suratthani,True Shop Matching,Upper South,WW,OPEN
+80100479,True Shop Terminal 21 Pattaya,True Shop Non Matching,East,WW,OPEN
+80101378,True Shop South Pattaya,True Shop Non Matching,East,WW,OPEN
+80100715,True Shop Fortune Town 1Fl.,True Shop Non Matching,BMA V (Central),WW,OPEN
+80101263,True Shop Maya Chiangmai,True Shop Non Matching,Upper North,WW,OPEN
+80101269,True Shop Mahboon Krong 4Fl.,True Shop Non Matching,BMA V (Central),WW,OPEN
+80101296,True Shop Paradise Park Srinakarin,True Shop Non Matching,BMA IV (South East),WW,OPEN
+80100842,True Shop Terminal 21 Korat,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100858,True Shop Mini Mae Sai ChiangRai,True Shop Non Matching,Upper North,WW,OPEN
+80101306,True Shop Robinson Mae Sot,True Shop Non Matching,Lower North,WW,OPEN
+80101281,True Shop Big C Chiangmai,True Shop Non Matching,Upper North,WW,OPEN
+80100754,True Shop Lotus's Ruamchok Chiangmai,True Shop Non Matching,Upper North,WW,OPEN
+80101225,True Shop Kao Yai Market Village,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100859,True Shop Trad,True Shop Non Matching,East,WW,OPEN
+80101290,True Shop Big C Korat 2,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101294,True Shop Big C Loei,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100765,True Shop Lotus's Prasat Surin,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100756,True Shop Lotus's Nongbualamphu,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100776,True Shop Lotus's JorHor Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100760,True Shop Lotus's Nakhonphanom,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100782,True Shop Lotus's Thaluang Phichit,True Shop Non Matching,Lower North,WW,OPEN
+80100750,True Shop Lotus's Fang Chiangmai,True Shop Non Matching,Upper North,WW,OPEN
+80101312,True Shop Robinson Kanchanaburi,True Shop Non Matching,West,WW,OPEN
+80101309,True Shop Robinson Mukdahan,True Shop Non Matching,Central Northeast,WW,OPEN
+80101123,True Shop Lotus's Sukhapibal 3,True Shop Non Matching,BMA III (North East),WW,OPEN
+80100770,True Shop Lotus's Buengkan,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100822,True Shop Lotus's Ranong,True Shop Non Matching,Upper South,WW,OPEN
+80101184,True Shop Chonburi,True Shop Non Matching,East,WW,OPEN
+80101584,True Shop Robinson Ratchapruek,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100841,True Move Shop Taweekit Complex Saraburi,True Shop Non Matching,Central,WW,OPEN
+80100763,True Shop The Walk Nakornsawan,True Shop Non Matching,Central,WW,OPEN
+80101348,True Shop Asawann Shopping Complex Nongkhai,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101308,True Shop Robinson Khamphaengphet,True Shop Non Matching,Lower North,WW,OPEN
+80101180,True Shop Wongsawang Town Center,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100758,True Shop Lotus's Buayai Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101418,True Shop Imperial World Samrong,True Shop Non Matching,BMA IV (South East),WW,OPEN
+80100774,True Shop Lotus's Phimai Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100733,True Shop Lotus's Sampran Nakhonpathom,True Shop Non Matching,West,WW,OPEN
+80100566,True Shop Central Rama 2 (H),True Shop Non Matching,BMA II (South West),WW,OPEN
+80100854,True Shop Mini Lomsak Phetchabun,True Shop Non Matching,Lower North,WW,OPEN
+80100778,True Shop Lotus's Yasothon,True Shop Non Matching,Central Northeast,WW,OPEN
+80100772,True Shop Lotus's Kaengkhro Chaiyaphum,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100727,True Shop Lotus's Udonthani,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100780,True Shop Lotus's Prakonchai Buriram,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101363,True Shop at Chamchuri Square 1,True Shop Non Matching,BMA V (Central),WW,OPEN
+80101264,True Shop Central Plaza Ramindra 1FL.,True Shop Non Matching,BMA I (North West),WW,OPEN
+80101349,True Shop Silom Complex,True Shop Non Matching,BMA V (Central),WW,OPEN
+80100905,True Center Makro Klonglhoung,True Shop Makro,BMA III (North East),WW,OPEN
+80100918,True Center Makro Nhongjok,True Shop Makro,BMA III (North East),WW,OPEN
+80101015,True Center Makro Ramintra,True Shop Makro,BMA III (North East),WW,OPEN
+80100922,True Center Makro Pathumthani,True Shop Makro,BMA III (North East),WW,OPEN
+80100916,True Center Makro Mahasarakham,True Shop Makro,Central Northeast,WW,OPEN
+80100903,True Center Makro Ratchaburi,True Shop Makro,West,WW,OPEN
+80100917,True Center Makro Tungsong,True Shop Makro,Lower South,WW,OPEN
+80100914,True Center Makro Pakchong,True Shop Makro,Lower Northeast,WW,OPEN
+80100909,True Center Makro Chumphae,True Shop Makro,Upper Northeast,WW,OPEN
+80100915,True Center Makro Yasothon,True Shop Makro,Central Northeast,WW,OPEN
+80100902,True Center Makro Nongkhai,True Shop Makro,Upper Northeast,WW,OPEN
+80100908,True Center Makro Mukdahan,True Shop Makro,Central Northeast,WW,OPEN
+80100901,True Center Makro Saraburi,True Shop Makro,Central,WW,OPEN
+80100912,True Center Makro Salaya,True Shop Makro,West,WW,OPEN
+80100895,True Center Makro Samsane,True Shop Makro,BMA V (Central),WW,OPEN
+80100911,True Center Makro Buengkan,True Shop Makro,Upper Northeast,WW,OPEN
+80100899,True Center Makro Sisaket,True Shop Makro,Central Northeast,WW,OPEN
+80100913,True Center Makro Samutsakhon,True Shop Makro,West,WW,OPEN
+80100881,True Center Makro NakhonRatchasima,True Shop Makro,Lower Northeast,WW,OPEN
+80100898,True Center Makro Buriram,True Shop Makro,Lower Northeast,WW,OPEN
+80100904,True Center Makro Ayutthaya,True Shop Makro,Central,WW,OPEN
+80100890,True Center Makro Nakhonsawan,True Shop Makro,Central,WW,OPEN
+80100886,True Center Makro Suratthani,True Shop Makro,Upper South,WW,OPEN
+80100879,True Center Makro Chonburi,True Shop Makro,East,WW,OPEN
+80100883,True Center Makro Hatyai,True Shop Makro,Lower South,WW,OPEN
+80100887,True Center Makro Ubonratchathani,True Shop Makro,Central Northeast,WW,OPEN
+80100882,True Center Makro Rangsit,True Shop Makro,BMA III (North East),WW,OPEN
+80100888,True Center Makro Phitsanulok,True Shop Makro,Lower North,WW,OPEN
+80100884,True Center Makro Udonthani,True Shop Makro,Upper Northeast,WW,OPEN
+80100889,True Center Makro Rayong,True Shop Makro,East,WW,OPEN
+80100893,True Center Makro Nakhon Pathom,True Shop Makro,West,WW,OPEN
+80100878,True Center Makro Bangbon,True Shop Makro,BMA II (South West),WW,OPEN
+80100885,True Center Makro Khonkaen,True Shop Makro,Upper Northeast,WW,OPEN
+80100880,True Center Makro Chiangmai,True Shop Makro,Upper North,WW,OPEN
+80100924,True Center Makro Phetkasem,True Shop Makro,BMA II (South West),WW,OPEN
+80100877,True Center Makro Srinakarin,True Shop Makro,BMA IV (South East),WW,OPEN
+80100875,True Center Makro Ladphrao,True Shop Makro,BMA IV (South East),WW,OPEN
+80100920,True Center Makro Nongbualumphu,True Shop Makro,Upper Northeast,WW,OPEN
+80100832,True Shop Lotus's Det Udom Ubonratchathani,True Shop Non Matching,Central Northeast,WW,OPEN
+80101331,True Shop Big C Nongki Buriram,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100853,True Shop Mini Mueang Satun,True Shop Non Matching,Lower South,WW,OPEN
+80100867,True Shop Dan Khun Thot Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100793,True Shop Lotus's Satuek Buriram,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100721,True Shop Lotus's Nakhonpathom,True Shop Non Matching,West,WW,OPEN
+80100821,True Shop Station Lotus's Pranburi Prachuapkhirikhan,True Shop Non Matching,West,WW,OPEN
+80100796,True Shop Lotus's Khok Samrong Lopburi,True Shop Non Matching,Central,WW,OPEN
+80100627,True Shop Hua Hin,True Shop Non Matching,West,WW,OPEN
+80100856,True Shop Uthaithani,True Shop Non Matching,Central,WW,OPEN
+80100865,True Shop Taphan Hin Phichit,True Shop Non Matching,Lower North,WW,OPEN
+80101265,True Shop Chumphuang Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100861,True Shop Kasetwisai Roiet,True Shop Non Matching,Central Northeast,WW,OPEN
+80100805,True Shop Lotus's Phatthanakan,True Shop Non Matching,BMA IV (South East),WW,OPEN
+80100852,True Shop Khamcha-I Mukdahan,True Shop Non Matching,Central Northeast,WW,OPEN
+80100804,True Shop Lotus's Jomthong Chiangmai,True Shop Non Matching,Upper North,WW,OPEN
+80100781,True Shop Lotus's Lamplaimat Buriram,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100790,True Shop Lotus's Phibunmangsahan Ubonratchathani,True Shop Non Matching,Central Northeast,WW,OPEN
+80100771,True Shop Lotus's Chiangyuen Mahasarakham,True Shop Non Matching,Central Northeast,WW,OPEN
+80100872,True Shop Chatturat Chaiyaphum,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100729,True Shop Station Lotus's Rama 4,True Shop Non Matching,BMA V (Central),WW,OPEN
+80100792,True Shop Lotus's Phayao,True Shop Non Matching,Upper North,WW,OPEN
+80100725,True Shop Lotus's Bang Pa-In Ayudhaya,True Shop Non Matching,Central,WW,OPEN
+80100784,True Shop Lotus's U-Thong Suphanburi,True Shop Non Matching,West,WW,OPEN
+80100806,True Shop Lotus's Samchuk Suphanburi,True Shop Non Matching,West,WW,OPEN
+80101328,True Shop Big C Khamtakla Sakonnakhon,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101327,True Shop Big C Phangkhon Sakonnakhon,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100845,True Shop Kaset Sombun Chaiyaphum,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101350,True Shop iPlace Latkrabang,True Shop Non Matching,BMA III (North East),WW,OPEN
+80100849,True Shop Mini Mueang Phayao,True Shop Non Matching,Upper North,WW,OPEN
+80100873,True Shop Mueang Loei,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101223,True Shop Gateway Bangsue,True Shop Non Matching,BMA I (North West),WW,OPEN
+80101346,True Shop Asawann Phonphisai Nong Khai,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100851,True Shop Nongbunmak Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100863,True Shop Huai Thalaeng Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100869,True Shop Khon Buri Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100794,True Shop Lotus's Nonthai Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100769,True Shop Lotus's Thatum Surin,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101329,True Shop Big C Nongbua Nakhonsawan,True Shop Non Matching,Central,WW,OPEN
+80101292,True Shop Big C Bandung Udonthani,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101227,True Shop Lotus's Ubonratchathani,True Shop Non Matching,Central Northeast,WW,OPEN
+80100797,True Shop Lotus's Trakan Phuet Phon Ubonratchathani,True Shop Non Matching,Central Northeast,WW,OPEN
+80101218,True Shop Big C Sainoi Nonthaburi,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100801,True Shop Lotus's Banphue Udonthani,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100802,True Shop Lotus's Borabue Mahasarakham,True Shop Non Matching,Central Northeast,WW,OPEN
+80100783,True Shop Lotus's Phonthong Roiet,True Shop Non Matching,Central Northeast,WW,OPEN
+80100736,True Shop Lotus's Bangpakok,True Shop Non Matching,BMA II (South West),WW,OPEN
+80101347,True Shop U Chu Liang Building,True Shop Non Matching,BMA V (Central),WW,OPEN
+80100848,True Shop Wangsaphung Loei,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101271,True Shop Big C Chaengwattana,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100864,True Shop Buntharik Ubonratchathan,True Shop Non Matching,Central Northeast,WW,OPEN
+80101217,True Shop Big C Sukhapibal 5,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100749,True Shop Lotus's Kalasin,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101351,True Shop Lotus's Keangkoi Saraburi,True Shop Non Matching,Central,WW,OPEN
+80100803,True Shop Lotus's Nongruea Khonkaen,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100786,True Shop Lotus's Somdet Kalasin,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100807,True Shop Lotus's Nakhon In,True Shop Non Matching,BMA I (North West),WW,OPEN
+80100799,True Shop Lotus's Phon Khonkaen,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101293,True Shop Big C Khonkaen 2,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100860,True Shop Sikhoraphum Surin,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101122,True Shop Ocean Complex Chumphon,True Shop Non Matching,Upper South,WW,OPEN
+80101013,True Shop Mini Mueang Maehongson,True Shop Non Matching,Upper North,WW,OPEN
+80101289,True Shop Big C Banphai Khon Kaen,True Shop Non Matching,Upper Northeast,WW,OPEN
+80100764,True Shop Lotus's Sungkha Surin,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100847,True Shop Mini Senangkhanikhom Amnatcharoen,True Shop Non Matching,Central Northeast,WW,OPEN
+80100870,True Shop Soeng Sang Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101345,True Shop Down Town Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80101377,True Shop Big C Chaiyaphum,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100798,True Shop Lotus's Chiangkham Phayao,True Shop Non Matching,Upper North,WW,OPEN
+80100862,True Shop Pakthongchai Nakhonratchasima,True Shop Non Matching,Lower Northeast,WW,OPEN
+80100628,True Shop Regional Office Khonkaen,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101370,True Shop Robinson Nakhonsithammarat,True Shop Non Matching,Lower South,WW,OPEN
+80100595,True 7-11 เนินพลับหวาน 31,True Shop SIS,East,WW,OPEN
+80101114,True 7-11 นาบัว (หนองเกตุใหญ่),True Shop SIS,East,WW,OPEN
+80100557,True 7-11 บ่อยาง (สหพัฒน์),True Shop SIS,East,WW,OPEN
+80101075,True 7-11 หมู่บ้านแกรนด์ทาวน์(บึง-หนองปรือ),True Shop SIS,East,WW,OPEN
+80100997,True 7-11 ไร่หนึ่ง – หนองขาม,True Shop SIS,East,WW,OPEN
+80101002,True 7-11 บ้านสวนทอง สหพัฒน์,True Shop SIS,East,WW,OPEN
+80101050,True 7-11 ตลาดเจ้าพระยา ศรีราชา,True Shop SIS,East,WW,OPEN
+80100946,True 7-11 ถนนพิบูลย์ละเอียด,True Shop SIS,Lower Northeast,WW,OPEN
+80100814,True 7-11 ตลาดหนองปรือ,True Shop SIS,Lower Northeast,WW,OPEN
+80100357,True 7-11 มิตรภาพโคกเพชร,True Shop SIS,Lower Northeast,WW,OPEN
+80100140,True 7-11 ตลาดระแหง จุด 2,True Shop SIS,BMA III (North East),WW,OPEN
+80100364,True 7-11 อบต. บึงคำพร้อย จุด 2,True Shop SIS,BMA III (North East),WW,OPEN
+80101164,True 7-11 แฟลตเอื้ออาทรลาดกระบัง 2 จุด 3,True Shop SIS,BMA III (North East),WW,OPEN
+80100160,True 7-11 ละหานทราย-โนนดินแดง,True Shop SIS,Lower Northeast,WW,OPEN
+80100389,True 7-11 คลองส่งน้ำเซฟวัน,True Shop SIS,Lower Northeast,WW,OPEN
+80100166,True 7-11 ตลาดเจริญ (สาย 5),True Shop SIS,West,WW,OPEN
+80100935,True 7-11 ตลาดละงู,True Shop SIS,Lower South,WW,OPEN
+80100910,True Center Makro Nakhonphanom,True Shop Makro,Upper Northeast,WW,OPEN
+80100907,True Center Makro Bangplee,True Shop Makro,BMA IV (South East),WW,OPEN
+80100897,True Center Makro Roi-Et,True Shop Makro,Central Northeast,WW,OPEN
+80100923,True Center Makro Kalasin,True Shop Makro,Upper Northeast,WW,OPEN
+80100900,True Center Makro Chaiyaphum,True Shop Makro,Lower Northeast,WW,OPEN
+80100876,True Center Makro Changwattana,True Shop Makro,BMA I (North West),WW,OPEN
+80101632,True Shop Lotus's Bangna-trad,True Shop Non Matching,BMA IV (South East),WW,OPEN
+80101633,True Shop Makro Sri Ayutthaya,True Shop Non Matching,BMA V (Central),WW,OPEN
+80101623,True Shop Chaeng Watthana Government Complex,True Shop Non Matching,BMA I (North West),WW,OPEN
+80101626,Kiosk Lotus's Sena Ayutthaya,True Shop Non Matching,Central,WW,OPEN
+10055257,True Shop Lotus's Onnut 80,True Shop Lotus,BMA IV (South East),WW,OPEN
+10055258,True Shop Lotus's Charan 70,True Shop Lotus,BMA II (South West),WW,OPEN
+10055273,True Shop Lotus's Liab Klong Song,True Shop Lotus,BMA III (North East),WW,OPEN
+10055247,True Shop Lotus's Minburi,True Shop Lotus,BMA III (North East),WW,OPEN
+10055289,True Shop Lotus's Sukhapiban1,True Shop Lotus,BMA III (North East),WW,OPEN
+80101706,True Shop Fashion Island (D),DTAC HALL,BMA III (North East),WW,OPEN
+80101679,True Shop Seacon Bangkae (D),DTAC COCO,BMA II (South West),WW,OPEN
+80101698,True Shop Central West Gate (D),DTAC HALL,BMA I (North West),WW,OPEN
+80101707,True Shop Future Park Rangsit (2 nd.) (D),DTAC HALL,BMA III (North East),WW,OPEN
+80101338,True Shop Big C Sattahip,True_Shop_By_Partner,East,TPNP,OPEN
+80101709,True Shop Mega Bangna (D),DTAC HALL,BMA IV (South East),WW,OPEN
+80101701,True Shop Central Festival Samui (D),DTAC HALL,Upper South,WW,OPEN
+80101700,True Shop Central Festival Pattaya (D),DTAC HALL,East,WW,OPEN
+80101710,True Shop Phuket (D),DTAC HALL,Upper South,WW,OPEN
+80101283,True Shop Big C Amnatcharoen,True_Shop_By_Partner,Central Northeast,TPNP,OPEN
+80101311,True Shop Robinson Chonburi 2 Fl.,True_Shop_By_Partner,East,TPNP,OPEN
+80101692,True Shop Central Nakorn Sithammarat (D),DTAC HALL,Lower South,WW,OPEN
+80101708,True Shop Future Park Rangsit (G Fl.) (D),DTAC HALL,BMA III (North East),WW,OPEN
+80101322,True Shop Big C Sisaket,True_Shop_By_Partner,Central Northeast,TPNP,OPEN
+80101356,True Shop CK Pluakdaeng Rayong,True_Shop_By_Partner,East,TPNP,OPEN
+80101211,True Shop Big C Roi Et,True_Shop_By_Partner,Central Northeast,TPNP,OPEN
+80101617,True Partner Plus เชียงใหม่สยามทีวี สำนักงานใหญ่ (เชียงใหม่),True_Shop_By_Partner,Upper North,TPNP,OPEN
+80101652,True Shop Big C Kranuan (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101712,True Shop Central Plaza Ubon Ratchathani (D),DTAC HALL,Central Northeast,WW,OPEN
+80101682,True Shop Lotus's Pran Buri (D),DTAC COCO,West,WW,OPEN
+80101696,True Shop Central Salaya (D),DTAC HALL,West,WW,OPEN
+80101381,True Shop by Partner Surin Plaza,True_Shop_By_Partner,Lower Northeast,TPNP,OPEN
+80101691,True Shop Ayutthaya (D),DTAC HALL,Central,WW,OPEN
+10055286,True Shop Lotus's Thatphanom,True Shop Lotus,Upper Northeast,WW,OPEN
+10055283,True Shop Lotus's Sakhon Nakorn,True Shop Lotus,Upper Northeast,WW,OPEN
+10055272,True Shop Lotus's Udonthani-Nadee,True Shop Lotus,Upper Northeast,WW,OPEN
+10055248,True Shop Lotus's Kosumphisai,True Shop Lotus,Central Northeast,WW,OPEN
+10055265,True Shop Lotus's Khukhan,True Shop Lotus,Central Northeast,WW,OPEN
+10055282,True Shop Lotus's Warinchamrab,True Shop Lotus,Central Northeast,WW,OPEN
+10055278,True Shop Lotus's Korat,True Shop Lotus,Lower Northeast,WW,OPEN
+10055281,True Shop Lotus's Surin,True Shop Lotus,Lower Northeast,WW,OPEN
+10055290,True Shop Lotus's Sikhio,True Shop Lotus,Lower Northeast,WW,OPEN
+10055252,True Shop Lotus's Tha Yang,True Shop Lotus,West,WW,OPEN
+10055266,True Shop Lotus's Samui,True Shop Lotus,Upper South,WW,OPEN
+10055268,True Shop Lotus's Hangdong,True Shop Lotus,Upper North,WW,OPEN
+10055276,True Shop Lotus's Nakornchaisri,True Shop Lotus,West,WW,OPEN
+10055291,True Shop Lotus's Satun,True Shop Lotus,Lower South,WW,OPEN
+10055249,True Shop Lotus's Wang NamYen,True Shop Lotus,East,WW,OPEN
+10055256,True Shop Lotus's Sri Mahaphoe,True Shop Lotus,East,WW,OPEN
+10055259,True Shop Lotus's Kanuworaluk,True Shop Lotus,Lower North,WW,OPEN
+10055287,True Shop Lotus's Chonburi,True Shop Lotus,East,WW,OPEN
+10055263,True Shop Lotus's Nan,True Shop Lotus,Upper North,WW,OPEN
+10055269,True Shop Lotus's Chiang Khong,True Shop Lotus,Upper North,WW,OPEN
+10055271,True Shop Lotus's Tak,True Shop Lotus,Lower North,WW,OPEN
+10055260,True Shop Lotus's Prachinburi,True Shop Lotus,East,WW,OPEN
+10055280,True Shop Lotus's Mae Khri,True Shop Lotus,Lower South,WW,OPEN
+10055270,True Shop Lotus's Chalong Phuket,True Shop Lotus,Upper South,WW,OPEN
+10055267,True Shop Lotus's Samui - Lamai,True Shop Lotus,Upper South,WW,OPEN
+10055253,True Shop Lotus's Ban Fah,True Shop Lotus,BMA III (North East),WW,OPEN
+10055284,True Shop Lotus's Bangkadi,True Shop Lotus,BMA III (North East),WW,OPEN
+10055275,True Shop Lotus's Tiwanon,True Shop Lotus,BMA I (North West),WW,OPEN
+10055251,True Shop Lotus's Supanburi,True Shop Lotus,West,WW,OPEN
+80101697,True Shop Central Udon Thani (D),DTAC HALL,Upper Northeast,WW,OPEN
+80101657,True Shop Assawan Phonpisai (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101677,True Shop Lotus's Ubon Ratchathani (D),DTAC COCO,Central Northeast,WW,OPEN
+80101647,True Shop Central Krabi,True Shop Matching,Upper South,WW,TBC OPEN
+80101683,True Shop Big C Nong Khai (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101648,True Shop UD Town Udonthani,True Shop Non Matching,Upper Northeast,WW,OPEN
+80101658,True Shop Lotus's Lomsak (D),DTAC COCO,Lower North,WW,OPEN
+80100800,True Shop Lotus's Maptaphut Rayong,True_Shop_By_Partner,East,TPNP,OPEN
+80101417,True Shop by Partner Erawan IT888 (Uthai Thani),True_Shop_By_Partner,Central,TPNP,OPEN
+80101699,True Shop Central Festival Hat Yai (D),DTAC HALL,Lower South,WW,OPEN
+80101693,True Shop Central Plaza Mahachai (D),DTAC HALL,West,WW,OPEN
+80101705,True Shop Central Plaza Suratthani (D),DTAC HALL,Upper South,WW,OPEN
+80101713,True Shop Central North Ville,True Shop Matching,BMA I (North West),WW,OPEN
+80101703,True Shop Central Plaza Khon Kaen (D),DTAC HALL,Upper Northeast,WW,OPEN
+80101659,True Shop Robinson Mae Sot (D),DTAC COCO,Lower North,WW,OPEN
+80101704,True Shop Central Plaza Phitsanulok (D),DTAC HALL,Lower North,WW,OPEN
+80101702,True Shop Central Plaza Chaengwattana (D),DTAC HALL,BMA I (North West),WW,OPEN
+80101651,True Shop Lotus's Banphue (D),DTAC COCO,Upper Northeast,WW,OPEN
+80100726,True Shop Lotus's Ban Chang Rayong,True_Shop_By_Partner,East,TPNP,OPEN
+80101197,True Shop Big C Ubonratchathani,True_Shop_By_Partner,Central Northeast,TPNP,OPEN
+80101376,True Shop by Partner DM Telecom,True_Shop_By_Partner,Lower South,TPNP,OPEN
+80101616,True Partner Plus Top Service 2019 (Samutsakhon),True_Shop_By_Partner,West,TPNP,OPEN
+80101673,True Shop Lotus's Prasat (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101684,True Shop Lotus's Kantharalak (D),DTAC COCO,Central Northeast,WW,OPEN
+80101666,True Shop Lotus's Sangkha (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101656,True Shop Lotus's Pitsanulok (D),DTAC COCO,Lower North,WW,OPEN
+80101695,True Shop Central Rayong (D),DTAC HALL,East,WW,OPEN
+80101660,True Shop Lotus's Phimai Nakhon (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101667,True Shop Supreme Complex (D),DTAC COCO,BMA V (Central),WW,OPEN
+80101690,True Shop Big Chiang Nongkhai (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101687,True Shop Ampur Ranot Songkhla (D),DTAC COCO,Lower South,WW,OPEN
+80101680,True Shop Lotus's Talad Khunhan (D),DTAC COCO,Central Northeast,WW,OPEN
+80101711,True Shop The Mall Korat (D),DTAC HALL,Lower Northeast,WW,OPEN
+80101661,True Shop Lotus's Chom Thong (D),DTAC COCO,Upper North,WW,OPEN
+80101618,True Partner Plus เชียงใหม่สยามทีวี (ลำพูน),True_Shop_By_Partner,Upper North,TPNP,OPEN
+80100795,True Shop Lotus's U-tapao Chonburi,True_Shop_By_Partner,East,TPNP,OPEN
+80101650,True Shop Lotus's Pakthongchai (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101655,True Shop Lotus's Fang Chiangmai (D),DTAC COCO,Upper North,WW,OPEN
+80101670,True Shop Lotus's Ruam Choke (D),DTAC COCO,Upper North,WW,OPEN
+80101669,True Shop Lotus's Sam Chuk (D),DTAC COCO,West,WW,OPEN
+80101663,True Shop Lotus's Muang Sam Sib (D),DTAC COCO,Central Northeast,WW,OPEN
+80101676,True Shop Big C Phibun Mangsahan (D),DTAC COCO,Central Northeast,WW,OPEN
+80101675,True Shop Big C Ranong (D),DTAC COCO,Upper South,WW,OPEN
+80101654,True Shop Lotus's Bua Yai (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101662,True Shop Ocean Shopping Mall (D),DTAC COCO,Upper South,WW,OPEN
+80101665,True Shop Salokbat Kamphaengphet (D),DTAC COCO,Lower North,WW,OPEN
+80101653,True Shop Robinson Chaiyaphum (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101672,True Shop Big C Korat 2 (D),DTAC COCO,Lower Northeast,WW,OPEN
+80101688,True Shop Lotus's Chaiya (D),DTAC COCO,Upper South,WW,OPEN
+80101674,True Shop Lotus's Nakhon Phanom (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101685,True Shop Lotus's Det Udom (D),DTAC COCO,Central Northeast,WW,OPEN
+80101681,True Shop Lotus's Trakan Phuet Phon (D),DTAC COCO,Central Northeast,WW,OPEN
+80101671,True Shop Lotus's Sawandandin (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101686,True Shop Lotus's Amphur U-Thong (D),DTAC COCO,West,WW,OPEN
+80101668,True Shop Lotus's Nong Ruea (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101664,True Shop Big C Loei (D),DTAC COCO,Upper Northeast,WW,OPEN
+80101689,True Shop Big C Sukhaphiban 5 (D),DTAC COCO,BMA I (North West),WW,OPEN
+80101619,True Shop by Partner Chiangmai SiamTV (Lampang),True_Shop_By_Partner,Upper North,TPNP,OPEN
+10055277,True Shop Lotus's Bueng Samphan,True Shop Lotus,Lower North,WW,OPEN
+80101678,True Shop Big C Market Puwieng (D),DTAC COCO,Upper Northeast,WW,RENOVATE
+80101630,Kiosk Lotus's Ramindra,True Shop Non Matching,BMA V (Central),WW,OPEN
+80101247,True Shop Lotus Charansanitwong 70,True Shop Lotus,BMA II (South West),WW,TBC OPEN
+80100919,True Center Makro Warinchamrap,True Shop Makro,Central Northeast,WW,OPEN
+80100894,True Center Makro Surin,True Shop Makro,Lower Northeast,WW,OPEN
+80100896,True Center Makro Sakonnakhon,True Shop Makro,Upper Northeast,WW,OPEN
+80101201,True Kiosk The Eight Thonglor,True Shop Non Matching,BMA V (Central),WW,OPEN
+80100674,True 7-11 ชุมชนห้วยใหญ่,True Shop SIS,East,WW,OPEN
+80101106,True 7-11 ถนนเบญจรงค์,True Shop SIS,Lower Northeast,WW,OPEN
+80101045,True 7-11 ท่ามะนาว,True Shop SIS,Lower Northeast,WW,OPEN
+80101109,True 7-11 ตลาดโป่งไผ่,True Shop SIS,East,WW,OPEN
+80101100,True 7-11 บางบ่อแปลงยาว,True Shop SIS,East,WW,OPEN
+80101549,WW 7-11 ตลาดชุมชนบ้านหมอ,True Shop SIS,Central,WW,OPEN
+80101018,True 7-11 หน้าอำเภอปากช่อง,True Shop SIS,Lower Northeast,WW,OPEN
+10055285,True Shop Lotus's Sriwaree,True Shop Lotus,BMA IV (South East),WW,OPEN
+10055255,True Shop Lotus's Bang Plee,True Shop Lotus,BMA IV (South East),WW,OPEN
+10055274,True Shop Lotus's Loei,True Shop Lotus,Upper Northeast,WW,OPEN
+10055264,True Shop Lotus's Maesod Tak,True Shop Lotus,Lower North,WW,OPEN
+10055250,True Shop Lotus's Banglen,True Shop Lotus,West,WW,OPEN
+10055288,True Shop Lotus's Samutsakhon,True Shop Lotus,West,WW,OPEN
+10055254,True Shop Lotus's Ladprao,True Shop Lotus,BMA I (North West),WW,OPEN
+10055262,True Shop Lotus's Bangkae,True Shop Lotus,BMA II (South West),WW,OPEN
+10055261,True Shop Lotus's Thabor Nong Khai,True Shop Lotus,Upper Northeast,WW,OPEN
+10055279,True Shop Lotus's Srisaket,True Shop Lotus,Central Northeast,WW,OPEN
+80101416,WW 7-11 ท่ารถปากท่อ,True Shop SIS,West,WW,OPEN
+80100385,True 7-11 แพลทตินั่ม คอนโด (มาบยางพร),True Shop SIS,East,WW,OPEN
+80100526,True 7-11 บึงโขงหลง,True Shop SIS,Upper Northeast,WW,OPEN
+80100561,True 7-11 ตลาดเลิงนกทา,True Shop SIS,Central Northeast,WW,OPEN
+80100891,True Center Makro Charunsanitwong,True Shop Makro,BMA II (South West),WW,OPEN
+80100906,True Center Makro Loei,True Shop Makro,Upper Northeast,WW,OPEN
+80100941,True 7-11 สะพานฟ้า(รังสิตคลอง1),True Shop SIS,BMA III (North East),WW,OPEN
+80100312,True 7-11 ภูเก็ตวิลล่า,True Shop SIS,Upper South,WW,OPEN
+80101715,Ten Ten Shop Phaholyothin Soi 69/1,Ten Ten Shop,BMA III (North East),WW,OPEN
+80101714,Ten Ten Shop Ban Tangsin Salaya,Ten Ten Shop,West,WW,OPEN
