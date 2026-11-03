@@ -76,7 +76,7 @@ def save_sim(df, only=None):
     for mo, g in df.groupby(_month(df)):
         if only is None or mo in only: save(g.sort_values(['BILL_DATE', 'key']), f'sim_{mo}.csv.gz')
 
-WATCH_COLS = ['serial', 'list', 'area', 'shop_name', 'added', 'expiry']
+WATCH_COLS = ['serial', 'list', 'area', 'shop_name', 'added', 'expiry', 'matcode']
 SOLD_COLS = ['serial', 'BILL_DATE', 'SHOP_CODE', 'PRODUCT_CODE', 'SALE_CODE', 'SALE_NAME', 'NET_AMOUNT', 'ORDER_STATUS', 'key']
 
 def watch_hits(raw):
@@ -101,7 +101,7 @@ def add_watch(path, label):
     sc = next(cols[c] for c in cols if 'serial' in c)
     out = pd.DataFrame({'serial': df[sc].astype(str).str.strip().str.replace(r'\.0$', '', regex=True), 'list': label,
                         'area': df[cols['area']] if 'area' in cols else '', 'shop_name': df[cols['shopname']] if 'shopname' in cols else '',
-                        'added': datetime.date.today().isoformat(), 'expiry': ''})
+                        'added': datetime.date.today().isoformat(), 'expiry': '', 'matcode': ''})
     out = out[out.serial.str.match(r'^\d{10,}$')]
     old = load('watch_serials.csv')
     if old is not None: out = pd.concat([old[~((old.list == label) & old.serial.isin(out.serial))], out])
@@ -240,7 +240,8 @@ def build():
     wl = []
     if w is not None:
         w = w.fillna('')
-        if 'expiry' not in w: w['expiry'] = ''  # empty area / shop name must not become NaN (invalid JSON)
+        if 'expiry' not in w: w['expiry'] = ''
+        if 'matcode' not in w: w['matcode'] = ''  # empty area / shop name must not become NaN (invalid JSON)
         kk = load('stock.csv.gz').drop_duplicates('SERIAL').set_index('SERIAL')
         shn = shops.set_index('shop').name.to_dict(); sha = shops.set_index('shop').area.to_dict()
         # shop master from 'Raw Data Prepaid' (WW-operated shops): partner shops (WW_FLAG != WW) are dropped, WW shops outside the target files get their name / area
@@ -253,6 +254,7 @@ def build():
             shn = {**dict(zip(sm.SHOP_CODE, sm.SHOP_NAME)), **shn}; sha = {**dict(zip(sm.SHOP_CODE, sm.AREA.map(ar))), **sha}
         n2s = {re.sub(r'\s+', ' ', str(v)).strip().lower(): k_ for k_, v in shn.items()}
         mname = m.set_index('matcode').name.to_dict()
+        mprice = {k_: (float(v) if v == v else None) for k_, v in m.set_index('matcode').price.to_dict().items()}
         sold = {}
         if ws is not None:
             ws['BD'] = pd.to_datetime(ws.BILL_DATE, format='%m/%d/%Y %I:%M:%S %p', errors='coerce')
@@ -273,6 +275,8 @@ def build():
                    'sold_net': float(x.NET_AMOUNT) if x is not None else None, 'stock_asof': meta.get('stock_asof', ''), 'sales_asof': meta.get('sales_asof', '')}
             if not row['shop'] and x is not None: row.update(shop=x.SHOP_CODE, shop_name=shn.get(x.SHOP_CODE, str(x.SHOP_CODE) + ' (Unidentified)'), area=sha.get(x.SHOP_CODE, 'Unidentified'))
             if row['matcode'] is None and x is not None: row['matcode'] = x.PRODUCT_CODE; row['product'] = mname.get(x.PRODUCT_CODE)
+            if not row['matcode'] and r.get('matcode'): row['matcode'] = r.matcode; row['product'] = mname.get(r.matcode)
+            row['price'] = mprice.get(row['matcode']) if row['matcode'] else None
             if str(row['shop']) in WX_SHOPS: continue  # True Shop by Partner (not WW) - see state/watch_exclude_shops.txt
             wl.append(row)
     json.dump(wl, open(os.path.join(OUT, 'watch_serials.json'), 'w'), ensure_ascii=False, separators=(',', ':'))

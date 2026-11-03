@@ -2062,7 +2062,7 @@ dash.draw('tb_w_serial', (el) => { const sf = dash.params().wstatus || 'ALL'; le
   const ord = { in_stock: 0, not_found: 1, sold: 2 };
   PC.table(el, 'tb_w_serial', r && r.map((x) => ({ ...x, srank: ord[x.status] })), { key: ['list', 'serial'], def: 'srank', dir: 1, q: 'watch', limit: 5000, cols: [
     { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [WS[d.status][1], WS[d.status][0]] }, ...(wList() === 'ALL' ? [{ f: 'list', label: 'เดือนหมดอายุ' }] : []), { f: 'serial', label: 'Serial' }, { f: 'expiry', label: 'วันหมดอายุ', fmt: (v) => (v ? PC.day(v) : '–') }, { f: 'area', label: 'Area' }, { f: 'shop_name', label: 'สาขา', wrap: true },
-    { f: 'product', label: 'สินค้า', wrap: true }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' },
+    { f: 'product', label: 'สินค้า', wrap: true }, { f: 'price', label: 'ราคา (บาท)', num: true, fmt: (v) => (v == null ? '–' : PC.nf(v)) }, { f: 'aging', label: 'วันในสต็อก', num: true, fmt: PC.nf }, { f: 'location', label: 'ที่เก็บ' },
     { f: 'sold_date', label: 'วันที่ขาย', fmt: (v) => PC.day(v) }, { f: 'sold_shop_name', label: 'สาขาที่ขาย', wrap: true }, { f: 'sold_emp_name', label: 'พนักงาน' }, { f: 'sold_net', label: 'Net Amount', num: true, fmt: PC.nf } ] }); });
 
 /* ---------- today charts ---------- */

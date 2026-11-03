@@ -13,7 +13,7 @@ Inputs Nami attaches each day (zip or csv):
 - SN expiry snapshot xlsx (sheet Detail, header row 3: Material, Serial number, SLoc, อายุระบบ = expiry date, `Month/Year ที่หมดอายุ` = MM/YYYY or "New Lot"):
   Nami wants EVERY serial in the file on the page (the count must match the file). One list per expiry month "ซิมหมดอายุ <ด.ด. ปป>"
   (Thai month, BE 2-digit year) plus "ซิม New Lot". Replace pipeline/state/watch_serials.csv with the file's rows (columns serial, list,
-  area '', shop_name 'SLoc <SLoc>', added, expiry = อายุระบบ as YYYY-MM-DD; Excel serial numbers converted), keeping old rows only if sold;
+  area '', shop_name 'SLoc <SLoc>', added, expiry = อายุระบบ as YYYY-MM-DD; Excel serial numbers converted, matcode = Material), keeping old rows only if sold;
   then run update.py with no args. Shop/area come from the stock file (shops outside the target files show "<code> (Unidentified)", Area "Unidentified"),
   sold serials from the sales state; serials in neither = "ไม่พบใน Stock" (shop shown as SLoc).
   Shops Nami says are not WW (e.g. True Shop by Partner) go in pipeline/state/watch_exclude_shops.txt and are dropped from the page.

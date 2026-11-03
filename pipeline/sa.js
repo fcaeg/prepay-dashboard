@@ -841,9 +841,9 @@ if (!window.PC_WSER_BOUND) { window.PC_WSER_BOUND = true;
     if (q) r = r.filter((x) => [x.serial, x.shop_name, x.area, x.product, x.matcode, x.sold_shop_name, x.sold_emp_name, x.list].some((v) => v != null && String(v).toLowerCase().includes(q)));
     const ST = { in_stock: 'ยังไม่ขาย', sold: 'ขายแล้ว', not_found: 'ไม่พบใน Stock' };
     const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const head = ['สถานะ', 'เดือนหมดอายุ', 'วันหมดอายุ', 'Serial', 'Area', 'รหัสสาขา', 'สาขา', 'Matcode', 'สินค้า', 'วันในสต็อก', 'ที่เก็บ', 'วันที่ขาย', 'เวลาขาย', 'สาขาที่ขาย', 'รหัสพนักงาน', 'พนักงาน', 'Net Amount'];
+    const head = ['สถานะ', 'เดือนหมดอายุ', 'วันหมดอายุ', 'Serial', 'Area', 'รหัสสาขา', 'สาขา', 'Matcode', 'สินค้า', 'ราคา (บาท)', 'วันในสต็อก', 'ที่เก็บ', 'วันที่ขาย', 'เวลาขาย', 'สาขาที่ขาย', 'รหัสพนักงาน', 'พนักงาน', 'Net Amount'];
     const ord = { in_stock: 0, not_found: 1, sold: 2 }; r = r.slice().sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.expiry || '').localeCompare(String(b.expiry || '')) || String(a.serial).localeCompare(String(b.serial)));
-    const lines = [head.join(',')].concat(r.map((x) => [ST[x.status] || x.status, esc(x.list), x.expiry || '', '="' + x.serial + '"', esc(x.area), x.shop ? '="' + x.shop + '"' : '', esc(x.shop_name), x.matcode ? '="' + x.matcode + '"' : '', esc(x.product), x.aging ?? '', esc(x.location),
+    const lines = [head.join(',')].concat(r.map((x) => [ST[x.status] || x.status, esc(x.list), x.expiry || '', '="' + x.serial + '"', esc(x.area), x.shop ? '="' + x.shop + '"' : '', esc(x.shop_name), x.matcode ? '="' + x.matcode + '"' : '', esc(x.product), x.price ?? '', x.aging ?? '', esc(x.location),
       x.sold_date || '', x.sold_time || '', esc(x.sold_shop_name), x.sold_emp ? '="' + x.sold_emp + '"' : '', esc(x.sold_emp_name), x.sold_net ?? ''].join(',')));
     const l = wList(); const tag = l === 'ALL' ? 'ALL' : (r[0] && r[0].expiry ? r[0].expiry.slice(0, 7) : 'list');
     const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url;
