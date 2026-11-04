@@ -206,14 +206,16 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <div class="ns" id="pc-sum" style="margin-bottom:14px">
         <h3 style="margin:0 0 6px">สรุป PC ตาม Performance</h3><p class="note" id="n-pcsum"></p>
         <div class="cmp" id="pc-tiers"></div>
-        <div class="alert" id="pc-alert" hidden style="cursor:default"></div>
-        <div style="display:flex;justify-content:flex-end;margin:-4px 0 6px"><button class="btn" id="pc-gappng">⤓ Download PNG (PC ไม่มียอด)</button></div>
-        <div class="gapc" id="pc-gaps"></div>
-        <div class="tw" id="t-pcalert" style="max-height:340px"></div>
       </div>
       <p class="note" id="n-ms"></p>
       <div class="cmp" id="ms-cmp"></div>
       <div class="tw" id="t-ms"></div>
+      <div class="ns" style="margin-top:16px">
+        <div class="card-h" style="margin-bottom:6px"><h3 style="margin:0">PC ไม่มียอดติดต่อกัน</h3><span class="spacer"></span><button class="btn" id="pc-gappng">⤓ Download PNG (PC ไม่มียอด)</button></div>
+        <div class="alert" id="pc-alert" hidden style="cursor:default"></div>
+        <div class="gapc" id="pc-gaps"></div>
+        <div class="tw" id="t-pcalert" style="max-height:340px"></div>
+      </div>
     </div>
     <div id="pc-detail" hidden>
       <div id="pd-head" class="pd-head"></div>
@@ -977,7 +979,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:23 น.</span>`;
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:27 น.</span>`;
 initControls(); render();
 </script>
 </body>
