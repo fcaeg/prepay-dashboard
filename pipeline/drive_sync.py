@@ -11,6 +11,8 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *Target of <Mon> <yy>*               -> shop targets
   Manpower*                            -> staff roster
   Master Prepaid*                      -> matcode master
+  *VIVO*Target*                        -> Vivo Dashboard targets
+  *PC Brand*                           -> Vivo Dashboard PC per shop
 Processed files are moved to the sub-folder "Done" (or "Error" if the update failed) and remembered in
 pipeline/state/drive_done.json, so a file is never processed twice. Raw files never leave Drive / the runner.
 Exit code 0; writes changed=true|false to $GITHUB_OUTPUT.
@@ -70,6 +72,8 @@ def move(s, f, src, dst):
 def kind(name):
     n = name.lower()
     if n.startswith('daily_sales'): return 'sales'
+    if 'vivo' in n and 'target' in n: return 'vivotarget'
+    if re.search(r'pc[ _]?brand', n): return 'pc'
     if n.startswith('stock_balance_report'): return 'stock'
     if re.search(r'individual[ _]target[ _]of', n): return 'indtarget'
     if re.search(r'target[ _]of[ _][a-z]{3}', n): return 'target'
@@ -100,9 +104,9 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'master': ['--master', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'pc': ['--pc', fp]}[k]
     # update.py takes several --sales / --target values as one list each
-    merged, lists = [], {'--sales': [], '--target': []}
+    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': []}
     for i in range(0, len(args), 2):
         if args[i] in lists: lists[args[i]].append(args[i + 1])
         else: merged += args[i:i + 2]
@@ -122,7 +126,7 @@ def main():
     for f, k, _ in used:
         move(s, f, folder, dst); done[f['id']] = {'name': f['name'], 'kind': k, 'at': now, 'ok': ok}
     json.dump(done, open(DONE, 'w'), ensure_ascii=False, indent=1)
-    head = [l for l in r.stdout.splitlines() if l.strip().startswith(('built:', 'YTD', 'sales:', 'stock:', 'target:', 'individual', 'manpower'))]
+    head = [l for l in r.stdout.splitlines() if l.strip().startswith(('built:', 'YTD', 'sales:', 'stock:', 'target:', 'individual', 'manpower', 'vivo'))]
     summary(('### ✅ อัปเดตแล้ว' if ok else '### ❌ อัปเดตไม่สำเร็จ — ไฟล์ถูกย้ายไปโฟลเดอร์ Error') + '\n\n' + '\n'.join('- ' + f['name'] + ' → ' + k for f, k, _ in used) + '\n\n```\n' + '\n'.join(head) + ('\n' + r.stderr[-1500:] if not ok else '') + '\n```')
     output('changed', 'true')  # always commit drive_done.json so failed files are not retried forever
     shutil.rmtree(tmp, ignore_errors=True)

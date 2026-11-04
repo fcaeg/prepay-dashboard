@@ -53,3 +53,13 @@ It runs `pipeline/drive_sync.py`, which lists the Drive inbox folder (`vars.DRIV
 Manpower*, Master Prepaid*), runs update.py + build_page.py, moves the files to the sub-folder Done (or Error) and commits
 `pipeline/state` + `index.html`. Processed file ids are kept in `pipeline/state/drive_done.json`.
 This updates GitHub Pages only; the Claude dashboard still needs step 2 above (pull first: `git pull origin main`).
+
+## Vivo Dashboard (https://fcaeg.github.io/prepay-dashboard/vivo/)
+Same inputs as Prepay — every daily_sales / stock_balance_report run also keeps the `H/S,VIVO` rows
+(`pipeline/vivo.py`, hooked into update.py; a Vivo error never stops the Prepay update):
+- sales → `state/vivo_sales_<YYYY-MM>.csv.gz` (same de-dup key as SIM rows) · stock → `state/vivo_stock.csv.gz`
+- `VIVO Target*.xlsx` (sheet TARGET_FOR_OPERATION, brand VIVO) → `python3 -I pipeline/update.py --vivo-target <file>` (Drive: any name with "vivo" + "target")
+- `* PC Brand Update*.xlsx` (newest sheet "PC <MON> <yy>", column VIVO by CODE WW) → `--pc <file>` (Drive: name contains "PC Brand")
+- Week portions (8-7-7-8 / 8-7-7-9): `state/vivo_portions.json`, e.g. `{"2026-10": [30, 23, 21, 26]}`; a month not listed uses the share of days
+- Page: `pipeline/vivo_page.html` + `out/vivo_data.json` → `vivo/index.html` (built by build_page.py). Model match: sales
+  `H/S,VIVO,V80LITE,5G,6/256,...` ↔ target `VIVO V80 LITE 5G 6/256GB` (key V80LITE|5G|6256; PHOTOSET kept separate).

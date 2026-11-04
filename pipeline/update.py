@@ -14,6 +14,13 @@ Then rebuilds pipeline/out/*.json + sales_daily.csv, and pipeline/build_page.py 
 """
 import argparse, glob, io, json, os, re, sys, zipfile
 import pandas as pd
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vivo
+
+def _vivo(fn, *a):
+    """Vivo Dashboard hooks never stop the Prepay update"""
+    try: return fn(*a)
+    except Exception as e: print('vivo: WARNING', fn.__name__, 'failed:', repr(e))
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ST = os.path.join(HERE, 'state'); OUT = os.path.join(HERE, 'out')
@@ -113,7 +120,7 @@ def merge_sales(paths):
     old = load_sim(); changed = set()
     for path in paths:
         raw, label = read_csv_any(path)
-        watch_hits(raw)
+        watch_hits(raw); _vivo(vivo.add_sales, raw)
         new = sim_rows(raw); n0 = 0 if old is None else len(old)
         add = new if old is None else new[~new.key.isin(set(old.key))]
         changed |= set(_month(add))
@@ -133,6 +140,7 @@ def merge_stock(path):
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
     meta['stock_asof'] = f'{m.group(3)}-{MON[m.group(2)]:02d}-{int(m.group(1)):02d}' + (f' {int(m.group(4)):02d}:{m.group(5)}' if m and m.group(4) else '') if m else (os.environ.get('STOCK_ASOF') or meta.get('sales_asof', ''))
     meta['stock_file'] = label
+    _vivo(vivo.set_stock, st, meta['stock_asof'])
     json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
 
@@ -334,6 +342,7 @@ def merge_indtarget(fp):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
     ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
+    ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)')
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
     if a.manpower: merge_manpower(a.manpower)
@@ -343,4 +352,7 @@ if __name__ == '__main__':
     if a.target: merge_targets(a.target)
     if a.sales: merge_sales(a.sales)
     if a.stock: merge_stock(a.stock)
+    for fp in a.vivo_target: vivo.merge_target(fp)
+    if a.pc: vivo.merge_pc(a.pc)
     build()
+    _vivo(vivo.build)

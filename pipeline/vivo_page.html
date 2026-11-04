@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Vivo Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --fg: #1f1e1c; --muted: #6b6862; --line: #e3e0d8; --soft: #f1efe9;
+  --accent: #3a4fd6; --accent-soft: #e7eafb; --ok: #23864f; --ok-soft: #e3f3ea; --warn: #a86a12; --warn-soft: #fbf0dc; --bad: #c53b32; --bad-soft: #fbe6e4;
+  --sub: #f3f2ee; --tot: #e9e7e0; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  --font: "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", "Leelawadee UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --accent: #8b9bff; --accent-soft: #2c3150; --ok: #4cc185; --ok-soft: #1f3a2b; --warn: #e0a63e; --warn-soft: #3d3020; --bad: #ef6b60; --bad-soft: #452523;
+  --sub: #2c2a27; --tot: #34322e; --shadow: none;
+} }
+:root[data-theme="dark"] {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --accent: #8b9bff; --accent-soft: #2c3150; --ok: #4cc185; --ok-soft: #1f3a2b; --warn: #e0a63e; --warn-soft: #3d3020; --bad: #ef6b60; --bad-soft: #452523;
+  --sub: #2c2a27; --tot: #34322e; --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); }
+.wrap { max-width: 96rem; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-left)) 40px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+h1 small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.asof { color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.asof a { color: var(--accent); }
+.filters { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+  display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end; }
+.f { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.f label { font-size: 11.5px; color: var(--muted); }
+select, input[type=search] { font: inherit; font-size: 13.5px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; max-width: 15rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--panel); }
+.seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--fg); padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 7px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.spacer { flex: 1; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
+.kpi .l { font-size: 12px; color: var(--muted); }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.25; margin-top: 2px; }
+.kpi .s { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 5px; background: var(--soft); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+nav.tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none; }
+nav.tabs button { font: inherit; font-size: 13.5px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 7px 13px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); margin-bottom: 14px; }
+section.card[hidden] { display: none; }
+.card-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.card-h h2 { font-size: 16px; margin: 0; font-weight: 600; }
+.note { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+.note b { color: var(--fg); font-weight: 600; }
+.tw { overflow: auto; max-height: 72vh; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; text-align: right; }
+th { position: sticky; top: 0; background: var(--soft); font-weight: 600; font-size: 12px; color: var(--muted); z-index: 2; }
+thead tr:nth-child(2) th { top: 27px; }
+th.g { text-align: center; color: var(--fg); border-left: 1px solid var(--line); }
+th.gl, td.gl { border-left: 1px solid var(--line); }
+td:first-child, th:first-child { text-align: left; position: sticky; left: 0; background: var(--panel); z-index: 1; max-width: 17rem; overflow: hidden; text-overflow: ellipsis; }
+th:first-child { background: var(--soft); z-index: 3; }
+td.t { text-align: left; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]:hover { color: var(--accent); }
+tr.sub td { background: var(--sub); font-weight: 600; }
+tr.tot td { background: var(--tot); font-weight: 700; }
+tr.ind td:first-child { padding-left: 20px; }
+td.na { color: var(--muted); }
+.p { display: inline-block; min-width: 3.4em; padding: 0 5px; border-radius: 5px; font-weight: 600; }
+.p.ok { color: var(--ok); background: var(--ok-soft); } .p.warn { color: var(--warn); background: var(--warn-soft); } .p.bad { color: var(--bad); background: var(--bad-soft); }
+.cw { font-weight: 600; } .cw.bad { color: var(--bad); } .cw.warn { color: var(--warn); } .cw.ok { color: var(--ok); }
+.pc { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
+.cur { color: var(--accent); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 1100px) { .two { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.cmp .kpi .v { font-size: 18px; }
+.locs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
+h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
+@media (max-width: 640px) { h1 { font-size: 20px; } .kpi .v { font-size: 18px; } select { max-width: 11rem; } .filters { position: static; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Vivo Dashboard <small>True Shop · WW</small></h1>
+      <div class="asof" id="asof"></div>
+    </div>
+    <div class="asof"><a href="../">← Prepay Dashboard</a></div>
+  </header>
+
+  <div class="filters" id="filters">
+    <div class="f"><label for="f-month">เดือน</label><select id="f-month"></select></div>
+    <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="q" aria-pressed="true">QTY</button><button data-v="n" aria-pressed="false">Net Amount</button></div></div>
+    <div class="f"><label for="f-zone">Region</label><select id="f-zone"></select></div>
+    <div class="f"><label for="f-area">Area</label><select id="f-area"></select></div>
+    <div class="f"><label for="f-type">ประเภทสาขา</label><select id="f-type"></select></div>
+    <div class="f"><label for="f-pc">PC Vivo</label><select id="f-pc"><option value="ALL">ทั้งหมด</option><option value="Y">มี PC</option><option value="N">ไม่มี PC</option></select></div>
+    <div class="f"><label for="f-model">Model</label><select id="f-model"></select></div>
+    <div class="spacer"></div>
+    <button class="btn primary" id="x-all">⤓ Export Excel ทั้งหมด</button>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-t="model" aria-selected="true">1 · ราย Model</button>
+    <button role="tab" data-t="area" aria-selected="false">2 · ราย Area</button>
+    <button role="tab" data-t="shop" aria-selected="false">3 · รายสาขา</button>
+    <button role="tab" data-t="stock" aria-selected="false">4 · Stock &amp; Cover Week</button>
+    <button role="tab" data-t="ms" aria-selected="false">5 · Model × สาขา (PC)</button>
+  </nav>
+
+  <section class="card" id="s-model">
+    <div class="card-h"><h2>ยอดขายราย Model เทียบ Target รายสัปดาห์</h2><span class="spacer"></span><button class="btn" data-x="model">⤓ Excel</button></div>
+    <p class="note" id="n-model"></p>
+    <div class="tw" id="t-model"></div>
+  </section>
+
+  <section class="card" id="s-area" hidden>
+    <div class="card-h"><h2>ยอดขายราย Area (15 เขต) จัดกลุ่มตาม Region</h2><span class="spacer"></span><button class="btn" data-x="area">⤓ Excel</button></div>
+    <p class="note" id="n-area"></p>
+    <div class="tw" id="t-area"></div>
+  </section>
+
+  <section class="card" id="s-shop" hidden>
+    <div class="card-h"><h2>ยอดขายรายสาขา</h2>
+      <div class="seg" id="f-tmode"><button data-v="full" aria-pressed="true">Target ทั้งเดือน</button><button data-v="day" aria-pressed="false">Target ตามวัน (8-7-7-8)</button></div>
+      <input type="search" id="q-shop" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา">
+      <span class="spacer"></span><button class="btn" data-x="shop">⤓ Excel</button></div>
+    <p class="note" id="n-shop"></p>
+    <div class="tw" id="t-shop"></div>
+  </section>
+
+  <section class="card" id="s-stock" hidden>
+    <div class="card-h"><h2>Stock คงเหลือ และ Cover Week</h2><span class="spacer"></span><button class="btn" data-x="stock">⤓ Excel</button></div>
+    <p class="note" id="n-stock"></p>
+    <div class="locs" id="locs"></div>
+    <div class="two" style="margin-top:8px">
+      <div><h3>ราย Model</h3><div class="tw" id="t-stock-m"></div></div>
+      <div><h3>รายสาขา <input type="search" id="q-stock" placeholder="ค้นหาสาขา" aria-label="ค้นหาสาขา" style="margin-left:8px;font-weight:400"></h3><div class="tw" id="t-stock-s"></div></div>
+    </div>
+  </section>
+
+  <section class="card" id="s-ms" hidden>
+    <div class="card-h"><h2>ยอดขายราย Model ของแต่ละสาขา</h2>
+      <div class="f"><select id="f-msmodel" aria-label="เลือก Model"></select></div>
+      <input type="search" id="q-ms" placeholder="ค้นหาสาขา" aria-label="ค้นหาสาขา">
+      <span class="spacer"></span><button class="btn" data-x="ms">⤓ Excel</button></div>
+    <p class="note" id="n-ms"></p>
+    <div class="cmp" id="ms-cmp"></div>
+    <div class="tw" id="t-ms"></div>
+  </section>
+</div>
+
+<script id="vivo-data" type="application/json">__DATA__</script>
+<script>
+'use strict';
+const D = JSON.parse(document.getElementById('vivo-data').textContent);
+const TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const THF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const thDate = (v) => { if (!v) return '–'; const [y, m, d] = v.slice(0, 10).split('-').map(Number); return `${d} ${TH[m - 1]} ${y + 543}` + (v.length > 10 ? ` ${v.slice(11, 16)} น.` : ''); };
+const zoneOf = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return 'อื่น ๆ'; };
+const ZONES = ['BMA', 'UPC I', 'UPC II'];
+const SH = Object.fromEntries(D.shops.map((s) => [s.c, s]));
+const MD = Object.fromEntries(D.models.map((m) => [m.k, m]));
+const MORDER = Object.fromEntries(D.models.map((m, i) => [m.k, i]));
+const LATEST = (D.meta.sales_asof || '').slice(0, 10);
+const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.keys(D.targets)])].sort().reverse();
+const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
+const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco'];
+
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i)),
+  sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
+try { const p = JSON.parse(localStorage.getItem('vivo-dash') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
+const persist = () => { try { localStorage.setItem('vivo-dash', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
+
+// ---------- month geometry: weeks 8-7-7-8 / 8-7-7-9
+function monthInfo(ym) {
+  const [y, m] = ym.split('-').map(Number); const days = new Date(y, m, 0).getDate();
+  const w = days >= 29 ? [[1, 8], [9, 15], [16, 22], [23, days]] : [[1, 7], [8, 14], [15, 21], [22, days]];
+  const pp = D.portions[ym]; const announced = Array.isArray(pp) && pp.length === 4;
+  const portion = announced ? pp.map((x) => x / 100) : w.map(([a, b]) => (b - a + 1) / days);
+  let asofDay = days;
+  if (LATEST.slice(0, 7) === ym) asofDay = +LATEST.slice(8, 10); else if (ym > LATEST.slice(0, 7)) asofDay = 0;
+  const todate = w.reduce((s, [a, b], i) => s + portion[i] * Math.min(1, Math.max(0, (asofDay - a + 1) / (b - a + 1))), 0);
+  const curWeek = w.findIndex(([a, b]) => asofDay >= a && asofDay < b);
+  return { ym, y, m, days, weeks: w, portion, announced, asofDay, todate, curWeek };
+}
+const wkOf = (mi, d) => mi.weeks.findIndex(([a, b]) => d >= a && d <= b);
+
+// ---------- filters
+const okShop = (c) => { const s = SH[c]; if (!s) return false;
+  if (S.zone !== 'ALL' && zoneOf(s.area) !== S.zone) return false; if (S.area !== 'ALL' && s.area !== S.area) return false;
+  if (S.type !== 'ALL' && s.type !== S.type) return false; if (S.pc === 'Y' && !(s.pc > 0)) return false; if (S.pc === 'N' && s.pc > 0) return false; return true; };
+const modelOk = (sel, k) => sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && MD[k].family === sel.slice(2)) : sel.startsWith('S:') ? (MD[k] && MD[k].series === sel.slice(2)) : k === sel.slice(2));
+const okModel = (k) => modelOk(S.model, k);
+
+// ---------- aggregation
+const z = () => ({ u: 0, n: 0, wu: [0, 0, 0, 0], wn: [0, 0, 0, 0], tu: 0, tn: 0 });
+function aggregate(mi, keyFn, modelSel) {
+  const out = new Map(); const get = (k) => { let x = out.get(k); if (!x) out.set(k, x = z()); return x; };
+  const msel = modelSel || S.model;
+  for (const [d, c, k, u, n] of D.sales) {
+    if (d.slice(0, 7) !== mi.ym || !okShop(c) || !modelOk(msel, k)) continue;
+    const w = wkOf(mi, +d.slice(8, 10));
+    for (const key of [].concat(keyFn(c, k))) { const x = get(key); x.u += u; x.n += n; if (w >= 0) { x.wu[w] += u; x.wn[w] += n; } }
+  }
+  for (const [c, k, tu, tn] of (D.targets[mi.ym] || [])) {
+    if (!okShop(c) || !modelOk(msel, k)) continue;
+    for (const key of [].concat(keyFn(c, k))) { const x = get(key); x.tu += tu; x.tn += tn; }
+  }
+  return out;
+}
+const V = (x) => S.metric === 'q' ? x.u : x.n;
+const T = (x) => S.metric === 'q' ? x.tu : x.tn;
+const W = (x, i) => S.metric === 'q' ? x.wu[i] : x.wn[i];
+
+// 28-day window ending at the latest sales date
+const L28 = (() => { if (!LATEST) return { from: '', to: '' }; const t = new Date(LATEST + 'T00:00:00'); const f = new Date(t); f.setDate(f.getDate() - 27);
+  const iso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; return { from: iso(f), to: LATEST }; })();
+const HAS28 = D.meta.first_sales && D.meta.first_sales <= L28.from;
+function sales28(keyFn, modelSel) {
+  const out = new Map(); const msel = modelSel || S.model;
+  for (const [d, c, k, u] of D.sales) { if (d < L28.from || d > L28.to || !okShop(c) || !modelOk(msel, k)) continue;
+    for (const key of [].concat(keyFn(c, k))) out.set(key, (out.get(key) || 0) + u); }
+  return out;
+}
+function stockBy(keyFn, modelSel) {
+  const out = new Map(); const msel = modelSel || S.model;
+  for (const [c, k, l, q] of D.stock) { if (!S.locs.has(l) || !okShop(c) || !modelOk(msel, k)) continue;
+    for (const key of [].concat(keyFn(c, k))) out.set(key, (out.get(key) || 0) + q); }
+  return out;
+}
+
+// ---------- formatting
+const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+const num = (v) => v == null || !isFinite(v) ? '–' : nf0.format(Math.round(v));
+const tgtF = (v) => v == null || !isFinite(v) || v === 0 ? '–' : (S.metric === 'q' && Math.abs(v) < 100 && Math.abs(v - Math.round(v)) > 0.05 ? nf1.format(v) : nf0.format(Math.round(v)));
+const pctCls = (p) => p >= 1 ? 'ok' : p >= 0.8 ? 'warn' : 'bad';
+const pct = (p) => p == null || !isFinite(p) ? '<span class="na">–</span>' : `<span class="p ${pctCls(p)}">${Math.round(p * 100)}%</span>`;
+const ratio = (a, b) => b > 0 ? a / b : null;
+const HASSTOCK = D.stock.length > 0;
+const cover = (stock, s28) => !HASSTOCK ? null : stock === 0 && s28 > 0 ? -1 : s28 > 0 ? stock / (s28 / 4) : (stock > 0 ? Infinity : null);
+const coverF = (c, stock) => c == null ? '<span class="na">–</span>' : c === -1 ? '<span class="cw bad">ของหมด</span>' : c === Infinity ? '<span class="cw warn" title="มี Stock แต่ไม่มีขายใน 28 วัน">ไม่มีขาย</span>'
+  : `<span class="cw ${c < 1 ? 'bad' : c < 2 ? 'warn' : c > 8 ? 'warn' : 'ok'}">${nf1.format(c)}</span>`;
+const unit = () => S.metric === 'q' ? 'เครื่อง' : 'บาท';
+
+// ---------- generic table: cols [{h, g?, v(row) -> raw, f(raw,row) -> html, cls, sort?, x?(raw)->excel}]
+let EXPORT = {};
+function renderTable(el, cols, rows, opt = {}) {
+  const groups = []; cols.forEach((c, i) => { const g = c.g || ''; if (groups.length && groups[groups.length - 1].g === g) groups[groups.length - 1].n++; else groups.push({ g, n: 1, i }); });
+  const hasG = groups.some((g) => g.g);
+  let h = '<table><thead>';
+  if (hasG) h += '<tr>' + groups.map((g) => g.g ? `<th colspan="${g.n}" class="g">${g.g}</th>` : `<th colspan="${g.n}"></th>`).join('') + '</tr>';
+  const sortKey = opt.sort ? S.sort[opt.sort] : null;
+  h += '<tr>' + cols.map((c, i) => { const gl = c.g && groups.find((g) => g.i === i) ? ' gl' : '';
+    const arrow = sortKey && c.sort === sortKey[0] ? (sortKey[1] > 0 ? ' ▲' : ' ▼') : '';
+    return `<th class="${gl}"${c.sort && opt.sort ? ` data-sort="${c.sort}"` : ''}>${c.h}${arrow}</th>`; }).join('') + '</tr></thead><tbody>';
+  if (!rows.length) h += `<tr><td colspan="${cols.length}" class="empty">ไม่มีข้อมูลตามตัวกรอง</td></tr>`;
+  for (const r of rows) {
+    h += `<tr class="${r._cls || ''}">` + cols.map((c, i) => { const gl = c.g && groups.find((g) => g.i === i) ? ' gl' : ''; const v = c.v(r);
+      return `<td class="${(c.cls || '') + gl}">${c.f ? c.f(v, r) : esc(v)}</td>`; }).join('') + '</tr>';
+  }
+  el.innerHTML = h + '</tbody></table>';
+  if (opt.sort) el.querySelectorAll('th[data-sort]').forEach((th) => th.onclick = () => { const k = th.dataset.sort; const cur = S.sort[opt.sort];
+    S.sort[opt.sort] = [k, cur[0] === k ? -cur[1] : (k === 'name' || k === 'area' ? 1 : -1)]; render(); });
+  return { cols, rows };
+}
+function toSheet(name, t, title) {
+  const head = t.cols.map((c) => (c.g ? c.g.replace(/<[^>]+>/g, '').replace('●', '').trim() + ' · ' : '') + c.h.replace(/<[^>]+>/g, ''));
+  const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (c.h === 'Cover Week' && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
+  return { name, rows: [[title], [], head, ...body], header: 2, pctCols: t.cols.map((c, i) => c.p ? i : -1).filter((i) => i >= 0) };
+}
+
+// ---------- weekly comparison columns (sections 1 and 2)
+function weeklyCols(mi, first) {
+  const lab = (i) => `W${i + 1} (${mi.weeks[i][0]}–${mi.weeks[i][1]}) ${Math.round(mi.portion[i] * 1000) / 10}%` + (i === mi.curWeek ? ' <span class="cur">●</span>' : '');
+  const cols = [first, { h: 'Target เดือน', v: (r) => T(r), f: tgtF }];
+  for (let i = 0; i < 4; i++) {
+    const future = mi.asofDay < mi.weeks[i][0];
+    cols.push({ g: lab(i), h: 'Target', v: (r) => T(r) * mi.portion[i], f: tgtF },
+      { g: lab(i), h: 'Actual', v: (r) => future ? null : W(r, i), f: num },
+      { g: lab(i), h: '%ACH', p: 1, v: (r) => future ? null : ratio(W(r, i), T(r) * mi.portion[i]), f: pct });
+  }
+  cols.push({ g: 'MTD', h: 'Actual', v: (r) => V(r), f: num }, { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
+    { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
+    { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
+    { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
+    { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct });
+  return cols;
+}
+const portionNote = (mi) => `สัปดาห์ ${mi.weeks.map(([a, b]) => b - a + 1).join('-')} วัน · Portion ${mi.portion.map((p) => Math.round(p * 1000) / 10 + '%').join(' / ')}` +
+  (mi.announced ? '' : ' <b>(ยังไม่ประกาศ — ใช้สัดส่วนตามจำนวนวันไปก่อน)</b>') + ` · ข้อมูลถึงวันที่ ${mi.asofDay} จาก ${mi.days} วัน · หน่วย: ${unit()}`;
+
+// ---------- sections
+function sModel(mi) {
+  const a = aggregate(mi, (c, k) => k);
+  const rows = []; const tot = Object.assign(z(), { name: 'รวมทั้งหมด', _cls: 'tot' });
+  const add = (dst, x) => { dst.u += x.u; dst.n += x.n; dst.tu += x.tu; dst.tn += x.tn; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
+  const keys = [...a.keys()].filter((k) => okModel(k)).sort((x, y) => (MORDER[x] ?? 999) - (MORDER[y] ?? 999));
+  let ser = null, sub = null;
+  for (const k of keys) {
+    const m = MD[k] || { name: k, series: '?' }; const x = a.get(k);
+    if (m.series !== ser) { ser = m.series; sub = Object.assign(z(), { name: `Vivo ${ser} Series`, _cls: 'sub' }); rows.push(sub); }
+    add(sub, x); add(tot, x); rows.push(Object.assign({}, x, { name: m.name + (m.tgt ? '' : ' *'), _cls: 'ind' }));
+  }
+  rows.push(tot);
+  $('#n-model').innerHTML = portionNote(mi) + (keys.some((k) => MD[k] && !MD[k].tgt) ? ' · * = รุ่นที่ไม่มี Target' : '');
+  EXPORT.model = toSheet('1 ราย Model', renderTable($('#t-model'), weeklyCols(mi, { h: 'Model', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Model · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+  return tot;
+}
+function sArea(mi) {
+  const a = aggregate(mi, (c) => SH[c].area);
+  const rows = []; const tot = Object.assign(z(), { name: 'รวมทั้งหมด', _cls: 'tot' });
+  const add = (dst, x) => { dst.u += x.u; dst.n += x.n; dst.tu += x.tu; dst.tn += x.tn; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
+  for (const zn of [...ZONES, 'อื่น ๆ']) {
+    const ar = AREAS.filter((x) => zoneOf(x) === zn && a.has(x)); if (!ar.length) continue;
+    const sub = Object.assign(z(), { name: zn, _cls: 'sub' }); rows.push(sub);
+    for (const x of ar) { add(sub, a.get(x)); add(tot, a.get(x)); rows.push(Object.assign({}, a.get(x), { name: x, _cls: 'ind' })); }
+  }
+  rows.push(tot);
+  $('#n-area').innerHTML = portionNote(mi) + ' · Region: BMA (BMA I–V) · UPC I (เหนือ + อีสาน) · UPC II (กลาง ตะวันออก ตะวันตก ใต้)';
+  EXPORT.area = toSheet('2 ราย Area', renderTable($('#t-area'), weeklyCols(mi, { h: 'Region / Area', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Area · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+}
+function shopRows(mi, modelSel) {
+  const a = aggregate(mi, (c) => c, modelSel);
+  return [...a.entries()].map(([c, x]) => { const s = SH[c];
+    const tg = S.tmode === 'full' ? T(x) : T(x) * mi.todate; const rr = mi.asofDay ? V(x) / mi.asofDay * mi.days : null;
+    return { c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: tg, tfull: T(x), act: V(x), ach: ratio(V(x), tg), rr, rach: ratio(rr, T(x)) }; });
+}
+const sorter = (key) => { const [k, d] = S.sort[key]; return (a, b) => { const x = a[k], y = b[k]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+  return (typeof x === 'string' ? x.localeCompare(y) : (x === y ? 0 : x > y ? 1 : -1)) * d; }; };
+const qMatch = (q, s) => !q || (s.name + ' ' + s.c).toLowerCase().includes(q.toLowerCase());
+function sShop(mi) {
+  const rows = shopRows(mi).filter((r) => qMatch(S.q.shop, r)).sort(sorter('shop'));
+  const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`;
+  const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
+    { h: 'รหัส', v: (r) => r.c, cls: 't' },
+    { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' }, { h: 'ประเภท', v: (r) => r.type, cls: 't' },
+    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+    { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: num },
+    { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
+    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: num }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct }];
+  const sum = rows.reduce((s, r) => (s.tgt += r.tgt, s.tfull += r.tfull, s.act += r.act, s), { tgt: 0, tfull: 0, act: 0 });
+  const rr = mi.asofDay ? sum.act / mi.asofDay * mi.days : null;
+  rows.push({ _cls: 'tot', name: `รวม ${rows.length} สาขา`, c: '', area: '', type: '', pc: null, tgt: sum.tgt, act: sum.act, ach: ratio(sum.act, sum.tgt), rr, rach: ratio(rr, sum.tfull) });
+  $('#n-shop').innerHTML = `${S.tmode === 'full' ? 'เทียบ Target ทั้งเดือน' : 'เทียบ Target ที่คิดตาม Portion รายสัปดาห์ถึงวันนี้ (' + Math.round(mi.todate * 1000) / 10 + '% ของเดือน)'} · Runrate = ยอดขาย ÷ ${mi.asofDay} วัน × ${mi.days} วัน · Runrate %ACH เทียบ Target ทั้งเดือน · หน่วย: ${unit()} · คลิกหัวคอลัมน์เพื่อเรียง`;
+  EXPORT.shop = toSheet('3 รายสาขา', renderTable($('#t-shop'), cols, rows, { sort: 'shop' }), `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'} · ${tl}`);
+}
+function sStock() {
+  const sm = stockBy((c, k) => k), s28 = sales28((c, k) => k);
+  const keys = [...new Set([...sm.keys(), ...s28.keys()])].sort((x, y) => (MORDER[x] ?? 999) - (MORDER[y] ?? 999));
+  const mrows = keys.map((k) => { const st = sm.get(k) || 0, s = s28.get(k) || 0; return { name: (MD[k] || { name: k }).name, stock: st, s28: s, wk: s / 4, cw: cover(st, s) }; });
+  const ts = mrows.reduce((a, r) => (a.stock += r.stock, a.s28 += r.s28, a), { stock: 0, s28: 0 });
+  mrows.push({ _cls: 'tot', name: 'รวม', stock: ts.stock, s28: ts.s28, wk: ts.s28 / 4, cw: cover(ts.stock, ts.s28) });
+  const mcols = [{ h: 'Model', v: (r) => r.name, cls: 't' }, { h: 'Stock', v: (r) => r.stock, f: num }, { h: 'ขาย 28 วัน', v: (r) => r.s28, f: num },
+    { h: 'เฉลี่ย/สัปดาห์', v: (r) => r.wk, f: (v) => nf1.format(v) }, { h: 'Cover Week', v: (r) => r.cw, f: coverF }];
+  const t1 = renderTable($('#t-stock-m'), mcols, mrows);
+  const ss = stockBy((c) => c), s28s = sales28((c) => c);
+  const srows = [...new Set([...ss.keys(), ...s28s.keys()])].map((c) => { const st = ss.get(c) || 0, s = s28s.get(c) || 0, sh = SH[c];
+    return { c, name: sh.n, area: sh.area, pc: sh.pc, stock: st, s28: s, cw: cover(st, s), cws: st === 0 && s > 0 ? -1 : (s > 0 ? st / (s / 4) : (st > 0 ? 1e9 : null)) }; })
+    .filter((r) => qMatch(S.q.stock, r));
+  const sk = S.sort.stock; const sortK = sk[0] === 'cw' ? 'cws' : sk[0]; const [, d] = sk;
+  srows.sort((a, b) => { const x = a[sortK], y = b[sortK]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * d; });
+  const scols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' }, { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' },
+    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+    { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'ขาย 28 วัน', sort: 's28', v: (r) => r.s28, f: num },
+    { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
+  const t2 = renderTable($('#t-stock-s'), scols, srows, { sort: 'stock' });
+  const mlab = S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.trim();
+  $('#n-stock').innerHTML = `Stock ณ ${thDate(D.meta.stock_asof)} · ยอดขาย 28 วันล่าสุด ${thDate(L28.from)} – ${thDate(L28.to)} (เลื่อนตามวันที่ข้อมูลล่าสุดทุกครั้ง) · Cover Week = Stock ÷ (ยอดขาย 28 วัน ÷ 4) · หน่วยเครื่อง · Model: ${esc(mlab)}`
+    + (HAS28 ? '' : ` · <b>ยอดขายในระบบเริ่ม ${thDate(D.meta.first_sales)} ยังไม่ครบ 28 วัน Cover Week จึงสูงกว่าจริง</b>`)
+    + (D.stock.length ? '' : ' · <b>ยังไม่มีไฟล์ Stock ที่มีเครื่อง Vivo — จะขึ้นเองเมื่อมีไฟล์ stock_balance_report ใหม่</b>')
+    + ' · สี: <span class="cw bad">&lt;1</span> <span class="cw warn">1–2</span> <span class="cw ok">2–8</span> <span class="cw warn">&gt;8 สัปดาห์</span>';
+  EXPORT.stock = [toSheet('4 Stock ราย Model', t1, `Stock ราย Model ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`),
+    toSheet('4 Stock รายสาขา', t2, `Stock รายสาขา (${mlab}) ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`)];
+  return ts;
+}
+function sMS(mi) {
+  const sel = S.msmodel === 'ALL' ? S.model : S.msmodel;
+  const base = shopRows(mi, sel); const by = new Map(base.map((r) => [r.c, r]));
+  const st = stockBy((c) => c, sel), s28 = sales28((c) => c, sel);
+  for (const c of new Set([...st.keys(), ...s28.keys()])) if (!by.has(c)) { const s = SH[c]; by.set(c, { c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: 0, tfull: 0, act: 0, ach: null, rr: 0, rach: null }); }
+  const rows = [...by.values()].map((r) => Object.assign(r, { s28: s28.get(r.c) || 0, stock: st.get(r.c) || 0 }, { cw: cover(st.get(r.c) || 0, s28.get(r.c) || 0) }));
+  // PC vs non-PC comparison (before the text search)
+  const grp = (f) => { const x = rows.filter(f); const t = x.reduce((a, r) => (a.act += r.act, a.tf += r.tfull, a.s28 += r.s28, a), { act: 0, tf: 0, s28: 0 });
+    return { n: x.length, act: t.act, avg: x.length ? t.act / x.length : 0, ach: ratio(t.act, t.tf), s28: t.s28 }; };
+  const pcY = grp((r) => r.pc > 0), pcN = grp((r) => !(r.pc > 0));
+  const card = (lab, g) => `<div class="kpi"><div class="l">${lab} · ${g.n} สาขา</div><div class="v">${num(g.act)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span></div>
+    <div class="s">เฉลี่ย ${S.metric === 'q' ? nf1.format(g.avg) : num(g.avg)} ต่อสาขา · %ACH เดือน ${g.ach == null ? '–' : Math.round(g.ach * 100) + '%'}</div></div>`;
+  $('#ms-cmp').innerHTML = card('<span class="pc">PC</span> สาขาที่มี PC Vivo', pcY) + card('สาขาที่ไม่มี PC', pcN)
+    + (pcN.avg > 0 ? `<div class="kpi"><div class="l">สาขามี PC ขายได้ต่อสาขา</div><div class="v">${nf1.format(pcY.avg / pcN.avg)}×</div><div class="s">ของสาขาที่ไม่มี PC</div></div>` : '');
+  const list = rows.filter((r) => qMatch(S.q.ms, r)).sort(sorter('ms'));
+  const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' }, { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' },
+    { h: 'PC Vivo', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">ไม่มี</span>', x: (v) => v > 0 ? 'PC ' + v : 'ไม่มี' },
+    { h: 'Target เดือน', sort: 'tfull', v: (r) => r.tfull, f: tgtF }, { h: 'ยอดขาย MTD', sort: 'act', v: (r) => r.act, f: num },
+    { h: '%ACH', sort: 'ach', p: 1, v: (r) => ratio(r.act, r.tfull), f: pct }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
+    { h: 'ขาย 28 วัน (เครื่อง)', sort: 's28', v: (r) => r.s28, f: num }, { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
+  const mlab = sel === 'ALL' ? 'ทุกรุ่น' : (S.msmodel !== 'ALL' ? $('#f-msmodel') : $('#f-model')).selectedOptions[0].textContent.trim();
+  $('#n-ms').innerHTML = `Model: <b>${esc(mlab)}</b> · ${THF[mi.m - 1]} ${mi.y + 543} · หน่วย: ${unit()} (ขาย 28 วัน / Stock เป็นเครื่อง) · PC ตาม ${esc(D.meta.pc_source)}`;
+  EXPORT.ms = toSheet('5 Model x สาขา', renderTable($('#t-ms'), cols, list, { sort: 'ms' }), `ยอดขาย ${mlab} รายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+}
+function kpis(mi, tot, ts) {
+  const rr = mi.asofDay ? V(tot) / mi.asofDay * mi.days : 0;
+  const k = (l, v, s, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
+  const a1 = ratio(V(tot), T(tot)), a2 = ratio(V(tot), T(tot) * mi.todate), a3 = ratio(rr, T(tot));
+  $('#kpis').innerHTML = k(`Target ${THF[mi.m - 1]}`, tgtF(T(tot)) || '–', unit()) +
+    k('ยอดขาย MTD', num(V(tot)), `%ACH เดือน ${a1 == null ? '–' : Math.round(a1 * 100) + '%'}`, a1) +
+    k(`%ACH ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, a2 == null ? '–' : Math.round(a2 * 100) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
+    k('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${a3 == null ? '–' : Math.round(a3 * 100) + '%'}`, a3) +
+    k('Stock คงเหลือ', HASSTOCK ? num(ts.stock) : '–', !HASSTOCK ? 'รอไฟล์ Stock ที่มีเครื่อง Vivo' : `Cover ${ts.s28 > 0 ? nf1.format(ts.stock / (ts.s28 / 4)) + ' สัปดาห์' : '–'} · ขาย 28 วัน ${num(ts.s28)} เครื่อง`);
+}
+
+// ---------- controls
+function fillSelect(el, opts, val) { el.innerHTML = opts.map(([v, l, grp]) => grp ? `<optgroup label="${esc(l)}">` : v === '</g>' ? '</optgroup>' : `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(l)}</option>`).join(''); }
+function modelOptions() {
+  const o = [['ALL', 'ทุกรุ่น']]; let ser = null;
+  for (const m of D.models) {
+    if (m.series !== ser) { if (ser) o.push(['</g>']); ser = m.series; o.push([null, `${ser} Series`, true]); o.push(['S:' + ser, `ทุกรุ่น ${ser} Series`]); }
+    const fam = D.models.filter((x) => x.family === m.family);
+    if (fam.length > 1 && fam[0] === m) o.push(['F:' + m.family, `${m.family} (ทุกความจุ)`]);
+    o.push(['M:' + m.k, '  ' + m.name.replace(/^VIVO /, '') + (m.tgt ? '' : ' *')]);
+  }
+  o.push(['</g>']); return o;
+}
+function initControls() {
+  fillSelect($('#f-month'), months.map((m) => [m, `${THF[+m.slice(5) - 1]} ${+m.slice(0, 4) + 543}`]), S.month);
+  fillSelect($('#f-zone'), [['ALL', 'ทุก Region'], ...ZONES.map((z) => [z, z])], 'ALL');
+  const areaOpts = () => [['ALL', 'ทุก Area'], ...AREAS.filter((a) => S.zone === 'ALL' || zoneOf(a) === S.zone).map((a) => [a, a])];
+  fillSelect($('#f-area'), areaOpts(), 'ALL');
+  fillSelect($('#f-type'), [['ALL', 'ทุกประเภท'], ...TYPES.map((t) => [t, t])], 'ALL');
+  fillSelect($('#f-model'), modelOptions(), 'ALL');
+  fillSelect($('#f-msmodel'), [['ALL', 'ตาม Model ที่กรองด้านบน'], ...modelOptions().slice(1)], 'ALL');
+  $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
+  $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
+  for (const [id, key] of [['#f-area', 'area'], ['#f-type', 'type'], ['#f-pc', 'pc'], ['#f-model', 'model'], ['#f-msmodel', 'msmodel']]) $(id).onchange = (e) => { S[key] = e.target.value; render(); };
+  const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
+    set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
+  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode');
+  const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
+    for (const t of ['model', 'area', 'shop', 'stock', 'ms']) $('#s-' + t).hidden = t !== S.tab; };
+  tabs(); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; tabs(); persist(); };
+  for (const [id, key] of [['#q-shop', 'shop'], ['#q-stock', 'stock'], ['#q-ms', 'ms']]) $(id).oninput = (e) => { S.q[key] = e.target.value.trim(); render(); };
+  $('#locs').innerHTML = D.locs.length > 1 ? 'Location ที่นับเป็น Stock: ' + D.locs.map((l, i) => `<label><input type="checkbox" data-l="${i}" checked> ${esc(l)}</label>`).join('') : '';
+  $('#locs').onchange = (e) => { const i = +e.target.dataset.l; if (e.target.checked) S.locs.add(i); else S.locs.delete(i); render(); };
+  document.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { const k = b.dataset.x; downloadXlsx([].concat(EXPORT[k]), `Vivo_${k}_${S.month}.xlsx`); });
+  $('#x-all').onclick = () => downloadXlsx([...['model', 'area', 'shop', 'stock', 'ms'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`);
+}
+function rawSheet() {
+  const rows = D.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
+    .map(([d, c, k, u, n]) => [d, c, SH[c].n, SH[c].area, zoneOf(SH[c].area), SH[c].type, SH[c].pc || 0, (MD[k] || { name: k }).name, u, n]);
+  return { name: 'Data ยอดขายรายวัน', rows: [['ยอดขายรายวัน ' + S.month + ' (ตามตัวกรอง)'], [], ['วันที่', 'รหัสสาขา', 'สาขา', 'Area', 'Region', 'ประเภท', 'PC Vivo', 'Model', 'QTY', 'Net Amount'], ...rows], header: 2, pctCols: [] };
+}
+
+function render() {
+  const mi = monthInfo(S.month); EXPORT = {};
+  const tot = sModel(mi); sArea(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
+}
+
+// ---------- minimal XLSX writer (stored zip, no external library)
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zip(files) {
+  const enc = new TextEncoder(); const parts = []; const cd = []; let off = 0;
+  for (const [name, text] of files) {
+    const nb = enc.encode(name), db = enc.encode(text), c = crc32(db);
+    const h = new DataView(new ArrayBuffer(30)); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint32(14, c, true); h.setUint32(18, db.length, true); h.setUint32(22, db.length, true); h.setUint16(26, nb.length, true);
+    parts.push(new Uint8Array(h.buffer), nb, db);
+    const e = new DataView(new ArrayBuffer(46)); e.setUint32(0, 0x02014b50, true); e.setUint16(4, 20, true); e.setUint16(6, 20, true); e.setUint16(8, 0x0800, true); e.setUint32(16, c, true); e.setUint32(20, db.length, true); e.setUint32(24, db.length, true); e.setUint16(28, nb.length, true); e.setUint32(42, off, true);
+    cd.push(new Uint8Array(e.buffer), nb); off += 30 + nb.length + db.length;
+  }
+  const cdl = cd.reduce((s, x) => s + x.length, 0); const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdl, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...cd, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+const xe = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+const colL = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+function downloadXlsx(sheets, fname) {
+  sheets = sheets.filter(Boolean); const used = new Set();
+  const names = sheets.map((s) => { let n = s.name.replace(/[\\/?*\[\]:]/g, ' ').slice(0, 31); while (used.has(n)) n = n.slice(0, 28) + '_' + used.size; used.add(n); return n; });
+  const files = [['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      + sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>'],
+    ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+      + names.map((n, i) => `<sheet name="${xe(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')
+      + `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Tahoma"/></font><font><b/><sz val="11"/><name val="Tahoma"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE9E7E0"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="6"><xf/><xf fontId="1" applyFont="1"/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/><xf numFmtId="3" applyNumberFormat="1"/><xf numFmtId="9" applyNumberFormat="1"/><xf numFmtId="164" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']];
+  sheets.forEach((s, si) => {
+    const widths = [];
+    const rows = s.rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
+      const ref = colL(ci) + (ri + 1); const head = ri === s.header; const title = ri === 0;
+      widths[ci] = Math.max(widths[ci] || 6, Math.min(48, String(v ?? '').length + 2));
+      if (typeof v === 'number' && isFinite(v)) { const st = s.pctCols.includes(ci) ? 4 : (Math.abs(v - Math.round(v)) > 1e-9 && Math.abs(v) < 1000 ? 5 : 3); return `<c r="${ref}" s="${st}"><v>${s.pctCols.includes(ci) ? v : Math.round(v * 100) / 100}</v></c>`; }
+      if (v == null || v === '') return '';
+      return `<c r="${ref}" t="inlineStr" s="${head ? 2 : title ? 1 : 0}"><is><t xml:space="preserve">${xe(v)}</t></is></c>`; }).join('') + '</row>').join('');
+    if (s.rows[0]) widths[0] = Math.max(Math.min(widths[0], 40), 12);
+    files.push([`xl/worksheets/sheet${si + 1}.xml`, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane xSplit="1" ySplit="' + (s.header + 1) + '" topLeftCell="B' + (s.header + 2) + '" activePane="bottomRight" state="frozen"/></sheetView></sheetViews><cols>'
+      + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${i === 0 ? Math.max(w, 14) : Math.min(w, 22)}" customWidth="1"/>`).join('') + '</cols><sheetData>' + rows + '</sheetData></worksheet>']);
+  });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(zip(files)); a.download = fname; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b></span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
+initControls(); render();
+</script>
+</body>
+</html>

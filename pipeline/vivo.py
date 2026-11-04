@@ -1,0 +1,215 @@
+"""Vivo Dashboard pipeline (shares the Prepay inputs: daily_sales + stock_balance_report).
+
+Called from update.py:
+  add_sales(raw)        every sales file -> state/vivo_sales_<YYYY-MM>.csv.gz (H/S,VIVO rows, de-duplicated like SIM rows)
+  set_stock(st, asof)   every stock file -> state/vivo_stock.csv.gz (H/S,VIVO serials, replaces the snapshot)
+  merge_target(xlsx)    'VIVO Target*.xlsx' (sheet TARGET_FOR_OPERATION) -> state/vivo_targets.csv (replaces that month)
+  merge_pc(xlsx)        '* PC Brand Update*.xlsx' (newest 'PC <Mon> <yy>' sheet, column VIVO) -> state/vivo_pc.csv
+  build()               -> out/vivo_data.json ; pipeline/vivo_page.py makes vivo/index.html
+Week portions per month: state/vivo_portions.json {"2026-10": [30, 23, 21, 26]}; a month that is missing
+uses the share of days (8-7-7-8 / 8-7-7-9).
+"""
+import glob, hashlib, json, os, re
+import pandas as pd
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ST = os.path.join(HERE, 'state'); OUT = os.path.join(HERE, 'out')
+DEDUP = ['SHOP_CODE', 'ORDER_ID', 'BILL_NO', 'PRODUCT_CODE', 'SERIAL', 'ORDER_STATUS', 'NET_AMOUNT', 'BILL_DATE']
+KEEP = ['BILL_DATE', 'SHOP_CODE', 'PRODUCT_CODE', 'DESCRIPTION', 'PRICE', 'QTY', 'DISCOUNT_AMOUNT', 'NET_AMOUNT', 'ORDER_STATUS', 'SALE_CODE', 'SALE_NAME']
+FMT = '%m/%d/%Y %I:%M:%S %p'
+MON = {m: i + 1 for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+MON.update({'Sept': 9, 'July': 7, 'June': 6})
+
+def is_vivo(s): return s.fillna('').str.upper().str.replace(' ', '').str.startswith('H/S,VIVO')
+
+def _load(name):
+    fp = os.path.join(ST, name)
+    return pd.read_csv(fp, dtype=str, keep_default_na=False, na_values=['']) if os.path.exists(fp) else None
+
+def _save(df, name): df.to_csv(os.path.join(ST, name), index=False, compression='gzip' if name.endswith('.gz') else None)
+
+def _meta():
+    fp = os.path.join(ST, 'meta.json'); return json.load(open(fp)) if os.path.exists(fp) else {}
+
+def _meta_set(**kw):
+    m = _meta(); m.update(kw); json.dump(m, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
+
+# ---------- model key: 'H/S,VIVO,V80LITE,5G,6/256,BLACK' and 'VIVO V80 LITE 5G 6/256GB' -> 'V80LITE|5G|6256'
+def _norm(x): return re.sub(r'[^A-Z0-9]', '', str(x).upper())
+
+def key_from_desc(d):
+    p = [x.strip() for x in str(d).upper().split(',')]
+    if len(p) < 5: return _norm(' '.join(p[2:])), ' '.join(p[2:])
+    model, net, mem = p[2], p[3], p[4]
+    extra = 'PHOTOSET' if 'PHOTOSET' in str(d).upper().replace(' ', '') else ''
+    k = '|'.join([_norm(model), _norm(net), _norm(mem.replace('GB', ''))]) + ('|PHOTOSET' if extra else '')
+    nm = f"VIVO {model} {net} {mem.replace('+', '/')}GB" + (' PHOTOSET' if extra else '')
+    return k, nm
+
+def key_from_target(s):
+    u = str(s).upper().strip()
+    extra = 'PHOTOSET' in u; u = u.replace('PHOTOSET', '').strip()
+    m = re.match(r'^VIVO\s+(.*?)\s+(\d+G)\s+([\d+/]+)\s*GB?$', u)
+    if not m: return _norm(u), str(s).strip()
+    return '|'.join([_norm(m.group(1)), m.group(2), _norm(m.group(3))]) + ('|PHOTOSET' if extra else ''), str(s).strip()
+
+# ---------- inputs
+def add_sales(raw):
+    if 'DESCRIPTION' not in raw: return
+    v = raw[is_vivo(raw.DESCRIPTION)].copy()
+    if not len(v): print('vivo: no H/S,VIVO rows in this sales file'); return
+    v['key'] = v[DEDUP].fillna('').astype(str).agg('|'.join, axis=1).map(lambda x: hashlib.sha1(x.encode()).hexdigest()[:16])
+    v = v[['key'] + KEEP].drop_duplicates('key')
+    mo = pd.to_datetime(v.BILL_DATE, format=FMT, errors='coerce').dt.strftime('%Y-%m')
+    added = 0
+    for m, g in v.groupby(mo):
+        name = f'vivo_sales_{m}.csv.gz'; old = _load(name)
+        new = g if old is None else g[~g.key.isin(set(old.key))]
+        added += len(new)
+        if len(new): _save((new if old is None else pd.concat([old, new])).sort_values(['BILL_DATE', 'key']), name)
+    bd = pd.to_datetime(v.BILL_DATE, format=FMT, errors='coerce')
+    m = _meta()
+    if bd.notna().any() and bd.max().strftime('%Y-%m-%d %H:%M') > m.get('vivo_sales_asof', ''): _meta_set(vivo_sales_asof=bd.max().strftime('%Y-%m-%d %H:%M'))
+    print(f'vivo: sales {len(v):,} H/S VIVO rows, new {added:,}')
+
+def set_stock(st, asof=None):
+    pn = 'PRODUCT_NAME' if 'PRODUCT_NAME' in st else 'DESCRIPTION'
+    k = st[is_vivo(st[pn])].copy(); k['PN'] = k[pn].str.strip()
+    cols = [c for c in ['SHOP_CODE', 'PRODUCT_CODE', 'PN', 'LOCATION_NAME', 'SERIAL', 'FIRST_AGING'] if c in k]
+    _save(k[cols], 'vivo_stock.csv.gz'); _meta_set(vivo_stock_asof=asof or _meta().get('stock_asof', ''))
+    print(f'vivo: stock {len(k):,} H/S VIVO serials')
+
+def merge_target(fp):
+    t = pd.read_excel(fp, sheet_name=0, dtype=str)
+    t = t[t.CUSTOM_BRAND.str.upper().str.strip() == 'VIVO'].copy()
+    t['month'] = pd.to_datetime(t.START_DATE).dt.strftime('%Y-%m')
+    out = pd.DataFrame({'month': t.month, 'shop': t.SHOP_CODE.str.strip(), 'name': t.SHOP_NAME.str.strip(), 'zone': t.ZONE_AREA, 'area': t.REGION.str.strip(),
+                        'size': t.SIZE_SHOP, 'type': t.SHOP_TYPE, 'location': t.LOCATION, 'submodel': t.CUSTOM_SUBMODEL.str.strip(), 'assort': t.ASSORTMENT,
+                        'pc': t.PC, 'total_pc': t.TOTAL_PC, 'qty': pd.to_numeric(t.OPERATION_TARGET_QTY, errors='coerce').fillna(0),
+                        'net': pd.to_numeric(t.OPERATION_TARGET_NET_AMOUNT, errors='coerce').fillna(0)})
+    old = _load('vivo_targets.csv'); months = set(out.month)
+    _save(pd.concat([old[~old.month.isin(months)], out]) if old is not None else out, 'vivo_targets.csv')
+    for m in sorted(months):
+        x = out[out.month == m]; print(f'vivo target {m}: {x.shop.nunique()} shops, {x.submodel.nunique()} models, QTY {x.qty.sum():,.0f}, Net {x.net.sum():,.0f}')
+
+def merge_pc(fp):
+    import openpyxl
+    wb = openpyxl.load_workbook(fp, read_only=True, data_only=True)
+    best = None
+    for n in wb.sheetnames:
+        m = re.match(r'^PC\s+([A-Za-z]+)\s+(\d{2})\s*$', n.strip())
+        if m and m.group(1)[:3].title() in MON:
+            k = (int(m.group(2)), MON[m.group(1)[:3].title()])
+            if best is None or k > best[0]: best = (k, n)
+    if not best: raise SystemExit('PC file: no sheet named like "PC OCT 26"')
+    rows = list(wb[best[1]].iter_rows(values_only=True))
+    hr = next(i for i, r in enumerate(rows) if r and 'CODE WW' in [str(c).strip() if c else '' for c in r])
+    h = [str(c).strip() if c else '' for c in rows[hr]]; iw, iv = h.index('CODE WW'), h.index('VIVO')
+    out = [{'shop': str(r[iw]).strip().replace('.0', ''), 'vivo_pc': int(r[iv] or 0)} for r in rows[hr + 1:] if r and r[iw]]
+    df = pd.DataFrame(out).drop_duplicates('shop'); _save(df, 'vivo_pc.csv')
+    _meta_set(vivo_pc_sheet=best[1])
+    print(f'vivo PC: sheet "{best[1]}": {len(df)} shops, {int((df.vivo_pc > 0).sum())} with Vivo PC ({int(df.vivo_pc.sum())} PC)')
+
+# ---------- build
+def _ty(t):
+    t = str(t or '').strip().lower().replace('_', ' ')
+    if 'hall' in t: return 'Dtac Hall'
+    if 'coco' in t: return 'Dtac Coco'
+    if t.startswith('non'): return 'Non Matching'
+    if t.startswith('matching'): return 'Matching'
+    return '-'
+
+def build():
+    meta = _meta()
+    fs = sorted(glob.glob(os.path.join(ST, 'vivo_sales_*.csv.gz')))
+    s = pd.concat([_load(os.path.basename(f)) for f in fs]) if fs else pd.DataFrame(columns=['key'] + KEEP)
+    t = _load('vivo_targets.csv'); k = _load('vivo_stock.csv.gz'); pc = _load('vivo_pc.csv')
+    if t is not None: t['qty'] = pd.to_numeric(t.qty, errors='coerce').fillna(0); t['net'] = pd.to_numeric(t.net, errors='coerce').fillna(0)
+    # shops: Vivo target file first, then WW shops of the Prepay target files (same rule as the Prepay Dashboard)
+    shops = {}
+    pt = _load('targets_all.csv')
+    if pt is not None:
+        pt = pt[pt.shop.str.startswith(('801', '1005'), na=False)].sort_values('month').drop_duplicates('shop', keep='last')
+        pt = pt[~pt.type.isin(["Lotus's", 'Lotus', 'True_Center_Makro', 'SIS GROUP1', 'SIS GROUP2'])]
+        for r in pt.itertuples():
+            shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.region, 'type': _ty(r.type), 'size': '', 'pc': 0}
+    if t is not None:
+        for r in t.sort_values('month').drop_duplicates('shop', keep='last').itertuples():
+            shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.area, 'type': _ty(r.type), 'size': r.size or '', 'pc': 0}
+    pcsrc = 'none'
+    if pc is not None:
+        pcm = dict(zip(pc.shop, pc.vivo_pc.astype(int))); pcsrc = meta.get('vivo_pc_sheet', 'PC file')
+        for c, x in shops.items(): x['pc'] = int(pcm.get(c, 0))
+    elif t is not None:
+        lt = t[t.month == t.month.max()].drop_duplicates('shop'); pcm = dict(zip(lt.shop, pd.to_numeric(lt.total_pc, errors='coerce').fillna(0).astype(int)))
+        for c, x in shops.items(): x['pc'] = int(pcm.get(c, 0))
+        pcsrc = 'VIVO Target (TOTAL_PC)'
+    ww = set(shops)
+    # models
+    models = {}
+    def addm(key, name, tgt):
+        if key not in models: models[key] = {'k': key, 'name': name, 'tgt': tgt}
+        elif tgt and not models[key]['tgt']: models[key].update(name=name, tgt=True)
+    if t is not None:
+        for sm in t.submodel.unique(): kk, nm = key_from_target(sm); addm(kk, nm, True)
+    # sales fact
+    s = s[s.SHOP_CODE.isin(ww)].copy()
+    s['BD'] = pd.to_datetime(s.BILL_DATE, format=FMT, errors='coerce'); s = s[s.BD.notna()]
+    s['sign'] = s.ORDER_STATUS.map({'Payment': 1, 'CreditNote': -1}).fillna(0)
+    s['units'] = s.sign * pd.to_numeric(s.QTY, errors='coerce').fillna(1).clip(lower=1)
+    s['net'] = s.sign * pd.to_numeric(s.NET_AMOUNT, errors='coerce').fillna(0)
+    km = s.DESCRIPTION.map(key_from_desc); s['m'] = km.str[0]
+    for kk, nm in set(km): addm(kk, nm, False)
+    s['date'] = s.BD.dt.strftime('%Y-%m-%d')
+    f = s.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(u=('units', 'sum'), n=('net', 'sum'))
+    f = f[(f.u != 0) | (f.n != 0)]
+    sales = [[r.date, r.SHOP_CODE, r.m, int(r.u), round(float(r.n))] for r in f.itertuples()]
+    # targets
+    targets = {}
+    if t is not None:
+        t['m'] = t.submodel.map(lambda x: key_from_target(x)[0])
+        g = t.groupby(['month', 'shop', 'm'], as_index=False)[['qty', 'net']].sum(); g = g[(g.qty > 0) | (g.net > 0)]
+        for mo, x in g.groupby('month'): targets[mo] = [[r.shop, r.m, round(float(r.qty), 4), round(float(r.net), 2)] for r in x.itertuples()]
+    # stock
+    stock = []; locs = []
+    if k is not None and len(k):
+        k = k[k.SHOP_CODE.isin(ww)].copy()
+        kk2 = k.PN.map(key_from_desc); k['m'] = kk2.str[0]
+        for a, b in set(kk2): addm(a, b, False)
+        if 'LOCATION_NAME' not in k: k['LOCATION_NAME'] = '-'
+        k['LOCATION_NAME'] = k.LOCATION_NAME.fillna('-')
+        g = k.groupby(['SHOP_CODE', 'm', 'LOCATION_NAME']).size().reset_index(name='q')
+        locs = sorted(g.LOCATION_NAME.unique().tolist())
+        stock = [[r.SHOP_CODE, r.m, locs.index(r.LOCATION_NAME), int(r.q)] for r in g.itertuples()]
+    # model order: series X > V > Y > others, then target net
+    tn = {}
+    if t is not None:
+        for kk_, v in t.groupby('m').net.sum().items(): tn[kk_] = v
+    def series(name):
+        m = re.match(r'^VIVO\s+([A-Z]+)(\d+)', name.upper()); return m.group(1) if m else '?'
+    def family(name):
+        m = re.match(r'^VIVO\s+(.*?)\s+\d+G\b', name.upper()); return ('VIVO ' + m.group(1)) if m else name
+    so = {'X': 0, 'V': 1, 'Y': 2, 'T': 3}
+    ml = sorted(models.values(), key=lambda x: (so.get(series(x['name']), 9), family(x['name']), -tn.get(x['k'], 0), x['name']))
+    for x in ml: x['series'] = series(x['name']); x['family'] = family(x['name']).replace('VIVO ', '')
+    ml = [x for x in ml if x['tgt'] or any(r[2] == x['k'] for r in sales) or any(r[1] == x['k'] for r in stock)]
+    portions = json.load(open(os.path.join(ST, 'vivo_portions.json'))) if os.path.exists(os.path.join(ST, 'vivo_portions.json')) else {}
+    data = {'meta': {'sales_asof': meta.get('vivo_sales_asof', ''), 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc,
+                     'first_sales': min((r[0] for r in sales), default='')},
+            'portions': portions, 'models': ml, 'shops': sorted(shops.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
+            'sales': sales, 'targets': targets, 'stock': stock, 'locs': locs}
+    os.makedirs(OUT, exist_ok=True)
+    json.dump(data, open(os.path.join(OUT, 'vivo_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    lm = max((r[0] for r in sales), default='')[:7]
+    mt = [r for r in sales if r[0][:7] == lm]
+    print(f"vivo built: sales {data['meta']['first_sales']}..{data['meta']['sales_asof']} ({len(sales)} rows), month {lm} QTY {sum(r[3] for r in mt):,} Net {sum(r[4] for r in mt):,}"
+          f" | stock {sum(r[3] for r in stock):,} as of {data['meta']['stock_asof']} | models {len(ml)} shops {len(shops)} | target months {sorted(targets)} | PC {pcsrc}")
+    unk = sorted({x['name'] for x in ml if not x['tgt']})
+    if unk: print('  models without target:', ', '.join(unk[:30]))
+
+if __name__ == '__main__':
+    import argparse
+    ap = argparse.ArgumentParser(); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--pc'); a = ap.parse_args()
+    for fp in a.target: merge_target(fp)
+    if a.pc: merge_pc(a.pc)
+    build()

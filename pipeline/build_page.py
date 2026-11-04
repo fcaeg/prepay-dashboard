@@ -131,3 +131,7 @@ open(fn,'w',encoding='utf-8').write(html)
 json.dump({'text':page_full},open(O+'/page_doc.json','w'),ensure_ascii=False)
 for _fn,_src in EXTRA.items(): json.dump({'text':_src},open(O+'/'+_fn+'.doc.json','w'),ensure_ascii=False)
 print(fn, os.path.getsize(fn))
+# Vivo Dashboard (vivo/index.html) - a failure here never blocks the Prepay page
+try:
+    sys.path.insert(0, HERE); import vivo_page; vivo_page.main()
+except Exception as e: print('vivo page: WARNING', repr(e))
