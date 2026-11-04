@@ -60,6 +60,9 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
 - sales → `state/vivo_sales_<YYYY-MM>.csv.gz` (same de-dup key as SIM rows) · stock → `state/vivo_stock.csv.gz`
 - `VIVO Target*.xlsx` (sheet TARGET_FOR_OPERATION, brand VIVO) → `python3 -I pipeline/update.py --vivo-target <file>` (Drive: any name with "vivo" + "target")
 - `* PC Brand Update*.xlsx` (newest sheet "PC <MON> <yy>", column VIVO by CODE WW) → `--pc <file>` (Drive: name contains "PC Brand")
+- Central-system Vivo sales (`VIVO Sale*.xlsx`, WW_FLAG = WW, sale day = YEAR/MONTH/DAY because TRANSACTION_DATE is the month end) →
+  `--vivo-hist <file>` (Drive: name contains "vivo" + "sale") → `state/vivo_hist.csv.gz`. The page uses these figures up to DATA_ASOF_DATE
+  and POS (TSM) daily_sales rows only for later dates (no double counting). Nami: Nov 26 portion = Oct portion until announced.
 - Week portions (8-7-7-8 / 8-7-7-9): `state/vivo_portions.json`, e.g. `{"2026-10": [30, 23, 21, 26]}`; a month not listed uses the share of days
 - Page: `pipeline/vivo_page.html` + `out/vivo_data.json` → `vivo/index.html` (built by build_page.py). Model match: sales
   `H/S,VIVO,V80LITE,5G,6/256,...` ↔ target `VIVO V80 LITE 5G 6/256GB` (key V80LITE|5G|6256; PHOTOSET kept separate).

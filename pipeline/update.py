@@ -342,7 +342,7 @@ def merge_indtarget(fp):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
     ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
-    ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)')
+    ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)'); ap.add_argument('--vivo-hist', nargs='*', default=[], help='central-system VIVO sales xlsx')
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
     if a.manpower: merge_manpower(a.manpower)
@@ -353,6 +353,7 @@ if __name__ == '__main__':
     if a.sales: merge_sales(a.sales)
     if a.stock: merge_stock(a.stock)
     for fp in a.vivo_target: vivo.merge_target(fp)
+    for fp in a.vivo_hist: vivo.merge_hist(fp)
     if a.pc: vivo.merge_pc(a.pc)
     build()
     _vivo(vivo.build)

@@ -172,6 +172,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 <script>
 'use strict';
 const D = JSON.parse(document.getElementById('vivo-data').textContent);
+if (D.sales && !Array.isArray(D.sales)) { const P = D.sales; D.sales = P.r.map((r) => [P.d[r[0]], P.s[r[1]], P.m[r[2]], r[3], r[4]]); }
 const TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const THF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const $ = (s) => document.querySelector(s);
@@ -185,7 +186,7 @@ const MORDER = Object.fromEntries(D.models.map((m, i) => [m.k, i]));
 const LATEST = (D.meta.sales_asof || '').slice(0, 10);
 const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.keys(D.targets)])].sort().reverse();
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
-const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco'];
+const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'Ten Ten Shop', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
 const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i)),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
@@ -522,7 +523,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b></span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
 initControls(); render();
 </script>
 </body>

@@ -110,6 +110,39 @@ def merge_pc(fp):
     _meta_set(vivo_pc_sheet=best[1])
     print(f'vivo PC: sheet "{best[1]}": {len(df)} shops, {int((df.vivo_pc > 0).sum())} with Vivo PC ({int(df.vivo_pc.sum())} PC)')
 
+def _area(a):
+    a = re.sub(r'\s+', ' ', str(a or '')).strip()
+    m = re.match(r'^(BMA [IVX]+) \((.*)\)$', a)
+    if m: return f'{m.group(1)} - {m.group(2)}'
+    return a if a.startswith(('BMA', 'UPC')) or not a or a == 'NOT_CLASSIFIED' else 'UPC - ' + a
+
+HCOLS = ['YEAR', 'MONTH', 'DAY', 'TRANSACTION_DATE', 'DATA_ASOF_DATE', 'SHOP_CODE', 'SHOP_NAME', 'SHOP_TYPE', 'AREA', 'SIZE_SHOP', 'WW_FLAG', 'PRODUCT_DESCRIPTION', 'SUB_MODEL', 'QTY', 'NET_AMOUNT']
+def merge_hist(fp):
+    """Central-system Vivo sales (e.g. 'VIVO Sale Jan-Nov.xlsx', one row per order line with SUB_MODEL, QTY, NET_AMOUNT, DATA_ASOF_DATE).
+    WW shops only, kept per day x shop x model in state/vivo_hist.csv.gz; dates in the file replace the same dates already kept.
+    build() uses these figures up to DATA_ASOF_DATE and the POS (TSM) daily_sales rows only for later dates."""
+    h = pd.read_excel(fp, dtype=str, usecols=lambda c: str(c).strip() in HCOLS)
+    h = h[h.WW_FLAG.str.strip().str.upper() == 'WW'].copy()
+    # TRANSACTION_DATE holds the month end; the sale day is YEAR / MONTH / DAY
+    h['date'] = pd.to_datetime(dict(year=pd.to_numeric(h.YEAR), month=pd.to_numeric(h.MONTH), day=pd.to_numeric(h.DAY)), errors='coerce').dt.strftime('%Y-%m-%d')
+    h = h[h.date.notna()]
+    pd_ = h.PRODUCT_DESCRIPTION.fillna('').str.upper().str.contains('PHOTOSET')
+    h['sub'] = h.SUB_MODEL.fillna(h.PRODUCT_DESCRIPTION).str.strip()
+    add = pd_ & ~h['sub'].str.upper().str.contains('PHOTOSET'); h.loc[add, 'sub'] = h.loc[add, 'sub'] + ' PHOTOSET'
+    h['m'] = h['sub'].map(lambda x: key_from_target(x)[0])
+    h['u'] = pd.to_numeric(h.QTY, errors='coerce').fillna(0); h['n'] = pd.to_numeric(h.NET_AMOUNT, errors='coerce').fillna(0)
+    g = h.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(name=('sub', 'first'), u=('u', 'sum'), n=('n', 'sum')).rename(columns={'SHOP_CODE': 'shop'})
+    asof = pd.to_datetime(h.DATA_ASOF_DATE).max().strftime('%Y-%m-%d')
+    lo = g.date.min(); old = _load('vivo_hist.csv.gz')
+    if old is not None: g = pd.concat([old[(old.date < lo) | (old.date > asof)], g])
+    _save(g.sort_values(['date', 'shop', 'm']), 'vivo_hist.csv.gz')
+    sh = h.sort_values('date').drop_duplicates('SHOP_CODE', keep='last')
+    sh = pd.DataFrame({'shop': sh.SHOP_CODE, 'name': sh.SHOP_NAME.str.strip(), 'area': sh.AREA.map(_area), 'type': sh.SHOP_TYPE, 'size': sh.SIZE_SHOP})
+    old = _load('vivo_hist_shops.csv')
+    if old is not None: sh = pd.concat([old[~old.shop.isin(set(sh.shop))], sh])
+    _save(sh, 'vivo_hist_shops.csv'); _meta_set(vivo_hist_asof=asof, vivo_hist_from=g.date.min())
+    print(f'vivo central sales: {os.path.basename(fp)}: {len(h):,} WW rows, {lo}..{asof}, QTY {h.u.sum():,.0f}, Net {h.n.sum():,.0f}')
+
 # ---------- build
 def _ty(t):
     t = str(t or '').strip().lower().replace('_', ' ')
@@ -117,7 +150,15 @@ def _ty(t):
     if 'coco' in t: return 'Dtac Coco'
     if t.startswith('non'): return 'Non Matching'
     if t.startswith('matching'): return 'Matching'
+    if 'makro' in t or 'sis' in t: return 'ปิดแล้ว (SIS / Makro)'
+    if 'ten ten' in t: return 'Ten Ten Shop'
     return '-'
+
+def _pack(rows):
+    """[date, shop, model, u, n] -> index-coded rows (the page unpacks them)"""
+    ds = sorted({r[0] for r in rows}); ss = sorted({r[1] for r in rows}); ms = sorted({r[2] for r in rows})
+    di = {v: i for i, v in enumerate(ds)}; si = {v: i for i, v in enumerate(ss)}; mi = {v: i for i, v in enumerate(ms)}
+    return {'d': ds, 's': ss, 'm': ms, 'r': [[di[r[0]], si[r[1]], mi[r[2]], r[3], r[4]] for r in rows]}
 
 def build():
     meta = _meta()
@@ -133,6 +174,10 @@ def build():
         pt = pt[~pt.type.isin(["Lotus's", 'Lotus', 'True_Center_Makro', 'SIS GROUP1', 'SIS GROUP2'])]
         for r in pt.itertuples():
             shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.region, 'type': _ty(r.type), 'size': '', 'pc': 0}
+    hs = _load('vivo_hist_shops.csv')
+    if hs is not None:
+        for r in hs.itertuples():
+            if r.shop not in shops: shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.area, 'type': _ty(r.type), 'size': r.size if isinstance(r.size, str) else '', 'pc': 0}
     if t is not None:
         for r in t.sort_values('month').drop_duplicates('shop', keep='last').itertuples():
             shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.area, 'type': _ty(r.type), 'size': r.size or '', 'pc': 0}
@@ -163,7 +208,16 @@ def build():
     s['date'] = s.BD.dt.strftime('%Y-%m-%d')
     f = s.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(u=('units', 'sum'), n=('net', 'sum'))
     f = f[(f.u != 0) | (f.n != 0)]
-    sales = [[r.date, r.SHOP_CODE, r.m, int(r.u), round(float(r.n))] for r in f.itertuples()]
+    # central-system figures up to their as-of date, POS (TSM) rows only after it
+    hz = _load('vivo_hist.csv.gz'); hasof = meta.get('vivo_hist_asof', '')
+    pos_asof = meta.get('vivo_sales_asof', '')
+    if hz is not None and hasof:
+        f = f[f.date > hasof]
+        hz = hz[hz.shop.isin(ww)]; hz['u'] = pd.to_numeric(hz.u); hz['n'] = pd.to_numeric(hz.n)
+        for kk, nm in set(zip(hz.m, hz.name)): addm(kk, nm, False)
+        f = pd.concat([hz.rename(columns={'shop': 'SHOP_CODE'})[['date', 'SHOP_CODE', 'm', 'u', 'n']], f])
+    sales = [[r.date, r.SHOP_CODE, r.m, int(r.u), round(float(r.n))] for r in f.itertuples() if r.u != 0 or r.n != 0]
+    sales_asof = pos_asof if pos_asof[:10] > hasof else hasof
     # targets
     targets = {}
     if t is not None:
@@ -194,10 +248,10 @@ def build():
     for x in ml: x['series'] = series(x['name']); x['family'] = family(x['name']).replace('VIVO ', '')
     ml = [x for x in ml if x['tgt'] or any(r[2] == x['k'] for r in sales) or any(r[1] == x['k'] for r in stock)]
     portions = json.load(open(os.path.join(ST, 'vivo_portions.json'))) if os.path.exists(os.path.join(ST, 'vivo_portions.json')) else {}
-    data = {'meta': {'sales_asof': meta.get('vivo_sales_asof', ''), 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc,
+    data = {'meta': {'sales_asof': sales_asof, 'hist_asof': hasof, 'pos_asof': pos_asof, 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc,
                      'first_sales': min((r[0] for r in sales), default='')},
             'portions': portions, 'models': ml, 'shops': sorted(shops.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
-            'sales': sales, 'targets': targets, 'stock': stock, 'locs': locs}
+            'sales': _pack(sales), 'targets': targets, 'stock': stock, 'locs': locs}
     os.makedirs(OUT, exist_ok=True)
     json.dump(data, open(os.path.join(OUT, 'vivo_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     lm = max((r[0] for r in sales), default='')[:7]
@@ -209,7 +263,8 @@ def build():
 
 if __name__ == '__main__':
     import argparse
-    ap = argparse.ArgumentParser(); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--pc'); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--pc'); ap.add_argument('--hist', nargs='*', default=[]); a = ap.parse_args()
+    for fp in a.hist: merge_hist(fp)
     for fp in a.target: merge_target(fp)
     if a.pc: merge_pc(a.pc)
     build()
