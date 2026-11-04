@@ -360,13 +360,13 @@ function weeklyCols(mi, first) {
   const P = (r) => S.metric === 'q' ? r.pu : r.pn, PF = (r) => S.metric === 'q' ? r.fu : r.fn;
   const mg = `MoM เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame}`;
   cols.push({ g: 'MTD', h: 'Actual', v: (r) => V(r), f: num }, { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
-    { g: mg, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
-    { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
-    { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: num },
     { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
     { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
     { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
-    { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct });
+    { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct },
+    { g: mg, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
+    { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
+    { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: num });
   return cols;
 }
 const portionNote = (mi) => `สัปดาห์ ${mi.weeks.map(([a, b]) => b - a + 1).join('-')} วัน · Portion ${mi.portion.map((p) => Math.round(p * 1000) / 10 + '%').join(' / ')}` +
