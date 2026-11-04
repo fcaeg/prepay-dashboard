@@ -194,10 +194,17 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <div class="card-h"><h2>PC Performance</h2>
       <div class="f"><select id="f-pcshop" aria-label="เลือกสาขา" style="max-width:24rem"></select></div>
       <button class="btn" id="pc-back" hidden>← ภาพรวมทุกสาขา</button>
+      <button class="btn primary" id="pc-sumdl">⤓ Download Summary Update</button>
       <span class="spacer"></span><button class="btn" data-x="ms">⤓ Excel</button></div>
     <div id="pc-overview">
       <div class="card-h" style="margin-bottom:6px"><div class="f"><select id="f-msmodel" aria-label="เลือก Model"></select></div>
         <input type="search" id="q-ms" placeholder="ค้นหาสาขา" aria-label="ค้นหาสาขา"></div>
+      <div class="ns" id="pc-sum" style="margin-bottom:14px">
+        <h3 style="margin:0 0 6px">สรุป PC ตาม Performance</h3><p class="note" id="n-pcsum"></p>
+        <div class="cmp" id="pc-tiers"></div>
+        <div class="alert" id="pc-alert" hidden style="cursor:default"></div>
+        <div class="tw" id="t-pcalert" style="max-height:340px"></div>
+      </div>
       <p class="note" id="n-ms"></p>
       <div class="cmp" id="ms-cmp"></div>
       <div class="tw" id="t-ms"></div>
@@ -574,9 +581,71 @@ function sStock() {
     toSheet('4 Stock รายสาขา', t2, `Stock รายสาขา (${mlab}) ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`)];
   return ts;
 }
+// ---------- PC summary: shops with Vivo PC grouped by %ACH to date; alert = no Vivo sale for 2+ days in a row
+const TIERS = [{ k: 't1', name: 'เกินเป้า (≥100%)', test: (a) => a >= 1, col: 'ok', x: 'E3F3EA' }, { k: 't2', name: 'ใกล้เป้า (80–99%)', test: (a) => a >= 0.8, col: 'warn', x: 'FBF0DC' },
+  { k: 't3', name: 'ต่ำกว่าเป้า (50–79%)', test: (a) => a >= 0.5, col: 'bad', x: 'FBE6E4' }, { k: 't4', name: 'ต่ำมาก (<50%)', test: (a) => a > 0, col: 'bad', x: 'F6CFCB' },
+  { k: 't5', name: 'No Sale เดือนนี้', test: () => true, col: 'bad', x: 'EBC4C0' }];
+function pcSummary(mi) {
+  const a = aggregate(mi, (c) => c, 'ALL'); const last = new Map();
+  for (const [d, c, k, u] of D.sales) { if (u <= 0 || !SH[c] || !(SH[c].pc > 0) || !okShop(c)) continue; if (!(last.get(c) >= d)) last.set(c, d); }
+  const ref = mi.asofDay ? `${mi.ym}-${String(mi.asofDay).padStart(2, '0')}` : LATEST;
+  const rows = D.shops.filter((s) => s.pc > 0 && okShop(s.c)).map((s) => { const x = a.get(s.c) || z();
+    const act = V(x), tf = T(x), td = tf * mi.todate, pv = S.metric === 'q' ? x.pu : x.pn, ld = last.get(s.c);
+    const prior = ld && ld <= ref ? ld : null; const gap = prior ? daysBetween(prior, ref) : null;
+    const ach = td > 0 ? act / td : null; const tier = act <= 0 ? TIERS[4] : ach == null ? null : TIERS.find((t) => t.test(ach));
+    return { c: s.c, name: s.n, area: s.area, zone: zoneOf(s.area), type: s.type, pc: s.pc, tf, td, act, ach, rr: mi.asofDay ? act / mi.asofDay * mi.days : null,
+      rach: tf > 0 && mi.asofDay ? act / mi.asofDay * mi.days / tf : null, pv, mom: pv > 0 ? act / pv - 1 : null, isNew: !(pv > 0) && act > 0, last: prior, gap,
+      tier: tier ? tier.name : 'ไม่มี Target', tk: tier ? tier.k : 't9', u: x.u }; });
+  rows.sort((p, q) => p.tk.localeCompare(q.tk) || (q.ach ?? -1) - (p.ach ?? -1));
+  const alert = rows.filter((r) => r.gap == null || r.gap >= 2).sort((p, q) => (q.gap ?? 999) - (p.gap ?? 999) || p.area.localeCompare(q.area));
+  return { rows, alert, ref };
+}
+function sPCsum(mi) {
+  const P = pcSummary(mi); const u = unit();
+  const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
+    return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? Math.round(g.length / P.rows.length * 100) : 0}% ของสาขามี PC · ยอด ${num(act)} ${u}</div></div>`; };
+  $('#pc-tiers').innerHTML = TIERS.map(card).join('');
+  $('#n-pcsum').innerHTML = `สาขาที่มี PC Vivo ${num(P.rows.length)} สาขา · แบ่งตาม %ACH เทียบ Target ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22}) · หน่วย ${u} · ทุกรุ่น · ตามตัวกรอง Region / Area / ประเภท ด้านบน`;
+  const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
+  al.innerHTML = P.alert.length ? `<b class="t">⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${num(P.alert.length)} สาขา</b><span>นับถึงวันที่ ${thDate(P.ref)} · ไม่มีขาย Vivo ทุกรุ่น</span>`
+    : `<b class="t">✓ ไม่มีสาขาที่มี PC ซึ่งไม่มียอดติดต่อกัน 2 วัน</b><span>นับถึงวันที่ ${thDate(P.ref)}</span>`;
+  renderTable($('#t-pcalert'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => `<span class="pc">PC ${v}</span>` },
+    { h: 'ไม่มียอดติดต่อกัน', v: (r) => r.gap, f: (v) => v == null ? '<span class="cw bad">ไม่เคยขาย</span>' : `<b class="dn">${v} วัน</b>` }, { h: 'ขายล่าสุด', v: (r) => r.last, f: (v) => v ? thDate(v) : '–' },
+    { h: `ยอด MTD (${u})`, v: (r) => r.act, f: num }, { h: '%ACH ถึงวันนี้', p: 1, v: (r) => r.ach, f: pct }], P.alert);
+  $('#pc-alert').parentElement.querySelector('#t-pcalert').hidden = !P.alert.length;
+  return P;
+}
+function downloadPCSummary() {
+  const mi = monthInfo(S.month); const P = pcSummary(mi); const u = unit(); const ml = `${THF[mi.m - 1]} 1–${mi.asofDay}`;
+  const tierRows = TIERS.map((t) => { const g = P.rows.filter((r) => r.tk === t.k); const tf = g.reduce((s, r) => s + r.tf, 0), act = g.reduce((s, r) => s + r.act, 0), td = g.reduce((s, r) => s + r.td, 0);
+    return [t.name, g.length, ratio(g.length, P.rows.length), tf, act, ratio(act, td)]; });
+  const tt = P.rows.reduce((a, r) => (a.tf += r.tf, a.act += r.act, a.td += r.td, a.pv += r.pv, a), { tf: 0, act: 0, td: 0, pv: 0 });
+  tierRows.push(['รวมสาขาที่มี PC', P.rows.length, 1, tt.tf, tt.act, ratio(tt.act, tt.td)]);
+  const best = P.rows.filter((r) => r.ach != null && r.act > 0).sort((a, b) => b.ach - a.ach).slice(0, 5);
+  const lines = [`ข้อมูลยอดขายถึง ${thDate(D.meta.sales_asof)} · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
+    `ยอดขายรวม ${num(tt.act)} ${u} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
+    ...TIERS.map((t) => { const n = P.rows.filter((r) => r.tk === t.k).length; return `${t.name}: ${n} สาขา`; }),
+    `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา` + (P.alert.length ? ` (${P.alert.slice(0, 8).map((r) => `${r.name.replace(/^True Shop /, '')} ${r.gap == null ? 'ไม่เคยขาย' : r.gap + ' วัน'}`).join(', ')}${P.alert.length > 8 ? ' …' : ''})` : ''),
+    best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${Math.round(r.ach * 100)}%`).join(', ')}` : ''].filter(Boolean);
+  const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: ['', '', '', '', '', ''],
+    head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', 'num', 'num', 'ach'],
+    body: [...tierRows, [], ['สรุปภาพรวม'], ...lines.map((l) => [l])], rowCls: [...tierRows.map((_, i) => i === tierRows.length - 1 ? 'tot' : ''), 'gap', 'line-h', ...lines.map(() => 'line')],
+    rowFill: tierRows.map((_, i) => TIERS[i] ? TIERS[i].x : null) };
+  const cols = ['Performance', 'Region', 'Area', 'สาขา', 'รหัส', 'ประเภท', 'PC', `Target เดือน`, `Target ถึงวันนี้`, `ยอด MTD`, '%ACH ถึงวันนี้', 'Runrate %ACH', `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, 'MoM %', 'ขายล่าสุด', 'ไม่มียอดติดต่อกัน (วัน)'];
+  const body = P.rows.map((r) => [r.tier, r.zone, r.area, r.name, r.c, r.type, r.pc, r.tf, r.td, r.act, r.ach, r.rach, r.pv, r.isNew ? 'ใหม่' : r.mom, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.gap == null ? 'ไม่เคยขาย' : r.gap]);
+  const S2 = { name: 'PC รายสาขา', title: `PC รายสาขา ตามกลุ่ม Performance · ${ml} · หน่วย ${u}`, groups: cols.map(() => ''), head: cols,
+    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'num', 'num', 'num', 'ach', 'ach', 'num', 'mom', 'text', 'gap'], body, rowCls: body.map(() => ''),
+    rowFill: P.rows.map((r) => (TIERS.find((t) => t.k === r.tk) || {}).x || null), fillCols: [0] };
+  const acols = ['Region', 'Area', 'สาขา', 'รหัส', 'PC', 'ไม่มียอดติดต่อกัน (วัน)', 'ขายล่าสุด', `ยอด MTD (${u})`, '%ACH ถึงวันนี้', 'Performance'];
+  const abody = P.alert.map((r) => [r.zone, r.area, r.name, r.c, r.pc, r.gap == null ? 'ไม่เคยขาย' : r.gap, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.act, r.ach, r.tier]);
+  const S3 = { name: 'Alert ไม่มียอด 2 วัน', title: `Alert: สาขาที่มี PC ไม่มียอด Vivo ติดต่อกัน 2 วันขึ้นไป · นับถึง ${thDate(P.ref)}`, groups: acols.map(() => ''), head: acols,
+    kinds: ['text', 'text', 'text', 'text', 'num', 'gap', 'text', 'num', 'ach', 'text'], body: abody.length ? abody : [['ไม่มีสาขาที่เข้าเงื่อนไข']], rowCls: abody.map(() => '') };
+  downloadXlsx([S1, S2, S3], `PC_Summary_Update_${(D.meta.sales_asof || '').slice(0, 10)}.xlsx`);
+}
 function sMS(mi) {
   const det = !!(S.pcshop && SH[S.pcshop]); $('#pc-overview').hidden = det; $('#pc-detail').hidden = !det; $('#pc-back').hidden = !det;
   if (det) return sPC(mi);
+  sPCsum(mi);
   const sel = S.msmodel === 'ALL' ? S.model : S.msmodel;
   const base = shopRows(mi, sel); const by = new Map(base.map((r) => [r.c, r]));
   const st = stockBy((c) => c, sel), s28 = sales28((c) => c, sel);
@@ -722,6 +791,7 @@ function initControls() {
   fillSelect($('#f-pcshop'), [['', 'ภาพรวมทุกสาขา (เทียบ PC / ไม่มี PC)'], [null, `สาขาที่มี PC Vivo (${pcs.length})`, true], ...pcs.map((x) => [x.c, `${x.n} · PC ${x.pc}`]), ['</g>'],
     [null, `สาขาที่ไม่มี PC (${npc.length})`, true], ...npc.map((x) => [x.c, x.n]), ['</g>']], '');
   $('#f-pcshop').onchange = (e) => { S.pcshop = e.target.value; render(); };
+  $('#pc-sumdl').onclick = downloadPCSummary;
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
   $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
@@ -817,18 +887,24 @@ function downloadXlsx(sheets, fname) {
     out.push(`<row r="${r}" ht="30" customHeight="1">` + s.head.map((h, c) => cell(colL(c) + r, h, xf({ font: 2, fill: '1F3A5F', border: 1, h: s.kinds[c] === 'text' || s.kinds[c] === 'note' ? 'left' : 'center', wrap: 1 }))).join('') + '</row>'); r++;
     const widths = s.head.map((h, c) => Math.max(8, Math.min(s.kinds[c] === 'note' ? 120 : 16, String(h).length + 2)));
     s.body.forEach((row, ri) => {
-      const rc = s.rowCls[ri] || ''; const rf = ROWFILL[rc]; const bold = rc === 'sub' || rc === 'tot';
+      const rc = s.rowCls[ri] || '';
+      if (rc === 'gap') { r++; return; }
+      if (rc === 'line' || rc === 'line-h') { const txt = row[0] || ''; const ht = Math.max(18, Math.ceil(String(txt).length / Math.max(40, widths.reduce((a, b) => a + b, 0) * 1.1)) * 16);
+        out.push(`<row r="${r}" ht="${ht}" customHeight="1">${cell('A' + r, txt, xf(rc === 'line-h' ? { font: 2, fill: '1F3A5F', h: 'left', wrap: 1 } : { h: 'left', wrap: 1, v: 'top', border: 1, fill: ri % 2 ? 'FAFAF8' : null }))}${s.head.slice(1).map((_, c) => cell(colL(c + 1) + r, '', xf(rc === 'line-h' ? { fill: '1F3A5F' } : { border: 1, fill: ri % 2 ? 'FAFAF8' : null }))).join('')}</row>`);
+        merges.push(`A${r}:${colL(nc - 1)}${r}`); r++; return; } const rf = ROWFILL[rc] || (s.rowFill && s.rowFill[ri] && !s.fillCols ? s.rowFill[ri] : null); const bold = rc === 'sub' || rc === 'tot';
       const zebra = !rf && !s.raw && ri % 2 === 1 ? 'FAFAF8' : null;
       out.push(`<row r="${r}">` + row.map((v, c) => {
         const k = s.kinds[c]; let o = { border: 1, fill: rf || zebra, font: bold ? 1 : 0 };
-        if (k === 'text' || k === 'note') { o.h = 'left'; if (c === 0 && rc === 'ind') o.indent = 1; if (k === 'note') o.wrap = 1; }
+        if (s.fillCols && s.fillCols.includes(c) && s.rowFill[ri]) { o.fill = s.rowFill[ri]; o.font = 1; }
+        if (k === 'gap') { o.h = 'center'; o.nf = 3; if (v === 'ไม่เคยขาย' || v >= 2) { o.fill = 'FBE6E4'; o.font = 5; } }
+        else if (k === 'text' || k === 'note') { o.h = 'left'; if (c === 0 && rc === 'ind') o.indent = 1; if (k === 'note') o.wrap = 1; }
         else if (k === 'ach' || k === 'pct') { o.nf = 9; o.h = 'right'; if (k === 'ach' && typeof v === 'number') Object.assign(o, achStyle(v)); }
         else if (k === 'mom') { o.nf = 166; o.h = 'right'; if (typeof v === 'number') o.font = v >= 0 ? 4 : 5; else if (v === 'ใหม่') o.font = 4; }
         else if (k === 'cover') { o.nf = 164; o.h = 'right'; Object.assign(o, coverStyle(v)); }
         else { o.h = 'right'; o.nf = typeof v === 'number' && Math.abs(v - Math.round(v)) > 1e-6 && Math.abs(v) < 100 ? 164 : 3; }
         widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? nf0.format(Math.round(v)).length + 3 : String(v ?? '').length + 2)));
         return cell(colL(c) + r, v, xf(o)); }).join('') + '</row>'); r++; });
-    const last = r - 1;
+    const last = s.rowCls.indexOf('gap') >= 0 ? hr + s.rowCls.indexOf('gap') : r - 1;
     const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
       + `<sheetPr><tabColor rgb="FF${['1F3A5F', '2E7D5B', 'B7791F', '6B4FA0', '1F7A8C', 'A23B5A'][si % 6]}"/><pageSetUpPr fitToPage="1"/></sheetPr>`
       + `<sheetViews><sheetView workbookViewId="0" showGridLines="0" zoomScale="90"><pane xSplit="1" ySplit="${hr}" topLeftCell="B${hr + 1}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>`
