@@ -45,6 +45,18 @@ h1 small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 
 .asof a { color: var(--accent); }
 .filters { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
   display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end; }
+.msel { position: relative; }
+.msel > button { font: inherit; font-size: 13.5px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 28px 6px 8px; min-width: 9rem; max-width: 15rem; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; }
+.msel > button::after { content: '▾'; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 11px; }
+.msel > button.on { border-color: var(--accent); background: var(--accent-soft); }
+.msel .pop { position: absolute; top: calc(100% + 4px); left: 0; z-index: 60; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.16); width: max(100%, 17rem); max-width: 92vw; padding: 8px; }
+.msel .pop[hidden] { display: none; }
+.msel .pop input[type=search] { width: 100%; margin-bottom: 6px; max-width: none; }
+.msel .acts { display: flex; gap: 6px; margin-bottom: 6px; } .msel .acts button { flex: 1; font: inherit; font-size: 12px; padding: 5px; border: 1px solid var(--line); background: var(--soft); color: var(--fg); border-radius: 6px; cursor: pointer; }
+.msel .list { max-height: 300px; overflow: auto; }
+.msel label.o { display: flex; align-items: center; gap: 8px; padding: 5px 4px; font-size: 13px; color: var(--fg); cursor: pointer; border-radius: 5px; white-space: nowrap; }
+.msel label.o:hover { background: var(--soft); } .msel label.o.g { font-weight: 600; margin-top: 4px; } .msel label.o.c { padding-left: 22px; }
+.msel input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
 .fmore { display: contents; } .fmore-btn { display: none; }
 .f { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .f label { font-size: 11.5px; color: var(--muted); }
@@ -158,6 +170,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   .fmore.open { display: grid; }
   .fmore .f:last-child { grid-column: 1 / -1; }
   .f label { font-size: 11px; }
+  .msel, .msel > button { width: 100%; max-width: none; } .msel > button { font-size: 15px; padding: 8px 28px 8px 10px; } .msel .pop { width: 100%; } .msel label.o { padding: 8px 4px; font-size: 14px; }
   /* iOS zooms into inputs under 16px */
   select, input[type=search], input[type=password] { font-size: 16px !important; max-width: none; width: 100%; }
   .seg button { padding: 8px 10px; font-size: 13px; }
@@ -204,11 +217,11 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="n" aria-pressed="true">Net Amount</button><button data-v="q" aria-pressed="false">QTY</button></div></div>
     <button class="btn fmore-btn" id="fmore-btn" type="button" aria-expanded="false" aria-controls="fmore">ตัวกรอง ▾</button>
     <div class="fmore" id="fmore">
-    <div class="f"><label for="f-zone">Region</label><select id="f-zone"></select></div>
-    <div class="f"><label for="f-area">Area</label><select id="f-area"></select></div>
-    <div class="f"><label for="f-type">ประเภทสาขา</label><select id="f-type"></select></div>
-    <div class="f"><label for="f-pc">PC Vivo</label><select id="f-pc"><option value="ALL">ทั้งหมด</option><option value="Y">มี PC</option><option value="N">ไม่มี PC</option></select></div>
-    <div class="f"><label for="f-model">Model</label><select id="f-model"></select></div>
+    <div class="f"><label>Region</label><div class="msel" id="f-zone"></div></div>
+    <div class="f"><label>Area</label><div class="msel" id="f-area"></div></div>
+    <div class="f"><label>ประเภทสาขา</label><div class="msel" id="f-type"></div></div>
+    <div class="f"><label>PC Vivo</label><div class="msel" id="f-pc"></div></div>
+    <div class="f"><label>Model</label><div class="msel" id="f-model"></div></div>
     </div>
     <div class="spacer"></div>
     <button class="btn primary" id="x-all">⤓ Export Excel ทั้งหมด</button>
@@ -389,7 +402,7 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'model', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
 try { const p = JSON.parse(localStorage.getItem('vivo-dash2') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
 const persist = () => { try { localStorage.setItem('vivo-dash2', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
@@ -416,10 +429,14 @@ function monthInfo(ym) {
 
 // ---------- filters
 const okShop = (c) => { const s = SH[c]; if (!s) return false;
-  if (S.zone !== 'ALL' && zoneOf(s.area) !== S.zone) return false; if (S.area !== 'ALL' && s.area !== S.area) return false;
-  if (S.type !== 'ALL' && s.type !== S.type) return false; if (S.pc === 'Y' && !(s.pc > 0)) return false; if (S.pc === 'N' && s.pc > 0) return false; return true; };
-const modelOk = (sel, k) => sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && MD[k].family === sel.slice(2)) : sel.startsWith('S:') ? (MD[k] && MD[k].series === sel.slice(2)) : k === sel.slice(2));
+  if (S.zone.size && !S.zone.has(zoneOf(s.area))) return false; if (S.area.size && !S.area.has(s.area)) return false;
+  if (S.type.size && !S.type.has(s.type)) return false; if (S.pc.size && !S.pc.has(s.pc > 0 ? 'Y' : 'N')) return false; return true; };
+const modelOk = (sel, k) => sel instanceof Set ? (sel.size === 0 || sel.has(k)) : sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && MD[k].family === sel.slice(2)) : sel.startsWith('S:') ? (MD[k] && MD[k].series === sel.slice(2)) : k === sel.slice(2));
 const okModel = (k) => modelOk(S.model, k);
+const PCLAB = { Y: 'มี PC', N: 'ไม่มี PC' };
+const setLab = (set, all, f = (x) => x, max = 2) => { if (!set.size) return all; const a = [...set].map(f); return a.length <= max ? a.join(', ') : `${a.slice(0, max).join(', ')} +${a.length - max}`; };
+const modelLabel = (max = 2) => setLab(S.model, 'ทุกรุ่น', (k) => (MD[k] || { name: k }).name.replace(/^VIVO /, ''), max);
+const filterParts = () => [S.zone.size && setLab(S.zone, '', undefined, 3), S.area.size && setLab(S.area, '', undefined, 3), S.type.size && setLab(S.type, '', undefined, 4), S.pc.size && setLab(S.pc, '', (x) => PCLAB[x]), S.model.size && modelLabel(3)].filter(Boolean);
 
 // ---------- aggregation
 const AGG_F = ['u', 'n', 'tu', 'tn', 'pu', 'pn', 'fu', 'fn', 'cu', 'cn', 'qu', 'qn', 'gu', 'gn'];
@@ -617,7 +634,7 @@ function sShop(mi) {
     + (hasT ? kc(`Target ของสาขา No Sale`, tgtF(ns.reduce((s, r) => s + r.tfull, 0)), `${unit()} · ${Math.round(ratio(ns.reduce((s, r) => s + r.tfull, 0), uni.reduce((s, r) => s + r.tfull, 0)) * 100 || 0)}% ของ Target รวม`) : '')
     + kc('ไม่มีขายเกิน 30 วัน', num(idle30), `ไม่เคยขายเลยตั้งแต่ ${thDate(D.meta.first_sales)}: ${num(never)} สาขา`)
     + (HASSTOCK ? kc('No Sale และไม่มี Stock', num(noStock), 'สาเหตุอาจมาจากไม่มีของ') : '');
-  const mlab = S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.trim();
+  const mlab = modelLabel(4);
   $('#n-ns').innerHTML = hasT ? `No Sale = สาขาที่มี Target เดือนนี้แต่ยังไม่มียอดขาย ${THF[mi.m - 1]} ถึงวันที่ ${mi.asofDay} · สาขาที่ไม่มี Target ไม่นับ · Model: <b>${esc(mlab)}</b> · ตามตัวกรองด้านบน` : `<b>${THF[mi.m - 1]} ไม่มี Target</b> จึงไม่มีการนับสาขา No Sale (นับเฉพาะสาขาที่มี Target)`;
   let rows = all.filter((r) => qMatch(S.q.shop, r) && (S.shopview !== 'ns' || r.ns)).sort(sorter('shop'));
   const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay} (Flat)`;
@@ -670,7 +687,7 @@ function sPlan() {
   const riskModels = new Map(); for (const x of P.risk) riskModels.set(x.k, (riskModels.get(x.k) || 0) + 1);
   const rm = [...riskModels.entries()].sort((a, b) => b[1] - a[1]);
   const al = $('#alert'); al.hidden = !HASSTOCK; al.classList.toggle('okay', !P.risk.length);
-  const fl = [S.zone !== 'ALL' && S.zone, S.area !== 'ALL' && S.area, S.type !== 'ALL' && S.type, S.pc !== 'ALL' && (S.pc === 'Y' ? 'มี PC' : 'ไม่มี PC'), S.model !== 'ALL' && $('#f-model').selectedOptions[0].textContent.replace(/\s*\*$/, '').trim()].filter(Boolean);
+  const fl = filterParts();
   const scope = fl.length ? ` · ตัวกรอง: ${esc(fl.join(' / '))}` : ' · ทุกสาขา ทุกรุ่น';
   if (!P.risk.length) al.innerHTML = `<b class="t">✓ ไม่มีรายการเสี่ยงขาดสินค้า</b><span>ไม่มีสาขา × รุ่นที่ Cover ต่ำกว่า ${CW_RISK} สัปดาห์${scope}</span>`;
   else al.innerHTML = `<b class="t">⚠ เสี่ยงขาดสินค้า ${num(P.risk.length)} รายการ (สาขา × รุ่น)</b><span>Cover ต่ำกว่า ${CW_RISK} สัปดาห์ · รุ่นที่เจอมากสุด: ${rm.slice(0, 5).map(([k, n]) => `${esc(mn(k))} (${n} สาขา)`).join(', ')}</span><span class="na">โอนภายใน Area ได้ ${num(P.moves.filter((m) => m.to.st / m.to.w < CW_RISK).reduce((s, m) => s + m.q, 0))} เครื่อง · ดูรายการด้านล่าง ›${scope}</span>`;
@@ -722,7 +739,7 @@ function sStock() {
     { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'ขาย 28 วัน', sort: 's28', v: (r) => r.s28, f: num },
     { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
   const t2 = renderTable($('#t-stock-s'), scols, srows, { sort: 'stock' });
-  const mlab = S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.trim();
+  const mlab = modelLabel(4);
   $('#n-stock').innerHTML = `Stock ณ ${thDate(D.meta.stock_asof)} · ยอดขาย 28 วันล่าสุด ${thDate(L28.from)} – ${thDate(L28.to)} (เลื่อนตามวันที่ข้อมูลล่าสุดทุกครั้ง) · Cover Week = Stock ÷ (ยอดขาย 28 วัน ÷ 4) · หน่วยเครื่อง · Model: ${esc(mlab)}`
     + (HAS28 ? '' : ` · <b>ยอดขายในระบบเริ่ม ${thDate(D.meta.first_sales)} ยังไม่ครบ 28 วัน Cover Week จึงสูงกว่าจริง</b>`)
     + (D.stock.length ? '' : ' · <b>ยังไม่มีไฟล์ Stock ที่มีเครื่อง Vivo — จะขึ้นเองเมื่อมีไฟล์ stock_balance_report ใหม่</b>')
@@ -792,7 +809,7 @@ function sPCsum(mi) {
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
   al.innerHTML = P.alert.length ? `<b class="t">⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${num(P.alert.length)} สาขา</b><span>นับถึงวันที่ ${thDate(P.ref)} · ไม่มีขาย Vivo ทุกรุ่น</span>`
     : `<b class="t">✓ ไม่มีสาขาที่มี PC ซึ่งไม่มียอดติดต่อกัน 2 วัน</b><span>นับถึงวันที่ ${thDate(P.ref)}</span>`;
-  const fl = [S.zone !== 'ALL' && S.zone, S.area !== 'ALL' && S.area, S.type !== 'ALL' && S.type].filter(Boolean);
+  const fl = [S.zone.size && setLab(S.zone, '', undefined, 3), S.area.size && setLab(S.area, '', undefined, 3), S.type.size && setLab(S.type, '', undefined, 4)].filter(Boolean);
   PCGAP = { alert: P.alert, ref: P.ref, scope: fl.length ? fl.join(' / ') : 'ทุก Area' };
   $('#pc-gaps').innerHTML = GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap));
     return `<div class="kpi ${b.k}"><div class="l">PC ${b.name}</div><div class="v"><span class="cw ${b.k === 'g2' ? 'warn' : 'bad'}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div>`
@@ -854,7 +871,7 @@ function sMS(mi) {
     { h: 'Target เดือน', sort: 'tfull', v: (r) => r.tfull, f: tgtF }, { h: 'ยอดขาย MTD', sort: 'act', v: (r) => r.act, f: num },
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => ratio(r.act, r.tfull), f: pct }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
     { h: 'ขาย 28 วัน (เครื่อง)', sort: 's28', v: (r) => r.s28, f: num }, { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
-  const mlab = sel === 'ALL' ? 'ทุกรุ่น' : (S.msmodel !== 'ALL' ? $('#f-msmodel') : $('#f-model')).selectedOptions[0].textContent.trim();
+  const mlab = S.msmodel !== 'ALL' ? $('#f-msmodel').selectedOptions[0].textContent.trim() : modelLabel(4);
   $('#n-ms').innerHTML = `คลิกชื่อสาขา หรือเลือกสาขาด้านบน เพื่อดูยอดขายราย Model ของ PC สาขานั้น เทียบ MoM พร้อมบทวิเคราะห์ · Model: <b>${esc(mlab)}</b> · ${THF[mi.m - 1]} ${mi.y + 543} · หน่วย: ${unit()} (ขาย 28 วัน / Stock เป็นเครื่อง) · PC ตาม ${esc(D.meta.pc_source)}`;
   EXPORT.ms = toSheet('5 PC Performance', renderTable($('#t-ms'), cols, list, { sort: 'ms' }), `PC Performance · ยอดขาย ${mlab} รายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
   $('#t-ms').querySelectorAll('tbody tr').forEach((tr, i) => { if (list[i]) tr.onclick = () => { S.pcshop = list[i].c; $('#f-pcshop').value = S.pcshop; render(); }; });
@@ -1038,13 +1055,51 @@ function modelOptions() {
   }
   o.push(['</g>']); return o;
 }
+// ---------- multi-select dropdown (empty selection = all)
+let MS_T = null;
+function multiSelect(root, key, allLab, getOpts, onChange, searchable) {
+  root.innerHTML = `<button type="button" aria-haspopup="true"></button><div class="pop" hidden>${searchable ? '<input type="search" placeholder="ค้นหา" aria-label="ค้นหา">' : ''}<div class="acts"><button type="button" data-a="all">เลือกทั้งหมด</button><button type="button" data-a="none">ไม่เลือกเลย</button></div><div class="list"></div></div>`;
+  const btn = root.firstChild, pop = root.querySelector('.pop'), list = root.querySelector('.list'), q = root.querySelector('input[type=search]');
+  const flat = () => getOpts().flatMap((o) => o.kids ? o.kids : [o]);
+  let none = false; // "ไม่เลือกเลย" pressed: show everything unticked until something is ticked (nothing ticked = all)
+  const eff = () => S[key].size ? S[key] : none ? new Set() : new Set(flat().map((o) => o.v));
+  const lab = () => { const sel = S[key]; const n = sel.size, all = flat();
+    btn.textContent = !n || n === all.length ? allLab : n <= 2 ? [...sel].map((v) => (all.find((o) => o.v === v) || { l: v }).l).join(', ') : `เลือก ${n} รายการ`;
+    btn.classList.toggle('on', n > 0 && n < all.length); btn.title = n ? [...sel].map((v) => (all.find((o) => o.v === v) || { l: v }).l).join(', ') : allLab; };
+  const changed = () => { const all = flat(); if (S[key].size === all.length) S[key].clear(); lab(); if (onChange) onChange(); clearTimeout(MS_T); MS_T = setTimeout(() => { render(); document.getElementById('filters').dispatchEvent(new Event('change')); }, 120); };
+  const draw = () => { const f = q ? q.value.trim().toLowerCase() : ''; const sel = eff(); let h = '';
+    for (const o of getOpts()) {
+      if (o.kids) { const kids = o.kids.filter((x) => !f || x.l.toLowerCase().includes(f) || o.g.toLowerCase().includes(f)); if (!kids.length) continue;
+        const allOn = kids.every((x) => sel.has(x.v)), some = kids.some((x) => sel.has(x.v));
+        h += `<label class="o g"><input type="checkbox" data-g="${esc(o.g)}" ${allOn ? 'checked' : ''} ${!allOn && some ? 'data-mixed="1"' : ''}> ${esc(o.g)}</label>`;
+        h += kids.map((x) => `<label class="o c"><input type="checkbox" data-v="${esc(x.v)}" ${sel.has(x.v) ? 'checked' : ''}> ${esc(x.l)}</label>`).join('');
+      } else if (!f || o.l.toLowerCase().includes(f)) h += `<label class="o"><input type="checkbox" data-v="${esc(o.v)}" ${sel.has(o.v) ? 'checked' : ''}> ${esc(o.l)}</label>`;
+    }
+    list.innerHTML = h || '<div class="note" style="padding:6px">ไม่พบรายการ</div>'; list.querySelectorAll('[data-mixed]').forEach((x) => x.indeterminate = true); };
+  btn.onclick = () => { const open = pop.hidden; if (!open) none = false; document.querySelectorAll('.msel .pop').forEach((p) => p.hidden = true); pop.hidden = !open; if (open) { draw(); if (q) { q.value = ''; if (!matchMedia('(pointer: coarse)').matches) setTimeout(() => q.focus(), 20); } } };
+  if (q) q.oninput = draw;
+  list.onchange = (e) => { const t = e.target; if (!S[key].size && !none) flat().forEach((o) => S[key].add(o.v)); none = false; const sel = S[key];
+    if (t.dataset.g != null) { const grp = getOpts().find((o) => o.g === t.dataset.g); const f = q ? q.value.trim().toLowerCase() : '';
+      const kids = grp.kids.filter((x) => !f || x.l.toLowerCase().includes(f) || grp.g.toLowerCase().includes(f)); kids.forEach((x) => t.checked ? sel.add(x.v) : sel.delete(x.v)); }
+    else if (t.dataset.v != null) { if (t.checked) sel.add(t.dataset.v); else sel.delete(t.dataset.v); }
+    draw(); changed(); };
+  root.querySelector('.acts').onclick = (e) => { const a = e.target.dataset.a; if (!a) return; S[key].clear(); none = a === 'none'; draw(); if (a === 'all') changed(); };
+  lab();
+  return { refresh: () => { lab(); if (!pop.hidden) draw(); } };
+}
 function initControls() {
   fillSelect($('#f-month'), months.map((m) => [m, `${THF[+m.slice(5) - 1]} ${+m.slice(0, 4) + 543}`]), S.month);
-  fillSelect($('#f-zone'), [['ALL', 'ทุก Region'], ...ZONES.map((z) => [z, z])], 'ALL');
-  const areaOpts = () => [['ALL', 'ทุก Area'], ...AREAS.filter((a) => S.zone === 'ALL' || zoneOf(a) === S.zone).map((a) => [a, a])];
-  fillSelect($('#f-area'), areaOpts(), 'ALL');
-  fillSelect($('#f-type'), [['ALL', 'ทุกประเภท'], ...TYPES.map((t) => [t, t])], 'ALL');
-  fillSelect($('#f-model'), modelOptions(), 'ALL');
+  const MS = {};
+  MS.zone = multiSelect($('#f-zone'), 'zone', 'ทุก Region', () => ZONES.map((z) => ({ v: z, l: z })), () => { for (const a of [...S.area]) if (S.zone.size && !S.zone.has(zoneOf(a))) S.area.delete(a); MS.area.refresh(); });
+  MS.area = multiSelect($('#f-area'), 'area', 'ทุก Area', () => { const out = []; for (const z of ZONES) { if (S.zone.size && !S.zone.has(z)) continue; const ch = AREAS.filter((a) => zoneOf(a) === z);
+      if (ch.length) out.push({ g: z, kids: ch.map((a) => ({ v: a, l: a })) }); } return out; }, null, true);
+  MS.type = multiSelect($('#f-type'), 'type', 'ทุกประเภท', () => TYPES.map((t) => ({ v: t, l: t })));
+  MS.pc = multiSelect($('#f-pc'), 'pc', 'ทั้งหมด', () => [{ v: 'Y', l: 'มี PC' }, { v: 'N', l: 'ไม่มี PC' }]);
+  MS.model = multiSelect($('#f-model'), 'model', 'ทุกรุ่น', () => { const out = []; const grp = new Map();
+      for (const m of D.models) { const g = m.tgt ? `${m.series} Series` : 'Non Target Model'; if (!grp.has(g)) grp.set(g, []); grp.get(g).push({ v: m.k, l: m.name.replace(/^VIVO /, '') }); }
+      const order = (g) => g === 'Non Target Model' ? 99 : ({ X: 0, V: 1, Y: 2, T: 3 }[g[0]] ?? 9);
+      for (const [g, kids] of [...grp].sort((a, b) => order(a[0]) - order(b[0]))) out.push({ g, kids }); return out; }, null, true);
+  document.addEventListener('click', (e) => { if (!e.target.closest('.msel')) document.querySelectorAll('.msel .pop').forEach((p) => p.hidden = true); });
   fillSelect($('#f-msmodel'), [['ALL', 'ตาม Model ที่กรองด้านบน'], ...modelOptions().slice(1)], 'ALL');
   const pcs = D.shops.filter((x) => x.pc > 0).sort((a, b) => a.n.localeCompare(b.n)), npc = D.shops.filter((x) => !(x.pc > 0)).sort((a, b) => a.n.localeCompare(b.n));
   fillSelect($('#f-pcshop'), [['', 'ภาพรวมทุกสาขา (เทียบ PC / ไม่มี PC)'], [null, `สาขาที่มี PC Vivo (${pcs.length})`, true], ...pcs.map((x) => [x.c, `${x.n} · PC ${x.pc}`]), ['</g>'],
@@ -1053,14 +1108,13 @@ function initControls() {
   $('#pc-sumdl').onclick = () => requireDL(downloadPCSummary); $('#pc-gappng').onclick = () => requireDL(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG));
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
   const fm = $('#fmore'), fb = $('#fmore-btn');
-  const fcount = () => { const n = [S.zone, S.area, S.type, S.pc, S.model].filter((v) => v !== 'ALL').length; fb.textContent = `ตัวกรอง${n ? ` (${n})` : ''} ${fm.classList.contains('open') ? '▴' : '▾'}`; };
+  const fcount = () => { const n = [S.zone, S.area, S.type, S.pc, S.model].filter((v) => v.size).length; fb.textContent = `ตัวกรอง${n ? ` (${n})` : ''} ${fm.classList.contains('open') ? '▴' : '▾'}`; };
   fb.onclick = () => { fm.classList.toggle('open'); fb.setAttribute('aria-expanded', String(fm.classList.contains('open'))); fcount(); setBar(); };
   const setBar = () => document.documentElement.style.setProperty('--fbar', $('#filters').getBoundingClientRect().height + 'px');
   window.addEventListener('resize', setBar); setTimeout(setBar, 0);
   document.getElementById('filters').addEventListener('change', fcount);
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
-  $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
-  for (const [id, key] of [['#f-area', 'area'], ['#f-type', 'type'], ['#f-pc', 'pc'], ['#f-model', 'model'], ['#f-msmodel', 'msmodel']]) $(id).onchange = (e) => { S[key] = e.target.value; render(); };
+  $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
   seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-shopview', 'shopview');
@@ -1125,8 +1179,8 @@ function requireDL(fn) {
     DL_OK = true; close(); fn(); };
 }
 function filterText() {
-  const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${S.zone === 'ALL' ? 'ทั้งหมด' : S.zone}`, `Area: ${S.area === 'ALL' ? 'ทั้งหมด' : S.area}`,
-    `ประเภท: ${S.type === 'ALL' ? 'ทั้งหมด' : S.type}`, `PC: ${S.pc === 'ALL' ? 'ทั้งหมด' : S.pc === 'Y' ? 'มี PC' : 'ไม่มี PC'}`, `Model: ${S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.replace(/\s*\*$/, '').trim()}`];
+  const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${setLab(S.zone, 'ทั้งหมด', undefined, 9)}`, `Area: ${setLab(S.area, 'ทั้งหมด', undefined, 15)}`,
+    `ประเภท: ${setLab(S.type, 'ทั้งหมด', undefined, 9)}`, `PC: ${setLab(S.pc, 'ทั้งหมด', (x) => PCLAB[x])}`, `Model: ${modelLabel(20)}`];
   return f.join('  |  ') + `  |  ยอดขายถึง ${thDate(D.meta.sales_asof)} · Stock ณ ${thDate(D.meta.stock_asof)}`;
 }
 function downloadXlsx(sheets, fname) {
