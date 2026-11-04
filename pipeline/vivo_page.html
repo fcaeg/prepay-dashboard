@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1a18" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vivo Dashboard">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
 <title>Vivo Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,6 +45,7 @@ h1 small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 
 .asof a { color: var(--accent); }
 .filters { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
   display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end; }
+.fmore { display: contents; } .fmore-btn { display: none; }
 .f { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .f label { font-size: 11.5px; color: var(--muted); }
 select, input[type=search] { font: inherit; font-size: 13.5px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; max-width: 15rem; }
@@ -122,7 +132,56 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .gate-err { color: var(--bad); font-size: 13px; min-height: 1em; }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
-@media (max-width: 640px) { h1 { font-size: 20px; } .kpi .v { font-size: 18px; } select { max-width: 11rem; } .filters { position: static; } }
+/* ---- tablet & phone ---- */
+@media (max-width: 1024px) {
+  .wrap { padding: 12px max(12px, env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  section.card { padding: 12px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .kpi .v { font-size: 19px; }
+}
+@media (max-width: 700px) {
+  body { font-size: 13.5px; }
+  h1 { font-size: 20px; } h1 small { display: block; margin: 2px 0 0; font-size: 12.5px; }
+  header.top { margin-bottom: 8px; } .asof { font-size: 11.5px; gap: 0 10px; }
+  /* filter bar: month + unit + toggle stay; the rest folds away */
+  .filters { position: static; display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 0 8px; margin-bottom: 10px; }
+  .filters > .f:first-child { grid-column: 1 / 2; } .filters > .f:nth-child(2) { grid-column: 2 / 3; }
+  .fmore-btn { display: block; grid-column: 1 / 2; text-align: left; }
+  .filters > .spacer { display: none; }
+  #x-all { grid-column: 2 / 3; grid-row: 2; font-size: 12.5px; }
+  .fmore { display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fmore.open { display: grid; }
+  .fmore .f:last-child { grid-column: 1 / -1; }
+  .f label { font-size: 11px; }
+  /* iOS zooms into inputs under 16px */
+  select, input[type=search], input[type=password] { font-size: 16px !important; max-width: none; width: 100%; }
+  .seg button { padding: 8px 10px; font-size: 13px; }
+  .btn { min-height: 38px; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .kpi { padding: 8px 10px; } .kpi .v { font-size: 17px; } .kpi .l, .kpi .s { font-size: 11px; }
+  .kpis .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  nav.tabs { position: sticky; top: 0; padding-top: max(6px, env(safe-area-inset-top)) !important; z-index: 15; background: var(--bg); padding: 6px 0; margin: 0 -12px 10px; padding-left: 12px; padding-right: 12px; }
+  nav.tabs button { padding: 7px 12px; font-size: 13px; }
+  section.card { padding: 10px; border-radius: 10px; }
+  .card-h { gap: 8px; } .card-h h2 { font-size: 15px; width: 100%; }
+  .card-h .seg { flex-wrap: wrap; }
+  .card-h input[type=search] { flex: 1 1 100%; }
+  .tw { max-height: 65vh; -webkit-overflow-scrolling: touch; }
+  table { font-size: 12px; } th, td { padding: 5px 6px; } th { font-size: 11px; }
+  td:first-child, th:first-child { max-width: 9.5rem; }
+  .cmp, .gapc { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gapc { grid-template-columns: 1fr; }
+  .cmp .kpi .v { font-size: 16px; }
+  .ns { padding: 10px; }
+  .alert { padding: 8px 10px; font-size: 12.5px; }
+  .pd-head b { font-size: 16px; }
+  .ai { padding: 10px 12px; font-size: 13px; }
+  .note { font-size: 11.5px; }
+  .gate-box { padding: 22px 18px; }
+  #pc-sumdl, #pc-gappng { flex: 1 1 auto; }
+}
+@media (max-width: 380px) { .cmp { grid-template-columns: 1fr; } .kpi .v { font-size: 16px; } }
+@media (hover: none) { #t-ms tbody tr:not(.tot):hover td { background: inherit; } }
 </style>
 </head>
 <body>
@@ -138,11 +197,14 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   <div class="filters" id="filters">
     <div class="f"><label for="f-month">เดือน</label><select id="f-month"></select></div>
     <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="n" aria-pressed="true">Net Amount</button><button data-v="q" aria-pressed="false">QTY</button></div></div>
+    <button class="btn fmore-btn" id="fmore-btn" type="button" aria-expanded="false" aria-controls="fmore">ตัวกรอง ▾</button>
+    <div class="fmore" id="fmore">
     <div class="f"><label for="f-zone">Region</label><select id="f-zone"></select></div>
     <div class="f"><label for="f-area">Area</label><select id="f-area"></select></div>
     <div class="f"><label for="f-type">ประเภทสาขา</label><select id="f-type"></select></div>
     <div class="f"><label for="f-pc">PC Vivo</label><select id="f-pc"><option value="ALL">ทั้งหมด</option><option value="Y">มี PC</option><option value="N">ไม่มี PC</option></select></div>
     <div class="f"><label for="f-model">Model</label><select id="f-model"></select></div>
+    </div>
     <div class="spacer"></div>
     <button class="btn primary" id="x-all">⤓ Export Excel ทั้งหมด</button>
   </div>
@@ -902,6 +964,12 @@ function initControls() {
   $('#f-pcshop').onchange = (e) => { S.pcshop = e.target.value; render(); };
   $('#pc-sumdl').onclick = () => requireDL(downloadPCSummary); $('#pc-gappng').onclick = () => requireDL(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG));
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
+  const fm = $('#fmore'), fb = $('#fmore-btn');
+  const fcount = () => { const n = [S.zone, S.area, S.type, S.pc, S.model].filter((v) => v !== 'ALL').length; fb.textContent = `ตัวกรอง${n ? ` (${n})` : ''} ${fm.classList.contains('open') ? '▴' : '▾'}`; };
+  fb.onclick = () => { fm.classList.toggle('open'); fb.setAttribute('aria-expanded', String(fm.classList.contains('open'))); fcount(); setBar(); };
+  const setBar = () => document.documentElement.style.setProperty('--fbar', $('#filters').getBoundingClientRect().height + 'px');
+  window.addEventListener('resize', setBar); setTimeout(setBar, 0);
+  document.getElementById('filters').addEventListener('change', fcount);
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
   $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
   for (const [id, key] of [['#f-area', 'area'], ['#f-type', 'type'], ['#f-pc', 'pc'], ['#f-model', 'model'], ['#f-msmodel', 'msmodel']]) $(id).onchange = (e) => { S[key] = e.target.value; render(); };
