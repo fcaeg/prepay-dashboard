@@ -81,7 +81,11 @@ tr.ind td:first-child { padding-left: 20px; }
 td.na { color: var(--muted); }
 .p { display: inline-block; min-width: 3.4em; padding: 0 5px; border-radius: 5px; font-weight: 600; }
 .p.ok { color: var(--ok); background: var(--ok-soft); } .p.warn { color: var(--warn); background: var(--warn-soft); } .p.bad { color: var(--bad); background: var(--bad-soft); }
-.cw { font-weight: 600; } .cw.bad { color: var(--bad); } .cw.warn { color: var(--warn); } .cw.ok { color: var(--ok); }
+.cw { font-weight: 600; } .cw.bad { color: var(--bad); } .cw.warn { color: var(--warn); } .cw.ok { color: var(--ok); } .cw.over { color: var(--accent); }
+.alert { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; background: var(--bad-soft); color: var(--fg); border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; cursor: pointer; }
+.alert b.t { color: var(--bad); }
+.alert[hidden] { display: none; }
+.sub2 { font-size: 15px; margin: 18px 0 6px; font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
 .pc { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
 .cur { color: var(--accent); }
 .two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -118,7 +122,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 
   <div class="filters" id="filters">
     <div class="f"><label for="f-month">เดือน</label><select id="f-month"></select></div>
-    <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="q" aria-pressed="true">QTY</button><button data-v="n" aria-pressed="false">Net Amount</button></div></div>
+    <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="n" aria-pressed="true">Net Amount</button><button data-v="q" aria-pressed="false">QTY</button></div></div>
     <div class="f"><label for="f-zone">Region</label><select id="f-zone"></select></div>
     <div class="f"><label for="f-area">Area</label><select id="f-area"></select></div>
     <div class="f"><label for="f-type">ประเภทสาขา</label><select id="f-type"></select></div>
@@ -129,6 +133,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   </div>
 
   <div class="kpis" id="kpis"></div>
+  <div class="alert" id="alert" hidden role="button" tabindex="0"></div>
 
   <nav class="tabs" role="tablist" id="tabs">
     <button role="tab" data-t="model" aria-selected="true">1 · ราย Model</button>
@@ -174,6 +179,13 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <div><h3>ราย Model</h3><div class="tw" id="t-stock-m"></div></div>
       <div><h3>รายสาขา <input type="search" id="q-stock" placeholder="ค้นหาสาขา" aria-label="ค้นหาสาขา" style="margin-left:8px;font-weight:400"></h3><div class="tw" id="t-stock-s"></div></div>
     </div>
+    <div class="sub2" id="h-risk">⚠ แจ้งเตือนเสี่ยงขาดสินค้า</div>
+    <p class="note" id="n-risk"></p>
+    <div class="tw" id="t-risk"></div>
+    <div class="sub2">⇄ แนะนำโอนย้าย (ภายใน Area เดียวกัน)</div>
+    <p class="note" id="n-tr"></p>
+    <div class="cmp" id="tr-kpi"></div>
+    <div class="tw" id="t-tr"></div>
   </section>
 
   <section class="card" id="s-ms" hidden>
@@ -219,10 +231,10 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
-try { const p = JSON.parse(localStorage.getItem('vivo-dash') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
-const persist = () => { try { localStorage.setItem('vivo-dash', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
+try { const p = JSON.parse(localStorage.getItem('vivo-dash2') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
+const persist = () => { try { localStorage.setItem('vivo-dash2', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
 
 // ---------- month geometry: weeks 8-7-7-8 / 8-7-7-9
 function monthInfo(ym) {
@@ -291,9 +303,13 @@ const pctCls = (p) => p >= 1 ? 'ok' : p >= 0.8 ? 'warn' : 'bad';
 const pct = (p) => p == null || !isFinite(p) ? '<span class="na">–</span>' : `<span class="p ${pctCls(p)}">${Math.round(p * 100)}%</span>`;
 const ratio = (a, b) => b > 0 ? a / b : null;
 const HASSTOCK = D.stock.length > 0;
+// Cover Week bands: enough stock = 4-6 weeks of sales
+const CW_LOW = 4, CW_HIGH = 6, CW_RISK = 2;
+const cwCls = (c) => c < CW_RISK ? 'bad' : c < CW_LOW ? 'warn' : c <= CW_HIGH ? 'ok' : 'over';
+const CW_LEGEND = `<span class="cw bad">&lt;${CW_RISK} เสี่ยงขาด</span> · <span class="cw warn">${CW_RISK}–${CW_LOW} ต่ำ</span> · <span class="cw ok">${CW_LOW}–${CW_HIGH} พอดี</span> · <span class="cw over">&gt;${CW_HIGH} สูง</span> สัปดาห์`;
 const cover = (stock, s28) => !HASSTOCK ? null : stock === 0 && s28 > 0 ? -1 : s28 > 0 ? stock / (s28 / 4) : (stock > 0 ? Infinity : null);
 const coverF = (c, stock) => c == null ? '<span class="na">–</span>' : c === -1 ? '<span class="cw bad">ของหมด</span>' : c === Infinity ? '<span class="cw warn" title="มี Stock แต่ไม่มีขายใน 28 วัน">ไม่มีขาย</span>'
-  : `<span class="cw ${c < 1 ? 'bad' : c < 2 ? 'warn' : c > 8 ? 'warn' : 'ok'}">${nf1.format(c)}</span>`;
+  : `<span class="cw ${cwCls(c)}">${nf1.format(c)}</span>`;
 const unit = () => S.metric === 'q' ? 'เครื่อง' : 'บาท';
 
 // ---------- generic table: cols [{h, g?, v(row) -> raw, f(raw,row) -> html, cls, sort?, x?(raw)->excel}]
@@ -348,15 +364,18 @@ function sModel(mi) {
   const a = aggregate(mi, (c, k) => k);
   const rows = []; const tot = Object.assign(z(), { name: 'รวมทั้งหมด', _cls: 'tot' });
   const add = (dst, x) => { dst.u += x.u; dst.n += x.n; dst.tu += x.tu; dst.tn += x.tn; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
-  const keys = [...a.keys()].filter((k) => okModel(k)).sort((x, y) => (MORDER[x] ?? 999) - (MORDER[y] ?? 999));
+  const isT = (k) => MD[k] && MD[k].tgt;
+  // models with Target are always listed; models without Target only when they sold, in their own group
+  const keys = [...a.keys()].filter((k) => okModel(k) && (isT(k) || a.get(k).u !== 0 || a.get(k).n !== 0))
+    .sort((x, y) => (isT(x) ? 0 : 1) - (isT(y) ? 0 : 1) || (MORDER[x] ?? 999) - (MORDER[y] ?? 999));
   let ser = null, sub = null;
   for (const k of keys) {
-    const m = MD[k] || { name: k, series: '?' }; const x = a.get(k);
-    if (m.series !== ser) { ser = m.series; sub = Object.assign(z(), { name: `Vivo ${ser} Series`, _cls: 'sub' }); rows.push(sub); }
-    add(sub, x); add(tot, x); rows.push(Object.assign({}, x, { name: m.name + (m.tgt ? '' : ' *'), _cls: 'ind' }));
+    const m = MD[k] || { name: k, series: '?' }; const x = a.get(k); const g = isT(k) ? `Vivo ${m.series} Series` : 'Non Target Model';
+    if (g !== ser) { ser = g; sub = Object.assign(z(), { name: g, _cls: 'sub' }); rows.push(sub); }
+    add(sub, x); add(tot, x); rows.push(Object.assign({}, x, { name: m.name, _cls: 'ind' }));
   }
   rows.push(tot);
-  $('#n-model').innerHTML = portionNote(mi) + (keys.some((k) => MD[k] && !MD[k].tgt) ? ' · * = รุ่นที่ไม่มี Target' : '');
+  $('#n-model').innerHTML = portionNote(mi) + (keys.some((k) => !isT(k)) ? ' · Non Target Model = รุ่นที่ไม่มี Target แต่มียอดขายเข้ามา' : '');
   EXPORT.model = toSheet('1 ราย Model', renderTable($('#t-model'), weeklyCols(mi, { h: 'Model', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Model · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
   return tot;
 }
@@ -443,6 +462,64 @@ function sShop(mi) {
     toSheet('3 No Sale ราย Area', tNs, `สรุปสาขา No Sale ราย Area · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`),
     toSheet('3 No Sale รายชื่อสาขา', nsList, `รายชื่อสาขา No Sale · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`)];
 }
+// shop x model stock plan: risk alert (< 2 weeks) and transfers inside each Area (from Cover > 6 weeks to Cover < 4 weeks)
+function stockPlan() {
+  const st = stockBy((c, k) => c + '#' + k), sl = sales28((c, k) => c + '#' + k);
+  const cells = new Map();
+  for (const key of new Set([...st.keys(), ...sl.keys()])) { const [c, k] = key.split('#'); const q = st.get(key) || 0, s28 = sl.get(key) || 0;
+    cells.set(key, { c, k, area: SH[c].area, st: q, s28, w: s28 / 4, cw: cover(q, s28) }); }
+  const risk = [...cells.values()].filter((x) => x.w > 0 && x.st / x.w < CW_RISK);
+  const byAM = new Map(); for (const x of cells.values()) { const g = x.area + '|' + x.k; if (!byAM.has(g)) byAM.set(g, []); byAM.get(g).push(x); }
+  const moves = []; const short = new Map();
+  for (const list of byAM.values()) {
+    const rec = list.filter((x) => x.w > 0 && x.st / x.w < CW_LOW).map((x) => ({ x, need: Math.ceil(CW_LOW * x.w - x.st), got: 0 })).filter((r) => r.need > 0).sort((a, b) => a.x.st / a.x.w - b.x.st / b.x.w);
+    const don = list.filter((x) => x.st > 0 && (x.w === 0 || x.st / x.w > CW_HIGH)).map((x) => ({ x, avail: x.st - (x.w > 0 ? Math.ceil(CW_HIGH * x.w) : 1), gave: 0 })).filter((d) => d.avail > 0)
+      .sort((a, b) => (b.x.w ? b.x.st / b.x.w : 1e9) - (a.x.w ? a.x.st / a.x.w : 1e9));
+    for (const r of rec) { for (const d of don) { if (r.need <= r.got) break; const q = Math.min(r.need - r.got, d.avail - d.gave); if (q <= 0) continue;
+        d.gave += q; r.got += q; moves.push({ area: r.x.area, k: r.x.k, from: d.x, to: r.x, q }); }
+      if (r.got < r.need) short.set(r.x.c + '#' + r.x.k, r.need - r.got); }
+  }
+  // after-transfer cover
+  const outQ = new Map(), inQ = new Map();
+  for (const m of moves) { const fk = m.from.c + '#' + m.k, tk = m.to.c + '#' + m.k; outQ.set(fk, (outQ.get(fk) || 0) + m.q); inQ.set(tk, (inQ.get(tk) || 0) + m.q); }
+  return { cells, risk, moves, short, outQ, inQ };
+}
+function sPlan() {
+  const P = stockPlan(); const mn = (k) => (MD[k] || { name: k }).name.replace(/^VIVO /, '');
+  const sn = (c) => SH[c].n.replace(/^True Shop /, '');
+  // alert banner (all tabs)
+  const riskModels = new Map(); for (const x of P.risk) riskModels.set(x.k, (riskModels.get(x.k) || 0) + 1);
+  const rm = [...riskModels.entries()].sort((a, b) => b[1] - a[1]);
+  const al = $('#alert'); al.hidden = !HASSTOCK || !P.risk.length;
+  if (!al.hidden) al.innerHTML = `<b class="t">⚠ เสี่ยงขาดสินค้า ${num(P.risk.length)} รายการ (สาขา × รุ่น)</b><span>Cover ต่ำกว่า ${CW_RISK} สัปดาห์ · รุ่นที่เจอมากสุด: ${rm.slice(0, 5).map(([k, n]) => `${esc(mn(k))} (${n} สาขา)`).join(', ')}</span><span class="na">โอนภายใน Area ได้ ${num(P.moves.filter((m) => m.to.st / m.to.w < CW_RISK).reduce((s, m) => s + m.q, 0))} เครื่อง · ดูรายละเอียดในแท็บ Stock ›</span>`;
+  // risk table
+  const rrows = P.risk.map((x) => { const key = x.c + '#' + x.k, inn = P.inQ.get(key) || 0;
+    return { area: x.area, name: sn(x.c), c: x.c, model: mn(x.k), st: x.st, s28: x.s28, cw: x.st === 0 ? -1 : x.st / x.w, inn, after: (x.st + inn) / x.w, short: P.short.get(key) || 0 }; })
+    .sort((a, b) => a.area.localeCompare(b.area) || (a.cw === -1 ? -1 : a.cw) - (b.cw === -1 ? -1 : b.cw));
+  const tRisk = renderTable($('#t-risk'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Model', v: (r) => r.model, cls: 't' },
+    { h: 'Stock', v: (r) => r.st, f: num }, { h: 'ขาย 28 วัน', v: (r) => r.s28, f: num }, { h: 'Cover Week', v: (r) => r.cw, f: coverF },
+    { h: 'รับโอนใน Area', v: (r) => r.inn, f: (v) => v ? `<b class="up">+${num(v)}</b>` : '<span class="na">–</span>' }, { h: 'Cover หลังโอน', v: (r) => r.inn ? r.after : null, f: (v) => v == null ? '<span class="na">–</span>' : coverF(v) },
+    { h: 'ยังขาด (ขอเติมจากคลัง)', v: (r) => r.short, f: (v) => v ? `<b class="dn">${num(v)}</b>` : '<span class="na">–</span>' }], rrows);
+  $('#n-risk').innerHTML = HASSTOCK ? `สาขา × รุ่นที่มียอดขายใน 28 วัน แต่ Stock เหลือไม่ถึง ${CW_RISK} สัปดาห์ (รวมของหมด) · ${num(rrows.length)} รายการ · "ยังขาด" = จำนวนที่ต้องเติมให้ถึง ${CW_LOW} สัปดาห์ หลังโอนภายใน Area แล้ว` : 'รอไฟล์ Stock';
+  // transfer table
+  const trows = P.moves.map((m) => { const fk = m.from.c + '#' + m.k, tk = m.to.c + '#' + m.k;
+    return { area: m.area, model: mn(m.k), from: sn(m.from.c), fs: m.from.st, fs2: m.from.st - P.outQ.get(fk), ts: m.to.st, ts2: m.to.st + P.inQ.get(tk), fc: m.from.w ? m.from.st / m.from.w : Infinity, fa: m.from.w ? (m.from.st - P.outQ.get(fk)) / m.from.w : Infinity,
+      to: sn(m.to.c), tc: m.to.st === 0 ? -1 : m.to.st / m.to.w, ta: (m.to.st + P.inQ.get(tk)) / m.to.w, q: m.q }; })
+    .sort((a, b) => a.area.localeCompare(b.area) || a.model.localeCompare(b.model) || b.q - a.q);
+  const arrow = (a, b, s1, s2) => `<span class="na">${num(s1)}→${num(s2)} เครื่อง ·</span> ${coverF(a)} → ${coverF(b)}`;
+  const tTr = renderTable($('#t-tr'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'Model', v: (r) => r.model, cls: 't' }, { h: 'โอนจากสาขา', v: (r) => r.from, cls: 't' },
+    { h: 'ต้นทาง Stock · Cover (ก่อน → หลัง)', v: (r) => r.fc, f: (v, r) => arrow(r.fc, r.fa, r.fs, r.fs2), x: (v, r) => `Stock ${r.fs}→${r.fs2} · Cover ${r.fc === Infinity ? 'ไม่มีขาย' : nf1.format(r.fc)} → ${r.fa === Infinity ? 'ไม่มีขาย' : nf1.format(r.fa)}` },
+    { h: 'ไปสาขา', v: (r) => r.to, cls: 't' }, { h: 'ปลายทาง Stock · Cover (ก่อน → หลัง)', v: (r) => r.tc, f: (v, r) => arrow(r.tc, r.ta, r.ts, r.ts2), x: (v, r) => `Stock ${r.ts}→${r.ts2} · Cover ${r.tc === -1 ? 'ของหมด' : nf1.format(r.tc)} → ${nf1.format(r.ta)}` },
+    { h: 'จำนวน (เครื่อง)', v: (r) => r.q, f: (v) => `<b>${num(v)}</b>` }], trows);
+  const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  const tq = trows.reduce((s, r) => s + r.q, 0), shortT = [...P.short.values()].reduce((s, v) => s + v, 0);
+  $('#tr-kpi').innerHTML = HASSTOCK ? kc('แนะนำโอนย้าย', `${num(tq)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `${num(trows.length)} รายการ · ${num(new Set(trows.map((r) => r.area)).size)} Area`)
+    + kc('สาขาปลายทาง', num(new Set(P.moves.map((m) => m.to.c)).size), `เติมให้ Cover ถึง ${CW_LOW} สัปดาห์`)
+    + kc('ยังขาดหลังโอน', num(shortT), 'เครื่อง · ใน Area ไม่มีสาขาที่ Cover สูงพอ ต้องขอเติมจากคลัง') : '';
+  $('#n-tr').innerHTML = `ต้นทาง = สาขาใน Area เดียวกันที่ Cover สูงกว่า ${CW_HIGH} สัปดาห์ (เลือกสาขาที่ Cover สูงสุดก่อน และเหลือไว้ให้ต้นทางอย่างน้อย ${CW_HIGH} สัปดาห์ · สาขาที่ไม่มีขายเหลือไว้ 1 เครื่อง) · ปลายทาง = สาขาที่ Cover ต่ำกว่า ${CW_LOW} สัปดาห์ เรียงจาก Cover ต่ำสุด · เติมให้ถึง ${CW_LOW} สัปดาห์ · คิดจากยอดขาย 28 วัน · ตามตัวกรอง Area / Model ด้านบน`;
+  EXPORT.plan = [toSheet('4 เสี่ยงขาดสินค้า', tRisk, `แจ้งเตือนเสี่ยงขาดสินค้า (Cover < ${CW_RISK} สัปดาห์) · Stock ณ ${thDate(D.meta.stock_asof)}`),
+    toSheet('4 แนะนำโอนย้าย', tTr, `แนะนำโอนย้ายภายใน Area · Stock ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`)];
+}
 function sStock() {
   const sm = stockBy((c, k) => k), s28 = sales28((c, k) => k);
   const keys = [...new Set([...sm.keys(), ...s28.keys()])].sort((x, y) => (MORDER[x] ?? 999) - (MORDER[y] ?? 999));
@@ -467,8 +544,9 @@ function sStock() {
   $('#n-stock').innerHTML = `Stock ณ ${thDate(D.meta.stock_asof)} · ยอดขาย 28 วันล่าสุด ${thDate(L28.from)} – ${thDate(L28.to)} (เลื่อนตามวันที่ข้อมูลล่าสุดทุกครั้ง) · Cover Week = Stock ÷ (ยอดขาย 28 วัน ÷ 4) · หน่วยเครื่อง · Model: ${esc(mlab)}`
     + (HAS28 ? '' : ` · <b>ยอดขายในระบบเริ่ม ${thDate(D.meta.first_sales)} ยังไม่ครบ 28 วัน Cover Week จึงสูงกว่าจริง</b>`)
     + (D.stock.length ? '' : ' · <b>ยังไม่มีไฟล์ Stock ที่มีเครื่อง Vivo — จะขึ้นเองเมื่อมีไฟล์ stock_balance_report ใหม่</b>')
-    + ' · สี: <span class="cw bad">&lt;1</span> <span class="cw warn">1–2</span> <span class="cw ok">2–8</span> <span class="cw warn">&gt;8 สัปดาห์</span>';
-  EXPORT.stock = [toSheet('4 Stock ราย Model', t1, `Stock ราย Model ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`),
+    + ' · เกณฑ์ Cover: ' + CW_LEGEND;
+  sPlan();
+  EXPORT.stock = [...EXPORT.plan, toSheet('4 Stock ราย Model', t1, `Stock ราย Model ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`),
     toSheet('4 Stock รายสาขา', t2, `Stock รายสาขา (${mlab}) ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`)];
   return ts;
 }
@@ -629,6 +707,7 @@ function initControls() {
   seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-shopview', 'shopview');
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
     for (const t of ['model', 'area', 'shop', 'stock', 'ms']) $('#s-' + t).hidden = t !== S.tab; };
+  $('#alert').onclick = () => { S.tab = 'stock'; tabs(); persist(); $('#h-risk').scrollIntoView({ behavior: 'smooth' }); };
   tabs(); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; tabs(); persist(); };
   for (const [id, key] of [['#q-shop', 'shop'], ['#q-stock', 'stock'], ['#q-ms', 'ms']]) $(id).oninput = (e) => { S.q[key] = e.target.value.trim(); render(); };
   $('#locs').innerHTML = D.locs.length > 1 ? 'Location ที่นับเป็น Stock: ' + D.locs.map((l, i) => `<label><input type="checkbox" data-l="${i}"${S.locs.has(i) ? ' checked' : ''}> ${esc(l)}</label>`).join('') : '';
