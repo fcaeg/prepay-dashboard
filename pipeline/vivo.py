@@ -221,7 +221,7 @@ def build():
     f = f[(f.u != 0) | (f.n != 0)]
     # central-system figures up to their as-of date, POS (TSM) rows only after it
     hz = _load('vivo_hist.csv.gz'); hasof = meta.get('vivo_hist_asof', '')
-    pos_asof = meta.get('vivo_sales_asof', '')
+    pos_asof = max(meta.get('vivo_sales_asof', ''), s.BD.max().strftime('%Y-%m-%d %H:%M') if len(s) else '')
     if hz is not None and hasof:
         f = f[f.date > hasof]; stf = stf[stf.date > hasof]
         hz = hz[hz.shop.isin(ww)]; hz['u'] = pd.to_numeric(hz.u); hz['n'] = pd.to_numeric(hz.n)

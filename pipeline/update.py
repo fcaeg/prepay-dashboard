@@ -129,7 +129,7 @@ def merge_sales(paths):
         if bd.notna().any() and bd.max().strftime('%Y-%m-%d %H:%M') > meta.get('sales_asof', ''): meta['sales_asof'] = bd.max().strftime('%Y-%m-%d %H:%M')
         print(f'sales: {label}: {len(raw):,} rows, SIM PRE {len(new):,}, new to state {len(old) - n0:,}, bills {bd.min():%Y-%m-%d}..{bd.max():%Y-%m-%d %H:%M}')
     save_sim(old, changed)
-    json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith('vivo_')}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
 
 def merge_stock(path):
     st, label = read_csv_any(path)
@@ -141,7 +141,7 @@ def merge_stock(path):
     meta['stock_asof'] = f'{m.group(3)}-{MON[m.group(2)]:02d}-{int(m.group(1)):02d}' + (f' {int(m.group(4)):02d}:{m.group(5)}' if m and m.group(4) else '') if m else (os.environ.get('STOCK_ASOF') or meta.get('sales_asof', ''))
     meta['stock_file'] = label
     _vivo(vivo.set_stock, st, meta['stock_asof'])
-    json.dump(meta, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith('vivo_')}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
 
 def merge_targets(paths):
