@@ -39,8 +39,13 @@ def _norm(x): return re.sub(r'[^A-Z0-9]', '', str(x).upper())
 
 def key_from_desc(d):
     p = [x.strip() for x in str(d).upper().split(',')]
-    if len(p) < 5: return _norm(' '.join(p[2:])), ' '.join(p[2:])
-    model, net, mem = p[2], p[3], p[4]
+    p = p[:2] + [x for x in p[2:] if x]
+    if len(p) > 1 and p[1].startswith('VIVO ') and len(p[1]) > 5: p = [p[0], 'VIVO', p[1][5:].strip()] + p[2:]
+    net = next((x for x in p[3:] if re.fullmatch(r'[2-5]G', x)), None)
+    mem = next((x for x in p[3:] if re.fullmatch(r'\d+\s*[/+]\s*\d+\s*(GB|TB)?', x)), None)
+    if len(p) < 4 or not net or not mem: return _norm(' '.join(p[2:4])), 'VIVO ' + ' '.join(p[2:4])
+    model = p[2]
+    mem = mem.replace('GB', '').replace(' ', '')
     extra = 'PHOTOSET' if 'PHOTOSET' in str(d).upper().replace(' ', '') else ''
     k = '|'.join([_norm(model), _norm(net), _norm(mem.replace('GB', ''))]) + ('|PHOTOSET' if extra else '')
     nm = f"VIVO {model} {net} {mem.replace('+', '/')}GB" + (' PHOTOSET' if extra else '')
@@ -75,7 +80,7 @@ def add_sales(raw):
 def set_stock(st, asof=None):
     pn = 'PRODUCT_NAME' if 'PRODUCT_NAME' in st else 'DESCRIPTION'
     k = st[is_vivo(st[pn])].copy(); k['PN'] = k[pn].str.strip()
-    cols = [c for c in ['SHOP_CODE', 'PRODUCT_CODE', 'PN', 'LOCATION_NAME', 'SERIAL', 'FIRST_AGING'] if c in k]
+    cols = [c for c in ['SHOP_CODE', 'PRODUCT_CODE', 'PN', 'LOCATION_NAME', 'BALANCE', 'SERIAL', 'FIRST_AGING'] if c in k]
     _save(k[cols], 'vivo_stock.csv.gz'); _meta_set(vivo_stock_asof=asof or _meta().get('stock_asof', ''))
     print(f'vivo: stock {len(k):,} H/S VIVO serials')
 
@@ -237,8 +242,9 @@ def build():
         kk2 = k.PN.map(key_from_desc); k['m'] = kk2.str[0]
         for a, b in set(kk2): addm(a, b, False)
         if 'LOCATION_NAME' not in k: k['LOCATION_NAME'] = '-'
-        k['LOCATION_NAME'] = k.LOCATION_NAME.fillna('-')
-        g = k.groupby(['SHOP_CODE', 'm', 'LOCATION_NAME']).size().reset_index(name='q')
+        k['LOCATION_NAME'] = k.LOCATION_NAME.fillna('-') + k.PN.str.upper().str.contains(r',\s*DEMO\b').map({True: ' (DEMO)', False: ''})
+        k['q'] = pd.to_numeric(k.BALANCE, errors='coerce').fillna(1) if 'BALANCE' in k else 1
+        g = k.groupby(['SHOP_CODE', 'm', 'LOCATION_NAME']).q.sum().reset_index()
         locs = sorted(g.LOCATION_NAME.unique().tolist())
         stock = [[r.SHOP_CODE, r.m, locs.index(r.LOCATION_NAME), int(r.q)] for r in g.itertuples()]
     # model order: series X > V > Y > others, then target net

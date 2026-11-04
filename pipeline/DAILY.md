@@ -57,7 +57,7 @@ This updates GitHub Pages only; the Claude dashboard still needs step 2 above (p
 ## Vivo Dashboard (https://fcaeg.github.io/prepay-dashboard/vivo/)
 Same inputs as Prepay — every daily_sales / stock_balance_report run also keeps the `H/S,VIVO` rows
 (`pipeline/vivo.py`, hooked into update.py; a Vivo error never stops the Prepay update):
-- sales → `state/vivo_sales_<YYYY-MM>.csv.gz` (same de-dup key as SIM rows) · stock → `state/vivo_stock.csv.gz`
+- sales → `state/vivo_sales_<YYYY-MM>.csv.gz` (same de-dup key as SIM rows) · stock → `state/vivo_stock.csv.gz` (qty = BALANCE; names with ",DEMO" become location "<LOC> (DEMO)"; page counts MAIN_STOCK only by default)
 - `VIVO Target*.xlsx` (sheet TARGET_FOR_OPERATION, brand VIVO) → `python3 -I pipeline/update.py --vivo-target <file>` (Drive: any name with "vivo" + "target")
 - `* PC Brand Update*.xlsx` (newest sheet "PC <MON> <yy>", column VIVO by CODE WW) → `--pc <file>` (Drive: name contains "PC Brand")
 - Central-system Vivo sales (`VIVO Sale*.xlsx`, WW_FLAG = WW, sale day = YEAR/MONTH/DAY because TRANSACTION_DATE is the month end) →
