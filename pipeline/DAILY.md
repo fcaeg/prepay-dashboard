@@ -63,7 +63,7 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
 - Central-system Vivo sales (`VIVO Sale*.xlsx`, WW_FLAG = WW, sale day = YEAR/MONTH/DAY because TRANSACTION_DATE is the month end) →
   `--vivo-hist <file>` (Drive: name contains "vivo" + "sale") → `state/vivo_hist.csv.gz`. The page uses these figures up to DATA_ASOF_DATE
   and POS (TSM) daily_sales rows only for later dates (no double counting). Nami: Nov 26 portion = Oct portion until announced.
-- Week portions (8-7-7-8 / 8-7-7-9): `state/vivo_portions.json`, e.g. `{"2026-10": [30, 23, 21, 26]}`; a month not listed uses the share of days
+- Target to date is FLAT (Nami, 4 Nov 2026): month Target ÷ days × days passed; the 8-7-7-8 portions are no longer used (vivo_portions.json is ignored). WoW = ISO weeks Mon–Sun, latest week to date vs the same weekdays of the week before; tab 6 shows W1–W52.
 - Page: `pipeline/vivo_page.html` + `out/vivo_data.json` → `vivo/index.html` (built by build_page.py). Model match: sales
   `H/S,VIVO,V80LITE,5G,6/256,...` ↔ target `VIVO V80 LITE 5G 6/256GB` (key V80LITE|5G|6256; PHOTOSET kept separate).
 - Download password (Nami, 4 Nov 2026): every Excel / PNG download asks a separate password (PBKDF2 hash DL_HASH in vivo_page.html; asked once per visit).
