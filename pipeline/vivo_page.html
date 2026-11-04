@@ -106,6 +106,10 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .ai ul { margin: 0; padding-left: 18px; } .ai li { margin: 3px 0; }
 .up { color: var(--ok); font-weight: 600; } .dn { color: var(--bad); font-weight: 600; }
 #t-ms tbody tr:not(.tot) { cursor: pointer; } #t-ms tbody tr:not(.tot):hover td { background: var(--accent-soft); }
+.gapc { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.gapc .kpi { background: var(--panel); border-top: 3px solid var(--bad); }
+.gapc .kpi.g2 { border-top-color: var(--warn); } .gapc .kpi.g3 { border-top-color: #e07b39; }
+.gapc ol { margin: 6px 0 0; padding-left: 20px; font-size: 12.5px; max-height: 220px; overflow: auto; } .gapc li { margin: 2px 0; } .gapc li span { color: var(--muted); }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 @media (max-width: 640px) { h1 { font-size: 20px; } .kpi .v { font-size: 18px; } select { max-width: 11rem; } .filters { position: static; } }
@@ -203,6 +207,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
         <h3 style="margin:0 0 6px">สรุป PC ตาม Performance</h3><p class="note" id="n-pcsum"></p>
         <div class="cmp" id="pc-tiers"></div>
         <div class="alert" id="pc-alert" hidden style="cursor:default"></div>
+        <div class="gapc" id="pc-gaps"></div>
         <div class="tw" id="t-pcalert" style="max-height:340px"></div>
       </div>
       <p class="note" id="n-ms"></p>
@@ -600,6 +605,8 @@ function pcSummary(mi) {
   const alert = rows.filter((r) => r.gap == null || r.gap >= 2).sort((p, q) => (q.gap ?? 999) - (p.gap ?? 999) || p.area.localeCompare(q.area));
   return { rows, alert, ref };
 }
+const GAPB = [{ k: 'g2', name: 'ไม่มียอด 2 วัน', t: (g) => g === 2 }, { k: 'g3', name: 'ไม่มียอด 3 วัน', t: (g) => g === 3 }, { k: 'g4', name: 'ไม่มียอดมากกว่า 3 วัน', t: (g) => g == null || g > 3 }];
+const gapTxt = (r) => r.gap == null ? 'ไม่เคยขาย' : `${r.gap} วัน`;
 function sPCsum(mi) {
   const P = pcSummary(mi); const u = unit();
   const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
@@ -609,6 +616,9 @@ function sPCsum(mi) {
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
   al.innerHTML = P.alert.length ? `<b class="t">⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${num(P.alert.length)} สาขา</b><span>นับถึงวันที่ ${thDate(P.ref)} · ไม่มีขาย Vivo ทุกรุ่น</span>`
     : `<b class="t">✓ ไม่มีสาขาที่มี PC ซึ่งไม่มียอดติดต่อกัน 2 วัน</b><span>นับถึงวันที่ ${thDate(P.ref)}</span>`;
+  $('#pc-gaps').innerHTML = GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap));
+    return `<div class="kpi ${b.k}"><div class="l">PC ${b.name}</div><div class="v"><span class="cw ${b.k === 'g2' ? 'warn' : 'bad'}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div>`
+      + (g.length ? `<ol>${g.map((r) => `<li>${esc(r.name.replace(/^True Shop /i, ''))} <span>· ${esc(r.area)}${b.k === 'g4' ? ' · ' + gapTxt(r) : ''} · PC ${r.pc}</span></li>`).join('')}</ol>` : '<div class="s">ไม่มีสาขา</div>') + '</div>'; }).join('');
   renderTable($('#t-pcalert'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => `<span class="pc">PC ${v}</span>` },
     { h: 'ไม่มียอดติดต่อกัน', v: (r) => r.gap, f: (v) => v == null ? '<span class="cw bad">ไม่เคยขาย</span>' : `<b class="dn">${v} วัน</b>` }, { h: 'ขายล่าสุด', v: (r) => r.last, f: (v) => v ? thDate(v) : '–' },
     { h: `ยอด MTD (${u})`, v: (r) => r.act, f: num }, { h: '%ACH ถึงวันนี้', p: 1, v: (r) => r.ach, f: pct }], P.alert);
@@ -625,7 +635,8 @@ function downloadPCSummary() {
   const lines = [`ข้อมูลยอดขายถึง ${thDate(D.meta.sales_asof)} · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
     `ยอดขายรวม ${num(tt.act)} ${u} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
     ...TIERS.map((t) => { const n = P.rows.filter((r) => r.tk === t.k).length; return `${t.name}: ${n} สาขา`; }),
-    `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา` + (P.alert.length ? ` (${P.alert.slice(0, 8).map((r) => `${r.name.replace(/^True Shop /, '')} ${r.gap == null ? 'ไม่เคยขาย' : r.gap + ' วัน'}`).join(', ')}${P.alert.length > 8 ? ' …' : ''})` : ''),
+    `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา`,
+    ...GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap)); return `   • ${b.name}: ${g.length} สาขา` + (g.length ? ` — ${g.map((r) => r.name.replace(/^True Shop /i, '') + (b.k === 'g4' ? ` (${gapTxt(r)})` : '')).join(', ')}` : ''); }),
     best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${Math.round(r.ach * 100)}%`).join(', ')}` : ''].filter(Boolean);
   const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: ['', '', '', '', '', ''],
     head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', 'num', 'num', 'ach'],
@@ -636,10 +647,10 @@ function downloadPCSummary() {
   const S2 = { name: 'PC รายสาขา', title: `PC รายสาขา ตามกลุ่ม Performance · ${ml} · หน่วย ${u}`, groups: cols.map(() => ''), head: cols,
     kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'num', 'num', 'num', 'ach', 'ach', 'num', 'mom', 'text', 'gap'], body, rowCls: body.map(() => ''),
     rowFill: P.rows.map((r) => (TIERS.find((t) => t.k === r.tk) || {}).x || null), fillCols: [0] };
-  const acols = ['Region', 'Area', 'สาขา', 'รหัส', 'PC', 'ไม่มียอดติดต่อกัน (วัน)', 'ขายล่าสุด', `ยอด MTD (${u})`, '%ACH ถึงวันนี้', 'Performance'];
-  const abody = P.alert.map((r) => [r.zone, r.area, r.name, r.c, r.pc, r.gap == null ? 'ไม่เคยขาย' : r.gap, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.act, r.ach, r.tier]);
+  const acols = ['กลุ่ม', 'Region', 'Area', 'สาขา', 'รหัส', 'PC', 'ไม่มียอดติดต่อกัน (วัน)', 'ขายล่าสุด', `ยอด MTD (${u})`, '%ACH ถึงวันนี้', 'Performance'];
+  const abody = P.alert.slice().sort((a, b) => (a.gap ?? 999) - (b.gap ?? 999) || a.area.localeCompare(b.area)).map((r) => [GAPB.find((b) => b.t(r.gap)).name, r.zone, r.area, r.name, r.c, r.pc, r.gap == null ? 'ไม่เคยขาย' : r.gap, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.act, r.ach, r.tier]);
   const S3 = { name: 'Alert ไม่มียอด 2 วัน', title: `Alert: สาขาที่มี PC ไม่มียอด Vivo ติดต่อกัน 2 วันขึ้นไป · นับถึง ${thDate(P.ref)}`, groups: acols.map(() => ''), head: acols,
-    kinds: ['text', 'text', 'text', 'text', 'num', 'gap', 'text', 'num', 'ach', 'text'], body: abody.length ? abody : [['ไม่มีสาขาที่เข้าเงื่อนไข']], rowCls: abody.map(() => '') };
+    kinds: ['text', 'text', 'text', 'text', 'text', 'num', 'gap', 'text', 'num', 'ach', 'text'], body: abody.length ? abody : [['ไม่มีสาขาที่เข้าเงื่อนไข']], rowCls: abody.map(() => '') };
   downloadXlsx([S1, S2, S3], `PC_Summary_Update_${(D.meta.sales_asof || '').slice(0, 10)}.xlsx`);
 }
 function sMS(mi) {
