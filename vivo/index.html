@@ -158,18 +158,18 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   <section class="card" id="s-shop" hidden>
     <div class="card-h"><h2>ยอดขายรายสาขา</h2>
       <div class="seg" id="f-tmode"><button data-v="full" aria-pressed="true">Target ทั้งเดือน</button><button data-v="day" aria-pressed="false">Target ตามวัน (8-7-7-8)</button></div>
+      <div class="seg" id="f-shopview"><button data-v="all" aria-pressed="true">แสดงทุกสาขา</button><button data-v="ns" aria-pressed="false">เฉพาะ No Sale</button></div>
       <input type="search" id="q-shop" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา">
       <span class="spacer"></span><button class="btn" data-x="shop">⤓ Excel</button></div>
-    <div class="ns" id="ns-box">
-      <div class="card-h" style="margin-bottom:6px"><h3 style="margin:0">สรุปสาขา No Sale</h3>
-        <div class="seg" id="f-shopview"><button data-v="all" aria-pressed="true">แสดงทุกสาขา</button><button data-v="ns" aria-pressed="false">เฉพาะ No Sale</button></div></div>
+    <p class="note" id="n-shop"></p>
+    <div class="tw" id="t-shop"></div>
+    <div class="ns" id="ns-box" style="margin-top:16px">
+      <div class="card-h" style="margin-bottom:6px"><h3 style="margin:0">สรุปสาขา No Sale</h3></div>
       <p class="note" id="n-ns"></p>
       <div class="cmp" id="ns-type"></div>
       <div class="cmp" id="ns-kpi"></div>
       <div class="tw" id="t-ns" style="max-height:none"></div>
     </div>
-    <p class="note" id="n-shop" style="margin-top:14px"></p>
-    <div class="tw" id="t-shop"></div>
   </section>
 
   <section class="card" id="s-stock" hidden>
@@ -795,7 +795,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:02 น.</span>`;
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:05 น.</span>`;
 initControls(); render();
 </script>
 </body>
