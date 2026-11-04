@@ -342,9 +342,10 @@ function renderTable(el, cols, rows, opt = {}) {
   return { cols, rows };
 }
 function toSheet(name, t, title) {
-  const head = t.cols.map((c) => (c.g ? c.g.replace(/<[^>]+>/g, '').replace('●', '').trim() + ' · ' : '') + c.h.replace(/<[^>]+>/g, ''));
-  const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (c.h === 'Cover Week' && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
-  return { name, rows: [[title], [], head, ...body], header: 2, pctCols: t.cols.map((c, i) => c.p ? i : -1).filter((i) => i >= 0) };
+  const clean = (x) => String(x || '').replace(/<[^>]+>/g, '').replace('●', '').trim();
+  const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : c.h === 'MoM %' ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : 'num';
+  const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (/Cover/.test(c.h) && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
+  return { name, title, groups: t.cols.map((c) => clean(c.g)), head: t.cols.map((c) => clean(c.h)), body, rowCls: t.rows.map((r) => r._cls || ''), kinds: t.cols.map(kind) };
 }
 
 // ---------- weekly comparison columns (sections 1 and 2)
@@ -683,7 +684,7 @@ function sPC(mi) {
   $('#n-pd-s').innerHTML = `ระบบส่วนกลางไม่มีชื่อพนักงาน ข้อมูลรายคนจึงมาจาก TSM (POS) เฉพาะวันที่หลัง ${thDate(D.meta.hist_asof)}` + (srows.length ? '' : ' — ยังไม่มีข้อมูลในเดือนนี้');
   EXPORT.ms = [toSheet('5 PC กลุ่ม Model', gtab, `${s.n} (${c}) · ยอดขายตามกลุ่ม Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
     toSheet('5 PC ราย Model', mtab, `${s.n} (${c}) · ยอดขายราย Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
-    { name: '5 PC บทวิเคราะห์', rows: [[`บทวิเคราะห์ ${s.n} (${c}) · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl}`], [], ...li.map((x) => ['• ' + x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&amp;/g, '&')])], header: 1, pctCols: [] },
+    { name: '5 PC บทวิเคราะห์', title: `บทวิเคราะห์ ${s.n} (${c}) · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl}`, groups: [''], head: ['บทวิเคราะห์'], kinds: ['note'], rowCls: li.map(() => ''), body: li.map((x) => ['• ' + x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&amp;/g, '&')]) },
     toSheet('5 PC รายพนักงาน', stab, `${s.n} · ยอดขายรายพนักงาน (TSM)`)];
 }
 function kpis(mi, tot, ts) {
@@ -741,7 +742,8 @@ function initControls() {
 function rawSheet() {
   const rows = D.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
     .map(([d, c, k, u, n]) => [d, c, SH[c].n, SH[c].area, zoneOf(SH[c].area), SH[c].type, SH[c].pc || 0, (MD[k] || { name: k }).name, u, n]);
-  return { name: 'Data ยอดขายรายวัน', rows: [['ยอดขายรายวัน ' + S.month + ' (ตามตัวกรอง)'], [], ['วันที่', 'รหัสสาขา', 'สาขา', 'Area', 'Region', 'ประเภท', 'PC Vivo', 'Model', 'QTY', 'Net Amount'], ...rows], header: 2, pctCols: [] };
+  return { name: 'Data ยอดขายรายวัน', title: 'ยอดขายรายวัน ' + S.month + ' (ตามตัวกรอง)', groups: Array(10).fill(''), head: ['วันที่', 'รหัสสาขา', 'สาขา', 'Area', 'Region', 'ประเภท', 'PC Vivo', 'Model', 'QTY', 'Net Amount'],
+    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'text', 'num', 'num'], body: rows, rowCls: rows.map(() => ''), raw: true };
 }
 
 function render() {
@@ -767,10 +769,82 @@ function zip(files) {
 }
 const xe = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 const colL = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+function filterText() {
+  const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${S.zone === 'ALL' ? 'ทั้งหมด' : S.zone}`, `Area: ${S.area === 'ALL' ? 'ทั้งหมด' : S.area}`,
+    `ประเภท: ${S.type === 'ALL' ? 'ทั้งหมด' : S.type}`, `PC: ${S.pc === 'ALL' ? 'ทั้งหมด' : S.pc === 'Y' ? 'มี PC' : 'ไม่มี PC'}`, `Model: ${S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.replace(/\s*\*$/, '').trim()}`];
+  return f.join('  |  ') + `  |  ยอดขายถึง ${thDate(D.meta.sales_asof)} · Stock ณ ${thDate(D.meta.stock_asof)}`;
+}
 function downloadXlsx(sheets, fname) {
   sheets = sheets.filter(Boolean); const used = new Set();
   const names = sheets.map((s) => { let n = s.name.replace(/[\\/?*\[\]:]/g, ' ').slice(0, 31); while (used.has(n)) n = n.slice(0, 28) + '_' + used.size; used.add(n); return n; });
-  const files = [['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+  // ---- style registry
+  const FONTS = ['<font><sz val="10"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Tahoma"/></font>',
+    '<font><b/><sz val="14"/><color rgb="FF1F3A5F"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><color rgb="FF1E7B45"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><color rgb="FFC0392B"/><name val="Tahoma"/></font>',
+    '<font><i/><sz val="9"/><color rgb="FF6B6862"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><color rgb="FFA86A12"/><name val="Tahoma"/></font>', '<font><b/><sz val="10"/><color rgb="FF2E46C8"/><name val="Tahoma"/></font>'];
+  const fillX = (rgb) => `<fill><patternFill patternType="solid"><fgColor rgb="FF${rgb}"/><bgColor indexed="64"/></patternFill></fill>`;
+  const FILLS = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+  const fillIdx = {}; const fill = (rgb) => { if (!rgb) return 0; if (!(rgb in fillIdx)) { fillIdx[rgb] = FILLS.length; FILLS.push(fillX(rgb)); } return fillIdx[rgb]; };
+  const XF = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>']; const xfIdx = {};
+  const xf = (o) => { const k = JSON.stringify(o); if (k in xfIdx) return xfIdx[k];
+    const al = o.h || o.v || o.wrap || o.indent ? `<alignment${o.h ? ` horizontal="${o.h}"` : ''} vertical="${o.v || 'center'}"${o.wrap ? ' wrapText="1"' : ''}${o.indent ? ` indent="${o.indent}"` : ''}/>` : '';
+    XF.push(`<xf numFmtId="${o.nf || 0}" fontId="${o.font || 0}" fillId="${fill(o.fill)}" borderId="${o.border ? 1 : 0}" xfId="0"${o.nf ? ' applyNumberFormat="1"' : ''}${o.font ? ' applyFont="1"' : ''}${o.fill ? ' applyFill="1"' : ''}${o.border ? ' applyBorder="1"' : ''}${al ? ' applyAlignment="1">' + al + '</xf>' : '/>'}`);
+    return xfIdx[k] = XF.length - 1; };
+  const GROUP_COLORS = ['DCE6F7', 'E3F1E4', 'FBEBD7', 'ECE3F6', 'DDEFF2', 'F6E1E6', 'EEF0D8', 'E6E6E6'];
+  const ROWFILL = { sub: 'F1EFE9', tot: 'E2DED4', 'ns-row': 'FDF1F0' };
+  const achStyle = (v) => v >= 1 ? { fill: 'E3F3EA', font: 4 } : v >= 0.8 ? { fill: 'FBF0DC', font: 7 } : { fill: 'FBE6E4', font: 5 };
+  const coverStyle = (v) => v === 'ของหมด' || (typeof v === 'number' && v < CW_RISK) ? { fill: 'FBE6E4', font: 5 } : v === 'ไม่มีขาย' ? { fill: 'FBF0DC', font: 7 }
+    : typeof v === 'number' ? (v < CW_LOW ? { fill: 'FBF0DC', font: 7 } : v <= CW_HIGH ? { fill: 'E3F3EA', font: 4 } : { fill: 'E7EAFB', font: 8 }) : {};
+  const files = [];
+  sheets.forEach((s, si) => {
+    const nc = s.head.length, hasG = s.groups.some(Boolean); const out = []; const merges = []; let r = 1;
+    const cell = (ref, v, st) => { if (v == null || v === '') return `<c r="${ref}" s="${st}"/>`;
+      if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}" s="${st}"><v>${Math.round(v * 10000) / 10000}</v></c>`;
+      return `<c r="${ref}" t="inlineStr" s="${st}"><is><t xml:space="preserve">${xe(v)}</t></is></c>`; };
+    // title + filter line + legend
+    out.push(`<row r="${r}" ht="24" customHeight="1">${cell('A' + r, s.title, xf({ font: 3 }))}</row>`); merges.push(`A${r}:${colL(Math.max(nc - 1, 0))}${r}`); r++;
+    out.push(`<row r="${r}">${cell('A' + r, filterText(), xf({ font: 6 }))}</row>`); merges.push(`A${r}:${colL(Math.max(nc - 1, 0))}${r}`); r++;
+    if (s.kinds.some((k) => k === 'ach' || k === 'cover')) { out.push(`<row r="${r}">${cell('A' + r, (s.kinds.includes('ach') ? 'สี %ACH: เขียว ≥ 100% · เหลือง 80–99% · แดง < 80%' : '') + (s.kinds.includes('cover') ? `${s.kinds.includes('ach') ? '   |   ' : ''}สี Cover Week: แดง < ${CW_RISK} (เสี่ยงขาด) · เหลือง ${CW_RISK}–${CW_LOW} · เขียว ${CW_LOW}–${CW_HIGH} (พอดี) · ฟ้า > ${CW_HIGH} (สูง)` : ''), xf({ font: 6 }))}</row>`); merges.push(`A${r}:${colL(Math.max(nc - 1, 0))}${r}`); r++; }
+    r++;
+    // group header row (merged, one colour per group)
+    const gcol = {}; let gi = 0; for (const g of s.groups) if (g && !(g in gcol)) gcol[g] = GROUP_COLORS[gi++ % GROUP_COLORS.length];
+    if (hasG) { let row = `<row r="${r}" ht="20" customHeight="1">`; let c0 = 0;
+      while (c0 < nc) { let c1 = c0; while (c1 + 1 < nc && s.groups[c1 + 1] === s.groups[c0]) c1++;
+        const g = s.groups[c0]; const st = xf({ font: 1, fill: g ? gcol[g] : 'F3F2EE', border: 1, h: 'center' });
+        for (let c = c0; c <= c1; c++) row += cell(colL(c) + r, c === c0 ? g : '', st);
+        if (c1 > c0) merges.push(`${colL(c0)}${r}:${colL(c1)}${r}`); c0 = c1 + 1; }
+      out.push(row + '</row>'); r++; }
+    const hr = r;
+    out.push(`<row r="${r}" ht="30" customHeight="1">` + s.head.map((h, c) => cell(colL(c) + r, h, xf({ font: 2, fill: '1F3A5F', border: 1, h: s.kinds[c] === 'text' || s.kinds[c] === 'note' ? 'left' : 'center', wrap: 1 }))).join('') + '</row>'); r++;
+    const widths = s.head.map((h, c) => Math.max(8, Math.min(s.kinds[c] === 'note' ? 120 : 16, String(h).length + 2)));
+    s.body.forEach((row, ri) => {
+      const rc = s.rowCls[ri] || ''; const rf = ROWFILL[rc]; const bold = rc === 'sub' || rc === 'tot';
+      const zebra = !rf && !s.raw && ri % 2 === 1 ? 'FAFAF8' : null;
+      out.push(`<row r="${r}">` + row.map((v, c) => {
+        const k = s.kinds[c]; let o = { border: 1, fill: rf || zebra, font: bold ? 1 : 0 };
+        if (k === 'text' || k === 'note') { o.h = 'left'; if (c === 0 && rc === 'ind') o.indent = 1; if (k === 'note') o.wrap = 1; }
+        else if (k === 'ach' || k === 'pct') { o.nf = 9; o.h = 'right'; if (k === 'ach' && typeof v === 'number') Object.assign(o, achStyle(v)); }
+        else if (k === 'mom') { o.nf = 166; o.h = 'right'; if (typeof v === 'number') o.font = v >= 0 ? 4 : 5; else if (v === 'ใหม่') o.font = 4; }
+        else if (k === 'cover') { o.nf = 164; o.h = 'right'; Object.assign(o, coverStyle(v)); }
+        else { o.h = 'right'; o.nf = typeof v === 'number' && Math.abs(v - Math.round(v)) > 1e-6 && Math.abs(v) < 100 ? 164 : 3; }
+        widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? nf0.format(Math.round(v)).length + 3 : String(v ?? '').length + 2)));
+        return cell(colL(c) + r, v, xf(o)); }).join('') + '</row>'); r++; });
+    const last = r - 1;
+    const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+      + `<sheetPr><tabColor rgb="FF${['1F3A5F', '2E7D5B', 'B7791F', '6B4FA0', '1F7A8C', 'A23B5A'][si % 6]}"/><pageSetUpPr fitToPage="1"/></sheetPr>`
+      + `<sheetViews><sheetView workbookViewId="0" showGridLines="0" zoomScale="90"><pane xSplit="1" ySplit="${hr}" topLeftCell="B${hr + 1}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>`
+      + '<sheetFormatPr defaultRowHeight="16"/><cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${i === 0 ? Math.max(w, 18) : w}" customWidth="1"/>`).join('') + '</cols>'
+      + '<sheetData>' + out.join('') + '</sheetData>'
+      + (last > hr && s.kinds[0] !== 'note' ? `<autoFilter ref="A${hr}:${colL(nc - 1)}${last}"/>` : '')
+      + (merges.length ? `<mergeCells count="${merges.length}">${merges.map((m) => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : '')
+      + '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';
+    files.push([`xl/worksheets/sheet${si + 1}.xml`, sheetXml]);
+  });
+  const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.0"/><numFmt numFmtId="166" formatCode="+0%;-0%;0%"/></numFmts>'
+    + `<fonts count="${FONTS.length}">${FONTS.join('')}</fonts><fills count="${FILLS.length}">${FILLS.join('')}</fills>`
+    + '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9D6CE"/></left><right style="thin"><color rgb="FFD9D6CE"/></right><top style="thin"><color rgb="FFD9D6CE"/></top><bottom style="thin"><color rgb="FFD9D6CE"/></bottom><diagonal/></border></borders>'
+    + `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${XF.length}">${XF.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  files.unshift(['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
       + sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>'],
     ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
     ['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
@@ -778,24 +852,12 @@ function downloadXlsx(sheets, fname) {
     ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
       + sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')
       + `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
-    ['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Tahoma"/></font><font><b/><sz val="11"/><name val="Tahoma"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE9E7E0"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="6"><xf/><xf fontId="1" applyFont="1"/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/><xf numFmtId="3" applyNumberFormat="1"/><xf numFmtId="9" applyNumberFormat="1"/><xf numFmtId="164" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']];
-  sheets.forEach((s, si) => {
-    const widths = [];
-    const rows = s.rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
-      const ref = colL(ci) + (ri + 1); const head = ri === s.header; const title = ri === 0;
-      widths[ci] = Math.max(widths[ci] || 6, Math.min(48, String(v ?? '').length + 2));
-      if (typeof v === 'number' && isFinite(v)) { const st = s.pctCols.includes(ci) ? 4 : (Math.abs(v - Math.round(v)) > 1e-9 && Math.abs(v) < 1000 ? 5 : 3); return `<c r="${ref}" s="${st}"><v>${s.pctCols.includes(ci) ? v : Math.round(v * 100) / 100}</v></c>`; }
-      if (v == null || v === '') return '';
-      return `<c r="${ref}" t="inlineStr" s="${head ? 2 : title ? 1 : 0}"><is><t xml:space="preserve">${xe(v)}</t></is></c>`; }).join('') + '</row>').join('');
-    if (s.rows[0]) widths[0] = Math.max(Math.min(widths[0], 40), 12);
-    files.push([`xl/worksheets/sheet${si + 1}.xml`, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane xSplit="1" ySplit="' + (s.header + 1) + '" topLeftCell="B' + (s.header + 2) + '" activePane="bottomRight" state="frozen"/></sheetView></sheetViews><cols>'
-      + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${i === 0 ? Math.max(w, 14) : Math.min(w, 22)}" customWidth="1"/>`).join('') + '</cols><sheetData>' + rows + '</sheetData></worksheet>']);
-  });
+    ['xl/styles.xml', styles]);
   const a = document.createElement('a'); a.href = URL.createObjectURL(zip(files)); a.download = fname; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:09 น.</span>`;
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:13 น.</span>`;
 initControls(); render();
 </script>
 </body>
