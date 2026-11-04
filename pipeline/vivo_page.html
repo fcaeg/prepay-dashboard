@@ -207,6 +207,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
         <h3 style="margin:0 0 6px">สรุป PC ตาม Performance</h3><p class="note" id="n-pcsum"></p>
         <div class="cmp" id="pc-tiers"></div>
         <div class="alert" id="pc-alert" hidden style="cursor:default"></div>
+        <div style="display:flex;justify-content:flex-end;margin:-4px 0 6px"><button class="btn" id="pc-gappng">⤓ Download PNG (PC ไม่มียอด)</button></div>
         <div class="gapc" id="pc-gaps"></div>
         <div class="tw" id="t-pcalert" style="max-height:340px"></div>
       </div>
@@ -607,6 +608,36 @@ function pcSummary(mi) {
 }
 const GAPB = [{ k: 'g2', name: 'ไม่มียอด 2 วัน', t: (g) => g === 2 }, { k: 'g3', name: 'ไม่มียอด 3 วัน', t: (g) => g === 3 }, { k: 'g4', name: 'ไม่มียอดมากกว่า 3 วัน', t: (g) => g == null || g > 3 }];
 const gapTxt = (r) => r.gap == null ? 'ไม่เคยขาย' : `${r.gap} วัน`;
+let PCGAP = null;
+// PNG of the 2 / 3 / >3 days cards, drawn on a canvas (full lists, no scrolling)
+function downloadGapPNG() {
+  if (!PCGAP) return; const { alert, ref, scope } = PCGAP;
+  const F = '"Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif';
+  const cols = GAPB.map((b) => ({ b, list: alert.filter((r) => b.t(r.gap)) }));
+  const W = 1600, pad = 28, gap = 18, cw = (W - pad * 2 - gap * 2) / 3, lh = 26;
+  const ctx0 = document.createElement('canvas').getContext('2d');
+  // wrap each line to the column width
+  const wrap = (ctx, t, w) => { const out = []; let line = ''; for (const ch of [...t]) { if (ctx.measureText(line + ch).width > w && line) { out.push(line); line = '  ' + ch; } else line += ch; } if (line) out.push(line); return out; };
+  ctx0.font = `15px ${F}`;
+  const lines = cols.map(({ b, list }) => list.length ? list.flatMap((r, i) => wrap(ctx0, `${i + 1}. ${r.name.replace(/^True Shop /i, '')} · ${r.area}${b.k === 'g4' ? ' · ' + gapTxt(r) : ''} · PC ${r.pc}`, cw - 32)) : ['ไม่มีสาขา']);
+  const top = 150, H = top + 92 + Math.max(...lines.map((l) => l.length)) * lh + 40;
+  const cv = document.createElement('canvas'); const sc = 2; cv.width = W * sc; cv.height = H * sc; const c = cv.getContext('2d'); c.scale(sc, sc);
+  const rr = (x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+  c.fillStyle = '#f6f5f1'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#1f1e1c'; c.font = `700 26px ${F}`; c.textBaseline = 'top'; c.fillText('Vivo · PC ไม่มียอดติดต่อกัน', pad, 22);
+  c.fillStyle = '#6b6862'; c.font = `14px ${F}`; c.fillText(`นับถึงวันที่ ${thDate(ref)} · ไม่มีขาย Vivo ทุกรุ่น · ${scope}`, pad, 58);
+  rr(pad, 86, W - pad * 2, 46, 10); c.fillStyle = '#fbe6e4'; c.fill(); c.strokeStyle = '#ecb3ad'; c.stroke();
+  c.fillStyle = '#c53b32'; c.font = `700 18px ${F}`; c.fillText(`⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${alert.length} สาขา`, pad + 16, 98);
+  const tone = { g2: '#b7791f', g3: '#e07b39', g4: '#c53b32' };
+  cols.forEach(({ b, list }, i) => { const x = pad + i * (cw + gap), y = top, h = H - top - 24;
+    rr(x, y, cw, h, 12); c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#e3e0d8'; c.stroke();
+    c.save(); rr(x, y, cw, h, 12); c.clip(); c.fillStyle = tone[b.k]; c.fillRect(x, y, cw, 4); c.restore();
+    c.fillStyle = '#6b6862'; c.font = `14px ${F}`; c.fillText(`PC ${b.name}`, x + 16, y + 16);
+    c.fillStyle = tone[b.k]; c.font = `700 30px ${F}`; c.fillText(String(list.length), x + 16, y + 38); const nw = c.measureText(String(list.length)).width;
+    c.fillStyle = '#6b6862'; c.font = `15px ${F}`; c.fillText('สาขา', x + 24 + nw, y + 50);
+    c.fillStyle = '#1f1e1c'; c.font = `15px ${F}`; lines[i].forEach((t, j) => c.fillText(t, x + 16, y + 92 + j * lh)); });
+  cv.toBlob((blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `PC_NoSale_${ref}.png`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }, 'image/png');
+}
 function sPCsum(mi) {
   const P = pcSummary(mi); const u = unit();
   const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
@@ -616,6 +647,8 @@ function sPCsum(mi) {
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
   al.innerHTML = P.alert.length ? `<b class="t">⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${num(P.alert.length)} สาขา</b><span>นับถึงวันที่ ${thDate(P.ref)} · ไม่มีขาย Vivo ทุกรุ่น</span>`
     : `<b class="t">✓ ไม่มีสาขาที่มี PC ซึ่งไม่มียอดติดต่อกัน 2 วัน</b><span>นับถึงวันที่ ${thDate(P.ref)}</span>`;
+  const fl = [S.zone !== 'ALL' && S.zone, S.area !== 'ALL' && S.area, S.type !== 'ALL' && S.type].filter(Boolean);
+  PCGAP = { alert: P.alert, ref: P.ref, scope: fl.length ? fl.join(' / ') : 'ทุก Area' };
   $('#pc-gaps').innerHTML = GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap));
     return `<div class="kpi ${b.k}"><div class="l">PC ${b.name}</div><div class="v"><span class="cw ${b.k === 'g2' ? 'warn' : 'bad'}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div>`
       + (g.length ? `<ol>${g.map((r) => `<li>${esc(r.name.replace(/^True Shop /i, ''))} <span>· ${esc(r.area)}${b.k === 'g4' ? ' · ' + gapTxt(r) : ''} · PC ${r.pc}</span></li>`).join('')}</ol>` : '<div class="s">ไม่มีสาขา</div>') + '</div>'; }).join('');
@@ -802,7 +835,7 @@ function initControls() {
   fillSelect($('#f-pcshop'), [['', 'ภาพรวมทุกสาขา (เทียบ PC / ไม่มี PC)'], [null, `สาขาที่มี PC Vivo (${pcs.length})`, true], ...pcs.map((x) => [x.c, `${x.n} · PC ${x.pc}`]), ['</g>'],
     [null, `สาขาที่ไม่มี PC (${npc.length})`, true], ...npc.map((x) => [x.c, x.n]), ['</g>']], '');
   $('#f-pcshop').onchange = (e) => { S.pcshop = e.target.value; render(); };
-  $('#pc-sumdl').onclick = downloadPCSummary;
+  $('#pc-sumdl').onclick = downloadPCSummary; $('#pc-gappng').onclick = () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG);
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
   $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
