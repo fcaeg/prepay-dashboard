@@ -66,3 +66,7 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
 - Week portions (8-7-7-8 / 8-7-7-9): `state/vivo_portions.json`, e.g. `{"2026-10": [30, 23, 21, 26]}`; a month not listed uses the share of days
 - Page: `pipeline/vivo_page.html` + `out/vivo_data.json` → `vivo/index.html` (built by build_page.py). Model match: sales
   `H/S,VIVO,V80LITE,5G,6/256,...` ↔ target `VIVO V80 LITE 5G 6/256GB` (key V80LITE|5G|6256; PHOTOSET kept separate).
+- Password (Nami, 4 Nov 2026): the Vivo page is locked. vivo_page.py encrypts out/vivo_data.json (zlib + AES-256-GCM, key wrapped with the
+  RSA public key in `pipeline/vivo_lock.json`); the browser unlocks the RSA private key with the password (PBKDF2-SHA256 250k + AES-GCM).
+  The password is not stored in the repo. To change it, regenerate vivo_lock.json with the new password (new key pair) and rebuild.
+  GitHub Actions needs `cryptography` (installed in drive-sync.yml).

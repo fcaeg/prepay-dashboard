@@ -110,13 +110,21 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .gapc .kpi { background: var(--panel); border-top: 3px solid var(--bad); }
 .gapc .kpi.g2 { border-top-color: var(--warn); } .gapc .kpi.g3 { border-top-color: #e07b39; }
 .gapc ol { margin: 6px 0 0; padding-left: 20px; font-size: 12.5px; max-height: 220px; overflow: auto; } .gapc li { margin: 2px 0; } .gapc li span { color: var(--muted); }
+.gate { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); padding: 16px; z-index: 100; }
+.gate-box { width: min(380px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+.gate-box h1 { font-size: 22px; } .gate-box p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.gate-logo { font-size: 28px; }
+.gate-box input[type=password] { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.gate-box .btn { padding: 10px; font-size: 15px; }
+.gate-rem { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.gate-err { color: var(--bad); font-size: 13px; min-height: 1em; }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 @media (max-width: 640px) { h1 { font-size: 20px; } .kpi .v { font-size: 18px; } select { max-width: 11rem; } .filters { position: static; } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" hidden>
   <header class="top">
     <div>
       <h1>Vivo Dashboard <small>True Shop · WW</small></h1>
@@ -228,10 +236,53 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   </section>
 </div>
 
+<div class="gate" id="gate">
+  <form class="gate-box" id="gate-form" autocomplete="on">
+    <div class="gate-logo">🔒</div>
+    <h1>Vivo Dashboard</h1>
+    <p>True Shop · WW — กรุณาใส่รหัสผ่านเพื่อดูข้อมูล</p>
+    <input type="text" name="username" value="vivo-dashboard" autocomplete="username" hidden>
+    <input type="password" id="gate-pw" placeholder="รหัสผ่าน" autocomplete="current-password" aria-label="รหัสผ่าน" required>
+    <label class="gate-rem"><input type="checkbox" id="gate-rem" checked> จำรหัสผ่านในเครื่องนี้</label>
+    <button class="btn primary" type="submit" id="gate-btn">เข้าสู่ Dashboard</button>
+    <div class="gate-err" id="gate-err" role="alert"></div>
+  </form>
+</div>
 <script id="vivo-data" type="application/json">__DATA__</script>
+<script>/*__PAKO__*/</script>
 <script>
 'use strict';
-const D = JSON.parse(document.getElementById('vivo-data').textContent);
+// data is encrypted: password -> PBKDF2 -> AES-GCM unlocks the RSA private key -> unwraps the data key -> AES-GCM -> zlib -> JSON
+(function () {
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const P = JSON.parse(document.getElementById('vivo-data').textContent);
+  async function open(pw) {
+    const L = P.lock, sub = crypto.subtle;
+    const base = await sub.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    const kek = await sub.deriveKey({ name: 'PBKDF2', salt: b64(L.salt), iterations: L.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const priv = await sub.decrypt({ name: 'AES-GCM', iv: b64(L.iv) }, kek, b64(L.wpriv));
+    const rsa = await sub.importKey('pkcs8', priv, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']);
+    const raw = await sub.decrypt({ name: 'RSA-OAEP' }, rsa, b64(P.ek));
+    const key = await sub.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+    const z = await sub.decrypt({ name: 'AES-GCM', iv: b64(P.iv) }, key, b64(P.ct));
+    return JSON.parse(new TextDecoder().decode(pako.inflate(new Uint8Array(z))));
+  }
+  const KEY = 'vivo-dash-pw';
+  const start = (data) => { window.__VIVO = data; document.getElementById('gate').remove(); document.querySelector('.wrap').hidden = false;
+    const sc = document.createElement('script'); sc.textContent = document.getElementById('app-src').textContent; document.body.appendChild(sc); };
+  const tryPw = async (pw, remember) => { const d = await open(pw); try { if (remember) localStorage.setItem(KEY, pw); else localStorage.removeItem(KEY); } catch (e) {} start(d); };
+  const err = document.getElementById('gate-err'), btn = document.getElementById('gate-btn');
+  if (!window.crypto || !crypto.subtle) err.textContent = 'เบราว์เซอร์นี้ไม่รองรับการถอดรหัส กรุณาเปิดผ่าน https หรือใช้ Chrome / Safari เวอร์ชันใหม่';
+  let saved = null; try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved) tryPw(saved, true).catch(() => { try { localStorage.removeItem(KEY); } catch (e) {} });
+  document.getElementById('gate-form').onsubmit = (e) => { e.preventDefault(); err.textContent = ''; btn.disabled = true; btn.textContent = 'กำลังเปิด…';
+    tryPw(document.getElementById('gate-pw').value, document.getElementById('gate-rem').checked)
+      .catch(() => { err.textContent = 'รหัสผ่านไม่ถูกต้อง'; btn.disabled = false; btn.textContent = 'เข้าสู่ Dashboard'; document.getElementById('gate-pw').select(); }); };
+})();
+</script>
+<script id="app-src" type="text/plain">
+'use strict';
+const D = window.__VIVO;
 if (D.sales && !Array.isArray(D.sales)) { const P = D.sales; D.sales = P.r.map((r) => [P.d[r[0]], P.s[r[1]], P.m[r[2]], r[3], r[4]]); }
 const TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const THF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
