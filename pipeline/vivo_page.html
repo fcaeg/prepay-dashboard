@@ -236,7 +236,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <button role="tab" data-t="shop" aria-selected="false">4 · รายสาขา</button>
     <button role="tab" data-t="stock" aria-selected="false">5 · Stock &amp; Cover Week</button>
     <button role="tab" data-t="ms" aria-selected="false">6 · PC Performance</button>
-    <button role="tab" data-t="wk" aria-selected="false">7 · รายสัปดาห์ (WoW)</button>
+    <button role="tab" data-t="wk" aria-selected="false">7 · แนวโน้มการขาย</button>
   </nav>
 
   <section class="card" id="s-today">
@@ -269,7 +269,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 
   <section class="card" id="s-shop" hidden>
     <div class="card-h"><h2>ยอดขายรายสาขา</h2>
-      <div class="seg" id="f-tmode"><button data-v="full" aria-pressed="true">Target ทั้งเดือน</button><button data-v="day" aria-pressed="false">Target ถึงวันนี้ (Flat)</button></div>
+      <div class="seg" id="f-tmode"><button data-v="full" aria-pressed="true">Target ทั้งเดือน</button><button data-v="day" aria-pressed="false">Target ถึงวันนี้</button></div>
       <div class="seg" id="f-shopview"><button data-v="all" aria-pressed="true">แสดงทุกสาขา</button><button data-v="ns" aria-pressed="false">เฉพาะ No Sale</button></div>
       <input type="search" id="q-shop" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา">
       <span class="spacer"></span><button class="btn" data-x="shop">⤓ Excel</button></div>
@@ -303,7 +303,8 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   </section>
 
   <section class="card" id="s-wk" hidden>
-    <div class="card-h"><h2>ยอดขายรายสัปดาห์ W1–W52 และ WoW</h2>
+    <div class="card-h"><h2>แนวโน้มการขาย</h2>
+      <div class="seg" id="f-tper"><button data-v="day" aria-pressed="false">วันนี้</button><button data-v="week" aria-pressed="true">Week</button><button data-v="mtd" aria-pressed="false">MTD</button><button data-v="ytd" aria-pressed="false">YTD</button></div>
       <div class="seg" id="f-wkdim"><button data-v="model" aria-pressed="true">ราย Model</button><button data-v="area" aria-pressed="false">ราย Area</button><button data-v="zone" aria-pressed="false">ราย Region</button><button data-v="type" aria-pressed="false">ประเภทสาขา</button></div>
       <span class="spacer"></span><button class="btn" data-x="wk">⤓ Excel</button></div>
     <p class="note" id="n-wk"></p>
@@ -419,7 +420,7 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
 try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
 const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
@@ -551,8 +552,8 @@ function weeklyCols(mi, first) {
   const P = (r) => S.metric === 'q' ? r.pu : r.pn, PF = (r) => S.metric === 'q' ? r.fu : r.fn;
   const mg = `MoM เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame}`;
   cols.push({ g: 'MTD', h: 'Actual', v: (r) => V(r), f: num }, { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
-    { g: `ถึงวันที่ ${mi.asofDay} (Flat)`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
-    { g: `ถึงวันที่ ${mi.asofDay} (Flat)`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
+    { g: `ถึงวันที่ ${mi.asofDay}`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
+    { g: `ถึงวันที่ ${mi.asofDay}`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
     { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
     { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct },
     { g: mg, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
@@ -566,7 +567,7 @@ function weeklyCols(mi, first) {
     ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, v: (r) => G(r), f: num }]));
   return cols;
 }
-const portionNote = (mi) => `Target ถึงวันนี้ = Target เดือน ÷ ${mi.days} วัน × ${mi.asofDay} วัน (Flat ${Math.round(mi.todate * 1000) / 10}%) · ข้อมูลถึงวันที่ ${mi.asofDay} จาก ${mi.days} วัน · WoW = สัปดาห์ ISO จันทร์–อาทิตย์ · หน่วย: ${unit()}`;
+const portionNote = (mi) => `Target ถึงวันนี้ = Target เดือน ÷ ${mi.days} วัน × ${mi.asofDay} วัน (${Math.round(mi.todate * 1000) / 10}% ของเดือน) · ข้อมูลถึงวันที่ ${mi.asofDay} จาก ${mi.days} วัน · WoW = สัปดาห์ ISO จันทร์–อาทิตย์ · หน่วย: ${unit()}`;
 
 // ---------- sections
 function sModel(mi) {
@@ -583,6 +584,8 @@ function sModel(mi) {
     if (g !== ser) { ser = g; sub = Object.assign(z(), { name: g, _cls: 'sub' }); rows.push(sub); }
     add(sub, x); add(tot, x); rows.push(Object.assign({}, x, { name: m.name, _cls: 'ind' }));
   }
+  // models not listed (no Target, no sale this month) still count in the grand total (their MoM / WoW history)
+  for (const [k, x] of a) if (okModel(k) && !keys.includes(k)) add(tot, x);
   rows.push(tot);
   $('#n-model').innerHTML = portionNote(mi) + (keys.some((k) => !isT(k)) ? ' · Non Target Model = รุ่นที่ไม่มี Target แต่มียอดขายเข้ามา' : '');
   EXPORT.model = toSheet('1 ราย Model', renderTable($('#t-model'), weeklyCols(mi, { h: 'Model', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Model · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
@@ -654,7 +657,7 @@ function sShop(mi) {
   const mlab = modelLabel(4);
   $('#n-ns').innerHTML = hasT ? `No Sale = สาขาที่มี Target เดือนนี้แต่ยังไม่มียอดขาย ${THF[mi.m - 1]} ถึงวันที่ ${mi.asofDay} · สาขาที่ไม่มี Target ไม่นับ · Model: <b>${esc(mlab)}</b> · ตามตัวกรองด้านบน` : `<b>${THF[mi.m - 1]} ไม่มี Target</b> จึงไม่มีการนับสาขา No Sale (นับเฉพาะสาขาที่มี Target)`;
   let rows = all.filter((r) => qMatch(S.q.shop, r) && (S.shopview !== 'ns' || r.ns)).sort(sorter('shop'));
-  const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay} (Flat)`;
+  const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay}`;
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
     { h: 'รหัส', v: (r) => r.c, cls: 't' },
     { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' }, { h: 'ประเภท', v: (r) => r.type, cls: 't' },
@@ -668,7 +671,7 @@ function sShop(mi) {
   const sum = rows.reduce((s, r) => (s.tgt += r.tgt, s.tfull += r.tfull, s.act += r.act, s), { tgt: 0, tfull: 0, act: 0 });
   const rr = mi.asofDay ? sum.act / mi.asofDay * mi.days : null;
   rows = rows.slice(); rows.push({ _cls: 'tot', name: `รวม ${rows.length} สาขา`, c: '', area: '', type: '', pc: null, tgt: sum.tgt, act: sum.act, ach: ratio(sum.act, sum.tgt), rr, rach: ratio(rr, sum.tfull), last: null, stock: HASSTOCK ? rows.reduce((s, r) => s + (r.stock || 0), 0) : null });
-  $('#n-shop').innerHTML = `${S.tmode === 'full' ? 'เทียบ Target ทั้งเดือน' : 'เทียบ Target ถึงวันนี้แบบ Flat (Target เดือน ÷ ' + mi.days + ' วัน × ' + mi.asofDay + ' วัน = ' + Math.round(mi.todate * 1000) / 10 + '% ของเดือน)'} · Runrate = ยอดขาย ÷ ${mi.asofDay} วัน × ${mi.days} วัน · Runrate %ACH เทียบ Target ทั้งเดือน · หน่วย: ${unit()} · คลิกหัวคอลัมน์เพื่อเรียง`;
+  $('#n-shop').innerHTML = `${S.tmode === 'full' ? 'เทียบ Target ทั้งเดือน' : 'เทียบ Target ถึงวันนี้ (Target เดือน ÷ ' + mi.days + ' วัน × ' + mi.asofDay + ' วัน = ' + Math.round(mi.todate * 1000) / 10 + '% ของเดือน)'} · Runrate = ยอดขาย ÷ ${mi.asofDay} วัน × ${mi.days} วัน · Runrate %ACH เทียบ Target ทั้งเดือน · หน่วย: ${unit()} · คลิกหัวคอลัมน์เพื่อเรียง`;
   const tShop = renderTable($('#t-shop'), cols, rows, { sort: 'shop' });
   const nsList = { cols: cols.filter((c) => !/%ACH|Runrate/.test(c.h)), rows: ns.slice().sort((a, b) => a.area.localeCompare(b.area) || (b.tfull - a.tfull)) };
   EXPORT.shop = [toSheet('3 รายสาขา', tShop, `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'} · ${tl}${S.shopview === 'ns' ? ' · เฉพาะ No Sale' : ''}`),
@@ -822,7 +825,7 @@ function sPCsum(mi) {
   const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
     return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? Math.round(g.length / P.rows.length * 100) : 0}% ของสาขามี PC · ยอด ${num(act)} ${u}</div></div>`; };
   $('#pc-tiers').innerHTML = TIERS.map(card).join('');
-  $('#n-pcsum').innerHTML = `สาขาที่มี PC Vivo ${num(P.rows.length)} สาขา · แบ่งตาม %ACH เทียบ Target ถึงวันที่ ${mi.asofDay} (Flat) · หน่วย ${u} · ทุกรุ่น · ตามตัวกรอง Region / Area / ประเภท ด้านบน`;
+  $('#n-pcsum').innerHTML = `สาขาที่มี PC Vivo ${num(P.rows.length)} สาขา · แบ่งตาม %ACH เทียบ Target ถึงวันที่ ${mi.asofDay} · หน่วย ${u} · ทุกรุ่น · ตามตัวกรอง Region / Area / ประเภท ด้านบน`;
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
   al.innerHTML = P.alert.length ? `<b class="t">⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป ${num(P.alert.length)} สาขา</b><span>นับถึงวันที่ ${thDate(P.ref)} · ไม่มีขาย Vivo ทุกรุ่น</span>`
     : `<b class="t">✓ ไม่มีสาขาที่มี PC ซึ่งไม่มียอดติดต่อกัน 2 วัน</b><span>นับถึงวันที่ ${thDate(P.ref)}</span>`;
@@ -933,7 +936,7 @@ function sPC(mi) {
   $('#pd-head').innerHTML = `<b>${esc(s.n)}</b><span>${esc(c)} · ${esc(s.area)} · ${esc(s.type)}</span>${s.pc > 0 ? `<span class="pc">PC Vivo ${s.pc} คน</span>` : '<span class="cw warn">ไม่มี PC Vivo</span>'}`;
   $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, num(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : Math.round(tot.ach * 100) + '%'}`)
     + kc(`MoM เทียบ ${pl}`, momF(tot.mom, tot), `${pl}: ${num(tot.prv)} · ทั้งเดือน ${THF[pmi.m - 1]} ${num(tot.pfull)}`)
-    + kc(`%ACH ถึงวันที่ ${d} (Flat)`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${Math.round(tot.achd * 100)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
+    + kc(`%ACH ถึงวันที่ ${d}`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${Math.round(tot.achd * 100)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
     + (HASSTOCK ? kc('Stock ในสาขา', `${num(tot.st)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `ขาย 28 วัน ${num(tot.s28)} · Cover ${tot.s28 > 0 ? nf1.format(tot.st / (tot.s28 / 4)) + ' สัปดาห์' : '–'}`) : '')
     + kc('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : Math.round(ratio(rr, tot.tgt) * 100) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
   // analysis
@@ -993,59 +996,80 @@ function sPC(mi) {
 }
 // ---------- weekly (ISO weeks, Mon–Sun) W1..W52 for the year of the selected month
 const WKCACHE = new Map(); const wkOfDate = (d) => { let w = WKCACHE.get(d); if (!w) { w = isoWeek(d); WKCACHE.set(d, w); } return w; };
-function sWeek(mi) {
-  const Y = mi.y; const lastD = mi.ref; const lw = wkOfDate(lastD); const maxW = lw.y === Y ? lw.w : (isoWeek(`${Y}-12-28`).w);
-  const dim = S.wkdim; const keyOf = { model: (c, k) => k, area: (c) => SH[c].area, zone: (c) => zoneOf(SH[c].area), type: (c) => SH[c].type }[dim];
-  const rows = new Map(); const tot = new Array(maxW + 1).fill(0);
-  let cw = 0, qw = 0, gw = 0; const cwm = new Map(), qwm = new Map(), gwm = new Map();
+const TPER = { day: 'วันนี้', week: 'Week', mtd: 'MTD', yd: '', ytd: 'YTD' };
+function sTrend(mi) {
+  const per = S.tper, ref = mi.ref, Y = mi.y, dim = S.wkdim;
+  const dmy = (d, n) => { const x = new Date(d + 'T00:00:00'); x.setFullYear(x.getFullYear() + n); return iso(x); };
+  const eom = (ym) => `${ym}-${String(new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate()).padStart(2, '0')}`;
+  // buckets (columns + chart) and comparisons for each period
+  let B = [], bOf, cur, comps, cum = false, gl, title;
+  if (per === 'day') { const from = addDays(ref, -30); for (let d = from; d <= ref; d = addDays(d, 1)) B.push({ k: d, l: shortD(d), cur: d === ref });
+    const ix = new Map(B.map((b, i) => [b.k, i])); bOf = (d) => ix.get(d);
+    cur = { l: `${thDate(ref)}`, a: ref, b: ref }; comps = [{ l: `เมื่อวาน (${shortD(addDays(ref, -1))})`, a: addDays(ref, -1), b: addDays(ref, -1), pl: 'DoD %' }, { l: `วันเดียวกันสัปดาห์ก่อน (${shortD(addDays(ref, -7))})`, a: addDays(ref, -7), b: addDays(ref, -7), pl: 'WoW %' }];
+    gl = 'ยอดขายรายวัน (31 วันล่าสุด)'; title = 'รายวัน'; }
+  else if (per === 'week') { const lw = wkOfDate(ref); const maxW = lw.y === Y ? lw.w : isoWeek(`${Y}-12-28`).w;
+    for (let w = 1; w <= maxW; w++) B.push({ k: w, l: `W${w}${w === lw.w && !mi.fullWeek ? '*' : ''}`, cur: w === lw.w });
+    bOf = (d) => { const w = wkOfDate(d); return w.y === Y && w.w <= maxW ? w.w - 1 : undefined; };
+    cur = { l: `W${mi.wk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, a: mi.cwFrom, b: ref };
+    comps = [{ l: mi.fullWeek ? `W${mi.pwk}` : `W${mi.pwk} วันเดียวกัน`, a: mi.pwFrom, b: mi.pwSame, pl: 'WoW %' }, ...(mi.fullWeek ? [] : [{ l: `W${mi.pwk} ทั้งสัปดาห์`, a: mi.pwFrom, b: mi.pwTo, nopct: 1 }])];
+    gl = `ปี ${Y + 543} · สัปดาห์ (จันทร์–อาทิตย์)`; title = 'รายสัปดาห์'; }
+  else { const lastM = +ref.slice(5, 7); for (let m = 1; m <= lastM; m++) B.push({ k: m, l: per === 'ytd' ? (m === 1 ? TH[0] : `ถึง ${TH[m - 1]}`) : TH[m - 1] + (m === lastM && mi.asofDay < mi.days ? '*' : ''), cur: m === lastM });
+    bOf = (d) => +d.slice(0, 4) === Y && +d.slice(5, 7) <= lastM ? +d.slice(5, 7) - 1 : undefined; cum = per === 'ytd';
+    if (per === 'mtd') { cur = { l: `${THF[mi.m - 1]} 1–${mi.asofDay}`, a: `${mi.ym}-01`, b: ref };
+      comps = [{ l: `${THF[mi.prevM - 1]} 1–${mi.prevSame}`, a: `${mi.prev}-01`, b: `${mi.prev}-${String(mi.prevSame).padStart(2, '0')}`, pl: 'MoM %' }, { l: `${THF[mi.prevM - 1]} ทั้งเดือน`, a: `${mi.prev}-01`, b: eom(mi.prev), nopct: 1 }];
+      gl = `ปี ${Y + 543} · รายเดือน (* = เดือนปัจจุบันถึงวันที่ ${mi.asofDay})`; title = 'รายเดือน'; }
+    else { cur = { l: `YTD ${Y + 543} (ถึง ${shortD(ref)})`, a: `${Y}-01-01`, b: ref };
+      comps = [{ l: `YTD ${Y + 542} (ถึง ${shortD(ref)})`, a: `${Y - 1}-01-01`, b: dmy(ref, -1), pl: 'YoY %' }];
+      gl = `ปี ${Y + 543} · ยอดสะสมตั้งแต่ต้นปี`; title = 'สะสมรายเดือน (YTD)'; } }
+  const keyOf = { model: (c, k) => k, area: (c) => SH[c].area, zone: (c) => zoneOf(SH[c].area), type: (c) => SH[c].type }[dim];
+  const nb = B.length; const rows = new Map(); const tot = new Array(nb).fill(0);
+  const cv = new Map(), pv = comps.map(() => new Map()); let cT = 0; const pT = comps.map(() => 0);
+  const lo = [cur.a, ...comps.map((x) => x.a)].sort()[0];
   for (const [d, c, k, u, n] of D.sales) {
-    if (!okShop(c) || !okModel(k) || d > lastD) continue; const v = S.metric === 'q' ? u : n; const key = keyOf(c, k);
-    if (d >= mi.pwFrom) { if (d >= mi.cwFrom) { cw += v; cwm.set(key, (cwm.get(key) || 0) + v); } else { gw += v; gwm.set(key, (gwm.get(key) || 0) + v); if (d <= mi.pwSame) { qw += v; qwm.set(key, (qwm.get(key) || 0) + v); } } }
-    const w = wkOfDate(d); if (w.y !== Y || w.w > maxW) continue;
-    let r = rows.get(key); if (!r) rows.set(key, r = new Array(maxW + 1).fill(0)); r[w.w] += v; tot[w.w] += v;
+    if (!okShop(c) || !okModel(k) || d > ref) continue; const v = S.metric === 'q' ? u : n; const key = keyOf(c, k);
+    if (d >= cur.a && d <= cur.b) { cv.set(key, (cv.get(key) || 0) + v); cT += v; }
+    comps.forEach((x, i) => { if (d >= x.a && d <= x.b) { pv[i].set(key, (pv[i].get(key) || 0) + v); pT[i] += v; } });
+    const bi = bOf(d); if (bi === undefined) continue;
+    let r = rows.get(key); if (!r) rows.set(key, r = new Array(nb).fill(0)); r[bi] += v; tot[bi] += v;
   }
+  if (cum) { const acc = (a) => { for (let i = 1; i < a.length; i++) a[i] += a[i - 1]; }; rows.forEach(acc); acc(tot); }
   const label = (key) => dim === 'model' ? (MD[key] || { name: key }).name.replace(/^VIVO /, '') : key;
-  let keys = [...rows.keys()];
+  const grpOf = (x) => dim === 'model' ? (MD[x] && MD[x].tgt ? `Vivo ${MD[x].series} Series` : 'Non Target Model') : zoneOf(x);
+  let keys = [...new Set([...rows.keys(), ...cv.keys()])].filter((k) => rows.has(k) || cv.get(k));
   if (dim === 'model') keys.sort((a, b) => (MD[a] && MD[a].tgt ? 0 : 1) - (MD[b] && MD[b].tgt ? 0 : 1) || (MORDER[a] ?? 999) - (MORDER[b] ?? 999));
   else if (dim === 'area') keys.sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
   else if (dim === 'zone') keys.sort((a, b) => ZONES.indexOf(a) - ZONES.indexOf(b)); else keys.sort();
+  const mk = (name, ks, cls) => { const arr = new Array(nb).fill(0); ks.forEach((x) => (rows.get(x) || []).forEach((v, i) => arr[i] += v));
+    return { name, _cls: cls, w: arr, c: ks.reduce((a, x) => a + (cv.get(x) || 0), 0), p: comps.map((_, i) => ks.reduce((a, x) => a + (pv[i].get(x) || 0), 0)) }; };
   const out = []; let grp = null;
-  const mk = (name, arr, cls, key) => ({ name, w: arr, _cls: cls, cw: key == null ? null : (cwm.get(key) || 0), qw: key == null ? null : (qwm.get(key) || 0), gw: key == null ? null : (gwm.get(key) || 0) });
-  for (const key of keys) {
-    if (dim === 'model' || dim === 'area') { const g = dim === 'model' ? (MD[key] && MD[key].tgt ? `Vivo ${MD[key].series} Series` : 'Non Target Model') : zoneOf(key);
-      if (g !== grp) { grp = g; const ks = keys.filter((x) => (dim === 'model' ? (MD[x] && MD[x].tgt ? `Vivo ${MD[x].series} Series` : 'Non Target Model') : zoneOf(x)) === g);
-        const arr = new Array(maxW + 1).fill(0); ks.forEach((x) => rows.get(x).forEach((v, i) => arr[i] += v));
-        const sr = mk(g, arr, 'sub', null); sr.cw = ks.reduce((s_, x) => s_ + (cwm.get(x) || 0), 0); sr.qw = ks.reduce((s_, x) => s_ + (qwm.get(x) || 0), 0); sr.gw = ks.reduce((s_, x) => s_ + (gwm.get(x) || 0), 0); out.push(sr); } }
-    out.push(mk(label(key), rows.get(key), dim === 'model' || dim === 'area' ? 'ind' : '', key));
-  }
-  const T0 = mk('รวมทั้งหมด', tot, 'tot', null); T0.cw = cw; T0.qw = qw; T0.gw = gw; out.push(T0);
-  const cur = lw.y === Y ? lw.w : null;
+  for (const key of keys) { if (dim === 'model' || dim === 'area') { const g = grpOf(key); if (g !== grp) { grp = g; out.push(mk(g, keys.filter((x) => grpOf(x) === g), 'sub')); } }
+    out.push(mk(label(key), [key], dim === 'model' || dim === 'area' ? 'ind' : '')); }
+  const T0 = { name: 'รวมทั้งหมด', _cls: 'tot', w: tot, c: cT, p: pT }; out.push(T0);
   const cols = [{ h: dim === 'model' ? 'Model' : dim === 'area' ? 'Region / Area' : dim === 'zone' ? 'Region' : 'ประเภทสาขา', v: (r) => r.name, cls: 't' }];
-  for (let w = 1; w <= maxW; w++) cols.push({ g: `ปี ${Y + 543} · สัปดาห์ (จันทร์–อาทิตย์)`, h: `W${w}${w === cur && !mi.fullWeek ? '*' : ''}`, v: (r) => r.w[w], f: (v) => v ? num(v) : '<span class="na">–</span>', cls: w === cur ? 'wcur' : '' });
-  const wg = `WoW · W${mi.wk} เทียบ W${mi.pwk}`;
-  cols.push({ g: wg, h: `W${mi.wk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, v: (r) => r.cw, f: num },
-    { g: wg, h: mi.fullWeek ? `W${mi.pwk}` : `W${mi.pwk} วันเดียวกัน`, v: (r) => r.qw, f: num },
-    { g: wg, h: 'WoW %', p: 1, v: (r) => r.qw > 0 ? r.cw / r.qw - 1 : null, f: (v, r) => !(r.qw > 0) && r.cw > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.qw > 0) && r.cw > 0 ? 'ใหม่' : v == null ? '' : v },
-    ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, v: (r) => r.gw, f: num }]),
-    { h: `รวมปี ${Y + 543}`, v: (r) => r.w.reduce((a, b) => a + b, 0), f: num });
+  B.forEach((b, i) => cols.push({ g: gl, h: b.l, v: (r) => r.w[i], f: (v) => v ? num(v) : '<span class="na">–</span>', cls: b.cur ? 'wcur' : '' }));
+  const cg = `เทียบ · ${cur.l}`;
+  cols.push({ g: cg, h: cur.l, v: (r) => r.c, f: (v) => `<b>${num(v)}</b>` });
+  comps.forEach((x, i) => { cols.push({ g: cg, h: x.l, v: (r) => r.p[i], f: num });
+    if (!x.nopct) cols.push({ g: cg, h: x.pl, p: 1, v: (r) => r.p[i] > 0 ? r.c / r.p[i] - 1 : null, f: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '<span class="na">ไม่มีข้อมูลปีก่อน</span>' : '<span class="up">ใหม่</span>') : momF(v), x: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '' : 'ใหม่') : v == null ? '' : v }); });
   const t = renderTable($('#t-wk'), cols, out);
   const tw = $('#t-wk'); requestAnimationFrame(() => { const th = tw.querySelector('th.wcur'); if (th) tw.scrollLeft = Math.max(0, th.offsetLeft - tw.clientWidth + 420); });
-  // chart of total by week
-  const W0 = 1000, H0 = 190, pl = 44, pb = 22, bw = (W0 - pl - 6) / maxW; const mx = Math.max(1, ...tot.slice(1));
-  let svg = `<svg viewBox="0 0 ${W0} ${H0}" preserveAspectRatio="none" role="img" aria-label="ยอดขายรวมรายสัปดาห์">`;
+  // chart
+  const W0 = 1000, H0 = 190, pl = 48, pb = 22, bw = (W0 - pl - 6) / nb; const mx = Math.max(1, ...tot);
+  let svg = `<svg viewBox="0 0 ${W0} ${H0}" preserveAspectRatio="none" role="img" aria-label="แนวโน้มยอดขาย">`;
   for (let i = 0; i <= 4; i++) { const y = 8 + (H0 - pb - 8) * (1 - i / 4); svg += `<line x1="${pl}" x2="${W0}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${pl - 4}" y="${y + 3}" text-anchor="end">${S.metric === 'q' ? num(mx * i / 4) : (mx * i / 4 / 1e6).toFixed(1) + 'M'}</text>`; }
-  for (let w = 1; w <= maxW; w++) { const v = tot[w]; const h = (H0 - pb - 8) * v / mx; const x = pl + (w - 1) * bw;
-    svg += `<rect class="wb${w === cur ? ' cur' : ''}" x="${x + 1}" y="${H0 - pb - h}" width="${Math.max(1, bw - 2)}" height="${h}"><title>W${w}: ${num(v)} ${unit()}</title></rect>`;
-    if (w === 1 || w % 4 === 0 || w === maxW) svg += `<text x="${x + bw / 2}" y="${H0 - 6}" text-anchor="middle">W${w}</text>`; }
+  const every = nb > 40 ? 4 : nb > 20 ? 3 : 1;
+  B.forEach((b, i) => { const v = tot[i], h = (H0 - pb - 8) * v / mx, x = pl + i * bw;
+    svg += `<rect class="wb${b.cur ? ' cur' : ''}" x="${x + 1}" y="${H0 - pb - h}" width="${Math.max(1, bw - 2)}" height="${h}"><title>${b.l}: ${num(v)} ${unit()}</title></rect>`;
+    if (i === 0 || i % every === 0 || i === nb - 1) svg += `<text x="${x + bw / 2}" y="${H0 - 6}" text-anchor="middle">${b.l.replace('*', '')}</text>`; });
   $('#wk-chart').innerHTML = svg + '</svg>';
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
-  const wow = qw > 0 ? cw / qw - 1 : null;
-  $('#wk-kpi').innerHTML = kc(`W${mi.wk} (${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` · ${mi.nd} วัน`})`, num(cw), unit())
-    + kc(`W${mi.pwk} ${mi.fullWeek ? '' : 'วันเดียวกัน'} (${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)})`, num(qw), mi.fullWeek ? unit() : `ทั้งสัปดาห์ ${num(gw)} ${unit()}`)
-    + kc('WoW', wow == null ? '–' : `<span class="${wow >= 0 ? 'up' : 'dn'}">${sgn(wow)}</span>`, `เปลี่ยน ${cw - qw >= 0 ? '+' : ''}${num(cw - qw)} ${unit()}`)
-    + kc(`เฉลี่ยต่อสัปดาห์ ปี ${Y + 543}`, num(tot.slice(1, cur || maxW + 1).reduce((a, b) => a + b, 0) / Math.max(1, (cur || maxW + 1) - 1)), `W1–W${(cur || maxW + 1) - 1} (สัปดาห์ที่ครบแล้ว)`);
-  $('#n-wk').innerHTML = `สัปดาห์แบบ ISO (จันทร์–อาทิตย์) · W${mi.wk} = ${thDate(mi.cwFrom)} – ${thDate(mi.ref)} ${mi.fullWeek ? '' : `(ยังไม่ครบสัปดาห์ · * = ถึงวันที่ข้อมูลล่าสุด)`} · WoW เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : `วันเดียวกัน (${thDate(mi.pwFrom)} – ${thDate(mi.pwSame)})`} · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
-  EXPORT.wk = toSheet('6 รายสัปดาห์ WoW', t, `ยอดขายรายสัปดาห์ W1–W${maxW} ปี ${Y + 543} · WoW W${mi.wk} เทียบ W${mi.pwk} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+  $('#wk-kpi').innerHTML = kc(cur.l, num(cT), unit()) + comps.map((x, i) => kc(x.l, num(pT[i]), x.nopct ? unit() : (pT[i] > 0 ? `${x.pl} <span class="${cT >= pT[i] ? 'up' : 'dn'}">${sgn(cT / pT[i] - 1)}</span> · ${cT - pT[i] >= 0 ? '+' : ''}${num(cT - pT[i])}` : (per === 'ytd' ? 'ไม่มีข้อมูลปีก่อนในระบบ' : '–')))).join('');
+  const notes = { day: `เทียบวันล่าสุด ${thDate(ref)} กับเมื่อวานและวันเดียวกันของสัปดาห์ก่อน${ref === LATEST && (D.meta.sales_asof || '').length > 10 ? ` · วันนี้มีข้อมูลถึง ${D.meta.sales_asof.slice(11, 16)} น.` : ''}`,
+    week: `สัปดาห์แบบ ISO (จันทร์–อาทิตย์) · W${mi.wk} = ${thDate(mi.cwFrom)} – ${thDate(ref)}${mi.fullWeek ? '' : ' (ยังไม่ครบสัปดาห์ · * = ถึงวันที่ข้อมูลล่าสุด)'} · เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : 'วันเดียวกัน'}`,
+    mtd: `ยอดรายเดือน · เดือนปัจจุบัน 1–${mi.asofDay} เทียบช่วงวันเดียวกันของ${THF[mi.prevM - 1]} (MoM)`,
+    ytd: `ยอดสะสมตั้งแต่ 1 ม.ค. (แต่ละคอลัมน์ = สะสมถึงสิ้นเดือนนั้น) · เทียบ YTD ปีก่อนช่วงเดียวกัน${D.meta.first_sales > `${Y - 1}-12-31` ? ' — ข้อมูลในระบบเริ่ม ' + thDate(D.meta.first_sales) + ' จึงยังไม่มีปีก่อนให้เทียบ' : ''}` };
+  $('#n-wk').innerHTML = notes[per] + ` · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
+  EXPORT.wk = toSheet('7 แนวโน้ม ' + TPER[per], t, `แนวโน้มการขาย ${title} · ${cur.l} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
 }
 // ---------- today: one day vs yesterday and the same weekday last week; daily Target = month Target ÷ days (flat)
 function sToday() {
@@ -1058,7 +1082,7 @@ function sToday() {
     for (const [c, k, tu, tn] of (D.targets[ym] || [])) { if (!okShop(c) || !okModel(k)) continue; for (const key of [].concat(keyFn(c, k))) { const x = g(key); x.t += vv(tu, tn) / dim; if (tu > 0 || tn > 0) x.tshops.add(c); } }
     return m; };
   const pctD = (a, b) => b > 0 ? a / b - 1 : null;
-  const cols = (first) => [first, { g: thDate(d), h: 'ยอดขาย', v: (r) => r.d, f: (v) => `<b>${num(v)}</b>` }, { g: thDate(d), h: 'Target/วัน (Flat)', v: (r) => r.t, f: tgtF }, { g: thDate(d), h: '%ACH', p: 1, v: (r) => ratio(r.d, r.t), f: pct },
+  const cols = (first) => [first, { g: thDate(d), h: 'ยอดขาย', v: (r) => r.d, f: (v) => `<b>${num(v)}</b>` }, { g: thDate(d), h: 'Target/วัน', v: (r) => r.t, f: tgtF }, { g: thDate(d), h: '%ACH', p: 1, v: (r) => ratio(r.d, r.t), f: pct },
     { g: 'เทียบเมื่อวาน', h: shortD(y1), v: (r) => r.y, f: num }, { g: 'เทียบเมื่อวาน', h: 'DoD %', p: 1, v: (r) => pctD(r.d, r.y), f: (v, r) => !(r.y > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.y > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v },
     { g: 'วันเดียวกันสัปดาห์ก่อน', h: shortD(w1), v: (r) => r.w, f: num }, { g: 'วันเดียวกันสัปดาห์ก่อน', h: 'WoW %', p: 1, v: (r) => pctD(r.d, r.w), f: (v, r) => !(r.w > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.w > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v }];
   const sumR = (name, xs, cls) => xs.reduce((a, x) => { a.d += x.d; a.y += x.y; a.w += x.w; a.t += x.t; a.u += x.u; x.shops.forEach((c) => a.shops.add(c)); x.tshops.forEach((c) => a.tshops.add(c)); return a; }, { name, _cls: cls, d: 0, y: 0, w: 0, t: 0, u: 0, shops: new Set(), tshops: new Set() });
@@ -1094,7 +1118,7 @@ function sToday() {
   const ach = ratio(TOT.d, TOT.t), dod = pctD(TOT.d, TOT.y), wow = pctD(TOT.d, TOT.w); const fmtP = (x) => x == null ? '–' : `<span class="${x >= 0 ? 'up' : 'dn'}">${sgn(x)}</span>`;
   const isLatest = d === LATEST; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
   $('#td-kpi').innerHTML = kc(`ยอดขาย ${thDate(d)}${tm ? ` ถึง ${tm} น.` : ''}`, `${num(TOT.d)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${num(TOT.u)} เครื่อง · ${num(TOT.shops.size)} สาขาที่ขายได้`)
-    + kc('%ACH วันนี้ (Target/วัน Flat)', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
+    + kc('%ACH วันนี้ (Target/วัน)', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
     + kc(`เทียบเมื่อวาน (${shortD(y1)})`, fmtP(dod), `${num(TOT.y)} ${unit()}`) + kc(`เทียบ ${shortD(w1)} (วันเดียวกันสัปดาห์ก่อน)`, fmtP(wow), `${num(TOT.w)} ${unit()}`)
     + kc('สาขาที่มี Target แต่ยังไม่มียอดวันนี้', num([...TOT.tshops].filter((c) => !TOT.shops.has(c)).length), `จาก ${num(TOT.tshops.size)} สาขาที่มี Target`);
   $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}ที่มา: ${d > (D.meta.hist_asof || '') ? 'TSM (POS)' : 'ระบบส่วนกลาง'} · Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
@@ -1108,7 +1132,7 @@ function kpis(mi, tot, ts) {
   const cW = S.metric === 'q' ? tot.cu : tot.cn, qW = S.metric === 'q' ? tot.qu : tot.qn;
   $('#kpis').innerHTML = k(`Target ${THF[mi.m - 1]}`, tgtF(T(tot)) || '–', unit()) +
     k('ยอดขาย MTD', num(V(tot)), `%ACH เดือน ${a1 == null ? '–' : Math.round(a1 * 100) + '%'}`, a1) +
-    k(`%ACH ถึงวันที่ ${mi.asofDay} (Flat)`, a2 == null ? '–' : Math.round(a2 * 100) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
+    k(`%ACH ถึงวันที่ ${mi.asofDay}`, a2 == null ? '–' : Math.round(a2 * 100) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
     k('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${a3 == null ? '–' : Math.round(a3 * 100) + '%'}`, a3) +
     k(`WoW · W${mi.wk} vs W${mi.pwk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, qW > 0 ? `<span class="${cW >= qW ? 'up' : 'dn'}">${sgn(cW / qW - 1)}</span>` : '–', `W${mi.wk} ${num(cW)} · W${mi.pwk} ${num(qW)}`) +
     k('Stock คงเหลือ', HASSTOCK ? num(ts.stock) : '–', !HASSTOCK ? 'รอไฟล์ Stock ที่มีเครื่อง Vivo' : `Cover ${ts.s28 > 0 ? nf1.format(ts.stock / (ts.s28 / 4)) + ' สัปดาห์' : '–'} · ขาย 28 วัน ${num(ts.s28)} เครื่อง`);
@@ -1191,7 +1215,7 @@ function initControls() {
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
-  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-shopview', 'shopview');
+  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-tper', 'tper'); seg('#f-shopview', 'shopview');
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
     for (const t of ['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk']) $('#s-' + t).hidden = t !== S.tab; };
   $('#alert').onclick = () => { if (!$('#alert').classList.contains('okay')) $('#h-risk').scrollIntoView({ behavior: 'smooth' }); };
@@ -1211,7 +1235,7 @@ function rawSheet() {
 
 function render() {
   const mi = monthInfo(S.month); EXPORT = {};
-  sToday(); const tot = sModel(mi); sArea(mi); sWeek(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
+  sToday(); const tot = sModel(mi); sArea(mi); sTrend(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
 }
 
 // ---------- minimal XLSX writer (stored zip, no external library)
