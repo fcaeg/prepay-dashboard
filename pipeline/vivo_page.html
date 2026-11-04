@@ -186,7 +186,7 @@ const MORDER = Object.fromEntries(D.models.map((m, i) => [m.k, i]));
 const LATEST = (D.meta.sales_asof || '').slice(0, 10);
 const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.keys(D.targets)])].sort().reverse();
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
-const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'Ten Ten Shop', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
+const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
 const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i)),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };

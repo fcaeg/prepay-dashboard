@@ -151,7 +151,7 @@ def _ty(t):
     if t.startswith('non'): return 'Non Matching'
     if t.startswith('matching'): return 'Matching'
     if 'makro' in t or 'sis' in t: return 'ปิดแล้ว (SIS / Makro)'
-    if 'ten ten' in t: return 'Ten Ten Shop'
+    if 'ten ten' in t: return 'Ten Ten Shop'  # not WW - dropped in build()
     return '-'
 
 def _pack(rows):
@@ -181,6 +181,10 @@ def build():
     if t is not None:
         for r in t.sort_values('month').drop_duplicates('shop', keep='last').itertuples():
             shops[r.shop] = {'c': r.shop, 'n': r.name, 'area': r.area, 'type': _ty(r.type), 'size': r.size or '', 'pc': 0}
+    # not WW: Ten Ten Shop, and shops listed in state/watch_exclude_shops.txt (same list as the Prepay Dashboard)
+    xf = os.path.join(ST, 'watch_exclude_shops.txt')
+    nx = {l.split('#')[0].strip() for l in open(xf, encoding='utf-8')} - {''} if os.path.exists(xf) else set()
+    for c in [c for c, x in shops.items() if c in nx or x['type'] == 'Ten Ten Shop' or str(x['n']).lower().startswith('ten ten')]: del shops[c]
     pcsrc = 'none'
     if pc is not None:
         pcm = dict(zip(pc.shop, pc.vivo_pc.astype(int))); pcsrc = meta.get('vivo_pc_sheet', 'PC file')
