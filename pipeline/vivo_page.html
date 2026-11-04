@@ -583,15 +583,12 @@ function sShop(mi) {
   const last = lastSaleBy(); const stk = HASSTOCK ? stockBy((c) => c) : null;
   const ref = mi.asofDay ? `${mi.ym}-${String(mi.asofDay).padStart(2, '0')}` : `${mi.ym}-01`;
   let all = shopRows(mi);
-  // No Sale = shop with Target this month (or, for a month without Target, a shop that sold in the 90 days before it) and no sales MTD
+  // No Sale = shop with a Target this month (for the filtered models) and no sales MTD; shops without Target are never counted
   const hasT = all.some((r) => r.tfull > 0);
-  const start = `${mi.ym}-01`;
-  if (!hasT) { const have = new Set(all.map((r) => r.c));
-    for (const [c, d] of last) if (!have.has(c) && d < start && daysBetween(d, start) <= 90) { const s = SH[c]; all.push({ c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: 0, tfull: 0, act: 0, ach: null, rr: 0, rach: null }); } }
   for (const r of all) { const ld = last.get(r.c); const prev = ld && ld <= ref ? ld : null;
     r.last = prev; r.idle = prev ? daysBetween(prev, ref) : null; r.stock = stk ? (stk.get(r.c) || 0) : null;
-    r.ns = (S.metric === 'q' ? r.act : r.act) <= 0 && (hasT ? r.tfull > 0 : true) && mi.asofDay > 0; }
-  const uni = all.filter((r) => hasT ? r.tfull > 0 : true); const ns = uni.filter((r) => r.ns);
+    r.ns = r.act <= 0 && r.tfull > 0 && mi.asofDay > 0; }
+  const uni = all.filter((r) => r.tfull > 0); const ns = uni.filter((r) => r.ns);
   // summary by Region > Area
   const NST = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco']; const tz = () => Object.fromEntries(NST.map((t) => [t, 0]));
   const nsRows = []; const tot = { name: 'รวม', _cls: 'tot', n: 0, x: 0, t: 0, st: 0, ty: tz() };
@@ -604,7 +601,7 @@ function sShop(mi) {
       for (const g of [sub, tot]) { g.n += row.n; g.x += row.x; g.t += row.t; g.st += row.st; for (const t of NST) g.ty[t] += row.ty[t]; } nsRows.push(row); }
   }
   nsRows.push(tot);
-  const ncols = [{ h: 'Region / Area', v: (r) => r.name, cls: 't' }, { h: hasT ? 'สาขาที่มี Target' : 'สาขาที่เคยขาย (90 วัน)', v: (r) => r.n, f: num },
+  const ncols = [{ h: 'Region / Area', v: (r) => r.name, cls: 't' }, { h: 'สาขาที่มี Target', v: (r) => r.n, f: num },
     { h: 'No Sale', v: (r) => r.x, f: (v) => v > 0 ? `<b style="color:var(--bad)">${num(v)}</b>` : '0' }, { h: '% No Sale', p: 1, v: (r) => ratio(r.x, r.n), f: (v) => v == null ? '–' : Math.round(v * 100) + '%' },
     ...NST.map((t) => ({ g: 'No Sale แยกตามประเภทสาขา', h: t.replace('Dtac ', ''), v: (r) => r.ty[t], f: (v) => v ? num(v) : '<span class="na">–</span>' })),
     { g: 'No Sale แยกตามประเภทสาขา', h: 'สรุป', v: (r) => NST.filter((t) => r.ty[t]).map((t) => `${t.replace('Dtac ', '')} ${r.ty[t]}`).join(' · ') || '–', cls: 't' },
@@ -621,7 +618,7 @@ function sShop(mi) {
     + kc('ไม่มีขายเกิน 30 วัน', num(idle30), `ไม่เคยขายเลยตั้งแต่ ${thDate(D.meta.first_sales)}: ${num(never)} สาขา`)
     + (HASSTOCK ? kc('No Sale และไม่มี Stock', num(noStock), 'สาเหตุอาจมาจากไม่มีของ') : '');
   const mlab = S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.trim();
-  $('#n-ns').innerHTML = `No Sale = ${hasT ? 'สาขาที่มี Target เดือนนี้' : 'สาขาที่เคยขายใน 90 วันก่อนเดือนนี้ (เดือนนี้ไม่มี Target)'} แต่ยังไม่มียอดขาย ${THF[mi.m - 1]} ถึงวันที่ ${mi.asofDay} · Model: <b>${esc(mlab)}</b> · ตามตัวกรองด้านบน`;
+  $('#n-ns').innerHTML = hasT ? `No Sale = สาขาที่มี Target เดือนนี้แต่ยังไม่มียอดขาย ${THF[mi.m - 1]} ถึงวันที่ ${mi.asofDay} · สาขาที่ไม่มี Target ไม่นับ · Model: <b>${esc(mlab)}</b> · ตามตัวกรองด้านบน` : `<b>${THF[mi.m - 1]} ไม่มี Target</b> จึงไม่มีการนับสาขา No Sale (นับเฉพาะสาขาที่มี Target)`;
   let rows = all.filter((r) => qMatch(S.q.shop, r) && (S.shopview !== 'ns' || r.ns)).sort(sorter('shop'));
   const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay} (Flat)`;
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
@@ -746,7 +743,7 @@ function pcSummary(mi) {
   const rows = D.shops.filter((s) => s.pc > 0 && okShop(s.c)).map((s) => { const x = a.get(s.c) || z();
     const act = V(x), tf = T(x), td = tf * mi.todate, pv = S.metric === 'q' ? x.pu : x.pn, ld = last.get(s.c);
     const prior = ld && ld <= ref ? ld : null; const gap = prior ? daysBetween(prior, ref) : null;
-    const ach = td > 0 ? act / td : null; const tier = act <= 0 ? TIERS[4] : ach == null ? null : TIERS.find((t) => t.test(ach));
+    const ach = td > 0 ? act / td : null; const tier = !(tf > 0) ? null : act <= 0 ? TIERS[4] : TIERS.find((t) => t.test(ach));
     return { c: s.c, name: s.n, area: s.area, zone: zoneOf(s.area), type: s.type, pc: s.pc, tf, td, act, ach, rr: mi.asofDay ? act / mi.asofDay * mi.days : null,
       rach: tf > 0 && mi.asofDay ? act / mi.asofDay * mi.days / tf : null, pv, mom: pv > 0 ? act / pv - 1 : null, isNew: !(pv > 0) && act > 0, last: prior, gap,
       tier: tier ? tier.name : 'ไม่มี Target', tk: tier ? tier.k : 't9', u: x.u }; });
