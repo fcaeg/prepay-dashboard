@@ -89,6 +89,10 @@ td.na { color: var(--muted); }
 .cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
 .cmp .kpi .v { font-size: 18px; }
 .locs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.ns { background: var(--soft); border-radius: 10px; padding: 12px; margin-bottom: 4px; }
+.ns .kpi { background: var(--panel); }
+.ns .tw { background: var(--panel); }
+tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 @media (max-width: 640px) { h1 { font-size: 20px; } .kpi .v { font-size: 18px; } select { max-width: 11rem; } .filters { position: static; } }
@@ -143,7 +147,14 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <div class="seg" id="f-tmode"><button data-v="full" aria-pressed="true">Target ทั้งเดือน</button><button data-v="day" aria-pressed="false">Target ตามวัน (8-7-7-8)</button></div>
       <input type="search" id="q-shop" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา">
       <span class="spacer"></span><button class="btn" data-x="shop">⤓ Excel</button></div>
-    <p class="note" id="n-shop"></p>
+    <div class="ns" id="ns-box">
+      <div class="card-h" style="margin-bottom:6px"><h3 style="margin:0">สรุปสาขา No Sale</h3>
+        <div class="seg" id="f-shopview"><button data-v="all" aria-pressed="true">แสดงทุกสาขา</button><button data-v="ns" aria-pressed="false">เฉพาะ No Sale</button></div></div>
+      <p class="note" id="n-ns"></p>
+      <div class="cmp" id="ns-kpi"></div>
+      <div class="tw" id="t-ns" style="max-height:none"></div>
+    </div>
+    <p class="note" id="n-shop" style="margin-top:14px"></p>
     <div class="tw" id="t-shop"></div>
   </section>
 
@@ -188,7 +199,7 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i)),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'q', zone: 'ALL', area: 'ALL', type: 'ALL', pc: 'ALL', model: 'ALL', tab: 'model', tmode: 'full', shopview: 'all', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i)),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
 try { const p = JSON.parse(localStorage.getItem('vivo-dash') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
 const persist = () => { try { localStorage.setItem('vivo-dash', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
@@ -351,8 +362,46 @@ function shopRows(mi, modelSel) {
 const sorter = (key) => { const [k, d] = S.sort[key]; return (a, b) => { const x = a[k], y = b[k]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
   return (typeof x === 'string' ? x.localeCompare(y) : (x === y ? 0 : x > y ? 1 : -1)) * d; }; };
 const qMatch = (q, s) => !q || (s.name + ' ' + s.c).toLowerCase().includes(q.toLowerCase());
+// last sale date per shop (Model filter applied, up to the latest data date)
+function lastSaleBy() { const m = new Map(); for (const [d, c, k, u] of D.sales) { if (u <= 0 || !okShop(c) || !okModel(k)) continue; if (!(m.get(c) >= d)) m.set(c, d); } return m; }
+const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
 function sShop(mi) {
-  const rows = shopRows(mi).filter((r) => qMatch(S.q.shop, r)).sort(sorter('shop'));
+  const last = lastSaleBy(); const stk = HASSTOCK ? stockBy((c) => c) : null;
+  const ref = mi.asofDay ? `${mi.ym}-${String(mi.asofDay).padStart(2, '0')}` : `${mi.ym}-01`;
+  let all = shopRows(mi);
+  // No Sale = shop with Target this month (or, for a month without Target, a shop that sold in the 90 days before it) and no sales MTD
+  const hasT = all.some((r) => r.tfull > 0);
+  const start = `${mi.ym}-01`;
+  if (!hasT) { const have = new Set(all.map((r) => r.c));
+    for (const [c, d] of last) if (!have.has(c) && d < start && daysBetween(d, start) <= 90) { const s = SH[c]; all.push({ c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: 0, tfull: 0, act: 0, ach: null, rr: 0, rach: null }); } }
+  for (const r of all) { const ld = last.get(r.c); const prev = ld && ld <= ref ? ld : null;
+    r.last = prev; r.idle = prev ? daysBetween(prev, ref) : null; r.stock = stk ? (stk.get(r.c) || 0) : null;
+    r.ns = (S.metric === 'q' ? r.act : r.act) <= 0 && (hasT ? r.tfull > 0 : true) && mi.asofDay > 0; }
+  const uni = all.filter((r) => hasT ? r.tfull > 0 : true); const ns = uni.filter((r) => r.ns);
+  // summary by Region > Area
+  const nsRows = []; const tot = { name: 'รวม', _cls: 'tot', n: 0, x: 0, t: 0, st: 0 };
+  for (const zn of [...ZONES, 'อื่น ๆ']) {
+    const ar = AREAS.filter((a) => zoneOf(a) === zn && uni.some((r) => r.area === a)); if (!ar.length) continue;
+    const sub = { name: zn, _cls: 'sub', n: 0, x: 0, t: 0, st: 0 }; nsRows.push(sub);
+    for (const a of ar) { const u = uni.filter((r) => r.area === a), x = u.filter((r) => r.ns);
+      const row = { name: a, _cls: 'ind', n: u.length, x: x.length, t: x.reduce((s, r) => s + r.tfull, 0), st: x.reduce((s, r) => s + (r.stock || 0), 0) };
+      for (const g of [sub, tot]) { g.n += row.n; g.x += row.x; g.t += row.t; g.st += row.st; } nsRows.push(row); }
+  }
+  nsRows.push(tot);
+  const ncols = [{ h: 'Region / Area', v: (r) => r.name, cls: 't' }, { h: hasT ? 'สาขาที่มี Target' : 'สาขาที่เคยขาย (90 วัน)', v: (r) => r.n, f: num },
+    { h: 'No Sale', v: (r) => r.x, f: (v) => v > 0 ? `<b style="color:var(--bad)">${num(v)}</b>` : '0' }, { h: '% No Sale', p: 1, v: (r) => ratio(r.x, r.n), f: (v) => v == null ? '–' : Math.round(v * 100) + '%' },
+    ...(hasT ? [{ h: `Target เดือนของสาขา No Sale (${unit()})`, v: (r) => r.t, f: tgtF }] : []), ...(HASSTOCK ? [{ h: 'Stock ในสาขา No Sale', v: (r) => r.st, f: num }] : [])];
+  const tNs = renderTable($('#t-ns'), ncols, nsRows);
+  const noStock = HASSTOCK ? ns.filter((r) => !r.stock).length : null;
+  const never = ns.filter((r) => !r.last).length, idle30 = ns.filter((r) => r.idle != null && r.idle > 30).length;
+  const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  $('#ns-kpi').innerHTML = kc('สาขา No Sale', `<span style="color:var(--bad)">${num(ns.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">จาก ${num(uni.length)} สาขา</span>`, `${uni.length ? Math.round(ns.length / uni.length * 100) : 0}% ของสาขา${hasT ? 'ที่มี Target' : ''}`)
+    + (hasT ? kc(`Target ของสาขา No Sale`, tgtF(ns.reduce((s, r) => s + r.tfull, 0)), `${unit()} · ${Math.round(ratio(ns.reduce((s, r) => s + r.tfull, 0), uni.reduce((s, r) => s + r.tfull, 0)) * 100 || 0)}% ของ Target รวม`) : '')
+    + kc('ไม่มีขายเกิน 30 วัน', num(idle30), `ไม่เคยขายเลยตั้งแต่ ${thDate(D.meta.first_sales)}: ${num(never)} สาขา`)
+    + (HASSTOCK ? kc('No Sale และไม่มี Stock', num(noStock), 'สาเหตุอาจมาจากไม่มีของ') : '');
+  const mlab = S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.trim();
+  $('#n-ns').innerHTML = `No Sale = ${hasT ? 'สาขาที่มี Target เดือนนี้' : 'สาขาที่เคยขายใน 90 วันก่อนเดือนนี้ (เดือนนี้ไม่มี Target)'} แต่ยังไม่มียอดขาย ${THF[mi.m - 1]} ถึงวันที่ ${mi.asofDay} · Model: <b>${esc(mlab)}</b> · ตามตัวกรองด้านบน`;
+  let rows = all.filter((r) => qMatch(S.q.shop, r) && (S.shopview !== 'ns' || r.ns)).sort(sorter('shop'));
   const tl = S.tmode === 'full' ? 'Target ทั้งเดือน' : `Target ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`;
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
     { h: 'รหัส', v: (r) => r.c, cls: 't' },
@@ -360,12 +409,19 @@ function sShop(mi) {
     { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
     { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: num },
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
-    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: num }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct }];
+    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: num }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
+    { h: 'ขายล่าสุด', sort: 'last', v: (r) => r.last, f: (v, r) => r._cls === 'tot' ? '' : v ? `${thDate(v)}${r.idle > 0 ? ` <span class="na">(${r.idle} วัน)</span>` : ''}` : '<span class="cw bad">ไม่เคยขาย</span>', x: (v, r) => r._cls === 'tot' ? '' : v || 'ไม่เคยขาย' },
+    ...(HASSTOCK ? [{ h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }] : [])];
+  rows.forEach((r) => { if (r.ns) r._cls = 'ns-row'; });
   const sum = rows.reduce((s, r) => (s.tgt += r.tgt, s.tfull += r.tfull, s.act += r.act, s), { tgt: 0, tfull: 0, act: 0 });
   const rr = mi.asofDay ? sum.act / mi.asofDay * mi.days : null;
-  rows.push({ _cls: 'tot', name: `รวม ${rows.length} สาขา`, c: '', area: '', type: '', pc: null, tgt: sum.tgt, act: sum.act, ach: ratio(sum.act, sum.tgt), rr, rach: ratio(rr, sum.tfull) });
+  rows = rows.slice(); rows.push({ _cls: 'tot', name: `รวม ${rows.length} สาขา`, c: '', area: '', type: '', pc: null, tgt: sum.tgt, act: sum.act, ach: ratio(sum.act, sum.tgt), rr, rach: ratio(rr, sum.tfull), last: null, stock: HASSTOCK ? rows.reduce((s, r) => s + (r.stock || 0), 0) : null });
   $('#n-shop').innerHTML = `${S.tmode === 'full' ? 'เทียบ Target ทั้งเดือน' : 'เทียบ Target ที่คิดตาม Portion รายสัปดาห์ถึงวันนี้ (' + Math.round(mi.todate * 1000) / 10 + '% ของเดือน)'} · Runrate = ยอดขาย ÷ ${mi.asofDay} วัน × ${mi.days} วัน · Runrate %ACH เทียบ Target ทั้งเดือน · หน่วย: ${unit()} · คลิกหัวคอลัมน์เพื่อเรียง`;
-  EXPORT.shop = toSheet('3 รายสาขา', renderTable($('#t-shop'), cols, rows, { sort: 'shop' }), `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'} · ${tl}`);
+  const tShop = renderTable($('#t-shop'), cols, rows, { sort: 'shop' });
+  const nsList = { cols: cols.filter((c) => !/%ACH|Runrate/.test(c.h)), rows: ns.slice().sort((a, b) => a.area.localeCompare(b.area) || (b.tfull - a.tfull)) };
+  EXPORT.shop = [toSheet('3 รายสาขา', tShop, `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'} · ${tl}${S.shopview === 'ns' ? ' · เฉพาะ No Sale' : ''}`),
+    toSheet('3 No Sale ราย Area', tNs, `สรุปสาขา No Sale ราย Area · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`),
+    toSheet('3 No Sale รายชื่อสาขา', nsList, `รายชื่อสาขา No Sale · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`)];
 }
 function sStock() {
   const sm = stockBy((c, k) => k), s28 = sales28((c, k) => k);
@@ -456,7 +512,7 @@ function initControls() {
   for (const [id, key] of [['#f-area', 'area'], ['#f-type', 'type'], ['#f-pc', 'pc'], ['#f-model', 'model'], ['#f-msmodel', 'msmodel']]) $(id).onchange = (e) => { S[key] = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
-  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode');
+  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-shopview', 'shopview');
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
     for (const t of ['model', 'area', 'shop', 'stock', 'ms']) $('#s-' + t).hidden = t !== S.tab; };
   tabs(); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; tabs(); persist(); };
