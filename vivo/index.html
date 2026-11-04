@@ -248,7 +248,8 @@ function monthInfo(ym) {
   if (LATEST.slice(0, 7) === ym) asofDay = +LATEST.slice(8, 10); else if (ym > LATEST.slice(0, 7)) asofDay = 0;
   const todate = w.reduce((s, [a, b], i) => s + portion[i] * Math.min(1, Math.max(0, (asofDay - a + 1) / (b - a + 1))), 0);
   const curWeek = w.findIndex(([a, b]) => asofDay >= a && asofDay < b);
-  return { ym, y, m, days, weeks: w, portion, announced, asofDay, todate, curWeek };
+  const pm = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`; const pdays = new Date(+pm.slice(0, 4), +pm.slice(5), 0).getDate();
+  return { ym, y, m, days, weeks: w, portion, announced, asofDay, todate, curWeek, prev: pm, prevM: +pm.slice(5), prevDays: pdays, prevSame: Math.min(asofDay, pdays) };
 }
 const wkOf = (mi, d) => mi.weeks.findIndex(([a, b]) => d >= a && d <= b);
 
@@ -260,12 +261,17 @@ const modelOk = (sel, k) => sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && M
 const okModel = (k) => modelOk(S.model, k);
 
 // ---------- aggregation
-const z = () => ({ u: 0, n: 0, wu: [0, 0, 0, 0], wn: [0, 0, 0, 0], tu: 0, tn: 0 });
+const z = () => ({ u: 0, n: 0, wu: [0, 0, 0, 0], wn: [0, 0, 0, 0], tu: 0, tn: 0, pu: 0, pn: 0, fu: 0, fn: 0 });
 function aggregate(mi, keyFn, modelSel) {
   const out = new Map(); const get = (k) => { let x = out.get(k); if (!x) out.set(k, x = z()); return x; };
   const msel = modelSel || S.model;
   for (const [d, c, k, u, n] of D.sales) {
-    if (d.slice(0, 7) !== mi.ym || !okShop(c) || !modelOk(msel, k)) continue;
+    const ym = d.slice(0, 7);
+    if (ym === mi.prev && okShop(c) && modelOk(msel, k)) { // previous month: same days (MoM) and full month
+      const same = +d.slice(8, 10) <= mi.prevSame;
+      for (const key of [].concat(keyFn(c, k))) { const x = get(key); x.fu += u; x.fn += n; if (same) { x.pu += u; x.pn += n; } }
+      continue; }
+    if (ym !== mi.ym || !okShop(c) || !modelOk(msel, k)) continue;
     const w = wkOf(mi, +d.slice(8, 10));
     for (const key of [].concat(keyFn(c, k))) { const x = get(key); x.u += u; x.n += n; if (w >= 0) { x.wu[w] += u; x.wn[w] += n; } }
   }
@@ -351,7 +357,12 @@ function weeklyCols(mi, first) {
       { g: lab(i), h: 'Actual', v: (r) => future ? null : W(r, i), f: num },
       { g: lab(i), h: '%ACH', p: 1, v: (r) => future ? null : ratio(W(r, i), T(r) * mi.portion[i]), f: pct });
   }
+  const P = (r) => S.metric === 'q' ? r.pu : r.pn, PF = (r) => S.metric === 'q' ? r.fu : r.fn;
+  const mg = `MoM เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame}`;
   cols.push({ g: 'MTD', h: 'Actual', v: (r) => V(r), f: num }, { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
+    { g: mg, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
+    { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
+    { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: num },
     { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
     { g: `ถึงวันที่ ${mi.asofDay} (8-7-7-${mi.days - 22})`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
     { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
@@ -365,7 +376,7 @@ const portionNote = (mi) => `สัปดาห์ ${mi.weeks.map(([a, b]) => b 
 function sModel(mi) {
   const a = aggregate(mi, (c, k) => k);
   const rows = []; const tot = Object.assign(z(), { name: 'รวมทั้งหมด', _cls: 'tot' });
-  const add = (dst, x) => { dst.u += x.u; dst.n += x.n; dst.tu += x.tu; dst.tn += x.tn; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
+  const add = (dst, x) => { for (const f of ['u', 'n', 'tu', 'tn', 'pu', 'pn', 'fu', 'fn']) dst[f] += x[f]; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
   const isT = (k) => MD[k] && MD[k].tgt;
   // models with Target are always listed; models without Target only when they sold, in their own group
   const keys = [...a.keys()].filter((k) => okModel(k) && (isT(k) || a.get(k).u !== 0 || a.get(k).n !== 0))
@@ -384,7 +395,7 @@ function sModel(mi) {
 function sArea(mi) {
   const a = aggregate(mi, (c) => SH[c].area);
   const rows = []; const tot = Object.assign(z(), { name: 'รวมทั้งหมด', _cls: 'tot' });
-  const add = (dst, x) => { dst.u += x.u; dst.n += x.n; dst.tu += x.tu; dst.tn += x.tn; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
+  const add = (dst, x) => { for (const f of ['u', 'n', 'tu', 'tn', 'pu', 'pn', 'fu', 'fn']) dst[f] += x[f]; for (let i = 0; i < 4; i++) { dst.wu[i] += x.wu[i]; dst.wn[i] += x.wn[i]; } };
   for (const zn of [...ZONES, 'อื่น ๆ']) {
     const ar = AREAS.filter((x) => zoneOf(x) === zn && a.has(x)); if (!ar.length) continue;
     const sub = Object.assign(z(), { name: zn, _cls: 'sub' }); rows.push(sub);
@@ -784,7 +795,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 13:59 น.</span>`;
+$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า 4 พ.ย. 2569 14:02 น.</span>`;
 initControls(); render();
 </script>
 </body>
