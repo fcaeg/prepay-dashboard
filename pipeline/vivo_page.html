@@ -230,15 +230,32 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   <div class="kpis" id="kpis"></div>
 
   <nav class="tabs" role="tablist" id="tabs">
-    <button role="tab" data-t="model" aria-selected="true">1 · ราย Model</button>
-    <button role="tab" data-t="area" aria-selected="false">2 · ราย Area</button>
-    <button role="tab" data-t="shop" aria-selected="false">3 · รายสาขา</button>
-    <button role="tab" data-t="stock" aria-selected="false">4 · Stock &amp; Cover Week</button>
-    <button role="tab" data-t="ms" aria-selected="false">5 · PC Performance</button>
-    <button role="tab" data-t="wk" aria-selected="false">6 · รายสัปดาห์ (WoW)</button>
+    <button role="tab" data-t="today" aria-selected="true">1 · ยอดขายวันนี้</button>
+    <button role="tab" data-t="model" aria-selected="false">2 · ราย Model</button>
+    <button role="tab" data-t="area" aria-selected="false">3 · ราย Area</button>
+    <button role="tab" data-t="shop" aria-selected="false">4 · รายสาขา</button>
+    <button role="tab" data-t="stock" aria-selected="false">5 · Stock &amp; Cover Week</button>
+    <button role="tab" data-t="ms" aria-selected="false">6 · PC Performance</button>
+    <button role="tab" data-t="wk" aria-selected="false">7 · รายสัปดาห์ (WoW)</button>
   </nav>
 
-  <section class="card" id="s-model">
+  <section class="card" id="s-today">
+    <div class="card-h"><h2>ยอดขายวันนี้</h2>
+      <div class="f"><select id="f-day" aria-label="เลือกวัน"></select></div>
+      <span class="spacer"></span><button class="btn" data-x="today">⤓ Excel</button></div>
+    <p class="note" id="n-today"></p>
+    <div class="cmp" id="td-kpi"></div>
+    <div class="two">
+      <div><h3>ราย Region / Area</h3><div class="tw" id="t-td-area" style="max-height:none"></div></div>
+      <div><h3>ราย Model</h3><div class="tw" id="t-td-model" style="max-height:none"></div></div>
+    </div>
+    <div class="two" style="margin-top:14px">
+      <div><h3>สาขาที่ขายได้มากสุดวันนี้</h3><div class="tw" id="t-td-shop"></div></div>
+      <div><h3>พนักงานที่ขายได้วันนี้ (TSM)</h3><p class="note" id="n-td-staff"></p><div class="tw" id="t-td-staff"></div></div>
+    </div>
+  </section>
+
+  <section class="card" id="s-model" hidden>
     <div class="card-h"><h2>ยอดขายราย Model เทียบ Target</h2><span class="spacer"></span><button class="btn" data-x="model">⤓ Excel</button></div>
     <p class="note" id="n-model"></p>
     <div class="tw" id="t-model"></div>
@@ -402,10 +419,10 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'model', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
-try { const p = JSON.parse(localStorage.getItem('vivo-dash2') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
-const persist = () => { try { localStorage.setItem('vivo-dash2', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
+try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
+const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
 
 // ---------- month geometry: Target to date = month Target ÷ days in month × days passed (flat rate)
 const iso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
@@ -1030,6 +1047,60 @@ function sWeek(mi) {
   $('#n-wk').innerHTML = `สัปดาห์แบบ ISO (จันทร์–อาทิตย์) · W${mi.wk} = ${thDate(mi.cwFrom)} – ${thDate(mi.ref)} ${mi.fullWeek ? '' : `(ยังไม่ครบสัปดาห์ · * = ถึงวันที่ข้อมูลล่าสุด)`} · WoW เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : `วันเดียวกัน (${thDate(mi.pwFrom)} – ${thDate(mi.pwSame)})`} · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
   EXPORT.wk = toSheet('6 รายสัปดาห์ WoW', t, `ยอดขายรายสัปดาห์ W1–W${maxW} ปี ${Y + 543} · WoW W${mi.wk} เทียบ W${mi.pwk} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
 }
+// ---------- today: one day vs yesterday and the same weekday last week; daily Target = month Target ÷ days (flat)
+function sToday() {
+  const d = S.day; if (!d) { $('#n-today').textContent = 'ยังไม่มีข้อมูลยอดขาย'; return; }
+  const y1 = addDays(d, -1), w1 = addDays(d, -7); const ym = d.slice(0, 7); const dim = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate();
+  const vv = (u, n) => S.metric === 'q' ? u : n;
+  const agg = (keyFn) => { const m = new Map(); const g = (k) => { let x = m.get(k); if (!x) m.set(k, x = { d: 0, y: 0, w: 0, t: 0, u: 0, n: 0, shops: new Set(), tshops: new Set() }); return x; };
+    for (const [dd, c, k, u, n] of D.sales) { if ((dd !== d && dd !== y1 && dd !== w1) || !okShop(c) || !okModel(k)) continue; const v = vv(u, n);
+      for (const key of [].concat(keyFn(c, k))) { const x = g(key); if (dd === d) { x.d += v; x.u += u; x.n += n; if (u > 0) x.shops.add(c); } else if (dd === y1) x.y += v; else x.w += v; } }
+    for (const [c, k, tu, tn] of (D.targets[ym] || [])) { if (!okShop(c) || !okModel(k)) continue; for (const key of [].concat(keyFn(c, k))) { const x = g(key); x.t += vv(tu, tn) / dim; if (tu > 0 || tn > 0) x.tshops.add(c); } }
+    return m; };
+  const pctD = (a, b) => b > 0 ? a / b - 1 : null;
+  const cols = (first) => [first, { g: thDate(d), h: 'ยอดขาย', v: (r) => r.d, f: (v) => `<b>${num(v)}</b>` }, { g: thDate(d), h: 'Target/วัน (Flat)', v: (r) => r.t, f: tgtF }, { g: thDate(d), h: '%ACH', p: 1, v: (r) => ratio(r.d, r.t), f: pct },
+    { g: 'เทียบเมื่อวาน', h: shortD(y1), v: (r) => r.y, f: num }, { g: 'เทียบเมื่อวาน', h: 'DoD %', p: 1, v: (r) => pctD(r.d, r.y), f: (v, r) => !(r.y > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.y > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v },
+    { g: 'วันเดียวกันสัปดาห์ก่อน', h: shortD(w1), v: (r) => r.w, f: num }, { g: 'วันเดียวกันสัปดาห์ก่อน', h: 'WoW %', p: 1, v: (r) => pctD(r.d, r.w), f: (v, r) => !(r.w > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.w > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v }];
+  const sumR = (name, xs, cls) => xs.reduce((a, x) => { a.d += x.d; a.y += x.y; a.w += x.w; a.t += x.t; a.u += x.u; x.shops.forEach((c) => a.shops.add(c)); x.tshops.forEach((c) => a.tshops.add(c)); return a; }, { name, _cls: cls, d: 0, y: 0, w: 0, t: 0, u: 0, shops: new Set(), tshops: new Set() });
+  // area
+  const A = agg((c) => SH[c].area); const arows = [];
+  for (const zn of [...ZONES, 'อื่น ๆ']) { const ks = AREAS.filter((a) => zoneOf(a) === zn && A.has(a)); if (!ks.length) continue;
+    arows.push(sumR(zn, ks.map((k) => A.get(k)), 'sub')); for (const k of ks) arows.push(Object.assign({ name: k, _cls: 'ind' }, A.get(k))); }
+  const TOT = sumR('รวมทั้งหมด', [...A.values()], 'tot'); arows.push(TOT);
+  const acols = cols({ h: 'Region / Area', v: (r) => r.name, cls: 't' }); acols.splice(2, 0, { g: thDate(d), h: 'สาขาที่ขายได้', v: (r) => r.shops.size, f: (v, r) => `${num(v)}<span class="na"> / ${num(r.tshops.size)}</span>`, x: (v, r) => `${v} / ${r.tshops.size}` });
+  const tA = renderTable($('#t-td-area'), acols, arows);
+  // model
+  const M = agg((c, k) => k); const isT = (k) => MD[k] && MD[k].tgt; const mrows = []; let grp = null; const keys = [...M.keys()].filter((k) => { const x = M.get(k); return x.d || x.y || x.w || (isT(k) && x.t); })
+    .sort((a, b) => (isT(a) ? 0 : 1) - (isT(b) ? 0 : 1) || (MORDER[a] ?? 999) - (MORDER[b] ?? 999));
+  for (const k of keys) { const g = isT(k) ? `Vivo ${MD[k].series} Series` : 'Non Target Model';
+    if (g !== grp) { grp = g; mrows.push(sumR(g, keys.filter((x) => (isT(x) ? `Vivo ${MD[x].series} Series` : 'Non Target Model') === g).map((x) => M.get(x)), 'sub')); }
+    mrows.push(Object.assign({ name: (MD[k] || { name: k }).name.replace(/^VIVO /, ''), _cls: 'ind' }, M.get(k))); }
+  mrows.push(sumR('รวมทั้งหมด', [...M.values()], 'tot'));
+  const tM = renderTable($('#t-td-model'), cols({ h: 'Model', v: (r) => r.name, cls: 't' }), mrows);
+  // shops
+  const SHP = new Map(); for (const [dd, c, k, u, n] of D.sales) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = SHP.get(c) || { v: 0, u: 0, m: new Map() }; x.v += vv(u, n); x.u += u; x.m.set(k, (x.m.get(k) || 0) + u); SHP.set(c, x); }
+  const srows = [...SHP.entries()].filter(([, x]) => x.u > 0 || x.v > 0).map(([c, x]) => ({ c, name: SH[c].n.replace(/^True Shop /i, ''), area: SH[c].area, pc: SH[c].pc, v: x.v, u: x.u,
+    top: [...x.m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, q]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${q})`).join(', ') })).sort((a, b) => b.v - a.v);
+  const tS = renderTable($('#t-td-shop'), [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+    { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }, { h: 'รุ่นที่ขาย', v: (r) => r.top, cls: 't' }], srows);
+  // staff (TSM only)
+  const ST = new Map(); for (const [dd, c, k, e, u, n] of (D.staff ? D.staff.r : [])) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = ST.get(e) || { e, name: D.staff.e[e] || e, c, v: 0, u: 0 }; x.v += vv(u, n); x.u += u; ST.set(e, x); }
+  const strows = [...ST.values()].filter((x) => x.u > 0 || x.v > 0).sort((a, b) => b.v - a.v);
+  const tE = renderTable($('#t-td-staff'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'สาขา', v: (r) => SH[r.c] ? SH[r.c].n.replace(/^True Shop /i, '') : r.c, cls: 't' },
+    { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }], strows);
+  $('#n-td-staff').innerHTML = d > (D.meta.hist_asof || '') ? '' : `วันที่ ${thDate(d)} มาจากระบบส่วนกลาง ซึ่งไม่มีชื่อพนักงาน — ข้อมูลรายคนมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}`;
+  // KPIs
+  const kc = (l, v, sub, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
+  const ach = ratio(TOT.d, TOT.t), dod = pctD(TOT.d, TOT.y), wow = pctD(TOT.d, TOT.w); const fmtP = (x) => x == null ? '–' : `<span class="${x >= 0 ? 'up' : 'dn'}">${sgn(x)}</span>`;
+  const isLatest = d === LATEST; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
+  $('#td-kpi').innerHTML = kc(`ยอดขาย ${thDate(d)}${tm ? ` ถึง ${tm} น.` : ''}`, `${num(TOT.d)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${num(TOT.u)} เครื่อง · ${num(TOT.shops.size)} สาขาที่ขายได้`)
+    + kc('%ACH วันนี้ (Target/วัน Flat)', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
+    + kc(`เทียบเมื่อวาน (${shortD(y1)})`, fmtP(dod), `${num(TOT.y)} ${unit()}`) + kc(`เทียบ ${shortD(w1)} (วันเดียวกันสัปดาห์ก่อน)`, fmtP(wow), `${num(TOT.w)} ${unit()}`)
+    + kc('สาขาที่มี Target แต่ยังไม่มียอดวันนี้', num([...TOT.tshops].filter((c) => !TOT.shops.has(c)).length), `จาก ${num(TOT.tshops.size)} สาขาที่มี Target`);
+  $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}ที่มา: ${d > (D.meta.hist_asof || '') ? 'TSM (POS)' : 'ระบบส่วนกลาง'} · Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
+  EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
+    toSheet('1 วันนี้ รายสาขา', tS, `ยอดขาย ${thDate(d)} รายสาขา`), toSheet('1 วันนี้ รายพนักงาน', tE, `ยอดขาย ${thDate(d)} รายพนักงาน (TSM)`)];
+}
 function kpis(mi, tot, ts) {
   const rr = mi.asofDay ? V(tot) / mi.asofDay * mi.days : 0;
   const k = (l, v, s, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
@@ -1114,19 +1185,22 @@ function initControls() {
   window.addEventListener('resize', setBar); setTimeout(setBar, 0);
   document.getElementById('filters').addEventListener('change', fcount);
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
+  const days = [...new Set(D.sales.map((r) => r[0]))].sort().reverse().slice(0, 31);
+  S.day = days[0] || ''; fillSelect($('#f-day'), days.map((d, i) => [d, `${thDate(d)}${i === 0 ? ' (ล่าสุด)' : ''} · ${['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'][new Date(d + 'T00:00:00').getDay()]}`]), S.day);
+  $('#f-day').onchange = (e) => { S.day = e.target.value; render(); };
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
   seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-shopview', 'shopview');
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
-    for (const t of ['model', 'area', 'shop', 'stock', 'ms', 'wk']) $('#s-' + t).hidden = t !== S.tab; };
+    for (const t of ['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk']) $('#s-' + t).hidden = t !== S.tab; };
   $('#alert').onclick = () => { if (!$('#alert').classList.contains('okay')) $('#h-risk').scrollIntoView({ behavior: 'smooth' }); };
   tabs(); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; tabs(); persist(); };
   for (const [id, key] of [['#q-shop', 'shop'], ['#q-stock', 'stock'], ['#q-ms', 'ms']]) $(id).oninput = (e) => { S.q[key] = e.target.value.trim(); render(); };
   $('#locs').innerHTML = D.locs.length > 1 ? 'Location ที่นับเป็น Stock: ' + D.locs.map((l, i) => `<label><input type="checkbox" data-l="${i}"${S.locs.has(i) ? ' checked' : ''}> ${esc(l)}</label>`).join('') : '';
   $('#locs').onchange = (e) => { const i = +e.target.dataset.l; if (e.target.checked) S.locs.add(i); else S.locs.delete(i); render(); };
   document.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { const k = b.dataset.x; requireDL(() => downloadXlsx([].concat(EXPORT[k]), `Vivo_${k}_${S.month}.xlsx`)); });
-  $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['model', 'area', 'shop', 'stock', 'ms', 'wk'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
+  $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
 }
 function rawSheet() {
   const rows = D.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
@@ -1137,7 +1211,7 @@ function rawSheet() {
 
 function render() {
   const mi = monthInfo(S.month); EXPORT = {};
-  const tot = sModel(mi); sArea(mi); sWeek(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
+  sToday(); const tot = sModel(mi); sArea(mi); sWeek(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
 }
 
 // ---------- minimal XLSX writer (stored zip, no external library)
