@@ -876,10 +876,15 @@ function sPC(mi) {
   const tg = new Map(); for (const [sc, k, tu, tn] of (D.targets[mi.ym] || [])) if (sc === c) tg.set(k, { u: tu, n: tn });
   const val = (m, k) => { const x = m.get(k); return x ? (S.metric === 'q' ? x.u : x.n) : 0; };
   const tv = (k) => { const x = tg.get(k); return x ? (S.metric === 'q' ? x.u : x.n) : 0; };
-  const keys = [...new Set([...cur.keys(), ...prv.keys(), ...pfull.keys(), ...tg.keys()])].sort((a, b) => (MORDER[a] ?? 999) - (MORDER[b] ?? 999));
+  // stock (locations ticked in the Stock tab) and units sold in the last 28 days, per model, for this shop
+  const stS = new Map(), s28S = new Map();
+  for (const [sc, k, l, q] of D.stock) if (sc === c && S.locs.has(l)) stS.set(k, (stS.get(k) || 0) + q);
+  for (const [dd, sc, k, u] of D.sales) if (sc === c && dd >= L28.from && dd <= L28.to) s28S.set(k, (s28S.get(k) || 0) + u);
+  const keys = [...new Set([...cur.keys(), ...prv.keys(), ...pfull.keys(), ...tg.keys(), ...stS.keys()])].sort((a, b) => (MORDER[a] ?? 999) - (MORDER[b] ?? 999));
   const areaTot = [...area.keys()].reduce((t, k) => t + val(area, k), 0);
-  const mk = (name, ks, cls) => { const r = { name, _cls: cls, tgt: 0, cur: 0, prv: 0, pfull: 0, ar: 0 };
-    for (const k of ks) { r.tgt += tv(k); r.cur += val(cur, k); r.prv += val(prv, k); r.pfull += val(pfull, k); r.ar += val(area, k); } return r; };
+  const mk = (name, ks, cls) => { const r = { name, _cls: cls, tgt: 0, cur: 0, prv: 0, pfull: 0, ar: 0, st: 0, s28: 0 };
+    for (const k of ks) { r.tgt += tv(k); r.cur += val(cur, k); r.prv += val(prv, k); r.pfull += val(pfull, k); r.ar += val(area, k); r.st += stS.get(k) || 0; r.s28 += s28S.get(k) || 0; }
+    r.cw = cover(r.st, r.s28); return r; };
   const mrows = keys.map((k) => Object.assign(mk((MD[k] || { name: k }).name.replace(/^VIVO /, ''), [k], ''), { k, fam: (MD[k] || {}).family || '?', ser: (MD[k] || {}).series || '?' }));
   const fams = [...new Set(mrows.map((r) => r.fam))];
   const grows = fams.map((f) => mk(f, mrows.filter((r) => r.fam === f).map((r) => r.k), ''));
@@ -895,6 +900,7 @@ function sPC(mi) {
   $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, num(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : Math.round(tot.ach * 100) + '%'}`)
     + kc(`MoM เทียบ ${pl}`, momF(tot.mom, tot), `${pl}: ${num(tot.prv)} · ทั้งเดือน ${THF[pmi.m - 1]} ${num(tot.pfull)}`)
     + kc(`%ACH ถึงวันที่ ${d} (Flat)`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${Math.round(tot.achd * 100)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
+    + (HASSTOCK ? kc('Stock ในสาขา', `${num(tot.st)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `ขาย 28 วัน ${num(tot.s28)} · Cover ${tot.s28 > 0 ? nf1.format(tot.st / (tot.s28 / 4)) + ' สัปดาห์' : '–'}`) : '')
     + kc('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : Math.round(ratio(rr, tot.tgt) * 100) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
   // analysis
   const u = unit(), li = [];
@@ -906,6 +912,9 @@ function sPC(mi) {
   const gdn = gd.filter((x) => x.diff < 0); if (gdn.length) { const x = gdn[gdn.length - 1]; li.push(`กลุ่มที่ลดลงมากสุด: <b>${esc(x.r.name)}</b> ${num(x.r.prv)} → ${num(x.r.cur)} ${u} (${sgn(x.r.mom)})`); }
   const best = mrows.filter((r) => r.cur > 0).sort((a, b) => b.cur - a.cur)[0];
   if (best) li.push(`Model ขายดีสุด: <b>${esc(best.name)}</b> ${num(best.cur)} ${u} คิดเป็น ${shareF(best.sh)} ของยอดสาขา${best.tgt > 0 ? ` (%ACH ${Math.round(best.ach * 100)}%)` : ''}`);
+  if (HASSTOCK) { const ns = mrows.filter((r) => r.tgt > 0 && r.st === 0); const lowc = mrows.filter((r) => r.st > 0 && r.s28 > 0 && r.st / (r.s28 / 4) < CW_RISK);
+    if (ns.length) li.push(`มี Target แต่ไม่มี Stock ${ns.length} รุ่น: ${ns.slice(0, 6).map((r) => `<b>${esc(r.name)}</b>`).join(', ')}${ns.length > 6 ? ' …' : ''} — ขอโอน / เติมของ`);
+    if (lowc.length) li.push(`Stock เสี่ยงขาด (Cover &lt; ${CW_RISK} สัปดาห์): ${lowc.map((r) => `<b>${esc(r.name)}</b> เหลือ ${num(r.st)} เครื่อง`).join(', ')}`); }
   const zero = mrows.filter((r) => r.tgt > 0 && r.cur <= 0).sort((a, b) => b.tgt - a.tgt);
   if (zero.length && d) li.push(`มี Target แต่ยังไม่มียอด ${zero.length} รุ่น: ${zero.slice(0, 5).map((r) => `<b>${esc(r.name)}</b> (เป้า ${tgtF(r.tgt)})`).join(', ')}${zero.length > 5 ? ' …' : ''} — ควรเช็ก Stock และเร่งนำเสนอ`);
   const lag = grows.filter((r) => r.tgt > 0 && r.cur > 0 && r.achd < 0.7).sort((a, b) => a.achd - b.achd);
@@ -923,7 +932,10 @@ function sPC(mi) {
     { g: `${THF[mi.m - 1]} 1–${d}`, h: '%ACH เดือน', p: 1, v: (r) => r.ach, f: pct }, { g: `${THF[mi.m - 1]} 1–${d}`, h: `%ACH ถึงวันนี้`, p: 1, v: (r) => r.achd, f: pct },
     { g: 'MoM', h: pl, v: (r) => r.prv, f: num }, { g: 'MoM', h: 'MoM %', p: 1, v: (r) => r.mom, f: momF, x: (v, r) => r._new ? 'ใหม่' : v == null ? '' : v },
     { h: `${THF[pmi.m - 1]} ทั้งเดือน`, v: (r) => r.pfull, f: num },
-    { g: 'สัดส่วนยอดขาย', h: 'สาขา', p: 1, v: (r) => r.sh, f: shareF }, { g: 'สัดส่วนยอดขาย', h: 'Area', p: 1, v: (r) => r.ash, f: shareF }];
+    { g: 'สัดส่วนยอดขาย', h: 'สาขา', p: 1, v: (r) => r.sh, f: shareF }, { g: 'สัดส่วนยอดขาย', h: 'Area', p: 1, v: (r) => r.ash, f: shareF },
+    { g: `Stock ณ ${thDate(D.meta.stock_asof).replace(/ \d\d:\d\d น\.$/, '')}`, h: 'Stock (เครื่อง)', v: (r) => HASSTOCK ? r.st : null, f: (v) => v == null ? '<span class="na">–</span>' : v ? `<b>${num(v)}</b>` : '<span class="cw bad">0</span>' },
+    { g: `Stock ณ ${thDate(D.meta.stock_asof).replace(/ \d\d:\d\d น\.$/, '')}`, h: 'ขาย 28 วัน', v: (r) => r.s28, f: num },
+    { g: `Stock ณ ${thDate(D.meta.stock_asof).replace(/ \d\d:\d\d น\.$/, '')}`, h: 'Cover Week', v: (r) => r.cw, f: coverF }];
   const gtab = renderTable($('#t-pd-g'), cols({ h: 'กลุ่ม Model', v: (r) => r.name, cls: 't' }), [...grows.filter((r) => r.cur || r.prv || r.pfull || r.tgt), tot]);
   let ser = null; const mr2 = [];
   for (const r of mrows) { if (r.ser !== ser) { ser = r.ser; const sub = mk(`Vivo ${ser} Series`, mrows.filter((x) => x.ser === ser).map((x) => x.k), 'sub');
