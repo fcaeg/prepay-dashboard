@@ -117,6 +117,8 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .gate-box input[type=password] { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
 .gate-box .btn { padding: 10px; font-size: 15px; }
 .gate-rem { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.dlg { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); padding: 16px; z-index: 90; }
+.dlg[hidden] { display: none; }
 .gate-err { color: var(--bad); font-size: 13px; min-height: 1em; }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
@@ -236,6 +238,16 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   </section>
 </div>
 
+<div class="dlg" id="dl-gate" hidden>
+  <form class="gate-box" id="dl-form">
+    <div class="gate-logo">⤓🔒</div>
+    <h1 style="font-size:19px">ใส่รหัสผ่านสำหรับดาวน์โหลด</h1>
+    <p>ต้องใช้รหัสดาวน์โหลดก่อนบันทึกไฟล์ Excel / PNG</p>
+    <input type="password" id="dl-pw" placeholder="รหัสดาวน์โหลด" autocomplete="off" aria-label="รหัสดาวน์โหลด" required>
+    <div style="display:flex;gap:8px"><button class="btn" type="button" id="dl-cancel" style="flex:1">ยกเลิก</button><button class="btn primary" type="submit" id="dl-ok" style="flex:2">ดาวน์โหลด</button></div>
+    <div class="gate-err" id="dl-err" role="alert"></div>
+  </form>
+</div>
 <div class="gate" id="gate">
   <form class="gate-box" id="gate-form" autocomplete="on">
     <div class="gate-logo">🔒</div>
@@ -888,7 +900,7 @@ function initControls() {
   fillSelect($('#f-pcshop'), [['', 'ภาพรวมทุกสาขา (เทียบ PC / ไม่มี PC)'], [null, `สาขาที่มี PC Vivo (${pcs.length})`, true], ...pcs.map((x) => [x.c, `${x.n} · PC ${x.pc}`]), ['</g>'],
     [null, `สาขาที่ไม่มี PC (${npc.length})`, true], ...npc.map((x) => [x.c, x.n]), ['</g>']], '');
   $('#f-pcshop').onchange = (e) => { S.pcshop = e.target.value; render(); };
-  $('#pc-sumdl').onclick = downloadPCSummary; $('#pc-gappng').onclick = () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG);
+  $('#pc-sumdl').onclick = () => requireDL(downloadPCSummary); $('#pc-gappng').onclick = () => requireDL(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG));
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
   $('#f-zone').onchange = (e) => { S.zone = e.target.value; S.area = 'ALL'; fillSelect($('#f-area'), areaOpts(), 'ALL'); render(); };
@@ -903,8 +915,8 @@ function initControls() {
   for (const [id, key] of [['#q-shop', 'shop'], ['#q-stock', 'stock'], ['#q-ms', 'ms']]) $(id).oninput = (e) => { S.q[key] = e.target.value.trim(); render(); };
   $('#locs').innerHTML = D.locs.length > 1 ? 'Location ที่นับเป็น Stock: ' + D.locs.map((l, i) => `<label><input type="checkbox" data-l="${i}"${S.locs.has(i) ? ' checked' : ''}> ${esc(l)}</label>`).join('') : '';
   $('#locs').onchange = (e) => { const i = +e.target.dataset.l; if (e.target.checked) S.locs.add(i); else S.locs.delete(i); render(); };
-  document.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { const k = b.dataset.x; downloadXlsx([].concat(EXPORT[k]), `Vivo_${k}_${S.month}.xlsx`); });
-  $('#x-all').onclick = () => downloadXlsx([...['model', 'area', 'shop', 'stock', 'ms'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`);
+  document.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { const k = b.dataset.x; requireDL(() => downloadXlsx([].concat(EXPORT[k]), `Vivo_${k}_${S.month}.xlsx`)); });
+  $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['model', 'area', 'shop', 'stock', 'ms'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
 }
 function rawSheet() {
   const rows = D.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
@@ -936,6 +948,26 @@ function zip(files) {
 }
 const xe = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 const colL = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+// download password (only a PBKDF2 hash is in the page); asked once per page visit
+const DL_SALT = 'GEJz6rCyk1P7qW+/fGIq/w==', DL_HASH = 'ap06eHVy86dIVDJLwDzUqxlEkv05pPX6fss2wr78Cjw=', DL_ITER = 150000;
+let DL_OK = false;
+async function dlCheck(pw) {
+  const b64 = (x) => Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: b64(DL_SALT), iterations: DL_ITER, hash: 'SHA-256' }, k, 256));
+  return btoa(String.fromCharCode(...bits)) === DL_HASH;
+}
+function requireDL(fn) {
+  if (DL_OK) return fn();
+  const g = $('#dl-gate'), pw = $('#dl-pw'), err = $('#dl-err'), ok = $('#dl-ok');
+  g.hidden = false; err.textContent = ''; pw.value = ''; setTimeout(() => pw.focus(), 30);
+  const close = () => { g.hidden = true; $('#dl-form').onsubmit = null; };
+  $('#dl-cancel').onclick = close; g.onclick = (e) => { if (e.target === g) close(); };
+  $('#dl-form').onsubmit = async (e) => { e.preventDefault(); ok.disabled = true;
+    const good = await dlCheck(pw.value).catch(() => false); ok.disabled = false;
+    if (!good) { err.textContent = 'รหัสดาวน์โหลดไม่ถูกต้อง'; pw.select(); return; }
+    DL_OK = true; close(); fn(); };
+}
 function filterText() {
   const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${S.zone === 'ALL' ? 'ทั้งหมด' : S.zone}`, `Area: ${S.area === 'ALL' ? 'ทั้งหมด' : S.area}`,
     `ประเภท: ${S.type === 'ALL' ? 'ทั้งหมด' : S.type}`, `PC: ${S.pc === 'ALL' ? 'ทั้งหมด' : S.pc === 'Y' ? 'มี PC' : 'ไม่มี PC'}`, `Model: ${S.model === 'ALL' ? 'ทุกรุ่น' : $('#f-model').selectedOptions[0].textContent.replace(/\s*\*$/, '').trim()}`];
