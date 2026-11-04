@@ -210,13 +210,15 @@ def build():
     km = s.DESCRIPTION.map(key_from_desc); s['m'] = km.str[0]
     for kk, nm in set(km): addm(kk, nm, False)
     s['date'] = s.BD.dt.strftime('%Y-%m-%d')
+    stf = s.groupby(['date', 'SHOP_CODE', 'm', 'SALE_CODE'], as_index=False, dropna=False).agg(u=('units', 'sum'), n=('net', 'sum'))
+    enames = s.dropna(subset=['SALE_CODE']).groupby('SALE_CODE').SALE_NAME.agg(lambda x: x.mode().iat[0] if len(x.mode()) else '').to_dict()
     f = s.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(u=('units', 'sum'), n=('net', 'sum'))
     f = f[(f.u != 0) | (f.n != 0)]
     # central-system figures up to their as-of date, POS (TSM) rows only after it
     hz = _load('vivo_hist.csv.gz'); hasof = meta.get('vivo_hist_asof', '')
     pos_asof = meta.get('vivo_sales_asof', '')
     if hz is not None and hasof:
-        f = f[f.date > hasof]
+        f = f[f.date > hasof]; stf = stf[stf.date > hasof]
         hz = hz[hz.shop.isin(ww)]; hz['u'] = pd.to_numeric(hz.u); hz['n'] = pd.to_numeric(hz.n)
         for kk, nm in set(zip(hz.m, hz.name)): addm(kk, nm, False)
         f = pd.concat([hz.rename(columns={'shop': 'SHOP_CODE'})[['date', 'SHOP_CODE', 'm', 'u', 'n']], f])
@@ -255,7 +257,9 @@ def build():
     data = {'meta': {'sales_asof': sales_asof, 'hist_asof': hasof, 'pos_asof': pos_asof, 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc,
                      'first_sales': min((r[0] for r in sales), default='')},
             'portions': portions, 'models': ml, 'shops': sorted(shops.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
-            'sales': _pack(sales), 'targets': targets, 'stock': stock, 'locs': locs}
+            'sales': _pack(sales),
+            'staff': {'e': {str(k_): v for k_, v in enames.items()}, 'r': [[r.date, r.SHOP_CODE, r.m, str(r.SALE_CODE), int(r.u), round(float(r.n))] for r in stf.itertuples() if r.u != 0 or r.n != 0]},
+            'targets': targets, 'stock': stock, 'locs': locs}
     os.makedirs(OUT, exist_ok=True)
     json.dump(data, open(os.path.join(OUT, 'vivo_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     lm = max((r[0] for r in sales), default='')[:7]
