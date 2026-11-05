@@ -938,7 +938,9 @@ if (!window.PC_SHNS_BOUND) { window.PC_SHNS_BOUND = true;
 .nsx ul{margin:4px 0 2px;padding:0;list-style:none;display:grid;gap:2px;font-size:12px;line-height:1.4} .nsx li{display:flex;gap:4px;align-items:baseline} .nsx li em{font-style:normal;color:var(--color-fg-muted);margin-left:auto;white-space:nowrap;font-size:11px}`; document.head.append(st); })();
 const NSTY = { 'Matching Shop': ['M', '#3b6fd8'], 'Non Matching Shop': ['NM', '#7a7a7a'], 'Dtac Hall': ['DH', '#9b3fc4'], 'Dtac Coco': ['DC', '#c06b18'], 'Ten Ten Shop': ['TT', '#1f9a4a'] };
 const nsTag = (t) => { const x = NSTY[t] || [String(t || '?').slice(0, 2), '#555']; return '<span class="tg" style="background:' + x[1] + '" title="' + WLESC(t) + '">' + x[0] + '</span>'; };
-const NSX = (card) => { const r = shNS(); if (!r) return; let box = card.querySelector('.nsx'); if (!box) { box = document.createElement('div'); box.className = 'nsx'; card.querySelector('.pc-scroll').before(box); }
+const NSX = (card) => { const r = shNS(); if (!r) return; let box = card.querySelector('.nsx'); if (!box) { box = document.createElement('div'); box.className = 'nsx'; card.querySelector('.pc-scroll').before(box);
+    const t1 = card.querySelector('#shns-csv'); const top = t1 && t1.parentElement; if (top) { const pb = document.createElement('button'); pb.className = 'pc-export pc-csv'; pb.id = 'shns-png'; pb.type = 'button'; pb.textContent = '⬇ Export รูป (PNG)'; pb.title = 'ดาวน์โหลดรูปการ์ดสรุป Region / Shop Type / Area'; t1.replaceWith(pb);
+      const bar = document.createElement('div'); bar.className = 'pc-tools nsbar'; bar.style.justifyContent = 'flex-end'; const lab = document.createElement('span'); lab.className = 'pc-note'; lab.textContent = 'รายละเอียดราย สาขา'; lab.style.marginRight = 'auto'; bar.append(lab, t1); card.querySelector('.pc-scroll').before(bar); } }
   const p = PC.P(); const all = nsScope();
   const ord = new Map((PC.rows('shops') || []).map((s) => [s.stype, +s.stype_order])); const types = [...new Set(all.map((s) => s.stype))].sort((a, b) => (ord.get(a) ?? 9) - (ord.get(b) ?? 9));
   const cnt = (arr, k) => d3.rollup(arr, (v) => v.length, (x) => x[k]);
@@ -955,3 +957,40 @@ const NSX = (card) => { const r = shNS(); if (!r) return; let box = card.querySe
   box.innerHTML = h + '</div>'; };
 
 window.NSX_READY = true;
+
+/* ---------- สาขา No Sale: PNG of the summary cards ---------- */
+const NSXP = async () => { try { await document.fonts.ready; } catch (e) {}
+  const { C, rr, fit } = RKX; const r = shNS() || [], all = nsScope(), I = nsInfo(), p = PC.P();
+  const FF = getComputedStyle(document.body).fontFamily || 'sans-serif'; const F = (w, s) => w + ' ' + s + 'px ' + FF;
+  const ord = new Map((PC.rows('shops') || []).map((s) => [s.stype, +s.stype_order])); const types = [...new Set(all.map((s) => s.stype))].sort((a, b) => (ord.get(a) ?? 9) - (ord.get(b) ?? 9));
+  const nm = (s) => String(s).replace(/^True Shop /, '');
+  const zones = window.PC_ZONES.filter((z) => all.some((s) => PCzone(s.area) === z)).map((z) => { const za = all.filter((s) => PCzone(s.area) === z), zr = r.filter((x) => PCzone(x.area) === z);
+    const areas = [...new Set(za.map((s) => s.area))].sort().map((a) => ({ a, tot: za.filter((s) => s.area === a).length, rows: zr.filter((x) => x.area === a).sort((x, y) => (ord.get(x.type) ?? 9) - (ord.get(y.type) ?? 9) || (y.gap ?? 1e4) - (x.gap ?? 1e4)) })).filter((a) => a.rows.length);
+    return { z, n: zr.length, tot: za.length, types: types.map((t) => [t, zr.filter((x) => x.type === t).length]).filter((x) => x[1]), areas }; });
+  const W = 2000, P = 48, GAP = 28, RH = 30, AH = 46; const cw = (W - 2 * P - GAP * (zones.length - 1)) / Math.max(1, zones.length);
+  const colH = (z) => 112 + z.areas.reduce((s, a) => s + AH + a.rows.length * RH + 10, 0) + 10; const ch = Math.max(160, ...zones.map(colH));
+  const H = P + 150 + ch + P; const S = 2; const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S);
+  g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+  let y = P + 34; g.fillStyle = C.fg; g.font = F(700, 34); g.fillText('Prepay Dashboard · สาขา No Sale · ' + I.label, P, y);
+  const ws = (PC.rows('watch_serials') || [])[0]; const sa = ws && ws.sales_asof ? String(ws.sales_asof) : '';
+  g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText((sa && sa.slice(0, 10) === I.to ? 'อัปเดตถึง ' + PC.day(sa.slice(0, 10)) + ' ' + sa.slice(11, 16) + ' น.' : 'ข้อมูลถึง ' + PC.day(I.to)) + (p.area !== 'ALL' ? ' · ' + p.area : '') + (p.stype !== 'ALL' ? ' · ' + p.stype : ''), W - P, y); g.textAlign = 'left';
+  y += 44; let x = P; const seg = (t, c, w, s) => { g.font = F(w || 400, s || 22); g.fillStyle = c || C.fg; g.fillText(t, x, y); x += g.measureText(t).width; };
+  seg('ไม่มียอดขาย '); seg(PC.nf(r.length), C.bad, 700); seg(' จาก ' + PC.nf(all.length) + ' สาขาที่มี Target Prepay  (' + PC.day(I.from) + ' – ' + PC.day(I.to) + ')', C.mu);
+  y += 40; x = P; seg('Shop Type: ', C.fg, 600, 19);
+  const tagW = (t) => { g.font = F(700, 13); return g.measureText((NSTY[t] || ['?'])[0]).width + 12; };
+  const tag = (t, tx, ty) => { const k = NSTY[t] || [String(t).slice(0, 2), '#555']; const w = tagW(t); g.fillStyle = k[1]; rr(g, tx, ty - 15, w, 20, 4); g.fill(); g.fillStyle = '#fff'; g.font = F(700, 13); g.fillText(k[0], tx + 6, ty); return w; };
+  for (const t of types) { const n = r.filter((q) => q.type === t).length, tot = all.filter((s) => s.stype === t).length; x += tag(t, x, y) + 6; seg(t + ' ', C.fg, 400, 19); seg(String(n), n ? C.bad : C.ok, 700, 19); seg('/' + tot + '     ', C.mu, 400, 19); }
+  y += 26; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2); y += 22;
+  zones.forEach((z, i) => { const x0 = P + i * (cw + GAP); g.fillStyle = C.bg; rr(g, x0, y, cw, ch, 10); g.fill(); g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
+    g.save(); rr(g, x0, y, cw, ch, 10); g.clip(); g.fillStyle = z.n ? C.bad : C.ok; g.fillRect(x0, y, cw, 7); g.restore();
+    g.fillStyle = C.fg; g.font = F(700, 28); g.fillText(z.z, x0 + 20, y + 50); g.textAlign = 'right'; g.font = F(400, 18); g.fillStyle = C.mu; const tt = ' / ' + PC.nf(z.tot) + ' สาขา'; g.fillText(tt, x0 + cw - 20, y + 50); const tw = g.measureText(tt).width;
+    g.font = F(700, 36); g.fillStyle = z.n ? C.bad : C.ok; g.fillText(PC.nf(z.n), x0 + cw - 20 - tw, y + 52); g.textAlign = 'left';
+    let tx = x0 + 20; const ty = y + 86; if (!z.types.length) { g.font = F(400, 16); g.fillStyle = C.ok; g.fillText('ทุกสาขามียอดขาย', tx, ty); }
+    for (const [t, n] of z.types) { tx += tag(t, tx, ty) + 5; g.font = F(400, 16); g.fillStyle = C.mu; g.fillText(String(n), tx, ty); tx += g.measureText(String(n)).width + 14; }
+    let yy = y + 112; for (const a of z.areas) { g.fillStyle = C.grid; g.fillRect(x0 + 20, yy, cw - 40, 1.5); yy += 30; g.font = F(600, 18); g.fillStyle = C.mu; g.fillText(a.a.replace(/^UPC - /, ''), x0 + 20, yy); g.textAlign = 'right'; g.fillStyle = C.bad; g.fillText(a.rows.length + '/' + a.tot, x0 + cw - 20, yy); g.textAlign = 'left'; yy += 16;
+      for (const q of a.rows) { yy += RH; const w = tag(q.type, x0 + 20, yy - 4) + 8; g.font = F(400, 13.5); g.fillStyle = C.mu; g.textAlign = 'right'; const ls = q.last ? 'ขายล่าสุด ' + PC.day(q.last).replace(/ \d+$/, '') : 'ไม่เคยขายปีนี้'; g.fillText(ls, x0 + cw - 20, yy - 4); const lw = g.measureText(ls).width; g.textAlign = 'left';
+        g.font = F(400, 17); g.fillStyle = C.fg; g.fillText(fit(g, nm(q.name), cw - 40 - w - lw - 14), x0 + 20 + w, yy - 4); } yy += 10; } });
+  return { cv, name: 'NoSale_Shops_MTD_' + I.to + '.png' }; };
+if (!window.PC_NSXP_BOUND) { window.PC_NSXP_BOUND = true;
+  document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#shns-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
+    try { const { cv, name } = await NSXP(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
