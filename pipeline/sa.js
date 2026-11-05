@@ -425,8 +425,7 @@ const RKX = (() => {
       const hw = (cw - 44 - 24) / 2; items.forEach((it, k) => { const cx = x + 22 + (k % 2) * (hw + 24), cy = y + 146 + Math.floor(k / 2) * 30; g.font = F(400, 17); g.fillStyle = C.mu; g.fillText(it[0], cx, cy); g.font = F(600, 18); g.fillStyle = it[2] || C.fg; g.textAlign = 'right'; g.fillText(it[1], cx + hw, cy); g.textAlign = 'left'; }); });
     zr.forEach((z, i) => { let x0 = P + i * (cw + GAP) + 22; const y0 = y + 246; const ds = ZDAYS(z.area); if (!ds.length) return; const S = ZSUM(ds);
       const seg = (t, c, w) => { g.font = F(w || 400, 15); g.fillStyle = c || C.mu; g.fillText(t, x0, y0); x0 += g.measureText(t).width; };
-      seg('%ACH รายวัน: '); ds.forEach((d, k) => { if (k) seg(' · '); seg(+d.date.slice(8, 10) + ' '); g.globalAlpha = k === ds.length - 1 ? 0.6 : 1; seg(d.a == null ? '–' : Math.round(d.a * 100) + '%', col(d.a), 700); g.globalAlpha = 1; if (k === ds.length - 1) seg('*'); });
-      if (S.n) seg(' · ถึง Target ' + S.hit + '/' + S.n + ' วัน'); });
+      const dd = rDate(); const x1 = ds.find((q) => q.date === dd) || ds[ds.length - 1]; seg('%ACH วันนี้ (' + PC.day(x1.date) + ') '); seg(x1.a == null ? '–' : PC.pf(x1.a), col(x1.a), 700); seg(' · ' + PC.mfmt(x1.v) + ' / Target ต่อวัน ' + PC.mfmt(x1.t)); });
     y += ch + 40;
     // two rankings
     const lw = (W - 2 * P - GAP) / 2;
@@ -885,7 +884,7 @@ const ZSUM = (ds) => { const full = ds.slice(0, -1).length ? ds.slice(0, -1) : d
 (() => { const st = document.createElement('style'); st.textContent = `.zd{margin:-2px 0 2px;font-size:11.5px;line-height:1.5;color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
 .zd b{font-weight:600} .zd .zp{white-space:nowrap} .zd .zp.last{opacity:.6}`; document.head.append(st); })();
 window.ZDAY = (c, zone) => { const ds = ZDAYS(zone); if (!ds.length) return; const S = ZSUM(ds); const w = document.createElement('div'); w.className = 'zd';
-  w.title = '%ACH รายวัน = ยอดของวันนั้น ÷ Target ต่อวัน · วันล่าสุดอาจยังไม่ครบวัน';
-  const parts = ds.map((x, i) => '<span class="zp' + (i === ds.length - 1 ? ' last' : '') + '">' + (+x.date.slice(8, 10)) + ' <b style="color:' + rkCol(x.a) + '">' + (x.a == null ? '–' : Math.round(x.a * 100) + '%') + '</b>' + (i === ds.length - 1 ? '*' : '') + '</span>');
-  w.innerHTML = '%ACH รายวัน: ' + parts.join(' · ') + (S.n ? ' · <span class="zp">ถึง Target ' + S.hit + '/' + S.n + ' วัน</span>' : '');
+  w.title = '%ACH วันนี้ = ยอดของวันที่เลือกใน Daily Ranking ÷ Target ต่อวัน · วันล่าสุดอาจยังไม่ครบวัน';
+  const d = rDate(); const x = ds.find((z) => z.date === d) || ds[ds.length - 1];
+  w.innerHTML = '%ACH วันนี้ (' + PC.day(x.date) + ') <b style="color:' + rkCol(x.a) + '">' + (x.a == null ? '–' : PC.pf(x.a)) + '</b> · ' + PC.mfmt(x.v) + ' / Target ต่อวัน ' + PC.mfmt(x.t);
   const big = c.children[1]; if (big) big.after(w); else c.append(w); };
