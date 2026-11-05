@@ -905,7 +905,7 @@ const shNS = () => { const r = PC.rows('enriched'), I = shInfo(), shops = PC.row
 dash.draw('sh_ns_sum', (el) => { const r = shNS(), I = shInfo(); if (!r || !I) { el.textContent = ''; return; } const p = PC.P(); const tot = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).length;
   const never = r.filter((x) => !x.last).length, nost = r.filter((x) => !x.stock).length;
   el.textContent = 'ไม่มียอดขาย ' + PC.nf(r.length) + ' จาก ' + PC.nf(tot) + ' สาขา (' + I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + ')' + (p.group !== 'ALL' ? ' · กลุ่มซิม ' + p.group : '') + ' · ไม่เคยขายปีนี้ ' + PC.nf(never) + ' · Stock = 0: ' + PC.nf(nost) + ' สาขา'; });
-dash.draw('tb_sh_ns', (el) => { const I = shInfo(), N = PC.isNet();
+dash.draw('tb_sh_ns', (el) => { const I = shInfo(), N = PC.isNet(); const cd = el.closest('.pc-card'); if (cd && window.NSX_READY) NSX(cd);
   PC.table(el, 'tb_sh_ns', shNS(), { key: ['shop'], def: 'gap', limit: 2000, cols: [{ f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'type', label: 'ประเภทสาขา' }, { f: 'area', label: 'Area' },
     { f: 'last', label: 'ขายล่าสุด', fmt: (v) => (v ? PC.day(v) : 'ไม่เคยขายปีนี้') }, { f: 'gap', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf },
     ...(I && I.pf ? [{ f: 'pv', label: (N ? 'Net Amount' : 'QTY') + ' ' + I.ps, num: true, fmt: (v) => PC.nf(Math.round(v)) }] : []), { f: 'target', label: 'Target ' + ((I && I.cs) || ''), num: true, fmt: PC.nf },
@@ -917,3 +917,36 @@ if (!window.PC_SHNS_BOUND) { window.PC_SHNS_BOUND = true;
     const rows = r.slice().sort((a, b) => (b.gap ?? -1) - (a.gap ?? -1) || String(a.area).localeCompare(String(b.area)));
     const lines = [head.join(',')].concat(rows.map((d) => ['="' + d.shop + '"', esc(d.name), esc(d.type), esc(d.area), esc(I.label + ' ' + I.from + (I.to !== I.from ? ' - ' + I.to : '')), d.last || 'ไม่เคยขายปีนี้', d.gap ?? '', ...(I.pf ? [Math.round(d.pv)] : []), d.target ?? '', d.stock, d.staff].join(',')));
     const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'NoSale_Shops_' + (dash.params().shperiod || 'mtd') + '_' + I.to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- สาขา No Sale: summary cards by Region / Shop Type / Area (with shop names) ---------- */
+(() => { const st = document.createElement('style'); st.textContent = `.nsx{display:grid;gap:10px}
+.nsx .tys{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.nsx .ty{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--color-border-line);border-radius:999px;padding:2px 10px;color:var(--color-fg);background:var(--color-panel)} .nsx .ty b{font-weight:600}
+.nsx .tg{flex:none;white-space:nowrap;display:inline-block;min-width:1.9em;text-align:center;font-size:10.5px;font-weight:600;border-radius:4px;padding:0 4px;margin-right:4px;color:#fff;vertical-align:1px}
+.nsx .zs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:10px}
+.nsx .zc{border:1px solid var(--color-border-line);border-top:4px solid var(--color-bad);border-radius:var(--cds-radius);padding:10px 12px;display:grid;gap:6px;align-content:start;min-width:0}
+.nsx .zc.ok{border-top-color:var(--color-ok)} .nsx .zt{display:flex;justify-content:space-between;align-items:baseline;gap:8px} .nsx .zt b{font-size:1.05rem}
+.nsx .zn{font-size:1.5rem;font-weight:600;color:var(--color-bad);font-variant-numeric:tabular-nums} .nsx .zn small{font-size:.8rem;font-weight:400;color:var(--color-fg-muted)}
+.nsx .zty{font-size:11.5px;color:var(--color-fg-muted)}
+.nsx details{border-top:1px solid var(--cds-chart-grid);padding-top:4px} .nsx summary{cursor:pointer;font-size:var(--cds-font-size-caption);font-weight:600;display:flex;justify-content:space-between;gap:6px}
+.nsx summary span{color:var(--color-bad);font-weight:600;font-variant-numeric:tabular-nums}
+.nsx ul{margin:4px 0 2px;padding:0;list-style:none;display:grid;gap:2px;font-size:12px;line-height:1.4} .nsx li{display:flex;gap:4px;align-items:baseline} .nsx li em{font-style:normal;color:var(--color-fg-muted);margin-left:auto;white-space:nowrap;font-size:11px}`; document.head.append(st); })();
+const NSTY = { 'Matching Shop': ['M', '#3b6fd8'], 'Non Matching Shop': ['NM', '#7a7a7a'], 'Dtac Hall': ['DH', '#9b3fc4'], 'Dtac Coco': ['DC', '#c06b18'], 'Ten Ten Shop': ['TT', '#1f9a4a'] };
+const nsTag = (t) => { const x = NSTY[t] || [String(t || '?').slice(0, 2), '#555']; return '<span class="tg" style="background:' + x[1] + '" title="' + WLESC(t) + '">' + x[0] + '</span>'; };
+const NSX = (card) => { const r = shNS(); if (!r) return; let box = card.querySelector('.nsx'); if (!box) { box = document.createElement('div'); box.className = 'nsx'; card.querySelector('.pc-scroll').before(box); }
+  const p = PC.P(); const all = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
+  const ord = new Map((PC.rows('shops') || []).map((s) => [s.stype, +s.stype_order])); const types = [...new Set(all.map((s) => s.stype))].sort((a, b) => (ord.get(a) ?? 9) - (ord.get(b) ?? 9));
+  const cnt = (arr, k) => d3.rollup(arr, (v) => v.length, (x) => x[k]);
+  const tN = cnt(r, 'type'), tA = cnt(all, 'stype');
+  let h = '<div class="tys"><b style="color:var(--color-fg)">Shop Type:</b>' + types.map((t) => '<span class="ty">' + nsTag(t) + WLESC(t) + ' <b style="color:' + ((tN.get(t) || 0) ? 'var(--color-bad)' : 'var(--color-ok)') + '">' + PC.nf(tN.get(t) || 0) + '</b>/' + PC.nf(tA.get(t) || 0) + '</span>').join('') + '</div><div class="zs">';
+  const nm = (s) => String(s).replace(/^True Shop /, '');
+  for (const z of window.PC_ZONES) { const za = all.filter((s) => PCzone(s.area) === z); if (!za.length) continue; const zr = r.filter((x) => PCzone(x.area) === z); const zt = cnt(zr, 'type');
+    h += '<div class="zc' + (zr.length ? '' : ' ok') + '"><div class="zt"><b>' + z + '</b><span class="zn">' + PC.nf(zr.length) + '<small> / ' + PC.nf(za.length) + ' สาขา</small></span></div>'
+      + '<div class="zty">' + (zr.length ? types.filter((t) => zt.get(t)).map((t) => nsTag(t) + PC.nf(zt.get(t))).join(' &nbsp;') : 'ทุกสาขามียอดขาย') + '</div>';
+    const areas = [...new Set(za.map((s) => s.area))].sort(); for (const a of areas) { const ar = zr.filter((x) => x.area === a).sort((x, y) => (ord.get(x.type) ?? 9) - (ord.get(y.type) ?? 9) || (y.gap ?? 1e4) - (x.gap ?? 1e4)); if (!ar.length) continue;
+      const tot = za.filter((s) => s.area === a).length;
+      h += '<details' + (ar.length <= 6 ? ' open' : '') + '><summary>' + WLESC(a.replace(/^UPC - /, '')) + '<span>' + ar.length + '/' + tot + '</span></summary><ul>' + ar.map((x) => '<li>' + nsTag(x.type) + '<span>' + WLESC(nm(x.name)) + '</span><em>' + (x.last ? 'ขายล่าสุด ' + PC.day(x.last).replace(/ \d+$/, '') : 'ไม่เคยขายปีนี้') + '</em></li>').join('') + '</ul></details>'; }
+    h += '</div>'; }
+  box.innerHTML = h + '</div>'; };
+
+window.NSX_READY = true;
