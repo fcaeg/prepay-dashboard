@@ -20,6 +20,10 @@ Inputs Nami attaches each day (zip or csv):
   pipeline/state/shop_master.csv (from Nami's 'Raw Data Prepaid.xlsx', sheet Rawdata, WW-operated shops: SHOP_CODE, SHOP_NAME, CHANNEL, AREA, WW_FLAG, SHOP_STATUS):
   WW_FLAG TPNP (True Shop by Partner) is dropped automatically; WW shops outside the target files (e.g. Ten Ten Shop) get their real name / area.
 
+- Shops added to WW outside the target files: `pipeline/state/extra_shops.csv` (shop,name,region,type,province,dm,from,note); sales count from `from`,
+  no target until a target file lists the shop (then the target file's name / area win). Now: Ten Ten Shop 80101715 (BMA I - North West) and
+  80101714 (UPC - West), type TenTen, under WW from 1 Nov 2026 (Nami, 5 Nov) - target pending.
+
 ## 1. Update the data and the GitHub page
 ```bash
 cd /home/claude/prepay-dashboard            # clone https://github.com/fcaeg/prepay-dashboard if missing

@@ -3,5 +3,3 @@
 80101197  # True Shop by Partner - not WW (Nami, 3 Nov 2026)
 80101381  # True Shop by Partner - not WW (Nami, 3 Nov 2026)
 80101616  # True Shop by Partner - not WW (Nami, 3 Nov 2026)
-80101714  # Ten Ten Shop Ban Tangsin Salaya (not WW)
-80101715  # Ten Ten Shop Phaholyothin Soi 69/1 (not WW)

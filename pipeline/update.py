@@ -203,6 +203,15 @@ def build():
     tg = allt.sort_values('month').drop_duplicates('shop', keep='last').drop(columns=['target_units', 'target_net'])
     tg = tg.merge(allt[allt.month == lastm][['shop', 'target_units', 'target_net']], on='shop', how='left')
     ww = set(allt.shop) - set(tg.loc[tg.type.isin(["Lotus's", 'Lotus']), 'shop'])
+    # shops Nami added to WW outside the target files (state/extra_shops.csv: shop,name,region,type,province,dm,from) - sales count from `from`
+    xs = load('extra_shops.csv'); xfrom = {}
+    if xs is not None:
+        xs = xs.fillna(''); xfrom = dict(zip(xs.shop, xs['from']))
+        add = xs[~xs.shop.isin(set(tg.shop))][['shop', 'name', 'region', 'type', 'province', 'dm']].assign(month=lastm)
+        if len(add): tg = pd.concat([tg, add], ignore_index=True)
+        for c_, r_ in xs.set_index('shop').iterrows():  # file values win (area / type) until the shop appears in a target file
+            if c_ not in set(allt.shop): tg.loc[tg.shop == c_, ['name', 'region', 'type', 'province', 'dm']] = [r_['name'], r_.region, r_.type, r_.province, r_.dm]
+        ww |= set(xs.shop)
     # matcodes
     nm = pd.concat([names.rename(columns={'name': 'n'}), k[['PRODUCT_CODE', 'PN']].rename(columns={'PRODUCT_CODE': 'matcode', 'PN': 'n'})]).drop_duplicates('matcode')
     m = nm.rename(columns={'n': 'name'}); m['name'] = m.name.str.replace(r'^SIM,PRE,', '', regex=True)
@@ -225,11 +234,13 @@ def build():
     shops = shops.merge(tg, on='shop', how='left')
     shops['name'] = shops.name.fillna(shops.shop); shops['region'] = shops.region.fillna('ไม่มีในไฟล์เป้า'); shops['type'] = shops.type.fillna('-')
     shops = shops[shops.shop.isin(ww)].copy(); shops['area'] = shops.region; shops['company'] = 'Wire & Wireless (WW)'
-    TY = {'matching': ('Matching Shop', 1), 'non_matching': ('Non Matching Shop', 2), 'HALL': ('Dtac Hall', 3), 'COCO': ('Dtac Coco', 4), "Lotus's": ("True Shop Lotus's", 5), 'Lotus': ("True Shop Lotus's", 5),
+    TY = {'matching': ('Matching Shop', 1), 'non_matching': ('Non Matching Shop', 2), 'HALL': ('Dtac Hall', 3), 'COCO': ('Dtac Coco', 4), 'TenTen': ('Ten Ten Shop', 6), "Lotus's": ("True Shop Lotus's", 5), 'Lotus': ("True Shop Lotus's", 5),
           'True_Center_Makro': ('สาขาที่ปิดแล้ว (SIS / Makro)', 99), 'SIS GROUP1': ('สาขาที่ปิดแล้ว (SIS / Makro)', 99), 'SIS GROUP2': ('สาขาที่ปิดแล้ว (SIS / Makro)', 99)}
     shops['stype'] = shops.type.map(lambda x: TY.get(x, ('ไม่ระบุ (ไม่อยู่ในไฟล์เป้า)', 9))[0]); shops['stype_order'] = shops.type.map(lambda x: TY.get(x, ('', 9))[1])
     shops = shops[['shop', 'company', 'month', 'name', 'region', 'type', 'province', 'dm', 'target_units', 'target_net', 'area', 'stype', 'stype_order']]
     f = f[f.shop.isin(ww)]; k = k[k.SHOP_CODE.isin(ww)]
+    for c_, d_ in xfrom.items():
+        if d_: f = f[~((f.shop == c_) & (f.date < d_))]
     # staff: most common name and shop
     staff = staff[staff.shop.isin(ww)]
     e = staff.groupby(['emp', 'name']).n.sum().reset_index().sort_values('n', ascending=False).drop_duplicates('emp')[['emp', 'name']]
