@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GIA Dashboard">
+<meta name="format-detection" content="telephone=no">
+<title>GIA Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --fg: #1f1e1c; --muted: #6b6862; --line: #e3e0d8; --soft: #f1efe9;
+  --accent: #3a4fd6; --accent-soft: #e7eafb; --ok: #23864f; --ok-soft: #e3f3ea; --warn: #a86a12; --warn-soft: #fbf0dc; --bad: #c53b32; --bad-soft: #fbe6e4;
+  --tot: #fde9b8; --tot-fg: #5a4300; --dtac: #e6eef9; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --sec1: #5e9a3a; --sec2: #6f83a0; --sec3: #7030a0; --sec4: #3f86c9; --sec5: #8a6d3b;
+  --font: "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", "Leelawadee UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --accent: #8b9bff; --accent-soft: #2c3150; --ok: #4cc185; --ok-soft: #1f3a2b; --warn: #e0a63e; --warn-soft: #3d3020; --bad: #ef6b60; --bad-soft: #452523;
+  --tot: #3d3320; --tot-fg: #f3d58a; --dtac: #23303f; --shadow: none;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --sec1: #4f8a2f; --sec2: #5b6d88; --sec3: #7f45ad; --sec4: #3577b5; --sec5: #7a5f30;
+} }
+:root[data-theme="dark"] {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --accent: #8b9bff; --accent-soft: #2c3150; --ok: #4cc185; --ok-soft: #1f3a2b; --warn: #e0a63e; --warn-soft: #3d3020; --bad: #ef6b60; --bad-soft: #452523;
+  --tot: #3d3320; --tot-fg: #f3d58a; --dtac: #23303f; --shadow: none;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --sec1: #4f8a2f; --sec2: #5b6d88; --sec3: #7f45ad; --sec4: #3577b5; --sec5: #7a5f30;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); }
+.wrap { max-width: 96rem; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-left)) 40px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+h1 small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.asof { color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.filters { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+.fld { display: flex; flex-direction: column; gap: 3px; }
+.fld > span { font-size: 11.5px; color: var(--muted); }
+select, .btn { font: inherit; font-size: 13.5px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; }
+.btn { cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:hover { filter: brightness(.97); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { font: inherit; font-size: 13.5px; border: 0; background: transparent; color: var(--fg); padding: 6px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.daynav { display: inline-flex; gap: 4px; align-items: center; }
+.daynav button { font: inherit; width: 32px; height: 32px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 7px; cursor: pointer; }
+.daynav button:disabled { opacity: .35; cursor: default; }
+.spacer { flex: 1; }
+.note { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 12px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+.kpi .l { font-size: 12.5px; color: var(--muted); }
+.kpi .v { font-size: 24px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.kpi .s { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--soft); border-radius: 3px; margin-top: 8px; position: relative; overflow: visible; }
+.bar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); max-width: 100%; }
+.bar > b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); opacity: .55; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin-bottom: 14px; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); min-width: 0; }
+.card h2 { font-size: 15px; margin: 0 0 8px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card h2 small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12.5px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.15); white-space: nowrap; z-index: 5; font-variant-numeric: tabular-nums; }
+.tip[hidden] { display: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.legend i.ln { height: 2px; width: 14px; vertical-align: 3px; border-radius: 0; background: var(--fg); opacity: .6; }
+.mix .row { display: grid; grid-template-columns: 6.5rem 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.mix .row:last-child { border-bottom: 0; }
+.mix .nm { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+.mix .nm i { width: 10px; height: 10px; border-radius: 2px; }
+.mix .track { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+.mix .track i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.mix .num { text-align: right; font-size: 13px; }
+.mix .num small { color: var(--muted); display: block; font-size: 11.5px; }
+.tblwrap { overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); max-height: 78vh; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 9px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.n, th.n { text-align: right; }
+thead th { position: sticky; top: 0; z-index: 3; background: var(--soft); font-weight: 600; font-size: 12px; color: var(--muted); text-align: right; vertical-align: bottom; line-height: 1.3; }
+thead th:nth-child(-n+2) { text-align: left; }
+th.grp { text-align: center !important; border-bottom: 0; padding-bottom: 0; color: var(--fg); }
+tr.sec td { color: #fff; font-weight: 600; font-size: 12.5px; padding: 5px 9px; }
+tr.area td { background: var(--soft); font-weight: 700; font-size: 13.5px; padding: 8px 9px; }
+tr.shop { cursor: pointer; }
+tr.shop:hover td { background: var(--accent-soft); }
+tr.shop.dtac td:nth-child(-n+2) { background: var(--dtac); }
+tr.shop.dtac:hover td { background: var(--accent-soft); }
+tr.sub td { background: var(--soft); font-weight: 600; font-size: 12.5px; }
+tr.tot td { background: var(--tot); color: var(--tot-fg); font-weight: 700; }
+td.code { color: var(--muted); font-size: 12px; }
+.pct { display: inline-block; min-width: 4.2em; text-align: right; padding: 1px 6px; border-radius: 5px; font-weight: 600; }
+.pct.g { background: var(--ok-soft); color: var(--ok); } .pct.a { background: var(--warn-soft); color: var(--warn); } .pct.r { background: var(--bad-soft); color: var(--bad); }
+.pct.z { color: var(--muted); font-weight: 400; }
+.pct::before { margin-right: 3px; font-size: 10px; }
+.pct.g::before { content: '▲'; } .pct.a::before { content: '●'; } .pct.r::before { content: '▼'; }
+tr.det > td { background: var(--bg); padding: 10px 12px 14px; white-space: normal; }
+.det-h { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.det table { font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.det td, .det th { white-space: normal; }
+.det thead th { position: static; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--soft); }
+.chip i { width: 8px; height: 8px; border-radius: 2px; }
+.foot { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.legend2 { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+@media (max-width: 640px) {
+  h1 { font-size: 20px; } .kpi .v { font-size: 20px; }
+  th, td { padding: 5px 7px; }
+  td.nm { max-width: 11rem; overflow: hidden; text-overflow: ellipsis; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 8px; } .kpi { padding: 10px; } .kpi .s { font-size: 11.5px; }
+  th:first-child, td.code { display: none; }
+  td.nm, thead th:nth-child(2) { position: sticky; left: 0; z-index: 2; background: var(--panel); }
+  thead th:nth-child(2) { z-index: 4; background: var(--soft); }
+  tr.sub td.nm { background: var(--soft); } tr.tot td.nm { background: var(--tot); } tr.shop.dtac td.nm { background: var(--dtac); }
+}
+@media print { .filters { position: static; } .tblwrap { max-height: none; overflow: visible; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>GIA Dashboard <small>Gadget · IOT · Accessory — North</small></h1>
+    <div class="asof"><span id="asof"></span><span>หน้าเว็บสร้างเมื่อ __BUILT__</span><span><a href="../" style="color:var(--accent)">Prepay Dashboard</a></span></div>
+  </header>
+
+  <div class="filters">
+    <label class="fld"><span>วันที่</span>
+      <span class="daynav"><button id="prev" aria-label="วันก่อนหน้า">‹</button><select id="day"></select><button id="next" aria-label="วันถัดไป">›</button></span>
+    </label>
+    <div class="fld"><span>พื้นที่</span><div class="seg" id="area"></div></div>
+    <div class="fld"><span>ประเภทสินค้า</span><div class="seg" id="grp"></div></div>
+    <div class="spacer"></div>
+    <a class="btn pri" id="xlsx" download>⬇ Excel (แบบฟอร์มเดิม)</a>
+  </div>
+
+  <div id="note"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card"><h2>ยอดขายรายวัน <small id="trendsub"></small></h2><div class="chart" id="trend"></div>
+      <div class="legend"><span><i style="background:var(--s1)"></i>Revenue ต่อวัน</span><span><i class="ln"></i>Target ต่อวัน</span><span><i style="background:var(--soft);border:1px dashed var(--muted)"></i>ไม่มีไฟล์ข้อมูล</span></div></div>
+    <div class="card"><h2>แยกประเภทสินค้า <small id="mixsub"></small></h2><div class="mix" id="mix"></div></div>
+  </div>
+
+  <div class="tblwrap"><table id="tbl"></table></div>
+  <div class="legend2">
+    <span><span class="pct g">100%</span> ถึงเป้า / ทันเป้าตามวัน</span>
+    <span><span class="pct a">85%</span> ใกล้เป้า (70–99% ของวัน, 80–99% ของเป้าถึงวันนี้)</span>
+    <span><span class="pct r">20%</span> ต่ำกว่าเป้า</span>
+    <span>แถวสีฟ้าอ่อน = ร้าน (D) · กดที่ชื่อร้านเพื่อดูสินค้าที่ขาย</span>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const D = __DATA__;
+const GR = [['Gadget', 'var(--s1)'], ['IOT', 'var(--s2)'], ['Accessory', 'var(--s3)']];
+const TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const [YY, MM] = D.month.split('-').map(Number);
+const st = { day: D.last, area: 'ALL', grp: 'ALL', open: new Set() };
+try { const a = localStorage.getItem('gia_area'); if (a) st.area = a; } catch (e) {}
+const $ = id => document.getElementById(id);
+const f0 = x => Math.round(x).toLocaleString('en-US');
+const f1 = x => (Math.round(x * 10) / 10).toLocaleString('en-US');
+const fk = x => Math.abs(x) >= 1e6 ? (x / 1e6).toFixed(2) + 'M' : Math.abs(x) >= 1e3 ? (x / 1e3).toFixed(1) + 'K' : f0(x);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dname = d => `${d} ${TH[MM - 1]} ${String(YY + 543).slice(2)}`;
+const has = d => D.days.includes(d);
+
+function cell(shop, d) { // [net, qty] of a shop on day d for the current product group
+  const x = (D.daily[shop] || {})[d] || {}; let n = 0, q = 0;
+  for (const g in x) if (st.grp === 'ALL' || st.grp === g) { n += x[g][0]; q += x[g][1]; }
+  return [n, q];
+}
+function mtd(shop, d) { let n = 0, q = 0; for (let i = 1; i <= d; i++) { const c = cell(shop, i); n += c[0]; q += c[1]; } return [n, q]; }
+function shops() { return D.shops.filter(s => st.area === 'ALL' || s.area === st.area); }
+function cls(p, kind) { // kind 'day': vs 100% of the day target; 'mtd': vs target to date
+  if (!isFinite(p)) return 'z';
+  const pace = kind === 'mtd' ? st.day / D.dim : 1;
+  const r = p / pace;
+  return r >= 1 ? 'g' : r >= (kind === 'mtd' ? .8 : .7) ? 'a' : 'r';
+}
+const pct = (p, kind) => !isFinite(p) ? '<span class="pct z">–</span>' : `<span class="pct ${cls(p, kind)}">${(p * 100).toFixed(p < .1 ? 1 : 0)}%</span>`;
+
+function rowVals(list, d) {
+  let tr = 0, tq = 0, dn = 0, dq = 0, mn = 0, mq = 0;
+  for (const s of list) { tr += s.tr; tq += s.tq; const c = cell(s.shop, d), m = mtd(s.shop, d); dn += c[0]; dq += c[1]; mn += m[0]; mq += m[1]; }
+  const tpd = tr / D.dim, qpd = tq / D.dim;
+  return { tr, tq, tpd, qpd, dn, dq, mn, mq, pd: tpd ? dn / tpd : NaN, pq: qpd ? dq / qpd : NaN, ar: tr ? mn / tr : NaN, aq: tq ? mq / tq : NaN };
+}
+function tds(v) {
+  return `<td class="n">${f0(v.tr)}</td><td class="n">${f0(v.tq)}</td><td class="n">${f0(v.tpd)}</td><td class="n">${f1(v.qpd)}</td>
+  <td class="n"><b>${f0(v.dn)}</b></td><td class="n">${pct(v.pd, 'day')}</td><td class="n">${f0(v.dq)}</td><td class="n">${pct(v.pq, 'day')}</td>
+  <td class="n"><b>${f0(v.mn)}</b></td><td class="n">${f0(v.mq)}</td><td class="n">${pct(v.ar, 'mtd')}</td><td class="n">${pct(v.aq, 'mtd')}</td>`;
+}
+
+function renderControls() {
+  $('day').innerHTML = Array.from({ length: D.last }, (_, i) => i + 1).map(d => `<option value="${d}" ${d === st.day ? 'selected' : ''}>${dname(d)}${has(d) ? '' : ' (ไม่มีข้อมูล)'}</option>`).join('');
+  $('prev').disabled = st.day <= 1; $('next').disabled = st.day >= D.last;
+  const areas = [['ALL', 'ทั้งหมด'], ...[...new Set(D.shops.map(s => s.area))].map(a => [a, D.shops.find(s => s.area === a).areaName])];
+  $('area').innerHTML = areas.map(([k, v]) => `<button data-k="${k}" class="${st.area === k ? 'on' : ''}">${esc(v)}</button>`).join('');
+  $('grp').innerHTML = [['ALL', 'ทั้งหมด'], ...GR.map(g => [g[0], g[0]])].map(([k, v]) => `<button data-k="${k}" class="${st.grp === k ? 'on' : ''}">${v}</button>`).join('');
+  $('xlsx').href = `xlsx/GIA_North_${D.mon}_${st.day}.xlsx`; $('xlsx').setAttribute('download', `GIA_North_${D.mon}_${st.day}.xlsx`);
+}
+
+function renderNote() {
+  const msgs = [];
+  if (!has(st.day)) msgs.push(`ยังไม่มีไฟล์ daily_sales ของวันที่ ${dname(st.day)} — ยอดวันนี้จึงเป็น 0 และยอดสะสมไม่รวมวันนี้`);
+  const miss = Array.from({ length: st.day }, (_, i) => i + 1).filter(d => !has(d) && d !== st.day);
+  if (miss.length) msgs.push(`ยอดสะสมยังขาดวันที่ ${miss.join(', ')} (ไม่มีไฟล์ใน Drive)`);
+  if (st.day === D.last && D.asof) msgs.push(`ยอดวันที่ ${dname(D.last)} เป็นข้อมูลถึง ${D.asof.slice(11)} น. (ระหว่างวัน)`);
+  if (D.target_month !== D.month) msgs.push(`ยังไม่มี Target ของเดือนนี้ — ใช้ Target ของ ${D.target_month} ไปก่อน`);
+  $('note').innerHTML = msgs.length ? `<div class="note">${msgs.map(esc).join('<br>')}</div>` : '';
+}
+
+function renderKpis() {
+  const v = rowVals(shops(), st.day), pace = st.day / D.dim;
+  const k = (l, val, sub, p, mark) => `<div class="kpi"><div class="l">${l}</div><div class="v">${val}</div><div class="s">${sub}</div>
+    <div class="bar"><i style="width:${Math.min(100, (p || 0) * 100)}%;background:var(--${{ g: 'ok', a: 'warn', r: 'bad', z: 'muted' }[cls(p, mark ? 'mtd' : 'day')]})"></i>${mark ? `<b style="left:${pace * 100}%" title="เป้าถึงวันนี้"></b>` : ''}</div></div>`;
+  const pp = p => isFinite(p) ? (p * 100).toFixed(1) + '%' : '–';
+  $('kpis').innerHTML =
+    k(`Revenue วันที่ ${st.day}`, f0(v.dn), `${pp(v.pd)} ของ Target/วัน ${f0(v.tpd)}`, v.pd) +
+    k(`QTY วันที่ ${st.day}`, f0(v.dq), `${pp(v.pq)} ของ Target/วัน ${f1(v.qpd)}`, v.pq) +
+    k(`Revenue สะสม ${D.mon} (ถึงวันที่ ${st.day})`, f0(v.mn), `%Ach ${pp(v.ar)} · เป้าถึงวันนี้ ${pp(pace)} · Target ${fk(v.tr)}`, v.ar, 1) +
+    k(`QTY สะสม ${D.mon}`, f0(v.mq), `%Ach ${pp(v.aq)} · Target ${f0(v.tq)} ชิ้น`, v.aq, 1);
+}
+
+function renderTrend() {
+  const list = shops(); const cw = $('trend').clientWidth || 640; const W = Math.max(320, Math.min(900, cw)), H = cw < 500 ? 200 : 220, L = 46, R = 8, T = 10, B = 26;
+  const tpd = list.reduce((a, s) => a + s.tr, 0) / D.dim;
+  const vals = Array.from({ length: D.last }, (_, i) => list.reduce((a, s) => a + cell(s.shop, i + 1)[0], 0));
+  const qs = Array.from({ length: D.last }, (_, i) => list.reduce((a, s) => a + cell(s.shop, i + 1)[1], 0));
+  const max = Math.max(tpd * 1.15, ...vals, 1);
+  const nice = (() => { const p = Math.pow(10, Math.floor(Math.log10(max))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p * 4 >= max) return m * p; return 10 * p; })();
+  const top = nice * 4, y = v => T + (H - T - B) * (1 - v / top);
+  const n = D.dim, bw = (W - L - R) / n, gap = Math.max(2, bw * .25);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ยอดขายรายวันเทียบเป้า">`;
+  for (let i = 0; i <= 4; i++) { const v = nice * i; s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${fk(v)}</text>`; }
+  for (let d = 1; d <= n; d++) {
+    const x = L + (d - 1) * bw + gap / 2, w = bw - gap;
+    if (d <= D.last && has(d)) {
+      const v = vals[d - 1], h = Math.max(0, y(0) - y(v)), r = Math.min(4, w / 2, h);
+      s += h > 0 ? `<path d="M${x},${y(0)} v${-(h - r)} q0,${-r} ${r},${-r} h${w - 2 * r} q${r},0 ${r},${r} v${h - r} z" fill="var(--s1)" opacity="${d === st.day ? 1 : .55}"/>` : '';
+    } else if (d <= D.last) s += `<rect x="${x}" y="${y(tpd)}" width="${w}" height="${y(0) - y(tpd)}" fill="none" stroke="var(--muted)" stroke-dasharray="3 3" rx="3" opacity=".6"/>`;
+    if (d === 1 || d % 5 === 0 || d === st.day) s += `<text x="${x + w / 2}" y="${H - 8}" font-size="10.5" fill="${d === st.day ? 'var(--fg)' : 'var(--muted)'}" font-weight="${d === st.day ? 700 : 400}" text-anchor="middle">${d}</text>`;
+    s += `<rect class="hit" data-d="${d}" x="${L + (d - 1) * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent"/>`;
+  }
+  s += `<line x1="${L}" x2="${W - R}" y1="${y(tpd)}" y2="${y(tpd)}" stroke="var(--fg)" stroke-opacity=".6" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1"/></svg><div class="tip" hidden></div>`;
+  const el = $('trend'); el.innerHTML = s;
+  $('trendsub').textContent = (st.area === 'ALL' ? 'ทุกพื้นที่' : list[0]?.areaName || '') + (st.grp === 'ALL' ? '' : ' · ' + st.grp) + ' · กดแท่งเพื่อเลือกวัน';
+  const tip = el.querySelector('.tip');
+  el.querySelectorAll('.hit').forEach(h => {
+    const d = +h.dataset.d;
+    h.addEventListener('mousemove', e => {
+      const b = el.getBoundingClientRect();
+      tip.innerHTML = d > D.last ? `<b>${dname(d)}</b><br>ยังไม่ถึงวัน` : !has(d) ? `<b>${dname(d)}</b><br>ไม่มีไฟล์ข้อมูล` :
+        `<b>${dname(d)}</b><br>Revenue ${f0(vals[d - 1])} (${(vals[d - 1] / tpd * 100).toFixed(0)}% ของเป้า/วัน)<br>QTY ${f0(qs[d - 1])} ชิ้น`;
+      tip.hidden = false; const tx = Math.min(b.width - tip.offsetWidth - 4, Math.max(4, e.clientX - b.left + 12));
+      tip.style.left = tx + 'px'; tip.style.top = Math.max(0, e.clientY - b.top - tip.offsetHeight - 8) + 'px';
+    });
+    h.addEventListener('mouseleave', () => tip.hidden = true);
+    h.addEventListener('click', () => { if (d <= D.last) { st.day = d; render(); } });
+  });
+}
+
+function renderMix() {
+  const list = new Set(shops().map(s => s.shop)); const sum = {}; GR.forEach(g => sum[g[0]] = [0, 0, 0, 0]);
+  for (const sh of list) for (const d in (D.daily[sh] || {})) if (+d <= st.day) for (const g in D.daily[sh][d]) {
+    const v = D.daily[sh][d][g]; sum[g][0] += v[0]; sum[g][1] += v[1]; if (+d === st.day) { sum[g][2] += v[0]; sum[g][3] += v[1]; }
+  }
+  const tot = GR.reduce((a, g) => a + sum[g[0]][0], 0) || 1;
+  $('mix').innerHTML = GR.map(([g, c]) => `<div class="row"><div class="nm"><i style="background:${c}"></i>${g}</div>
+    <div class="track"><i style="width:${sum[g][0] / tot * 100}%;background:${c}"></i></div>
+    <div class="num">${f0(sum[g][0])} <small>${(sum[g][0] / tot * 100).toFixed(0)}% · ${f0(sum[g][1])} ชิ้น · วันนี้ ${f0(sum[g][2])}</small></div></div>`).join('');
+  $('mixsub').textContent = `สะสมถึงวันที่ ${st.day} (ทุกประเภท ไม่ขึ้นกับตัวกรองประเภท)`;
+}
+
+function detail(s) {
+  const rows = D.pdays.filter(r => r[0] === s.shop && r[1] <= st.day && (st.grp === 'ALL' || r[2] === st.grp));
+  const by = {};
+  for (const [, d, g, desc, n, q] of rows) { const k = g + '|' + desc; by[k] = by[k] || { g, desc, n: 0, q: 0, dn: 0, dq: 0 }; by[k].n += n; by[k].q += q; if (d === st.day) { by[k].dn += n; by[k].dq += q; } }
+  const list = Object.values(by).sort((a, b) => b.dn - a.dn || b.n - a.n);
+  if (!list.length) return `<div class="det">ยังไม่มีการขายสินค้า GIA ในเดือนนี้ถึงวันที่ ${st.day}</div>`;
+  const col = Object.fromEntries(GR);
+  return `<div class="det"><div class="det-h"><b>${esc(s.name)}</b><span>สินค้าที่ขายสะสมถึงวันที่ ${st.day} · เรียงตามยอดวันนี้</span></div>
+  <table><thead><tr><th>ประเภท</th><th>สินค้า</th><th class="n">QTY วันนี้</th><th class="n">Revenue วันนี้</th><th class="n">QTY สะสม</th><th class="n">Revenue สะสม</th></tr></thead><tbody>
+  ${list.slice(0, 60).map(r => `<tr><td><span class="chip"><i style="background:${col[r.g]}"></i>${r.g}</span></td><td>${esc(r.desc)}</td><td class="n">${r.dq ? f0(r.dq) : ''}</td><td class="n">${r.dn ? f0(r.dn) : ''}</td><td class="n">${f0(r.q)}</td><td class="n">${f0(r.n)}</td></tr>`).join('')}
+  </tbody></table>${list.length > 60 ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">แสดง 60 จาก ${list.length} รายการ</div>` : ''}</div>`;
+}
+
+function renderTable() {
+  const list = shops(); const areas = [...new Set(list.map(s => s.area))];
+  let h = `<thead><tr><th>Shop Code</th><th>Shop</th><th class="n">Target Revenue<br>Month</th><th class="n">Target QTY<br>Month</th><th class="n">Target<br>Per Day</th><th class="n">QTY<br>Per Day</th>
+    <th class="n">Revenue<br>Day ${st.day}</th><th class="n">%Per Day</th><th class="n">Today<br>QTY</th><th class="n">%Per Day<br>QTY</th>
+    <th class="n">Total Revenue<br>${D.mon}</th><th class="n">Total QTY<br>${D.mon}</th><th class="n">%Ach<br>Revenue</th><th class="n">%Ach<br>QTY</th></tr></thead><tbody>`;
+  for (const a of areas) {
+    const al = list.filter(s => s.area === a);
+    if (areas.length > 1) h += `<tr class="area"><td colspan="14">${esc(al[0].areaName)} (${a})</td></tr>`;
+    const secs = [...new Set(al.map(s => s.sec))];
+    for (const sc of secs) {
+      const sl = al.filter(s => s.sec === sc);
+      h += `<tr class="sec"><td colspan="14" style="background:var(--sec${Math.min(sc, 5)})">${esc(sl[0].section)}</td></tr>`;
+      for (const s of sl) {
+        const v = rowVals([s], st.day);
+        h += `<tr class="shop${/\(D\)\s*$/.test(s.name) ? ' dtac' : ''}" data-s="${s.shop}"><td class="code">${s.shop}</td><td class="nm">${st.open.has(s.shop) ? '▾' : '▸'} ${esc(s.name)}</td>${tds(v)}</tr>`;
+        if (st.open.has(s.shop)) h += `<tr class="det"><td colspan="14">${detail(s)}</td></tr>`;
+      }
+      if (sl.length > 1) h += `<tr class="sub"><td class="code"></td><td class="nm">รวม ${esc(sl[0].section)}</td>${tds(rowVals(sl, st.day))}</tr>`;
+    }
+    h += `<tr class="tot"><td class="code"></td><td class="nm">Total (รวม) ${areas.length > 1 ? a : ''}</td>${tds(rowVals(al, st.day))}</tr>`;
+  }
+  if (areas.length > 1) h += `<tr class="tot"><td class="code"></td><td class="nm">รวมทั้งหมด North</td>${tds(rowVals(list, st.day))}</tr>`;
+  $('tbl').innerHTML = h + '</tbody>';
+  $('tbl').querySelectorAll('tr.shop').forEach(tr => tr.addEventListener('click', () => {
+    const k = tr.dataset.s; st.open.has(k) ? st.open.delete(k) : st.open.add(k); renderTable();
+  }));
+}
+
+function render() { renderControls(); renderNote(); renderKpis(); renderTrend(); renderMix(); renderTable(); }
+
+$('day').addEventListener('change', e => { st.day = +e.target.value; render(); });
+$('prev').addEventListener('click', () => { if (st.day > 1) { st.day--; render(); } });
+$('next').addEventListener('click', () => { if (st.day < D.last) { st.day++; render(); } });
+$('area').addEventListener('click', e => { const k = e.target.dataset.k; if (!k) return; st.area = k; try { localStorage.setItem('gia_area', k); } catch (er) {} render(); });
+$('grp').addEventListener('click', e => { const k = e.target.dataset.k; if (!k) return; st.grp = k; render(); });
+$('asof').textContent = D.asof ? `ข้อมูลขายถึง ${+D.asof.slice(8, 10)} ${TH[+D.asof.slice(5, 7) - 1]} ${+D.asof.slice(0, 4) + 543} ${D.asof.slice(11)} น.` : '';
+$('foot').innerHTML = `ที่มา: POS Sale Report (TSM) daily_sales ใน Google Drive — อัปเดตอัตโนมัติทุก 15 นาที (09:00–23:00) ·
+  นับเป็น GIA: ACC (Accessory), WATCH / OTT / IT (Gadget), IOT / T,IOT (IOT) · ไม่นับ H/S, ซิม, iPad, บัตรเติมเงิน และรายการ FOC ·
+  Target ต่อวัน = Target เดือน ÷ ${D.dim} วัน · %Ach สะสมเทียบกับเป้าถึงวันนี้ (${D.dim} วัน) · ร้านและ Target มาจากไฟล์ GIA_North ที่ส่งหัวหน้า (อัปโหลดไฟล์ชื่อ GIA_... เข้า Drive เพื่อเปลี่ยน Target / รายชื่อร้าน)`;
+render();
+let _rw = innerWidth; addEventListener('resize', () => { if (Math.abs(innerWidth - _rw) > 40) { _rw = innerWidth; renderTrend(); } });
+</script>
+</body>
+</html>

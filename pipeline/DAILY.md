@@ -75,3 +75,15 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
   RSA public key in `pipeline/vivo_lock.json`); the browser unlocks the RSA private key with the password (PBKDF2-SHA256 250k + AES-GCM).
   The password is not stored in the repo. To change it, regenerate vivo_lock.json with the new password (new key pair) and rebuild.
   GitHub Actions needs `cryptography` (installed in drive-sync.yml).
+
+## GIA Dashboard (https://fcaeg.github.io/prepay-dashboard/gia/)
+Gadget / IOT / Accessory sales of Nami's North shops, same daily_sales input (`pipeline/gia.py`, hooked into update.py; a GIA error never stops Prepay).
+- GIA rule: ACC → Accessory · WATCH / OTT / IT → Gadget · IOT, T,IOT → IOT · lines with a `FOC` part are not counted; H/S, SIM, IPAD, scratch cards are not GIA
+  (checked against Nami's GIA_North_Nov_1.xlsx: 27/28 shops identical, the 28th had a sale after her file's time).
+- A daily_sales file is a snapshot: for its main days (>= 20% of its rows) the newer file REPLACES that day (cancelled bills drop out);
+  `meta.json gia_day_asof` keeps the latest bill time per day, an older snapshot never overwrites a newer one. → `state/gia_sales_<YYYY-MM>.csv.gz`
+- Shops, sections, order and month targets come from Nami's report `GIA_North_<Mon>_<d>.xlsx` (sheets UN / LN) →
+  `python3 -I pipeline/update.py --gia-target <file>` (Drive: any xlsx whose name starts with "GIA") → `state/gia_targets.csv`; the file is kept as
+  `state/gia_template.xlsx` and every build writes `gia/xlsx/GIA_North_<Mon>_<d>.xlsx` for each day of the month (template filled with values, no external links).
+- Target per day = month target ÷ days in month (template: ÷30). Page: `pipeline/gia_page.html` → `gia/index.html` (gia_page.py, built by build_page.py).
+- Nov 2026: no daily_sales file for 3 Nov in Drive; 2 Nov is up to 21:45, 4 Nov up to 16:23 (partial).

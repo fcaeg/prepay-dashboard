@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "prepay-dashboard-bot"
           git config user.email "prepay-dashboard-bot@users.noreply.github.com"
-          git add -A pipeline/state index.html vivo
+          git add -A pipeline/state index.html vivo gia
           git diff --cached --quiet && exit 0
           git commit -m "Data update from Google Drive $(TZ=Asia/Bangkok date '+%Y-%m-%d %H:%M')"
           git pull --rebase -q origin main
