@@ -399,7 +399,7 @@ const RKX = (() => {
     const FF = getComputedStyle(document.body).fontFamily || 'sans-serif'; const F = (w, s) => w + ' ' + s + 'px ' + FF;
     const f = rkF(), N = PC.isNet(), d = rDate(), rk = rkRows() || [], rd = rdRows() || [], zr = zoneRows(); const ar = PC.rows('area_rank'); const r0 = ar && ar[0];
     const W = 2000, P = 48, GAP = 32, ROW = 64; const n = Math.max(rk.length, rd.length);
-    const H = P + 110 + 50 + 250 + 118 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
+    const H = P + 110 + 50 + 250 + 30 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
     const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S); g.textBaseline = 'alphabetic';
     g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
     // header
@@ -415,7 +415,7 @@ const RKX = (() => {
     y += 26; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2);
     // region cards
     y += 46; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('สรุปราย Region', P, y); y += 18;
-    const cw = (W - 2 * P - 2 * GAP) / 3, ch = 236 + 118;
+    const cw = (W - 2 * P - 2 * GAP) / 3, ch = 236 + 30;
     zr.forEach((z, i) => { const x = P + i * (cw + GAP); g.fillStyle = C.bg; rr(g, x, y, cw, ch, 10); g.fill(); g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
       g.save(); rr(g, x, y, cw, ch, 10); g.clip(); g.fillStyle = col(z[f.ach]); g.fillRect(x, y, cw, 7); g.restore();
       g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('#' + (i + 1) + ' ' + z.area, x + 22, y + 46);
@@ -423,12 +423,10 @@ const RKX = (() => {
       g.font = F(700, 50); g.fillStyle = col(z[f.ach]); const big = PC.pf(z[f.ach]); g.fillText(big, x + 22, y + 104); const bw = g.measureText(big).width; g.font = F(400, 17); g.fillStyle = C.mu; g.fillText('ยอดสะสมเทียบ Target ถึงวันนี้', x + 34 + bw, y + 102);
       const items = [['Target ถึงวันนี้', PC.mfmt(z[f.ttd])], ['ยอดสะสม', PC.mfmt(z[f.act])], ['ยอดรายวัน', PC.mfmt(z.dval) + (z.dach == null ? '' : ' (' + PC.pf(z.dach) + ')'), col(z.dach)], ['MoM', z.mom == null ? '–' : (z.mom > 0 ? '+' : z.mom < 0 ? '−' : '') + PC.pf(Math.abs(z.mom)), z.mom == null ? C.fg : z.mom >= 0 ? C.ok : C.bad], ['Target ทั้งเดือน', PC.mfmt(z[f.tgt])], ['ต้องทำต่อวัน', z[f.need] == null ? '—' : PC.mfmt(z[f.need])]];
       const hw = (cw - 44 - 24) / 2; items.forEach((it, k) => { const cx = x + 22 + (k % 2) * (hw + 24), cy = y + 146 + Math.floor(k / 2) * 30; g.font = F(400, 17); g.fillStyle = C.mu; g.fillText(it[0], cx, cy); g.font = F(600, 18); g.fillStyle = it[2] || C.fg; g.textAlign = 'right'; g.fillText(it[1], cx + hw, cy); g.textAlign = 'left'; }); });
-    zr.forEach((z, i) => { const x0 = P + i * (cw + GAP) + 22, wd = cw - 44, y0 = y + 236; const ds = ZDAYS(z.area); if (!ds.length) return; const S = ZSUM(ds), MX = 1.5;
-      g.fillStyle = C.line; g.fillRect(x0, y0 - 6, wd, 1.5); g.font = F(600, 17); g.fillStyle = C.fg; g.fillText('%ACH Target รายวัน', x0, y0 + 18);
-      g.font = F(400, 16); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText('ถึง Target ' + S.hit + '/' + S.n + ' วัน' + (S.avg == null ? '' : ' · เฉลี่ย ' + PC.pf(S.avg)), x0 + wd, y0 + 18); g.textAlign = 'left';
-      const bt = y0 + 30, bh = 56, bw = wd / ds.length; g.strokeStyle = C.fg; g.globalAlpha = 0.5; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, bt + bh - bh / MX); g.lineTo(x0 + wd, bt + bh - bh / MX); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-      ds.forEach((d, k) => { const hh = Math.max(2, Math.min(1, (d.a || 0) / MX) * bh); g.fillStyle = col(d.a); g.globalAlpha = k === ds.length - 1 ? 0.5 : 1; g.fillRect(x0 + k * bw + 1, bt + bh - hh, Math.max(2, bw - 2), hh); g.globalAlpha = 1;
-        if (k % Math.max(1, Math.ceil(ds.length / 16)) === 0 || k === ds.length - 1) { g.font = F(400, 12); g.fillStyle = C.mu; g.textAlign = 'center'; g.fillText(String(+d.date.slice(8, 10)), x0 + k * bw + bw / 2, bt + bh + 16); g.textAlign = 'left'; } }); });
+    zr.forEach((z, i) => { let x0 = P + i * (cw + GAP) + 22; const y0 = y + 246; const ds = ZDAYS(z.area); if (!ds.length) return; const S = ZSUM(ds);
+      const seg = (t, c, w) => { g.font = F(w || 400, 15); g.fillStyle = c || C.mu; g.fillText(t, x0, y0); x0 += g.measureText(t).width; };
+      seg('%ACH รายวัน: '); ds.forEach((d, k) => { if (k) seg(' · '); seg(+d.date.slice(8, 10) + ' '); g.globalAlpha = k === ds.length - 1 ? 0.6 : 1; seg(d.a == null ? '–' : Math.round(d.a * 100) + '%', col(d.a), 700); g.globalAlpha = 1; if (k === ds.length - 1) seg('*'); });
+      if (S.n) seg(' · ถึง Target ' + S.hit + '/' + S.n + ' วัน'); });
     y += ch + 40;
     // two rankings
     const lw = (W - 2 * P - GAP) / 2;
@@ -884,20 +882,10 @@ const ZDAYS = (zone) => { const ad = PC.rows('area_day'); if (!ad) return []; co
   return ad.filter((z) => z.stype === st && z.area === zone).sort((a, b) => a.date.localeCompare(b.date)).map((z) => ({ date: z.date, v: z[f.d], t: z[f.tpd], a: z[f.ach] })); };
 const ZSUM = (ds) => { const full = ds.slice(0, -1).length ? ds.slice(0, -1) : ds; const ok = full.filter((x) => x.a != null); const hit = ok.filter((x) => x.a >= 1).length;
   const avg = ok.length ? d3.mean(ok, (x) => x.a) : null; const best = ok.length ? ok.reduce((m, x) => (x.a > m.a ? x : m)) : null, worst = ok.length ? ok.reduce((m, x) => (x.a < m.a ? x : m)) : null; return { n: ok.length, hit, avg, best, worst }; };
-(() => { const st = document.createElement('style'); st.textContent = `.zd{display:grid;gap:4px;margin-top:6px;padding-top:8px;border-top:1px solid var(--color-border-line)}
-.zd .zh{display:flex;justify-content:space-between;gap:8px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)} .zd .zh b{color:var(--color-fg);font-weight:600}
-.zd .zs{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;align-items:end;height:46px}
-.zd .zs i{display:block;border-radius:2px 2px 0 0;min-height:2px} .zd .zs i.last{opacity:.55;outline:1px dashed var(--color-fg-muted);outline-offset:-1px}
-.zd .zl{position:absolute;left:0;right:0;border-top:1.5px dashed var(--color-fg);opacity:.55;pointer-events:none}
-.zd .zx{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;font-size:10px;color:var(--color-fg-muted);text-align:center;font-variant-numeric:tabular-nums}
-.zd .zm{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);line-height:1.45}`; document.head.append(st); })();
-window.ZDAY = (c, zone) => { const ds = ZDAYS(zone); if (!ds.length) return; const S = ZSUM(ds); const MX = 1.5; const w = document.createElement('div'); w.className = 'zd';
-  const h = document.createElement('div'); h.className = 'zh'; h.innerHTML = '<span><b>%ACH Target รายวัน</b> (' + PC.mlabel() + ')</span><span>ถึง Target <b>' + S.hit + '/' + S.n + '</b> วัน</span>';
-  const bars = document.createElement('div'); bars.className = 'zs'; const ln = document.createElement('div'); ln.className = 'zl'; ln.style.bottom = (1 / MX) * 100 + '%'; bars.append(ln);
-  const ax = document.createElement('div'); ax.className = 'zx'; const ev = Math.max(1, Math.ceil(ds.length / 16));
-  ds.forEach((x, i) => { const b = document.createElement('i'); b.style.height = Math.max(2, Math.min(1, (x.a || 0) / MX) * 100) + '%'; b.style.background = rkCol(x.a); if (i === ds.length - 1) b.className = 'last';
-    b.title = PC.day(x.date) + ' · ' + PC.mfmt(x.v) + ' / Target ต่อวัน ' + PC.mfmt(x.t) + ' · ' + (x.a == null ? '–' : PC.pf(x.a)) + (i === ds.length - 1 ? ' (วันล่าสุด อาจยังไม่ครบวัน)' : ''); bars.append(b);
-    const t = document.createElement('span'); t.textContent = i % ev === 0 || i === ds.length - 1 ? +x.date.slice(8, 10) : ''; ax.append(t); });
-  const m = document.createElement('div'); m.className = 'zm';
-  m.textContent = S.n ? 'เฉลี่ย ' + PC.pf(S.avg) + ' ต่อวัน · ดีสุด ' + PC.day(S.best.date).replace(/ \d+$/, '') + ' ' + PC.pf(S.best.a) + ' · ต่ำสุด ' + PC.day(S.worst.date).replace(/ \d+$/, '') + ' ' + PC.pf(S.worst.a) + (ds.length > 1 ? ' · ไม่นับวันล่าสุด (ยังไม่ครบวัน)' : '') : 'วันแรกของเดือน — ยังไม่มีวันที่ครบ';
-  w.append(h, bars, ax, m); c.append(w); };
+(() => { const st = document.createElement('style'); st.textContent = `.zd{margin:-2px 0 2px;font-size:11.5px;line-height:1.5;color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
+.zd b{font-weight:600} .zd .zp{white-space:nowrap} .zd .zp.last{opacity:.6}`; document.head.append(st); })();
+window.ZDAY = (c, zone) => { const ds = ZDAYS(zone); if (!ds.length) return; const S = ZSUM(ds); const w = document.createElement('div'); w.className = 'zd';
+  w.title = '%ACH รายวัน = ยอดของวันนั้น ÷ Target ต่อวัน · วันล่าสุดอาจยังไม่ครบวัน';
+  const parts = ds.map((x, i) => '<span class="zp' + (i === ds.length - 1 ? ' last' : '') + '">' + (+x.date.slice(8, 10)) + ' <b style="color:' + rkCol(x.a) + '">' + (x.a == null ? '–' : Math.round(x.a * 100) + '%') + '</b>' + (i === ds.length - 1 ? '*' : '') + '</span>');
+  w.innerHTML = '%ACH รายวัน: ' + parts.join(' · ') + (S.n ? ' · <span class="zp">ถึง Target ' + S.hit + '/' + S.n + ' วัน</span>' : '');
+  const big = c.children[1]; if (big) big.after(w); else c.append(w); };
