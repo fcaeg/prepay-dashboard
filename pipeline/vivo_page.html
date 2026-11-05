@@ -272,7 +272,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <div class="tw" id="t-td-model" style="max-height:none" hidden></div>
     <div class="two" style="margin-top:16px">
       <div><h3>สาขาที่ขายได้มากสุดวันนี้</h3><div class="tw" id="t-td-shop" style="max-height:480px"></div></div>
-      <div><h3>พนักงานที่ขายได้วันนี้ (TSM)</h3><p class="note" id="n-td-staff"></p><div class="tw" id="t-td-staff" style="max-height:480px"></div></div>
+      <div><h3>พนักงานที่ขายได้วันนี้</h3><p class="note" id="n-td-staff"></p><div class="tw" id="t-td-staff" style="max-height:480px"></div></div>
     </div>
   </section>
 
@@ -364,7 +364,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <div class="ai" id="pd-ai"></div>
       <h3>ยอดขายตามกลุ่ม Model</h3><div class="tw" id="t-pd-g" style="max-height:none"></div>
       <h3 style="margin-top:14px">ยอดขายราย Model</h3><div class="tw" id="t-pd-m" style="max-height:none"></div>
-      <h3 style="margin-top:14px">ยอดขายรายพนักงาน (จาก TSM)</h3><p class="note" id="n-pd-s"></p><div class="tw" id="t-pd-s" style="max-height:none"></div>
+      <h3 style="margin-top:14px">ยอดขายรายพนักงาน</h3><p class="note" id="n-pd-s"></p><div class="tw" id="t-pd-s" style="max-height:none"></div>
     </div>
   </section>
 </div>
@@ -1067,11 +1067,11 @@ function sPC(mi) {
     return { name: x.name, e: x.e, cur: x.cur, sh: ratio(x.cur, tot.cur), top: top.map(([k, v]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${num(v)})`).join(', ') }; });
   const stab = renderTable($('#t-pd-s'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'รหัส', v: (r) => r.e, cls: 't' }, { h: `ยอดขาย (${u})`, v: (r) => r.cur, f: num },
     { h: 'สัดส่วนของสาขา', p: 1, v: (r) => r.sh, f: shareF }, { h: 'Model ที่ขายมากสุด', v: (r) => r.top, cls: 't' }], srows);
-  $('#n-pd-s').innerHTML = `ระบบส่วนกลางไม่มีชื่อพนักงาน ข้อมูลรายคนจึงมาจาก TSM (POS) เฉพาะวันที่หลัง ${thDate(D.meta.hist_asof)}` + (srows.length ? '' : ' — ยังไม่มีข้อมูลในเดือนนี้');
+  $('#n-pd-s').innerHTML = `ข้อมูลรายพนักงานมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}` + (srows.length ? '' : ' — ยังไม่มีข้อมูลในเดือนนี้');
   EXPORT.ms = [toSheet('5 PC กลุ่ม Model', gtab, `${s.n} (${c}) · ยอดขายตามกลุ่ม Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
     toSheet('5 PC ราย Model', mtab, `${s.n} (${c}) · ยอดขายราย Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
     { name: '5 PC บทวิเคราะห์', title: `บทวิเคราะห์ ${s.n} (${c}) · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl}`, groups: [''], head: ['บทวิเคราะห์'], kinds: ['note'], rowCls: li.map(() => ''), body: li.map((x) => ['• ' + x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&amp;/g, '&')]) },
-    toSheet('5 PC รายพนักงาน', stab, `${s.n} · ยอดขายรายพนักงาน (TSM)`)];
+    toSheet('5 PC รายพนักงาน', stab, `${s.n} · ยอดขายรายพนักงาน`)];
 }
 // ---------- weekly (ISO weeks, Mon–Sun) W1..W52 for the year of the selected month
 const WKCACHE = new Map(); const wkOfDate = (d) => { let w = WKCACHE.get(d); if (!w) { w = isoWeek(d); WKCACHE.set(d, w); } return w; };
@@ -1191,7 +1191,7 @@ function sToday() {
   const strows = [...ST.values()].filter((x) => x.u > 0 || x.v > 0).sort((a, b) => b.v - a.v);
   const tE = renderTable($('#t-td-staff'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'สาขา', v: (r) => SH[r.c] ? SH[r.c].n.replace(/^True Shop /i, '') : r.c, cls: 't' },
     { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }], strows);
-  $('#n-td-staff').innerHTML = d > (D.meta.hist_asof || '') ? '' : `วันที่ ${thDate(d)} มาจากระบบส่วนกลาง ซึ่งไม่มีชื่อพนักงาน — ข้อมูลรายคนมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}`;
+  $('#n-td-staff').innerHTML = d > (D.meta.hist_asof || '') ? '' : `ข้อมูลรายพนักงานมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}`;
   // KPIs
   const kc = (l, v, sub, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
   const ach = ratio(TOT.d, TOT.t), dod = pctD(TOT.d, TOT.y), wow = pctD(TOT.d, TOT.w); const fmtP = (x) => x == null ? '–' : `<span class="${x >= 0 ? 'up' : 'dn'}">${sgn(x)}</span>`;
@@ -1206,9 +1206,9 @@ function sToday() {
   $('#td-zone').innerHTML = arows.filter((r) => r._cls === 'sub').map((r) => { const a = ratio(r.d, r.t), dd = pctD(r.d, r.y);
     return `<div class="z"><b>${esc(r.name)}</b><span class="v">${num(r.d)}</span><span class="s">%ACH ${a == null ? '–' : Math.round(a * 100) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
   $('#t-td-area').hidden = S.tdview !== 'area'; $('#t-td-model').hidden = S.tdview !== 'model';
-  $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}ที่มา: ${d > (D.meta.hist_asof || '') ? 'TSM (POS)' : 'ระบบส่วนกลาง'} · Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
+  $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
   EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
-    toSheet('1 วันนี้ รายสาขา', tS, `ยอดขาย ${thDate(d)} รายสาขา`), toSheet('1 วันนี้ รายพนักงาน', tE, `ยอดขาย ${thDate(d)} รายพนักงาน (TSM)`)];
+    toSheet('1 วันนี้ รายสาขา', tS, `ยอดขาย ${thDate(d)} รายสาขา`), toSheet('1 วันนี้ รายพนักงาน', tE, `ยอดขาย ${thDate(d)} รายพนักงาน`)];
 }
 function kpis(mi, tot, ts) {
   const rr = mi.asofDay ? V(tot) / mi.asofDay * mi.days : 0;
@@ -1508,7 +1508,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ข้อมูลวิเคราะห์ถึง <b>${thDate(LATEST)} (Day-1)</b> · ยอดวันนี้ถึง ${thDate(D.meta.sales_asof)}${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
+$('#asof').innerHTML = `<span>ข้อมูลวิเคราะห์ถึง <b>${thDate(LATEST)} (Day-1)</b> · ยอดวันนี้ถึง ${thDate(D.meta.sales_asof)}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
 initControls(); render();
 </script>
 </body>
