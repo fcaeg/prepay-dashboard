@@ -1186,8 +1186,8 @@ function initControls() {
   fillSelect($('#f-month'), months.map((m) => [m, `${THF[+m.slice(5) - 1]} ${+m.slice(0, 4) + 543}`]), S.month);
   const MS = {};
   MS.zone = multiSelect($('#f-zone'), 'zone', 'ทุก Region', () => ZONES.map((z) => ({ v: z, l: z })), () => { for (const a of [...S.area]) if (S.zone.size && !S.zone.has(zoneOf(a))) S.area.delete(a); MS.area.refresh(); });
-  MS.area = multiSelect($('#f-area'), 'area', 'ทุก Area', () => { const out = []; for (const z of ZONES) { if (S.zone.size && !S.zone.has(z)) continue; const ch = AREAS.filter((a) => zoneOf(a) === z);
-      if (ch.length) out.push({ g: z, kids: ch.map((a) => ({ v: a, l: a })) }); } return out; }, null, true);
+  // Area list only (Region has its own filter); limited to the Regions picked there
+  MS.area = multiSelect($('#f-area'), 'area', 'ทุก Area', () => AREAS.filter((a) => !S.zone.size || S.zone.has(zoneOf(a))).map((a) => ({ v: a, l: a })), null, true);
   MS.type = multiSelect($('#f-type'), 'type', 'ทุกประเภท', () => TYPES.map((t) => ({ v: t, l: t })));
   MS.pc = multiSelect($('#f-pc'), 'pc', 'ทั้งหมด', () => [{ v: 'Y', l: 'มี PC' }, { v: 'N', l: 'ไม่มี PC' }]);
   MS.model = multiSelect($('#f-model'), 'model', 'ทุกรุ่น', () => { const out = []; const grp = new Map();
