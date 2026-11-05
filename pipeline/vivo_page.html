@@ -158,6 +158,7 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .tbc .sm { font-size: 12px; color: var(--muted); }
 .tbc ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; } .tbc li { margin: 2px 0; }
 .tbc .lb { font-size: 12px; font-weight: 600; margin-top: 6px; } .tbc .lb.g { color: var(--ok); } .tbc .lb.r { color: var(--bad); }
+.nopc { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 /* ---- tablet & phone ---- */
@@ -308,7 +309,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <div class="sub2" id="h-risk">⚠ แจ้งเตือนเสี่ยงขาดสินค้า</div>
     <p class="note" id="n-risk"></p>
     <div class="tw" id="t-risk"></div>
-    <div class="sub2">⇄ แนะนำโอนย้าย (ภายใน Area เดียวกัน)</div>
+    <div class="sub2">⇄ แนะนำโยกสต๊อก: สาขา No PC → สาขา PC (ภายใน Area เดียวกัน)</div>
     <p class="note" id="n-tr"></p>
     <div class="cmp" id="tr-kpi"></div>
     <div class="tw" id="t-tr"></div>
@@ -464,6 +465,8 @@ const okShop = (c) => { const s = SH[c]; if (!s) return false;
 const modelOk = (sel, k) => sel instanceof Set ? (sel.size === 0 || sel.has(k)) : sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && MD[k].family === sel.slice(2)) : sel.startsWith('S:') ? (MD[k] && MD[k].series === sel.slice(2)) : k === sel.slice(2));
 const okModel = (k) => modelOk(S.model, k);
 const PCLAB = { Y: 'มี PC', N: 'ไม่มี PC' };
+const pcTag = (c) => SH[c] && SH[c].pc > 0 ? `<span class="pc">PC ${SH[c].pc}</span>` : '<span class="nopc">No PC</span>';
+const pcTxt = (c) => SH[c] && SH[c].pc > 0 ? `PC ${SH[c].pc}` : 'No PC';
 const setLab = (set, all, f = (x) => x, max = 2) => { if (!set.size) return all; const a = [...set].map(f); return a.length <= max ? a.join(', ') : `${a.slice(0, max).join(', ')} +${a.length - max}`; };
 const modelLabel = (max = 2) => setLab(S.model, 'ทุกรุ่น', (k) => (MD[k] || { name: k }).name.replace(/^VIVO /, ''), max);
 const filterParts = () => [S.zone.size && setLab(S.zone, '', undefined, 3), S.area.size && setLab(S.area, '', undefined, 3), S.type.size && setLab(S.type, '', undefined, 4), S.pc.size && setLab(S.pc, '', (x) => PCLAB[x]), S.model.size && modelLabel(3)].filter(Boolean);
@@ -721,7 +724,7 @@ function sShop(mi) {
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
     { h: 'รหัส', v: (r) => r.c, cls: 't' },
     { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' }, { h: 'ประเภท', v: (r) => r.type, cls: 't' },
-    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
     { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: num },
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
     { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: num }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
@@ -748,8 +751,9 @@ function stockPlan() {
   const byAM = new Map(); for (const x of cells.values()) { const g = x.area + '|' + x.k; if (!byAM.has(g)) byAM.set(g, []); byAM.get(g).push(x); }
   const moves = []; const short = new Map();
   for (const list of byAM.values()) {
-    const rec = list.filter((x) => x.w > 0 && x.st / x.w < CW_LOW).map((x) => ({ x, need: Math.ceil(CW_LOW * x.w - x.st), got: 0 })).filter((r) => r.need > 0).sort((a, b) => a.x.st / a.x.w - b.x.st / b.x.w);
-    const don = list.filter((x) => x.st > 0 && (x.w === 0 || x.st / x.w > CW_HIGH)).map((x) => ({ x, avail: x.st - (x.w > 0 ? Math.ceil(CW_HIGH * x.w) : 1), gave: 0 })).filter((d) => d.avail > 0)
+    // receivers = shops WITH Vivo PC (Cover < 4 wk); donors = shops WITHOUT PC (Cover > 6 wk), same Area
+    const rec = list.filter((x) => SH[x.c].pc > 0 && x.w > 0 && x.st / x.w < CW_LOW).map((x) => ({ x, need: Math.ceil(CW_LOW * x.w - x.st), got: 0 })).filter((r) => r.need > 0).sort((a, b) => a.x.st / a.x.w - b.x.st / b.x.w);
+    const don = list.filter((x) => !(SH[x.c].pc > 0) && x.st > 0 && (x.w === 0 || x.st / x.w > CW_HIGH)).map((x) => ({ x, avail: x.st - (x.w > 0 ? Math.ceil(CW_HIGH * x.w) : 1), gave: 0 })).filter((d) => d.avail > 0)
       .sort((a, b) => (b.x.w ? b.x.st / b.x.w : 1e9) - (a.x.w ? a.x.st / a.x.w : 1e9));
     for (const r of rec) { for (const d of don) { if (r.need <= r.got) break; const q = Math.min(r.need - r.got, d.avail - d.gave); if (q <= 0) continue;
         d.gave += q; r.got += q; moves.push({ area: r.x.area, k: r.x.k, from: d.x, to: r.x, q }); }
@@ -770,32 +774,32 @@ function sPlan() {
   const fl = filterParts();
   const scope = fl.length ? ` · ตัวกรอง: ${esc(fl.join(' / '))}` : ' · ทุกสาขา ทุกรุ่น';
   if (!P.risk.length) al.innerHTML = `<b class="t">✓ ไม่มีรายการเสี่ยงขาดสินค้า</b><span>ไม่มีสาขา × รุ่นที่ Cover ต่ำกว่า ${CW_RISK} สัปดาห์${scope}</span>`;
-  else al.innerHTML = `<b class="t">⚠ เสี่ยงขาดสินค้า ${num(P.risk.length)} รายการ (สาขา × รุ่น)</b><span>Cover ต่ำกว่า ${CW_RISK} สัปดาห์ · รุ่นที่เจอมากสุด: ${rm.slice(0, 5).map(([k, n]) => `${esc(mn(k))} (${n} สาขา)`).join(', ')}</span><span class="na">โอนภายใน Area ได้ ${num(P.moves.filter((m) => m.to.st / m.to.w < CW_RISK).reduce((s, m) => s + m.q, 0))} เครื่อง · ดูรายการด้านล่าง ›${scope}</span>`;
+  else al.innerHTML = `<b class="t">⚠ เสี่ยงขาดสินค้า ${num(P.risk.length)} รายการ (สาขา × รุ่น)</b><span>Cover ต่ำกว่า ${CW_RISK} สัปดาห์ · รุ่นที่เจอมากสุด: ${rm.slice(0, 5).map(([k, n]) => `${esc(mn(k))} (${n} สาขา)`).join(', ')}</span><span class="na">โยกจากสาขา No PC ไปสาขา PC ได้ ${num(P.moves.filter((m) => m.to.st / m.to.w < CW_RISK).reduce((s, m) => s + m.q, 0))} เครื่อง · ดูรายการด้านล่าง ›${scope}</span>`;
   // risk table
   const rrows = P.risk.map((x) => { const key = x.c + '#' + x.k, inn = P.inQ.get(key) || 0;
     return { area: x.area, name: sn(x.c), c: x.c, model: mn(x.k), st: x.st, s28: x.s28, cw: x.st === 0 ? -1 : x.st / x.w, inn, after: (x.st + inn) / x.w, short: P.short.get(key) || 0 }; })
     .sort((a, b) => a.area.localeCompare(b.area) || (a.cw === -1 ? -1 : a.cw) - (b.cw === -1 ? -1 : b.cw));
-  const tRisk = renderTable($('#t-risk'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Model', v: (r) => r.model, cls: 't' },
+  const tRisk = renderTable($('#t-risk'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'PC / No PC', v: (r) => pcTxt(r.c), f: (v, r) => pcTag(r.c) }, { h: 'Model', v: (r) => r.model, cls: 't' },
     { h: 'Stock', v: (r) => r.st, f: num }, { h: 'ขาย 28 วัน', v: (r) => r.s28, f: num }, { h: 'Cover Week', v: (r) => r.cw, f: coverF },
     { h: 'รับโอนใน Area', v: (r) => r.inn, f: (v) => v ? `<b class="up">+${num(v)}</b>` : '<span class="na">–</span>' }, { h: 'Cover หลังโอน', v: (r) => r.inn ? r.after : null, f: (v) => v == null ? '<span class="na">–</span>' : coverF(v) },
-    { h: 'ยังขาด (ขอเติมจากคลัง)', v: (r) => r.short, f: (v) => v ? `<b class="dn">${num(v)}</b>` : '<span class="na">–</span>' }], rrows);
+    { h: 'ยังขาด (ขอเติมจากคลัง)', v: (r) => SH[r.c].pc > 0 ? r.short : null, f: (v) => v == null ? '<span class="na">ไม่รับโอน (No PC)</span>' : v ? `<b class="dn">${num(v)}</b>` : '<span class="na">–</span>', x: (v) => v == null ? 'ไม่รับโอน (No PC)' : v }], rrows);
   $('#n-risk').innerHTML = HASSTOCK ? `สาขา × รุ่นที่มียอดขายใน 28 วัน แต่ Stock เหลือไม่ถึง ${CW_RISK} สัปดาห์ (รวมของหมด) · ${num(rrows.length)} รายการ · "ยังขาด" = จำนวนที่ต้องเติมให้ถึง ${CW_LOW} สัปดาห์ หลังโอนภายใน Area แล้ว` : 'รอไฟล์ Stock';
   // transfer table
   const trows = P.moves.map((m) => { const fk = m.from.c + '#' + m.k, tk = m.to.c + '#' + m.k;
-    return { area: m.area, model: mn(m.k), from: sn(m.from.c), fs: m.from.st, fs2: m.from.st - P.outQ.get(fk), ts: m.to.st, ts2: m.to.st + P.inQ.get(tk), fc: m.from.w ? m.from.st / m.from.w : Infinity, fa: m.from.w ? (m.from.st - P.outQ.get(fk)) / m.from.w : Infinity,
+    return { area: m.area, model: mn(m.k), from: sn(m.from.c), fc0: m.from.c, tc0: m.to.c, fs: m.from.st, fs2: m.from.st - P.outQ.get(fk), ts: m.to.st, ts2: m.to.st + P.inQ.get(tk), fc: m.from.w ? m.from.st / m.from.w : Infinity, fa: m.from.w ? (m.from.st - P.outQ.get(fk)) / m.from.w : Infinity,
       to: sn(m.to.c), tc: m.to.st === 0 ? -1 : m.to.st / m.to.w, ta: (m.to.st + P.inQ.get(tk)) / m.to.w, q: m.q }; })
     .sort((a, b) => a.area.localeCompare(b.area) || a.model.localeCompare(b.model) || b.q - a.q);
   const arrow = (a, b, s1, s2) => `<span class="na">${num(s1)}→${num(s2)} เครื่อง ·</span> ${coverF(a)} → ${coverF(b)}`;
-  const tTr = renderTable($('#t-tr'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'Model', v: (r) => r.model, cls: 't' }, { h: 'โอนจากสาขา', v: (r) => r.from, cls: 't' },
+  const tTr = renderTable($('#t-tr'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'Model', v: (r) => r.model, cls: 't' }, { h: 'โอนจากสาขา (No PC)', v: (r) => r.from, f: (v, r) => `${esc(v)} ${pcTag(r.fc0)}`, x: (v, r) => `${v} (${pcTxt(r.fc0)})`, cls: 't' },
     { h: 'ต้นทาง Stock · Cover (ก่อน → หลัง)', v: (r) => r.fc, f: (v, r) => arrow(r.fc, r.fa, r.fs, r.fs2), x: (v, r) => `Stock ${r.fs}→${r.fs2} · Cover ${r.fc === Infinity ? 'ไม่มีขาย' : nf1.format(r.fc)} → ${r.fa === Infinity ? 'ไม่มีขาย' : nf1.format(r.fa)}` },
-    { h: 'ไปสาขา', v: (r) => r.to, cls: 't' }, { h: 'ปลายทาง Stock · Cover (ก่อน → หลัง)', v: (r) => r.tc, f: (v, r) => arrow(r.tc, r.ta, r.ts, r.ts2), x: (v, r) => `Stock ${r.ts}→${r.ts2} · Cover ${r.tc === -1 ? 'ของหมด' : nf1.format(r.tc)} → ${nf1.format(r.ta)}` },
+    { h: 'ไปสาขา (PC)', v: (r) => r.to, f: (v, r) => `${esc(v)} ${pcTag(r.tc0)}`, x: (v, r) => `${v} (${pcTxt(r.tc0)})`, cls: 't' }, { h: 'ปลายทาง Stock · Cover (ก่อน → หลัง)', v: (r) => r.tc, f: (v, r) => arrow(r.tc, r.ta, r.ts, r.ts2), x: (v, r) => `Stock ${r.ts}→${r.ts2} · Cover ${r.tc === -1 ? 'ของหมด' : nf1.format(r.tc)} → ${nf1.format(r.ta)}` },
     { h: 'จำนวน (เครื่อง)', v: (r) => r.q, f: (v) => `<b>${num(v)}</b>` }], trows);
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
   const tq = trows.reduce((s, r) => s + r.q, 0), shortT = [...P.short.values()].reduce((s, v) => s + v, 0);
   $('#tr-kpi').innerHTML = HASSTOCK ? kc('แนะนำโอนย้าย', `${num(tq)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `${num(trows.length)} รายการ · ${num(new Set(trows.map((r) => r.area)).size)} Area`)
-    + kc('สาขาปลายทาง', num(new Set(P.moves.map((m) => m.to.c)).size), `เติมให้ Cover ถึง ${CW_LOW} สัปดาห์`)
-    + kc('ยังขาดหลังโอน', num(shortT), 'เครื่อง · ใน Area ไม่มีสาขาที่ Cover สูงพอ ต้องขอเติมจากคลัง') : '';
-  $('#n-tr').innerHTML = `ต้นทาง = สาขาใน Area เดียวกันที่ Cover สูงกว่า ${CW_HIGH} สัปดาห์ (เลือกสาขาที่ Cover สูงสุดก่อน และเหลือไว้ให้ต้นทางอย่างน้อย ${CW_HIGH} สัปดาห์ · สาขาที่ไม่มีขายเหลือไว้ 1 เครื่อง) · ปลายทาง = สาขาที่ Cover ต่ำกว่า ${CW_LOW} สัปดาห์ เรียงจาก Cover ต่ำสุด · เติมให้ถึง ${CW_LOW} สัปดาห์ · คิดจากยอดขาย 28 วัน · ตามตัวกรอง Area / Model ด้านบน`;
+    + kc('สาขา PC ที่ได้รับ', num(new Set(P.moves.map((m) => m.to.c)).size), `จากสาขา No PC ${num(new Set(P.moves.map((m) => m.from.c)).size)} สาขา · เติมให้ Cover ถึง ${CW_LOW} สัปดาห์`)
+    + kc('สาขา PC ยังขาดหลังโอน', num(shortT), 'เครื่อง · ใน Area ไม่มีสาขา No PC ที่ Cover สูงพอ ต้องขอเติมจากคลัง') : '';
+  $('#n-tr').innerHTML = `แนะนำโยกจาก<b>สาขาที่ไม่มี PC</b> ไปยัง<b>สาขาที่มี PC Vivo</b> ใน Area เดียวกันเท่านั้น · ต้นทาง = สาขา No PC ที่ Cover สูงกว่า ${CW_HIGH} สัปดาห์ (เลือก Cover สูงสุดก่อน เหลือไว้อย่างน้อย ${CW_HIGH} สัปดาห์ · สาขาที่ไม่มีขายเหลือไว้ 1 เครื่อง) · ปลายทาง = สาขา PC ที่ Cover ต่ำกว่า ${CW_LOW} สัปดาห์ เรียงจาก Cover ต่ำสุด · เติมให้ถึง ${CW_LOW} สัปดาห์ · คิดจากยอดขาย 28 วัน · ตามตัวกรองด้านบน`;
   EXPORT.plan = [toSheet('4 เสี่ยงขาดสินค้า', tRisk, `แจ้งเตือนเสี่ยงขาดสินค้า (Cover < ${CW_RISK} สัปดาห์) · Stock ณ ${thDate(D.meta.stock_asof)}`),
     toSheet('4 แนะนำโอนย้าย', tTr, `แนะนำโอนย้ายภายใน Area · Stock ณ ${thDate(D.meta.stock_asof)} · ขาย 28 วัน ${L28.from} – ${L28.to}`)];
 }
@@ -815,7 +819,7 @@ function sStock() {
   const sk = S.sort.stock; const sortK = sk[0] === 'cw' ? 'cws' : sk[0]; const [, d] = sk;
   srows.sort((a, b) => { const x = a[sortK], y = b[sortK]; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * d; });
   const scols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' }, { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' },
-    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
     { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'ขาย 28 วัน', sort: 's28', v: (r) => r.s28, f: num },
     { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
   const t2 = renderTable($('#t-stock-s'), scols, srows, { sort: 'stock' });
@@ -1165,7 +1169,7 @@ function sToday() {
   const SHP = new Map(); for (const [dd, c, k, u, n] of D.sales) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = SHP.get(c) || { v: 0, u: 0, m: new Map() }; x.v += vv(u, n); x.u += u; x.m.set(k, (x.m.get(k) || 0) + u); SHP.set(c, x); }
   const srows = [...SHP.entries()].filter(([, x]) => x.u > 0 || x.v > 0).map(([c, x]) => ({ c, name: SH[c].n.replace(/^True Shop /i, ''), area: SH[c].area, pc: SH[c].pc, v: x.v, u: x.u,
     top: [...x.m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, q]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${q})`).join(', ') })).sort((a, b) => b.v - a.v);
-  const tS = renderTable($('#t-td-shop'), [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">–</span>', x: (v) => v || 0 },
+  const tS = renderTable($('#t-td-shop'), [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
     { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }, { h: 'รุ่นที่ขาย', v: (r) => r.top, cls: 't' }], srows);
   // staff (TSM only)
   const ST = new Map(); for (const [dd, c, k, e, u, n] of (D.staff ? D.staff.r : [])) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = ST.get(e) || { e, name: D.staff.e[e] || e, c, v: 0, u: 0 }; x.v += vv(u, n); x.u += u; ST.set(e, x); }
