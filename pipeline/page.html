@@ -596,6 +596,11 @@ body.pc-noscroll { overflow: hidden; }
         <table data-draw="tb_shop" data-source="enriched targets shops stock_by_shop" data-row-key="shop"></table>
       </div>
     </article>
+    <article class="pc-card" id="card-shop-ns">
+      <h3>สาขา No Sale · <span data-draw="sh_label3" data-source="enriched"></span></h3>
+      <div class="pc-tools"><p class="pc-note" data-draw="sh_ns_sum" data-source="enriched shops manpower"></p><button class="pc-export pc-csv" id="shns-csv" type="button">⬇ Export CSV</button></div>
+      <div class="pc-scroll"><table data-draw="tb_sh_ns" data-source="enriched targets shops stock_by_shop manpower" data-row-key="shop"></table></div>
+    </article>
   </section>
 
   <section class="pc-sec" id="staff" data-page="staff" hidden>

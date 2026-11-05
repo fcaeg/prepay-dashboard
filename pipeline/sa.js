@@ -888,3 +888,32 @@ window.ZDAY = (c, zone) => { const ds = ZDAYS(zone); if (!ds.length) return; con
   const d = rDate(); const x = ds.find((z) => z.date === d) || ds[ds.length - 1];
   w.innerHTML = '%ACH วันนี้ (' + PC.day(x.date) + ') <b style="color:' + rkCol(x.a) + '">' + (x.a == null ? '–' : PC.pf(x.a)) + '</b> · ' + PC.mfmt(x.v) + ' / Target ต่อวัน ' + PC.mfmt(x.t);
   const big = c.children[1]; if (big) big.after(w); else c.append(w); };
+
+/* ---------- สาขา tab: shops with no sale in the selected period (+ CSV) ---------- */
+dash.draw('sh_label3', (el) => { const I = shInfo(); el.textContent = I ? I.label : ''; });
+const shNS = () => { const r = PC.rows('enriched'), I = shInfo(), shops = PC.rows('shops'); if (!r || !I || !shops) return null; const p = PC.P(), N = PC.isNet();
+  const scope = shops.filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
+  const sold = new Set(), last = new Map(), prv = new Map();
+  for (const x of r) { if (p.group !== 'ALL' && x.group !== p.group) continue; const k = String(x.shop);
+    if (x.date >= I.from && x.date <= I.to && x.units > 0) sold.add(k);
+    if (x.units > 0 && x.date <= I.to && (!last.has(k) || x.date > last.get(k))) last.set(k, x.date);
+    if (I.pf && x.date >= I.pf && x.date <= I.pt) prv.set(k, (prv.get(k) || 0) + (N ? x.net : x.units)); }
+  const ag = new Map((shAgg() || []).map((a) => [String(a.shop), a])); const stk = new Map(); for (const s of PC.rows('stock_by_shop') || []) stk.set(String(s.shop), (stk.get(String(s.shop)) || 0) + (+s.qty || 0));
+  const mp = new Map(); for (const m of PC.rows('manpower') || []) { if (String(m.sales_role) !== '1' || String(m.leave || '').trim()) continue; mp.set(String(m.shop), (mp.get(String(m.shop)) || 0) + 1); }
+  return scope.filter((s) => !sold.has(String(s.shop))).map((s) => { const k = String(s.shop), l = last.get(k) || null, a = ag.get(k) || {};
+    return { shop: k, name: s.name, type: s.stype, area: s.area, last: l, gap: l ? SA.diff(l, I.to) : null, pv: prv.get(k) ?? 0, target: a.target ?? null, stock: stk.get(k) || 0, staff: mp.get(k) || 0 }; }); };
+dash.draw('sh_ns_sum', (el) => { const r = shNS(), I = shInfo(); if (!r || !I) { el.textContent = ''; return; } const p = PC.P(); const tot = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).length;
+  const never = r.filter((x) => !x.last).length, nost = r.filter((x) => !x.stock).length;
+  el.textContent = 'ไม่มียอดขาย ' + PC.nf(r.length) + ' จาก ' + PC.nf(tot) + ' สาขา (' + I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + ')' + (p.group !== 'ALL' ? ' · กลุ่มซิม ' + p.group : '') + ' · ไม่เคยขายปีนี้ ' + PC.nf(never) + ' · Stock = 0: ' + PC.nf(nost) + ' สาขา'; });
+dash.draw('tb_sh_ns', (el) => { const I = shInfo(), N = PC.isNet();
+  PC.table(el, 'tb_sh_ns', shNS(), { key: ['shop'], def: 'gap', limit: 2000, cols: [{ f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'type', label: 'ประเภทสาขา' }, { f: 'area', label: 'Area' },
+    { f: 'last', label: 'ขายล่าสุด', fmt: (v) => (v ? PC.day(v) : 'ไม่เคยขายปีนี้') }, { f: 'gap', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf },
+    ...(I && I.pf ? [{ f: 'pv', label: (N ? 'Net Amount' : 'QTY') + ' ' + I.ps, num: true, fmt: (v) => PC.nf(Math.round(v)) }] : []), { f: 'target', label: 'Target ' + ((I && I.cs) || ''), num: true, fmt: PC.nf },
+    { f: 'stock', label: 'Stock', num: true, pill: (d) => [d.stock ? 'mute' : 'bad', PC.nf(d.stock)] }, { f: 'staff', label: 'พนักงานขาย (Manpower)', num: true, fmt: PC.nf }] }); });
+if (!window.PC_SHNS_BOUND) { window.PC_SHNS_BOUND = true;
+  document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#shns-csv'))) return; const r = shNS(), I = shInfo(); if (!r || !I) return; const N = PC.isNet();
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const head = ['รหัสสาขา', 'สาขา', 'ประเภทสาขา', 'Area', 'ช่วงเวลา', 'ขายล่าสุด', 'ไม่มียอดมาแล้ว (วัน)', ...(I.pf ? [(N ? 'Net Amount ' : 'QTY ') + I.ps] : []), 'Target ' + (I.cs || ''), 'Stock', 'พนักงานขาย (Manpower)'];
+    const rows = r.slice().sort((a, b) => (b.gap ?? -1) - (a.gap ?? -1) || String(a.area).localeCompare(String(b.area)));
+    const lines = [head.join(',')].concat(rows.map((d) => ['="' + d.shop + '"', esc(d.name), esc(d.type), esc(d.area), esc(I.label + ' ' + I.from + (I.to !== I.from ? ' - ' + I.to : '')), d.last || 'ไม่เคยขายปีนี้', d.gap ?? '', ...(I.pf ? [Math.round(d.pv)] : []), d.target ?? '', d.stock, d.staff].join(',')));
+    const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'NoSale_Shops_' + (dash.params().shperiod || 'mtd') + '_' + I.to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
