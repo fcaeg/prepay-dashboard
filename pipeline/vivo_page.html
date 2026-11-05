@@ -147,6 +147,8 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .wkchart .wb { fill: var(--accent); opacity: .75; } .wkchart .wb.cur { opacity: 1; fill: var(--warn); }
 .wkchart text { fill: var(--muted); font-size: 10px; font-family: var(--font); }
 #t-wk td, #t-wk th { padding: 4px 6px; } #t-wk td.wcur, #t-wk th.wcur { background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.tip { font: inherit; font-size: 11px; line-height: 1; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0 2px; vertical-align: 1px; }
+.tippop { position: fixed; z-index: 80; max-width: min(320px, 90vw); background: var(--fg); color: var(--bg); font-size: 12.5px; line-height: 1.45; padding: 7px 10px; border-radius: 7px; box-shadow: 0 6px 20px rgba(0,0,0,.2); white-space: normal; }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 /* ---- tablet & phone ---- */
@@ -524,11 +526,12 @@ function renderTable(el, cols, rows, opt = {}) {
   const groups = []; cols.forEach((c, i) => { const g = c.g || ''; if (groups.length && groups[groups.length - 1].g === g) groups[groups.length - 1].n++; else groups.push({ g, n: 1, i }); });
   const hasG = groups.some((g) => g.g);
   let h = '<table><thead>';
-  if (hasG) h += '<tr>' + groups.map((g) => g.g ? `<th colspan="${g.n}" class="g">${g.g}</th>` : `<th colspan="${g.n}"></th>`).join('') + '</tr>';
+  const tipI = (t) => t ? ` <button type="button" class="tip" data-tip="${esc(t)}" aria-label="${esc(t)}" title="${esc(t)}">ⓘ</button>` : '';
+  if (hasG) h += '<tr>' + groups.map((g) => g.g ? `<th colspan="${g.n}" class="g">${g.g}${tipI(cols[g.i].gtip)}</th>` : `<th colspan="${g.n}"></th>`).join('') + '</tr>';
   const sortKey = opt.sort ? S.sort[opt.sort] : null;
   h += '<tr>' + cols.map((c, i) => { const gl = c.g && groups.find((g) => g.i === i) ? ' gl' : '';
     const arrow = sortKey && c.sort === sortKey[0] ? (sortKey[1] > 0 ? ' ▲' : ' ▼') : '';
-    return `<th class="${gl}"${c.sort && opt.sort ? ` data-sort="${c.sort}"` : ''}>${c.h}${arrow}</th>`; }).join('') + '</tr></thead><tbody>';
+    return `<th class="${gl}"${c.sort && opt.sort ? ` data-sort="${c.sort}"` : ''}>${c.h}${tipI(c.tip)}${arrow}</th>`; }).join('') + '</tr></thead><tbody>';
   if (!rows.length) h += `<tr><td colspan="${cols.length}" class="empty">ไม่มีข้อมูลตามตัวกรอง</td></tr>`;
   for (const r of rows) {
     h += `<tr class="${r._cls || ''}">` + cols.map((c, i) => { const gl = c.g && groups.find((g) => g.i === i) ? ' gl' : ''; const v = c.v(r);
@@ -543,28 +546,29 @@ function toSheet(name, t, title) {
   const clean = (x) => String(x || '').replace(/<[^>]+>/g, '').replace('●', '').trim();
   const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : (c.h === 'MoM %' || c.h === 'WoW %') ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : 'num';
   const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (/Cover/.test(c.h) && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
-  return { name, title, groups: t.cols.map((c) => clean(c.g)), head: t.cols.map((c) => clean(c.h)), body, rowCls: t.rows.map((r) => r._cls || ''), kinds: t.cols.map(kind) };
+  return { name, title, groups: t.cols.map((c) => clean(c.g)), head: t.cols.map((c) => clean(c.h) + (c.tip ? ` (${c.tip})` : '')), body, rowCls: t.rows.map((r) => r._cls || ''), kinds: t.cols.map(kind) };
 }
 
 // ---------- weekly comparison columns (sections 1 and 2)
 function weeklyCols(mi, first) {
   const cols = [first, { h: 'Target เดือน', v: (r) => T(r), f: tgtF }];
   const P = (r) => S.metric === 'q' ? r.pu : r.pn, PF = (r) => S.metric === 'q' ? r.fu : r.fn;
-  const mg = `MoM เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame}`;
+  const mg = `MoM vs ${TH[mi.prevM - 1]}`;
   cols.push({ g: 'MTD', h: 'Actual', v: (r) => V(r), f: num }, { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
     { g: `ถึงวันที่ ${mi.asofDay}`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
     { g: `ถึงวันที่ ${mi.asofDay}`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
     { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
     { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct },
-    { g: mg, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
+    { g: mg, gtip: `${THF[mi.m - 1]} 1–${mi.asofDay} เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame} (ช่วงวันเดียวกัน)`, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
     { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
     { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: num });
   const C = (r) => S.metric === 'q' ? r.cu : r.cn, Q = (r) => S.metric === 'q' ? r.qu : r.qn, G = (r) => S.metric === 'q' ? r.gu : r.gn;
-  const wg = `WoW · W${mi.wk} (${shortD(mi.cwFrom)}–${shortD(mi.ref)}) เทียบ W${mi.pwk}`;
-  cols.push({ g: wg, h: `W${mi.wk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, v: (r) => C(r), f: num },
-    { g: wg, h: `W${mi.pwk} ${mi.fullWeek ? '' : `วันเดียวกัน (${shortD(mi.pwFrom)}–${shortD(mi.pwSame)})`}`.trim(), v: (r) => Q(r), f: num },
+  const wg = `WoW · W${mi.wk} vs W${mi.pwk}`;
+  const wgt = `W${mi.wk} = ${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`} เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : 'วันเดียวกัน'} = ${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)}`;
+  cols.push({ g: wg, gtip: wgt, h: `W${mi.wk}`, tip: `${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, v: (r) => C(r), f: num },
+    { g: wg, h: mi.fullWeek ? `W${mi.pwk}` : `W${mi.pwk} วันเดียวกัน`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)}`, v: (r) => Q(r), f: num },
     { g: wg, h: 'WoW %', p: 1, v: (r) => Q(r) > 0 ? C(r) / Q(r) - 1 : null, f: (v, r) => !(Q(r) > 0) && C(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(Q(r) > 0) && C(r) > 0 ? 'ใหม่' : v == null ? '' : v },
-    ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, v: (r) => G(r), f: num }]));
+    ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.pwTo)}`, v: (r) => G(r), f: num }]));
   return cols;
 }
 const portionNote = (mi) => `Target ถึงวันนี้ = Target เดือน ÷ ${mi.days} วัน × ${mi.asofDay} วัน (${Math.round(mi.todate * 1000) / 10}% ของเดือน) · ข้อมูลถึงวันที่ ${mi.asofDay} จาก ${mi.days} วัน · WoW = สัปดาห์ ISO จันทร์–อาทิตย์ · หน่วย: ${unit()}`;
@@ -1047,9 +1051,9 @@ function sTrend(mi) {
   const T0 = { name: 'รวมทั้งหมด', _cls: 'tot', w: tot, c: cT, p: pT }; out.push(T0);
   const cols = [{ h: dim === 'model' ? 'Model' : dim === 'area' ? 'Region / Area' : dim === 'zone' ? 'Region' : 'ประเภทสาขา', v: (r) => r.name, cls: 't' }];
   B.forEach((b, i) => cols.push({ g: gl, h: b.l, v: (r) => r.w[i], f: (v) => v ? num(v) : '<span class="na">–</span>', cls: b.cur ? 'wcur' : '' }));
-  const cg = `เทียบ · ${cur.l}`;
-  cols.push({ g: cg, h: cur.l, v: (r) => r.c, f: (v) => `<b>${num(v)}</b>` });
-  comps.forEach((x, i) => { cols.push({ g: cg, h: x.l, v: (r) => r.p[i], f: num });
+  const cg = 'เทียบ'; const sh = (t) => t.replace(/\s*\(.*\)\s*$/, ''); const tp = (t) => (t.match(/\((.*)\)\s*$/) || [])[1] || '';
+  cols.push({ g: cg, h: sh(cur.l), tip: tp(cur.l), v: (r) => r.c, f: (v) => `<b>${num(v)}</b>` });
+  comps.forEach((x, i) => { cols.push({ g: cg, h: sh(x.l), tip: tp(x.l), v: (r) => r.p[i], f: num });
     if (!x.nopct) cols.push({ g: cg, h: x.pl, p: 1, v: (r) => r.p[i] > 0 ? r.c / r.p[i] - 1 : null, f: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '<span class="na">ไม่มีข้อมูลปีก่อน</span>' : '<span class="up">ใหม่</span>') : momF(v), x: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '' : 'ใหม่') : v == null ? '' : v }); });
   const t = renderTable($('#t-wk'), cols, out);
   const tw = $('#t-wk'); requestAnimationFrame(() => { const th = tw.querySelector('th.wcur'); if (th) tw.scrollLeft = Math.max(0, th.offsetLeft - tw.clientWidth + 420); });
@@ -1182,6 +1186,15 @@ function multiSelect(root, key, allLab, getOpts, onChange, searchable) {
   lab();
   return { refresh: () => { lab(); if (!pop.hidden) draw(); } };
 }
+// hint popover for ⓘ buttons in table headers (click / tap; hover shows the native tooltip)
+document.addEventListener('click', (e) => {
+  const old = document.querySelector('.tippop'); const b = e.target.closest && e.target.closest('.tip');
+  if (old) { const same = b && old.dataset.for === b.dataset.tip; old.remove(); if (same) return; }
+  if (!b) return; e.stopPropagation();
+  const p = document.createElement('div'); p.className = 'tippop'; p.textContent = b.dataset.tip; p.dataset.for = b.dataset.tip; document.body.appendChild(p);
+  const r = b.getBoundingClientRect(); const w = p.offsetWidth; p.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; p.style.top = (r.bottom + 6) + 'px';
+}, true);
+window.addEventListener('scroll', () => { const o = document.querySelector('.tippop'); if (o) o.remove(); }, true);
 function initControls() {
   fillSelect($('#f-month'), months.map((m) => [m, `${THF[+m.slice(5) - 1]} ${+m.slice(0, 4) + 543}`]), S.month);
   const MS = {};

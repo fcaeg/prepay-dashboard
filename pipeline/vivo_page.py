@@ -18,8 +18,8 @@ TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.
 
 def main():
     fp = os.path.join(HERE, 'out', 'vivo_data.json')
-    if not os.path.exists(fp):
-        import vivo; vivo.build()
+    # always rebuild from pipeline/state (out/ is not in git, so a local copy can be stale)
+    import vivo; vivo.build()
     data = open(fp, encoding='utf-8').read()
     lock = json.load(open(os.path.join(HERE, 'vivo_lock.json')))
     payload = json.dumps(seal(data.encode('utf-8'), lock), separators=(',', ':'))
