@@ -1341,7 +1341,7 @@ function initControls() {
   window.addEventListener('resize', setBar); setTimeout(setBar, 0);
   document.getElementById('filters').addEventListener('change', fcount);
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
-  const days = [...new Set(D.sales.map((r) => r[0]))].sort().reverse().slice(0, 31);
+  const days = [...new Set(D.sales.map((r) => r[0]).filter((d) => d.slice(0, 7) === LATEST.slice(0, 7)))].sort().reverse(); // current month only
   S.day = days[0] || ''; fillSelect($('#f-day'), days.map((d, i) => [d, `${thDate(d)}${i === 0 ? ' (ล่าสุด)' : ''} · ${['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'][new Date(d + 'T00:00:00').getDay()]}`]), S.day);
   $('#f-day').onchange = (e) => { S.day = e.target.value; render(); };
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
