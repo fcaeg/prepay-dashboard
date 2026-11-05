@@ -274,9 +274,9 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 
   <section class="card" id="s-area" hidden>
     <div class="card-h"><h2>ยอดขายราย Area (15 เขต) จัดกลุ่มตาม Region</h2><span class="spacer"></span><button class="btn" data-x="area">⤓ Excel</button></div>
-    <div class="tb" id="area-tb"></div>
     <p class="note" id="n-area"></p>
     <div class="tw" id="t-area"></div>
+    <div class="tb" id="area-tb" style="margin-top:16px"></div>
   </section>
 
   <section class="card" id="s-shop" hidden>
@@ -613,49 +613,40 @@ function areaTopBottom(mi, A) {
   const box = $('#area-tb');
   if (areas.length < 2 || !mi.asofDay) { box.innerHTML = ''; return null; }
   const n = Math.min(3, Math.floor(areas.length / 2)); const top = areas.slice(0, n), bot = areas.slice(-n).reverse();
-  // drivers: model families vs target-to-date, shops, PC, stock
+  // drivers: model groups vs target to date, and the shop that made / broke the Area
   const fam = aggregate(mi, (c, k) => SH[c].area + '|' + ((MD[k] && MD[k].family) || k));
+  const sf = aggregate(mi, (c, k) => c + '|' + ((MD[k] && MD[k].family) || k));
   const shp = aggregate(mi, (c) => c);
-  const plan = HASSTOCK ? stockPlan() : null;
   const avgAch = (() => { const t = areas.reduce((a, r) => (a.v += r.act, a.t += r.td, a), { v: 0, t: 0 }); return t.t ? t.v / t.t : null; })();
+  const gapF = (g) => `${g >= 0 ? '+' : '−'}${num(Math.abs(g))}`;
+  const sname = (c) => esc(SH[c].n.replace(/^True Shop /i, ''));
+  const famOf = (prefix) => [...sf.entries()].filter(([k]) => k.startsWith(prefix + '|')).map(([k, x]) => ({ f: k.slice(prefix.length + 1), gap: V(x) - T(x) * mi.todate, act: V(x) }));
   const why = (r) => {
-    const fs = [...fam.entries()].filter(([k]) => k.startsWith(r.k + '|')).map(([k, x]) => ({ f: k.slice(r.k.length + 1), act: V(x), td: T(x) * mi.todate, prv: S.metric === 'q' ? x.pu : x.pn }))
-      .map((f) => Object.assign(f, { gap: f.act - f.td, ach: f.td > 0 ? f.act / f.td : null }));
-    const shops = [...shp.entries()].filter(([c]) => SH[c] && SH[c].area === r.k).map(([c, x]) => ({ c, n: SH[c].n.replace(/^True Shop /i, ''), pc: SH[c].pc, act: V(x), tf: T(x), td: T(x) * mi.todate }));
-    const tShops = shops.filter((s) => s.tf > 0), ns = tShops.filter((s) => s.act <= 0), hit = tShops.filter((s) => s.td > 0 && s.act >= s.td);
-    const pcA = shops.filter((s) => s.pc > 0).reduce((a, s) => (a.v += s.act, a.t += s.td, a.n++, a), { v: 0, t: 0, n: 0 }), npA = shops.filter((s) => !(s.pc > 0)).reduce((a, s) => (a.v += s.act, a.t += s.td, a.n++, a), { v: 0, t: 0, n: 0 });
-    const topShop = shops.slice().sort((a, b) => b.act - a.act)[0];
-    const risk = plan ? plan.risk.filter((x) => x.area === r.k) : [];
-    const good = [], bad = [];
-    const up = fs.filter((f) => f.gap > 0 && f.td > 0).sort((a, b) => b.gap - a.gap).slice(0, 2);
-    const dn = fs.filter((f) => f.gap < 0).sort((a, b) => a.gap - b.gap).slice(0, 2);
-    const nt = fs.filter((f) => !(f.td > 0) && f.act > 0).sort((a, b) => b.act - a.act)[0];
-    up.forEach((f) => good.push(`<b>${esc(f.f)}</b> ขายเกินเป้าถึงวันนี้ ${num(f.gap)} ${u} (%ACH ${Math.round(f.ach * 100)}%)`));
-    if (nt && nt.act > 0) good.push(`รุ่นนอก Target <b>${esc(nt.f)}</b> ช่วยเพิ่มยอด ${num(nt.act)} ${u}`);
-    if (r.mom != null && r.mom > 0.05) good.push(`โตจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}`);
-    if (r.wow != null && r.wow > 0.05) good.push(`สัปดาห์นี้โต ${sgn(r.wow)} เทียบสัปดาห์ก่อน`);
-    if (tShops.length && hit.length / tShops.length >= 0.5) good.push(`สาขาเดินถึงเป้า ${hit.length} จาก ${tShops.length} สาขา`);
-    if (topShop && topShop.act > 0 && r.act > 0 && topShop.act / r.act >= 0.2) good.push(`สาขาหลัก <b>${esc(topShop.n)}</b> ทำยอด ${Math.round(topShop.act / r.act * 100)}% ของ Area`);
-    if (pcA.t > 0 && npA.t > 0 && pcA.v / pcA.t > npA.v / npA.t + 0.15) good.push(`สาขามี PC เดิน ${Math.round(pcA.v / pcA.t * 100)}% vs ไม่มี PC ${Math.round(npA.v / npA.t * 100)}%`);
-    dn.forEach((f) => bad.push(`<b>${esc(f.f)}</b> ขาดเป้าถึงวันนี้ ${num(-f.gap)} ${u} (%ACH ${f.ach == null ? '–' : Math.round(f.ach * 100) + '%'})`));
-    if (ns.length) bad.push(`สาขา No Sale ${ns.length} จาก ${tShops.length} สาขา${ns.length <= 3 ? ` (${ns.map((s) => esc(s.n)).join(', ')})` : ''}`);
-    if (r.mom != null && r.mom < -0.05) bad.push(`ลดลงจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}`);
-    if (r.wow != null && r.wow < -0.05) bad.push(`สัปดาห์นี้ลดลง ${sgn(r.wow)} เทียบสัปดาห์ก่อน`);
-    if (pcA.t > 0 && npA.t > 0 && npA.v / npA.t > pcA.v / pcA.t + 0.15) bad.push(`สาขามี PC เดินแค่ ${Math.round(pcA.v / pcA.t * 100)}% (ไม่มี PC ${Math.round(npA.v / npA.t * 100)}%)`);
-    if (risk.length) { const rm = new Map(); risk.forEach((x) => rm.set(x.k, (rm.get(x.k) || 0) + 1)); const tm = [...rm.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2);
-      bad.push(`Stock เสี่ยงขาด ${risk.length} รายการ (${tm.map(([k, c]) => `${esc((MD[k] || { name: k }).name.replace(/^VIVO /, ''))} ${c} สาขา`).join(', ')})`); }
-    return { good, bad };
+    const fs = [...fam.entries()].filter(([k]) => k.startsWith(r.k + '|')).map(([k, x]) => ({ f: k.slice(r.k.length + 1), gap: V(x) - T(x) * mi.todate, td: T(x) * mi.todate, ach: T(x) > 0 ? V(x) / (T(x) * mi.todate) : null, act: V(x) }));
+    const shops = [...shp.entries()].filter(([c]) => SH[c] && SH[c].area === r.k).map(([c, x]) => { const td = T(x) * mi.todate, pv = S.metric === 'q' ? x.pu : x.pn;
+      return { c, act: V(x), td, gap: V(x) - td, ach: td > 0 ? V(x) / td : null, share: r.td > 0 ? td / r.td : 0, mom: pv > 0 ? V(x) / pv - 1 : null, pc: SH[c].pc }; });
+    const tShops = shops.filter((x) => x.td > 0), ns = tShops.filter((x) => x.act <= 0).length;
+    const fUp = fs.filter((f) => f.gap > 0).sort((a, b) => b.gap - a.gap)[0], fDn = fs.filter((f) => f.gap < 0).sort((a, b) => a.gap - b.gap)[0];
+    const best = shops.filter((x) => x.gap > 0).sort((a, b) => b.gap - a.gap)[0], worst = tShops.filter((x) => x.gap < 0).sort((a, b) => a.gap - b.gap)[0];
+    const shopLine = (x, good) => { if (!x) return null; const f = famOf(x.c).sort((a, b) => good ? b.gap - a.gap : a.gap - b.gap)[0];
+      const hc = x.share >= 0.15 ? ' <span class="pc">High Contribute</span>' : '';
+      return `${good ? 'สาขาเด่น' : 'สาขาฉุด'} <b>${sname(x.c)}</b>${hc} เดิน ${x.ach == null ? '–' : Math.round(x.ach * 100) + '%'} (เป้า ${Math.round(x.share * 100)}% ของ Area)`
+        + (f && (good ? f.gap > 0 : f.gap < 0) ? ` · ${good ? 'มาจาก' : 'ตกจาก'} ${esc(f.f)} ${gapF(f.gap)}` : '') + (x.mom != null ? ` · MoM ${sgn(x.mom)}` : '') + (x.pc > 0 ? ' · มี PC' : ''); };
+    return { fUp: fUp && `${esc(fUp.f)} เกินเป้า ${gapF(fUp.gap)} ${u}`, fDn: fDn && `${esc(fDn.f)} ขาดเป้า ${gapF(fDn.gap)} ${u}`,
+      sGood: shopLine(best, true), sBad: shopLine(worst, false), ns: ns ? `No Sale ${ns}/${tShops.length} สาขา` : null };
   };
-  const card = (r, i, isTop) => { const w = why(r); const main = isTop ? w.good : w.bad, other = isTop ? w.bad : w.good;
-    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${num(r.act)} / เป้าถึงวันนี้ ${tgtF(r.td)} ${u}${r.mom != null ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
-      + `<div class="lb ${isTop ? 'g' : 'r'}">${isTop ? '▲ ทำได้ดีจาก' : '▼ ยอดไม่ดีจาก'}</div><ul>${(main.length ? main : ['ไม่มีปัจจัยเด่น']).slice(0, 4).map((x) => `<li>${x}</li>`).join('')}</ul>`
-      + (other.length ? `<div class="lb ${isTop ? 'r' : 'g'}">${isTop ? '▼ ต้องระวัง' : '▲ จุดที่ยังทำได้ดี'}</div><ul>${other.slice(0, 2).map((x) => `<li>${x}</li>`).join('')}</ul>` : '') + '</div>'; };
-  box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· เรียงตาม %ACH ถึงวันนี้ (เฉลี่ยทุก Area ${avgAch == null ? '–' : Math.round(avgAch * 100) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
-    + `<div class="col"><h3>⚠ Bottom ${n} Area</h3>${bot.map((r, i) => card(r, i, false)).join('')}</div>`;
+  const card = (r, i, isTop) => { const w = why(r);
+    const main = (isTop ? [w.fUp, w.sGood] : [w.fDn, w.sBad, w.ns]).filter(Boolean), other = (isTop ? [w.fDn || w.sBad] : [w.sGood || w.fUp]).filter(Boolean);
+    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${num(r.act)} ${u}${r.mom != null ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
+      + `<ul>${main.map((x) => `<li><span class="${isTop ? 'up' : 'dn'}">${isTop ? '▲' : '▼'}</span> ${x}</li>`).join('')}${other.map((x) => `<li><span class="${isTop ? 'dn' : 'up'}">${isTop ? '▼' : '▲'}</span> ${x}</li>`).join('')}</ul></div>`; };
+  box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· %ACH ถึงวันนี้ (เฉลี่ย ${avgAch == null ? '–' : Math.round(avgAch * 100) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
+    + `<div class="col"><h3>⚠ Bottom ${n} Area</h3>${bot.map((r, i) => card(r, i, false)).join('')}</div>`
+    + `<p class="note" style="grid-column:1/-1;margin:0">▲ = ปัจจัยที่ช่วย · ▼ = ปัจจัยที่ฉุด · สาขาเด่น / สาขาฉุด = สาขาที่ยอดเกิน / ขาดเป้าถึงวันนี้มากที่สุดใน Area · <span class="pc">High Contribute</span> = สาขาที่มีเป้า ≥ 15% ของ Area</p>`;
   const strip = (h) => h.replace(/<[^>]+>/g, '');
   const lines = [];
-  top.forEach((r, i) => { const w = why(r); lines.push([`Top ${i + 1}`, r.k, r.ach, r.act, r.td, w.good.map(strip).join(' | '), w.bad.map(strip).join(' | ')]); });
-  bot.forEach((r, i) => { const w = why(r); lines.push([`Bottom ${i + 1}`, r.k, r.ach, r.act, r.td, w.good.map(strip).join(' | '), w.bad.map(strip).join(' | ')]); });
+  const L = (w, good) => (good ? [w.fUp, w.sGood] : [w.fDn, w.sBad, w.ns]).filter(Boolean).map(strip).join(' | ');
+  top.forEach((r, i) => { const w = why(r); lines.push([`Top ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
+  bot.forEach((r, i) => { const w = why(r); lines.push([`Bottom ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
   return { name: '3 Top-Bottom Area', title: `Top ${n} / Bottom ${n} Area · %ACH ถึงวันที่ ${mi.asofDay} ${THF[mi.m - 1]} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: Array(7).fill(''),
     head: ['อันดับ', 'Area', '%ACH ถึงวันนี้', 'ยอดขาย', 'Target ถึงวันนี้', 'ทำได้ดีจาก', 'ยอดไม่ดีจาก'], kinds: ['text', 'text', 'ach', 'num', 'num', 'note', 'note'], body: lines, rowCls: lines.map(() => '') };
 }
