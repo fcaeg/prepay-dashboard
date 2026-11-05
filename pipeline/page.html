@@ -1798,7 +1798,7 @@ dash.draw('c_rank_zone', (el) => { el.replaceChildren(); const all = PC.rows('ar
     for (const [a, b] of rows) { const dt = document.createElement('dt'); dt.textContent = a; const dd = document.createElement('dd'); dd.textContent = b; dl.append(dt, dd); }
     const mo = dl.children[7]; if (mom != null) mo.style.color = mom >= 0 ? 'var(--color-ok)' : 'var(--color-bad)';
     const dv = dl.children[5]; if (y[f.ach] != null) dv.style.color = rkCol(y[f.ach]);
-    c.append(top, big, dl); el.append(c); }); });
+    c.append(top, big, dl); if (window.ZDAY) ZDAY(c, x.area); el.append(c); }); });
 const rfNote = (el, daily) => { const all = PC.rows('area_rank'); const r = all && all[0]; const d = rDate(); const st = PC.P(); const bits = ['Prepay Dashboard', PC.isNet() ? 'Net Amount' : 'QTY'];
   if (daily && d) bits.push('วันที่ ' + PC.day(d)); else if (r) bits.push('ข้อมูลถึง ' + PC.day(r.today) + ' (' + r.elapsed + '/' + r.days + ' วัน)');
   if (st.area !== 'ALL') bits.push(st.area); el.textContent = bits.join(' · '); };
