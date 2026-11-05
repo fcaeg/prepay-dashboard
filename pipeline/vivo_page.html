@@ -437,7 +437,13 @@ const ZONES = ['BMA', 'UPC I', 'UPC II'];
 const SH = Object.fromEntries(D.shops.map((s) => [s.c, s]));
 const MD = Object.fromEntries(D.models.map((m) => [m.k, m]));
 const MORDER = Object.fromEntries(D.models.map((m, i) => [m.k, i]));
-const LATEST = (D.meta.sales_asof || '').slice(0, 10);
+const LATEST_ALL = (D.meta.sales_asof || '').slice(0, 10);
+// every tab except "ยอดขายวันนี้" works on Day-1: data up to yesterday (Bangkok time)
+const TODAY_BKK = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+const CUT = (() => { const y = new Date(TODAY_BKK + 'T00:00:00'); y.setDate(y.getDate() - 1); const yd = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`; return LATEST_ALL > yd ? yd : LATEST_ALL; })();
+D.salesAll = D.sales; D.sales = D.sales.filter((r) => r[0] <= CUT);
+D.staffAll = D.staff; if (D.staff) D.staff = { e: D.staff.e, r: D.staff.r.filter((r) => r[0] <= CUT) };
+const LATEST = CUT;
 const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.keys(D.targets)])].sort().reverse();
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
@@ -920,7 +926,7 @@ function downloadPCSummary() {
   const tt = P.rows.reduce((a, r) => (a.tf += r.tf, a.act += r.act, a.td += r.td, a.pv += r.pv, a), { tf: 0, act: 0, td: 0, pv: 0 });
   tierRows.push(['รวมสาขาที่มี PC', P.rows.length, 1, tt.tf, tt.act, ratio(tt.act, tt.td)]);
   const best = P.rows.filter((r) => r.ach != null && r.act > 0).sort((a, b) => b.ach - a.ach).slice(0, 5);
-  const lines = [`ข้อมูลยอดขายถึง ${thDate(D.meta.sales_asof)} · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
+  const lines = [`ข้อมูลยอดขายถึง ${thDate(LATEST)} (Day-1) · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
     `ยอดขายรวม ${num(tt.act)} ${u} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
     ...TIERS.map((t) => { const n = P.rows.filter((r) => r.tk === t.k).length; return `${t.name}: ${n} สาขา`; }),
     `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา`,
@@ -1150,7 +1156,7 @@ function sToday() {
   const y1 = addDays(d, -1), w1 = addDays(d, -7); const ym = d.slice(0, 7); const dim = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate();
   const vv = (u, n) => S.metric === 'q' ? u : n;
   const agg = (keyFn) => { const m = new Map(); const g = (k) => { let x = m.get(k); if (!x) m.set(k, x = { d: 0, y: 0, w: 0, t: 0, u: 0, n: 0, shops: new Set(), tshops: new Set() }); return x; };
-    for (const [dd, c, k, u, n] of D.sales) { if ((dd !== d && dd !== y1 && dd !== w1) || !okShop(c) || !okModel(k)) continue; const v = vv(u, n);
+    for (const [dd, c, k, u, n] of D.salesAll) { if ((dd !== d && dd !== y1 && dd !== w1) || !okShop(c) || !okModel(k)) continue; const v = vv(u, n);
       for (const key of [].concat(keyFn(c, k))) { const x = g(key); if (dd === d) { x.d += v; x.u += u; x.n += n; if (u > 0) x.shops.add(c); } else if (dd === y1) x.y += v; else x.w += v; } }
     for (const [c, k, tu, tn] of (D.targets[ym] || [])) { if (!okShop(c) || !okModel(k)) continue; for (const key of [].concat(keyFn(c, k))) { const x = g(key); x.t += vv(tu, tn) / dim; if (tu > 0 || tn > 0) x.tshops.add(c); } }
     return m; };
@@ -1175,13 +1181,13 @@ function sToday() {
   mrows.push(sumR('รวมทั้งหมด', [...M.values()], 'tot'));
   const tM = renderTable($('#t-td-model'), cols({ h: 'Model', v: (r) => r.name, cls: 't' }), mrows);
   // shops
-  const SHP = new Map(); for (const [dd, c, k, u, n] of D.sales) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = SHP.get(c) || { v: 0, u: 0, m: new Map() }; x.v += vv(u, n); x.u += u; x.m.set(k, (x.m.get(k) || 0) + u); SHP.set(c, x); }
+  const SHP = new Map(); for (const [dd, c, k, u, n] of D.salesAll) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = SHP.get(c) || { v: 0, u: 0, m: new Map() }; x.v += vv(u, n); x.u += u; x.m.set(k, (x.m.get(k) || 0) + u); SHP.set(c, x); }
   const srows = [...SHP.entries()].filter(([, x]) => x.u > 0 || x.v > 0).map(([c, x]) => ({ c, name: SH[c].n.replace(/^True Shop /i, ''), area: SH[c].area, pc: SH[c].pc, v: x.v, u: x.u,
     top: [...x.m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, q]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${q})`).join(', ') })).sort((a, b) => b.v - a.v);
   const tS = renderTable($('#t-td-shop'), [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
     { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }, { h: 'รุ่นที่ขาย', v: (r) => r.top, cls: 't' }], srows);
   // staff (TSM only)
-  const ST = new Map(); for (const [dd, c, k, e, u, n] of (D.staff ? D.staff.r : [])) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = ST.get(e) || { e, name: D.staff.e[e] || e, c, v: 0, u: 0 }; x.v += vv(u, n); x.u += u; ST.set(e, x); }
+  const ST = new Map(); for (const [dd, c, k, e, u, n] of (D.staffAll ? D.staffAll.r : [])) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = ST.get(e) || { e, name: D.staffAll.e[e] || e, c, v: 0, u: 0 }; x.v += vv(u, n); x.u += u; ST.set(e, x); }
   const strows = [...ST.values()].filter((x) => x.u > 0 || x.v > 0).sort((a, b) => b.v - a.v);
   const tE = renderTable($('#t-td-staff'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'สาขา', v: (r) => SH[r.c] ? SH[r.c].n.replace(/^True Shop /i, '') : r.c, cls: 't' },
     { h: `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, { h: 'เครื่อง', v: (r) => r.u, f: num }], strows);
@@ -1189,7 +1195,7 @@ function sToday() {
   // KPIs
   const kc = (l, v, sub, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
   const ach = ratio(TOT.d, TOT.t), dod = pctD(TOT.d, TOT.y), wow = pctD(TOT.d, TOT.w); const fmtP = (x) => x == null ? '–' : `<span class="${x >= 0 ? 'up' : 'dn'}">${sgn(x)}</span>`;
-  const isLatest = d === LATEST; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
+  const isLatest = d === LATEST_ALL; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
   const noYet = [...TOT.tshops].filter((c) => !TOT.shops.has(c)).length;
   const bar = (p) => p == null ? '' : `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>`;
   $('#td-kpi').innerHTML = `<div class="kpi main"><div class="l">ยอดขาย ${thDate(d)}${tm ? ` · ถึง ${tm} น.` : ''}</div><div class="v">${num(TOT.d)} <span style="font-size:14px;font-weight:500;color:var(--muted)">${unit()}</span></div><div class="s">${num(TOT.u)} เครื่อง · ขายได้ ${num(TOT.shops.size)} สาขา · ยังไม่มียอด ${num(noYet)} จาก ${num(TOT.tshops.size)} สาขาที่มี Target</div></div>`
@@ -1341,7 +1347,7 @@ function initControls() {
   window.addEventListener('resize', setBar); setTimeout(setBar, 0);
   document.getElementById('filters').addEventListener('change', fcount);
   $('#f-month').onchange = (e) => { S.month = e.target.value; render(); };
-  const days = [...new Set(D.sales.map((r) => r[0]).filter((d) => d.slice(0, 7) === LATEST.slice(0, 7)))].sort().reverse(); // current month only
+  const days = [...new Set(D.salesAll.map((r) => r[0]).filter((d) => d.slice(0, 7) === LATEST_ALL.slice(0, 7)))].sort().reverse(); // current month only
   S.day = days[0] || ''; fillSelect($('#f-day'), days.map((d, i) => [d, `${thDate(d)}${i === 0 ? ' (ล่าสุด)' : ''} · ${['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'][new Date(d + 'T00:00:00').getDay()]}`]), S.day);
   $('#f-day').onchange = (e) => { S.day = e.target.value; render(); };
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
@@ -1411,7 +1417,7 @@ function requireDL(fn) {
 function filterText() {
   const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${setLab(S.zone, 'ทั้งหมด', undefined, 9)}`, `Area: ${setLab(S.area, 'ทั้งหมด', undefined, 15)}`,
     `ประเภท: ${setLab(S.type, 'ทั้งหมด', undefined, 9)}`, `PC: ${setLab(S.pc, 'ทั้งหมด', (x) => PCLAB[x])}`, `Model: ${modelLabel(20)}`];
-  return f.join('  |  ') + `  |  ยอดขายถึง ${thDate(D.meta.sales_asof)} · Stock ณ ${thDate(D.meta.stock_asof)}`;
+  return f.join('  |  ') + `  |  ข้อมูลถึง ${thDate(S.tab === 'today' ? D.meta.sales_asof : LATEST)}${S.tab === 'today' ? '' : ' (Day-1)'} · Stock ณ ${thDate(D.meta.stock_asof)}`;
 }
 function downloadXlsx(sheets, fname) {
   sheets = sheets.filter(Boolean); const used = new Set();
@@ -1502,7 +1508,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ยอดขายถึง <b>${thDate(D.meta.sales_asof)}</b>${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
+$('#asof').innerHTML = `<span>ข้อมูลวิเคราะห์ถึง <b>${thDate(LATEST)} (Day-1)</b> · ยอดวันนี้ถึง ${thDate(D.meta.sales_asof)}${D.meta.hist_asof ? ` <span title="ถึง ${thDate(D.meta.hist_asof)} ใช้ข้อมูลระบบส่วนกลาง หลังจากนั้นใช้ TSM (POS)">(ระบบส่วนกลางถึง ${thDate(D.meta.hist_asof)}${D.meta.sales_asof.slice(0, 10) > D.meta.hist_asof ? ' + TSM' : ''})</span>` : ''}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
 initControls(); render();
 </script>
 </body>
