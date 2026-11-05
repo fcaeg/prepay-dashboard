@@ -159,6 +159,14 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .tbc ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; } .tbc li { margin: 2px 0; }
 .tbc .lb { font-size: 12px; font-weight: 600; margin-top: 6px; } .tbc .lb.g { color: var(--ok); } .tbc .lb.r { color: var(--bad); }
 .nopc { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 4px; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+.tdk { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.tdk .kpi.main { background: var(--accent-soft); border-color: transparent; } .tdk .kpi.main .v { font-size: 28px; }
+.tdk .kpi .v { font-size: 22px; }
+.tdz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.tdz .z { background: var(--soft); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
+.tdz .z b { font-size: 15px; } .tdz .z .v { font-size: 18px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; } .tdz .z .s { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
+.tdz .z .bar { grid-column: 1 / -1; margin-top: 4px; }
+@media (max-width: 900px) { .tdk { grid-template-columns: 1fr 1fr; } .tdk .kpi.main { grid-column: 1 / -1; } .tdz { grid-template-columns: 1fr; } }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
 h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 /* ---- tablet & phone ---- */
@@ -256,14 +264,15 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <div class="f"><select id="f-day" aria-label="เลือกวัน"></select></div>
       <span class="spacer"></span><button class="btn" data-x="today">⤓ Excel</button></div>
     <p class="note" id="n-today"></p>
-    <div class="cmp" id="td-kpi"></div>
-    <div class="two">
-      <div><h3>ราย Region / Area</h3><div class="tw" id="t-td-area" style="max-height:none"></div></div>
-      <div><h3>ราย Model</h3><div class="tw" id="t-td-model" style="max-height:none"></div></div>
-    </div>
-    <div class="two" style="margin-top:14px">
-      <div><h3>สาขาที่ขายได้มากสุดวันนี้</h3><div class="tw" id="t-td-shop"></div></div>
-      <div><h3>พนักงานที่ขายได้วันนี้ (TSM)</h3><p class="note" id="n-td-staff"></p><div class="tw" id="t-td-staff"></div></div>
+    <div class="tdk" id="td-kpi"></div>
+    <div class="tdz" id="td-zone"></div>
+    <div class="card-h" style="margin:6px 0 8px"><h3 style="margin:0">รายละเอียด</h3>
+      <div class="seg" id="f-tdview"><button data-v="area" aria-pressed="true">ราย Area</button><button data-v="model" aria-pressed="false">ราย Model</button></div></div>
+    <div class="tw" id="t-td-area" style="max-height:none"></div>
+    <div class="tw" id="t-td-model" style="max-height:none" hidden></div>
+    <div class="two" style="margin-top:16px">
+      <div><h3>สาขาที่ขายได้มากสุดวันนี้</h3><div class="tw" id="t-td-shop" style="max-height:480px"></div></div>
+      <div><h3>พนักงานที่ขายได้วันนี้ (TSM)</h3><p class="note" id="n-td-staff"></p><div class="tw" id="t-td-staff" style="max-height:480px"></div></div>
     </div>
   </section>
 
@@ -433,7 +442,7 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
 try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
 const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
@@ -1155,7 +1164,7 @@ function sToday() {
   for (const zn of [...ZONES, 'อื่น ๆ']) { const ks = AREAS.filter((a) => zoneOf(a) === zn && A.has(a)); if (!ks.length) continue;
     arows.push(sumR(zn, ks.map((k) => A.get(k)), 'sub')); for (const k of ks) arows.push(Object.assign({ name: k, _cls: 'ind' }, A.get(k))); }
   const TOT = sumR('รวมทั้งหมด', [...A.values()], 'tot'); arows.push(TOT);
-  const acols = cols({ h: 'Region / Area', v: (r) => r.name, cls: 't' }); acols.splice(2, 0, { g: thDate(d), h: 'สาขาที่ขายได้', v: (r) => r.shops.size, f: (v, r) => `${num(v)}<span class="na"> / ${num(r.tshops.size)}</span>`, x: (v, r) => `${v} / ${r.tshops.size}` });
+  const acols = cols({ h: 'Region / Area', v: (r) => r.name, cls: 't' }); acols.splice(4, 0, { g: thDate(d), h: 'สาขาขายได้', v: (r) => r.shops.size, f: (v, r) => `${num(v)}<span class="na"> / ${num(r.tshops.size)}</span>`, x: (v, r) => `${v} / ${r.tshops.size}` });
   const tA = renderTable($('#t-td-area'), acols, arows);
   // model
   const M = agg((c, k) => k); const isT = (k) => MD[k] && MD[k].tgt; const mrows = []; let grp = null; const keys = [...M.keys()].filter((k) => { const x = M.get(k); return x.d || x.y || x.w || (isT(k) && x.t); })
@@ -1181,10 +1190,16 @@ function sToday() {
   const kc = (l, v, sub, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
   const ach = ratio(TOT.d, TOT.t), dod = pctD(TOT.d, TOT.y), wow = pctD(TOT.d, TOT.w); const fmtP = (x) => x == null ? '–' : `<span class="${x >= 0 ? 'up' : 'dn'}">${sgn(x)}</span>`;
   const isLatest = d === LATEST; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
-  $('#td-kpi').innerHTML = kc(`ยอดขาย ${thDate(d)}${tm ? ` ถึง ${tm} น.` : ''}`, `${num(TOT.d)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${num(TOT.u)} เครื่อง · ${num(TOT.shops.size)} สาขาที่ขายได้`)
-    + kc('%ACH วันนี้ (Target/วัน)', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
-    + kc(`เทียบเมื่อวาน (${shortD(y1)})`, fmtP(dod), `${num(TOT.y)} ${unit()}`) + kc(`เทียบ ${shortD(w1)} (วันเดียวกันสัปดาห์ก่อน)`, fmtP(wow), `${num(TOT.w)} ${unit()}`)
-    + kc('สาขาที่มี Target แต่ยังไม่มียอดวันนี้', num([...TOT.tshops].filter((c) => !TOT.shops.has(c)).length), `จาก ${num(TOT.tshops.size)} สาขาที่มี Target`);
+  const noYet = [...TOT.tshops].filter((c) => !TOT.shops.has(c)).length;
+  const bar = (p) => p == null ? '' : `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>`;
+  $('#td-kpi').innerHTML = `<div class="kpi main"><div class="l">ยอดขาย ${thDate(d)}${tm ? ` · ถึง ${tm} น.` : ''}</div><div class="v">${num(TOT.d)} <span style="font-size:14px;font-weight:500;color:var(--muted)">${unit()}</span></div><div class="s">${num(TOT.u)} เครื่อง · ขายได้ ${num(TOT.shops.size)} สาขา · ยังไม่มียอด ${num(noYet)} จาก ${num(TOT.tshops.size)} สาขาที่มี Target</div></div>`
+    + kc('%ACH วันนี้', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
+    + kc(`เทียบเมื่อวาน · ${shortD(y1)}`, fmtP(dod), `${num(TOT.y)} ${unit()}`)
+    + kc(`เทียบสัปดาห์ก่อน · ${shortD(w1)}`, fmtP(wow), `${num(TOT.w)} ${unit()}`);
+  // region strip
+  $('#td-zone').innerHTML = arows.filter((r) => r._cls === 'sub').map((r) => { const a = ratio(r.d, r.t), dd = pctD(r.d, r.y);
+    return `<div class="z"><b>${esc(r.name)}</b><span class="v">${num(r.d)}</span><span class="s">%ACH ${a == null ? '–' : Math.round(a * 100) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
+  $('#t-td-area').hidden = S.tdview !== 'area'; $('#t-td-model').hidden = S.tdview !== 'model';
   $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}ที่มา: ${d > (D.meta.hist_asof || '') ? 'TSM (POS)' : 'ระบบส่วนกลาง'} · Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
   EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
     toSheet('1 วันนี้ รายสาขา', tS, `ยอดขาย ${thDate(d)} รายสาขา`), toSheet('1 วันนี้ รายพนักงาน', tE, `ยอดขาย ${thDate(d)} รายพนักงาน (TSM)`)];
@@ -1332,7 +1347,7 @@ function initControls() {
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
-  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-tper', 'tper'); seg('#f-shopview', 'shopview');
+  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-tper', 'tper'); seg('#f-tdview', 'tdview'); seg('#f-shopview', 'shopview');
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
     for (const t of ['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk']) $('#s-' + t).hidden = t !== S.tab; };
   $('#alert').onclick = () => { if (!$('#alert').classList.contains('okay')) $('#h-risk').scrollIntoView({ behavior: 'smooth' }); };
