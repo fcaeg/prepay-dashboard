@@ -878,7 +878,7 @@ function downloadGapPNG() {
   const W = 1600, pad = 28, gap = 18, cw = (W - pad * 2 - gap * 2) / 3, lh = 26;
   const ctx0 = document.createElement('canvas').getContext('2d');
   // wrap each line to the column width
-  const wrap = (ctx, t, w) => { const out = []; let line = ''; for (const ch of [...t]) { if (ctx.measureText(line + ch).width > w && line) { out.push(line); line = '  ' + ch; } else line += ch; } if (line) out.push(line); return out; };
+  const wrap = (ctx, t, w) => { const M = (x) => ctx.measureText(x).width, IND = '  '; const out = []; let line = ''; const toks = String(t).split(/(\s+)/); for (const tk of toks) { if (!tk) continue; if (M(line + tk) <= w || !line.trim()) { if (M(line + tk) <= w) { line += tk; continue; } for (const ch of [...tk]) { if (M(line + ch) > w && line.trim()) { out.push(line); line = IND + ch; } else line += ch; } continue; } out.push(line.replace(/\s+$/, '')); line = /^\s+$/.test(tk) ? IND : IND + tk; } if (line.trim()) out.push(line); return out; };
   ctx0.font = `15px ${F}`;
   const lines = cols.map(({ b, list }) => list.length ? list.flatMap((r, i) => wrap(ctx0, `${i + 1}. ${r.name.replace(/^True Shop /i, '')} · ${r.area}${b.k === 'g4' ? ' · ' + gapTxt(r) : ''} · PC ${r.pc}`, cw - 32)) : ['ไม่มีสาขา']);
   const top = 150, H = top + 92 + Math.max(...lines.map((l) => l.length)) * lh + 40;
@@ -1282,18 +1282,19 @@ function sheetPNG(sh, tb, fname) {
   const meas = document.createElement('canvas').getContext('2d');
   const txt = (v, k) => v == null || v === '' ? '–' : typeof v === 'number' ? (k === 'ach' || k === 'pct' ? Math.round(v * 100) + '%' : k === 'mom' ? (v >= 0 ? '+' : '') + Math.round(v * 100) + '%' : k === 'cover' ? nf1.format(v) : num(v)) : String(v);
   const nc = sh.head.length, pad = 10, rh = 26, x0 = 24;
-  meas.font = `600 12px ${F}`; const cw = sh.head.map((h, c) => { meas.font = `600 12px ${F}`; let w = meas.measureText(h).width;
+  const hsplit = (h) => { const m = String(h).match(/^(.*?)\s*\((.*)\)\s*$/); return m ? [m[1], m[2]] : [String(h), '']; }; const hh = sh.head.some((h) => hsplit(h)[1]) ? 40 : 26;
+  meas.font = `600 12px ${F}`; const cw = sh.head.map((h, c) => { meas.font = `600 12px ${F}`; const [h1, h2] = hsplit(h); let w = meas.measureText(h1).width; meas.font = `11px ${F}`; w = Math.max(w, meas.measureText(h2).width);
     meas.font = `13px ${F}`; sh.body.forEach((r) => { w = Math.max(w, meas.measureText(txt(r[c], sh.kinds[c])).width + (c === 0 && sh.rowCls[sh.body.indexOf(r)] === 'ind' ? 14 : 0)); }); return Math.ceil(w) + pad * 2; });
   const tw = cw.reduce((a, b) => a + b, 0); const W = Math.max(900, tw + x0 * 2);
   const hasG = sh.groups.some(Boolean);
   // Top / Bottom text blocks
   let tbLines = []; const colW = (W - x0 * 2 - 20) / 2;
-  const wrap = (t, w, font) => { meas.font = font; const out = []; let line = ''; for (const ch of [...t]) { if (meas.measureText(line + ch).width > w && line) { out.push(line); line = '   ' + ch; } else line += ch; } if (line) out.push(line); return out; };
+  const wrap = (t, w, font) => { meas.font = font; const M = (x) => meas.measureText(x).width, IND = '   '; const out = []; let line = ''; const toks = String(t).split(/(\s+)/); for (const tk of toks) { if (!tk) continue; if (M(line + tk) <= w || !line.trim()) { if (M(line + tk) <= w) { line += tk; continue; } for (const ch of [...tk]) { if (M(line + ch) > w && line.trim()) { out.push(line); line = IND + ch; } else line += ch; } continue; } out.push(line.replace(/\s+$/, '')); line = /^\s+$/.test(tk) ? IND : IND + tk; } if (line.trim()) out.push(line); return out; };
   if (tb && tb.body.length) { const tops = tb.body.filter((r) => String(r[0]).startsWith('Top')), bots = tb.body.filter((r) => String(r[0]).startsWith('Bottom'));
     const block = (rows, good) => rows.flatMap((r) => [{ t: `${r[0]} · ${r[1]} · ${Math.round(r[2] * 100)}%`, b: 1, good }, ...String(good ? r[5] : r[6]).split(' | ').filter(Boolean).flatMap((x) => wrap(`${good ? '▲' : '▼'} ${x}`, colW - 16, `12.5px ${F}`).map((t) => ({ t, good })) ), { t: '', sp: 1 }]);
     tbLines = [block(tops, true), block(bots, false)]; }
   const tbH = tbLines.length ? 40 + Math.max(...tbLines.map((l) => l.length)) * 19 : 0;
-  const top = 86, H = top + (hasG ? rh : 0) + rh + sh.body.length * rh + 24 + tbH + 20;
+  const top = 86, H = top + (hasG ? rh : 0) + hh + sh.body.length * rh + 24 + tbH + 20;
   const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc; const c = cv.getContext('2d'); c.scale(sc, sc); c.textBaseline = 'middle';
   c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H);
   c.fillStyle = '#1f3a5f'; c.font = `700 20px ${F}`; c.fillText(sh.title, x0, 28);
@@ -1302,8 +1303,9 @@ function sheetPNG(sh, tb, fname) {
   const GC = ['#dce6f7', '#e3f1e4', '#fbebd7', '#ece3f6', '#ddeff2', '#f6e1e6', '#eef0d8'];
   if (hasG) { let ci = 0, x = x0, gi = 0; while (ci < nc) { let cj = ci; while (cj + 1 < nc && sh.groups[cj + 1] === sh.groups[ci]) cj++; const w = cw.slice(ci, cj + 1).reduce((a, b) => a + b, 0);
       c.fillStyle = sh.groups[ci] ? GC[gi++ % GC.length] : '#f3f2ee'; c.fillRect(x, y, w, rh); c.fillStyle = '#1f1e1c'; c.font = `600 12px ${F}`; c.textAlign = 'center'; c.fillText(sh.groups[ci] || '', x + w / 2, y + rh / 2); x += w; ci = cj + 1; } y += rh; }
-  c.fillStyle = '#1f3a5f'; c.fillRect(x0, y, tw, rh); c.fillStyle = '#ffffff'; c.font = `600 12px ${F}`;
-  let x = x0; sh.head.forEach((h, ci) => { c.textAlign = ci === 0 ? 'left' : 'right'; c.fillText(h, ci === 0 ? x + pad : x + cw[ci] - pad, y + rh / 2); x += cw[ci]; }); y += rh;
+  c.fillStyle = '#1f3a5f'; c.fillRect(x0, y, tw, hh); c.fillStyle = '#ffffff';
+  let x = x0; sh.head.forEach((h, ci) => { const [h1, h2] = hsplit(h); c.textAlign = ci === 0 ? 'left' : 'right'; const tx = ci === 0 ? x + pad : x + cw[ci] - pad;
+    c.font = `600 12px ${F}`; c.fillStyle = '#ffffff'; c.fillText(h1, tx, y + (h2 ? 14 : hh / 2)); if (h2) { c.font = `11px ${F}`; c.fillStyle = '#c9d6ea'; c.fillText(h2, tx, y + 29); } x += cw[ci]; }); y += hh;
   const RF = { sub: '#f1efe9', tot: '#e2ded4' };
   const achC = (v) => v >= 1 ? ['#e3f3ea', '#1e7b45'] : v >= 0.8 ? ['#fbf0dc', '#a86a12'] : ['#fbe6e4', '#c0392b'];
   sh.body.forEach((r, ri) => { const cls = sh.rowCls[ri]; c.fillStyle = RF[cls] || (ri % 2 ? '#fafaf8' : '#ffffff'); c.fillRect(x0, y, tw, rh);
@@ -1337,7 +1339,7 @@ function initControls() {
   fillSelect($('#f-pcshop'), [['', 'ภาพรวมทุกสาขา (เทียบ PC / ไม่มี PC)'], [null, `สาขาที่มี PC Vivo (${pcs.length})`, true], ...pcs.map((x) => [x.c, `${x.n} · PC ${x.pc}`]), ['</g>'],
     [null, `สาขาที่ไม่มี PC (${npc.length})`, true], ...npc.map((x) => [x.c, x.n]), ['</g>']], '');
   $('#f-pcshop').onchange = (e) => { S.pcshop = e.target.value; render(); };
-  $('#png-area').onclick = () => requireDL(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { const [sh, tb] = [].concat(EXPORT.area); sheetPNG(sh, tb, `Vivo_Area_${(D.meta.sales_asof || '').slice(0, 10)}.png`); }));
+  $('#png-area').onclick = () => requireDL(() => (document.fonts ? Promise.all(['600 12px', '11px', '13px', '700 13px', '700 20px', '12px', '700 15px', '12.5px', '700 14px'].map((f) => document.fonts.load(`${f} "Noto Sans Thai"`, 'กขabc0'))).catch(() => 0).then(() => document.fonts.ready) : Promise.resolve()).then(() => { const [sh, tb] = [].concat(EXPORT.area); sheetPNG(sh, tb, `Vivo_Area_${(D.meta.sales_asof || '').slice(0, 10)}.png`); }));
   $('#pc-sumdl').onclick = () => requireDL(downloadPCSummary); $('#pc-gappng').onclick = () => requireDL(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(downloadGapPNG));
   $('#pc-back').onclick = () => { S.pcshop = ''; $('#f-pcshop').value = ''; render(); };
   const fm = $('#fmore'), fb = $('#fmore-btn');
