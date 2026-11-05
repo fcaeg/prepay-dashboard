@@ -631,17 +631,17 @@ function areaTopBottom(mi, A) {
     const shopLine = (x, good) => { if (!x) return null; const f = famOf(x.c).sort((a, b) => good ? b.gap - a.gap : a.gap - b.gap)[0];
       const hc = x.share >= 0.15 ? ' <span class="pc">High Contribute</span>' : '';
       return `${good ? 'สาขาเด่น' : 'สาขาฉุด'} <b>${sname(x.c)}</b>${hc} เดิน ${x.ach == null ? '–' : Math.round(x.ach * 100) + '%'} (เป้า ${Math.round(x.share * 100)}% ของ Area)`
-        + (f && (good ? f.gap > 0 : f.gap < 0) ? ` · ${good ? 'มาจาก' : 'ตกจาก'} ${esc(f.f)} ${gapF(f.gap)}` : '') + (x.mom != null ? ` · MoM ${sgn(x.mom)}` : '') + (x.pc > 0 ? ' · มี PC' : ''); };
+        + (f && (good ? f.gap > 0 : f.gap < 0) ? ` · ${good ? 'มาจาก' : 'ตกจาก'} ${esc(f.f)} ${gapF(f.gap)}` : '') + (x.mom != null && (good ? x.mom > 0 : x.mom < 0) ? ` · MoM ${sgn(x.mom)}` : '') + (x.pc > 0 && good ? ' · มี PC' : ''); };
     return { fUp: fUp && `${esc(fUp.f)} เกินเป้า ${gapF(fUp.gap)} ${u}`, fDn: fDn && `${esc(fDn.f)} ขาดเป้า ${gapF(fDn.gap)} ${u}`,
       sGood: shopLine(best, true), sBad: shopLine(worst, false), ns: ns ? `No Sale ${ns}/${tShops.length} สาขา` : null };
   };
   const card = (r, i, isTop) => { const w = why(r);
-    const main = (isTop ? [w.fUp, w.sGood] : [w.fDn, w.sBad, w.ns]).filter(Boolean), other = (isTop ? [w.fDn || w.sBad] : [w.sGood || w.fUp]).filter(Boolean);
-    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${num(r.act)} ${u}${r.mom != null ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
+    const main = (isTop ? [w.fUp, w.sGood, r.mom > 0.05 ? `โตจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : r.wow > 0.05 ? `สัปดาห์นี้โต ${sgn(r.wow)}` : null] : [w.fDn, w.sBad, w.ns, r.mom < -0.05 ? `ลดลงจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : null]).filter(Boolean), other = []; // Top shows only positives, Bottom only negatives
+    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${num(r.act)} ${u}${r.mom != null && (isTop ? r.mom >= 0 : r.mom < 0) ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null && (isTop ? r.wow >= 0 : r.wow < 0) ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
       + `<ul>${main.map((x) => `<li><span class="${isTop ? 'up' : 'dn'}">${isTop ? '▲' : '▼'}</span> ${x}</li>`).join('')}${other.map((x) => `<li><span class="${isTop ? 'dn' : 'up'}">${isTop ? '▼' : '▲'}</span> ${x}</li>`).join('')}</ul></div>`; };
   box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· %ACH ถึงวันนี้ (เฉลี่ย ${avgAch == null ? '–' : Math.round(avgAch * 100) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
     + `<div class="col"><h3>⚠ Bottom ${n} Area</h3>${bot.map((r, i) => card(r, i, false)).join('')}</div>`
-    + `<p class="note" style="grid-column:1/-1;margin:0">▲ = ปัจจัยที่ช่วย · ▼ = ปัจจัยที่ฉุด · สาขาเด่น / สาขาฉุด = สาขาที่ยอดเกิน / ขาดเป้าถึงวันนี้มากที่สุดใน Area · <span class="pc">High Contribute</span> = สาขาที่มีเป้า ≥ 15% ของ Area</p>`;
+    + `<p class="note" style="grid-column:1/-1;margin:0">Top แสดงปัจจัยที่ช่วย (▲) · Bottom แสดงปัจจัยที่ฉุด (▼) · สาขาเด่น / สาขาฉุด = สาขาที่ยอดเกิน / ขาดเป้าถึงวันนี้มากที่สุดใน Area · <span class="pc">High Contribute</span> = สาขาที่มีเป้า ≥ 15% ของ Area</p>`;
   const strip = (h) => h.replace(/<[^>]+>/g, '');
   const lines = [];
   const L = (w, good) => (good ? [w.fUp, w.sGood] : [w.fDn, w.sBad, w.ns]).filter(Boolean).map(strip).join(' | ');
