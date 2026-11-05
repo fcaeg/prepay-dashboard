@@ -851,9 +851,9 @@ if (!window.PC_WSER_BOUND) { window.PC_WSER_BOUND = true;
 
 /* ---------- Watch: quick Serial lookup box in the toolbar (expiry date + status) ---------- */
 const WLESC = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-(() => { const css = `.wlk{display:flex;flex-direction:column;gap:4px;min-width:250px;max-width:460px;flex:1 1 300px}
-.wlk input{font:inherit;padding:7px 10px;border:1px solid var(--color-border,#d6d3cc);border-radius:8px;background:var(--color-surface,#fff);color:inherit;width:100%;box-sizing:border-box}
-.wlk-r{font-size:.82rem;line-height:1.35;min-height:1.2em;color:var(--color-muted,#6b6b6b)}
+(() => { const css = `.wlk{display:flex;flex-direction:column;gap:3px;margin-left:auto;width:250px;max-width:100%;flex:0 1 250px}
+.wlk input{font:inherit;font-size:.8rem;padding:4px 8px;border:1px solid var(--color-border,#d6d3cc);border-radius:8px;background:var(--color-surface,#fff);color:inherit;width:100%;box-sizing:border-box}
+.wlk-r{font-size:.72rem;line-height:1.3;min-height:1.2em;color:var(--color-muted,#6b6b6b)}
 .wlk-r b{color:var(--color-text,inherit)} .wlk-r .ok{color:var(--color-ok,#1f8a4c)} .wlk-r .bad{color:var(--color-bad,#c0392b)} .wlk-r .warn{color:#b7791f}`;
   const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   const dTH = (s) => (s ? +s.slice(8, 10) + ' ' + TH[+s.slice(5, 7) - 1] + ' ' + String(+s.slice(0, 4) + 543).slice(2) : '');
@@ -869,6 +869,6 @@ const WLESC = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '
   const mount = () => { const b = document.getElementById('w-exp-ov'); if (!b || document.getElementById('wlk-q')) return;
     const st = document.createElement('style'); st.textContent = css; document.head.append(st);
     const w = document.createElement('div'); w.className = 'wlk';
-    w.innerHTML = '<input id="wlk-q" type="search" inputmode="numeric" autocomplete="off" placeholder="กรอก Serial เพื่อดูวันหมดอายุ (หรือ 6 หลักท้าย)" aria-label="ค้นหาวันหมดอายุจาก Serial"><div class="wlk-r" aria-live="polite"></div>';
-    b.before(w); const inp = w.querySelector('input'), out = w.querySelector('.wlk-r'); inp.addEventListener('input', () => run(inp, out)); };
+    w.innerHTML = '<input id="wlk-q" type="search" inputmode="numeric" autocomplete="off" placeholder="ค้นวันหมดอายุจาก Serial" title="กรอก Serial เต็ม หรือ 6 หลักท้ายขึ้นไป" aria-label="ค้นหาวันหมดอายุจาก Serial"><div class="wlk-r" aria-live="polite"></div>';
+    b.after(w); const inp = w.querySelector('input'), out = w.querySelector('.wlk-r'); inp.addEventListener('input', () => run(inp, out)); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount(); setTimeout(mount, 1500); })();
