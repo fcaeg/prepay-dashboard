@@ -87,3 +87,8 @@ Gadget / IOT / Accessory sales of Nami's North shops, same daily_sales input (`p
   `state/gia_template.xlsx` and every build writes `gia/xlsx/GIA_North_<Mon>_<d>.xlsx` for each day of the month (template filled with values, no external links).
 - Target per day = month target ÷ days in month (template: ÷30). Page: `pipeline/gia_page.html` → `gia/index.html` (gia_page.py, built by build_page.py).
 - Nov 2026: no daily_sales file for 3 Nov in Drive; 2 Nov is up to 21:45, 4 Nov up to 16:23 (partial).
+
+### Instant start from Drive (Google Apps Script)
+`pipeline/drive_trigger.gs` runs every minute in Nami's Google account (script.google.com): when a data file appears in the
+inbox folder it calls the GitHub workflow_dispatch API, so the update starts within ~1 minute instead of waiting for GitHub's
+(often late) schedule. Script Properties: FOLDER_ID, GITHUB_TOKEN (fine-grained, fcaeg/prepay-dashboard, Actions read/write).
