@@ -891,9 +891,11 @@ window.ZDAY = (c, zone) => { const ds = ZDAYS(zone); if (!ds.length) return; con
 
 /* ---------- สาขา tab: shops with no sale this month (MTD, independent of the tab's period) (+ CSV) ---------- */
 const nsInfo = () => SA.period('mtd');
+const nsHasT = () => { const I = nsInfo(); const m = I ? I.to.slice(0, 7) : ''; return new Set((PC.rows('targets') || []).filter((t) => t.month === m && ((+t.target_units || 0) > 0 || (+t.target_net || 0) > 0)).map((t) => String(t.shop))); };
+const nsScope = () => { const p = PC.P(), T = nsHasT(); return (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && T.has(String(s.shop)) && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)); };
 dash.draw('sh_label3', (el) => { const I = nsInfo(); el.textContent = I ? I.label : ''; });
 const shNS = () => { const r = PC.rows('enriched'), I = nsInfo(), shops = PC.rows('shops'); if (!r || !I || !shops) return null; const p = PC.P(), N = PC.isNet();
-  const scope = shops.filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
+  const scope = nsScope();
   const sold = new Set(), last = new Map(), prv = new Map();
   for (const x of r) { if (p.group !== 'ALL' && x.group !== p.group) continue; const k = String(x.shop);
     if (x.date >= I.from && x.date <= I.to && x.units > 0) sold.add(k);
@@ -905,9 +907,9 @@ const shNS = () => { const r = PC.rows('enriched'), I = nsInfo(), shops = PC.row
   const mp = new Map(); for (const m of PC.rows('manpower') || []) { if (String(m.sales_role) !== '1' || String(m.leave || '').trim()) continue; mp.set(String(m.shop), (mp.get(String(m.shop)) || 0) + 1); }
   return scope.filter((s) => !sold.has(String(s.shop))).map((s) => { const k = String(s.shop), l = last.get(k) || null, a = ag.get(k) || {};
     return { shop: k, name: s.name, type: s.stype, area: s.area, last: l, gap: l ? SA.diff(l, I.to) : null, pv: prv.get(k) ?? 0, target: a.target ?? null, stock: stk.get(k) || 0, staff: mp.get(k) || 0 }; }); };
-dash.draw('sh_ns_sum', (el) => { const r = shNS(), I = nsInfo(); if (!r || !I) { el.textContent = ''; return; } const p = PC.P(); const tot = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).length;
+dash.draw('sh_ns_sum', (el) => { const r = shNS(), I = nsInfo(); if (!r || !I) { el.textContent = ''; return; } const p = PC.P(); const tot = nsScope().length;
   const never = r.filter((x) => !x.last).length, nost = r.filter((x) => !x.stock).length;
-  el.textContent = 'ไม่มียอดขาย ' + PC.nf(r.length) + ' จาก ' + PC.nf(tot) + ' สาขา (' + I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + ')' + (p.group !== 'ALL' ? ' · กลุ่มซิม ' + p.group : '') + ' · ไม่เคยขายปีนี้ ' + PC.nf(never) + ' · Stock = 0: ' + PC.nf(nost) + ' สาขา'; });
+  el.textContent = 'ไม่มียอดขาย ' + PC.nf(r.length) + ' จาก ' + PC.nf(tot) + ' สาขาที่มี Target Prepay (' + I.label + ': ' + PC.day(I.from) + (I.to !== I.from ? ' – ' + PC.day(I.to) : '') + ')' + (p.group !== 'ALL' ? ' · กลุ่มซิม ' + p.group : '') + ' · ไม่เคยขายปีนี้ ' + PC.nf(never) + ' · Stock = 0: ' + PC.nf(nost) + ' สาขา'; });
 dash.draw('tb_sh_ns', (el) => { const I = nsInfo(), N = PC.isNet(); const cd = el.closest('.pc-card'); if (cd && window.NSX_READY) NSX(cd);
   PC.table(el, 'tb_sh_ns', shNS(), { key: ['shop'], def: 'gap', limit: 2000, cols: [{ f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'type', label: 'ประเภทสาขา' }, { f: 'area', label: 'Area' },
     { f: 'last', label: 'ขายล่าสุด', fmt: (v) => (v ? PC.day(v) : 'ไม่เคยขายปีนี้') }, { f: 'gap', label: 'ไม่มียอดมาแล้ว (วัน)', num: true, fmt: PC.nf },
@@ -937,7 +939,7 @@ if (!window.PC_SHNS_BOUND) { window.PC_SHNS_BOUND = true;
 const NSTY = { 'Matching Shop': ['M', '#3b6fd8'], 'Non Matching Shop': ['NM', '#7a7a7a'], 'Dtac Hall': ['DH', '#9b3fc4'], 'Dtac Coco': ['DC', '#c06b18'], 'Ten Ten Shop': ['TT', '#1f9a4a'] };
 const nsTag = (t) => { const x = NSTY[t] || [String(t || '?').slice(0, 2), '#555']; return '<span class="tg" style="background:' + x[1] + '" title="' + WLESC(t) + '">' + x[0] + '</span>'; };
 const NSX = (card) => { const r = shNS(); if (!r) return; let box = card.querySelector('.nsx'); if (!box) { box = document.createElement('div'); box.className = 'nsx'; card.querySelector('.pc-scroll').before(box); }
-  const p = PC.P(); const all = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop));
+  const p = PC.P(); const all = nsScope();
   const ord = new Map((PC.rows('shops') || []).map((s) => [s.stype, +s.stype_order])); const types = [...new Set(all.map((s) => s.stype))].sort((a, b) => (ord.get(a) ?? 9) - (ord.get(b) ?? 9));
   const cnt = (arr, k) => d3.rollup(arr, (v) => v.length, (x) => x[k]);
   const tN = cnt(r, 'type'), tA = cnt(all, 'stype');
