@@ -848,3 +848,27 @@ if (!window.PC_WSER_BOUND) { window.PC_WSER_BOUND = true;
     const l = wList(); const tag = l === 'ALL' ? 'ALL' : (r[0] && r[0].expiry ? r[0].expiry.slice(0, 7) : 'list');
     const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url;
     a.download = 'ExpiringSIM_' + tag + '_' + (sf === 'ALL' ? 'all' : sf) + '_' + String((r[0] && r[0].sales_asof) || '').slice(0, 10) + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- Watch: quick Serial lookup box in the toolbar (expiry date + status) ---------- */
+const WLESC = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+(() => { const css = `.wlk{display:flex;flex-direction:column;gap:4px;min-width:250px;max-width:460px;flex:1 1 300px}
+.wlk input{font:inherit;padding:7px 10px;border:1px solid var(--color-border,#d6d3cc);border-radius:8px;background:var(--color-surface,#fff);color:inherit;width:100%;box-sizing:border-box}
+.wlk-r{font-size:.82rem;line-height:1.35;min-height:1.2em;color:var(--color-muted,#6b6b6b)}
+.wlk-r b{color:var(--color-text,inherit)} .wlk-r .ok{color:var(--color-ok,#1f8a4c)} .wlk-r .bad{color:var(--color-bad,#c0392b)} .wlk-r .warn{color:#b7791f}`;
+  const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const dTH = (s) => (s ? +s.slice(8, 10) + ' ' + TH[+s.slice(5, 7) - 1] + ' ' + String(+s.slice(0, 4) + 543).slice(2) : '');
+  const ST = { in_stock: ['ยังไม่ขาย', 'bad'], sold: ['ขายแล้ว', 'ok'], not_found: ['ไม่พบใน Stock', 'warn'] };
+  const line = (x) => { const r = PC.rows('watch_serials') || []; const t = String((r[0] && r[0].sales_asof) || '').slice(0, 10); const dl = x.expiry && t ? SA.diff(t, x.expiry) : null; const s = ST[x.status] || [x.status, ''];
+    return '<div><b>' + x.serial + '</b> · หมดอายุ <b>' + (x.expiry ? dTH(x.expiry) : (x.list || '–')) + '</b>' + (dl == null ? '' : dl < 0 ? ' <span class="bad">(เลยมา ' + -dl + ' วัน)</span>' : dl === 0 ? ' <span class="bad">(หมดอายุวันนี้)</span>' : ' (อีก ' + dl + ' วัน)')
+      + ' · <span class="' + s[1] + '">' + s[0] + (x.status === 'sold' && x.sold_date ? ' ' + dTH(x.sold_date) : '') + '</span>'
+      + '<br>' + WLESC(x.status === 'sold' ? (x.sold_shop_name || x.shop_name || '') : (x.shop_name || '')) + (x.matcode ? ' · ' + x.matcode : '') + (x.price ? ' · ' + PC.nf(x.price) + ' บ.' : '') + '</div>'; };
+  const run = (inp, out) => { const q = inp.value.replace(/\D/g, ''); if (q.length < 6) { out.innerHTML = q ? 'พิมพ์อย่างน้อย 6 หลัก' : ''; return; }
+    const r = PC.rows('watch_serials'); if (!r) { out.textContent = 'กำลังโหลดข้อมูล…'; return; }
+    const hit = r.filter((x) => String(x.serial).endsWith(q) || String(x.serial) === q);
+    out.innerHTML = !hit.length ? '<span class="warn">ไม่พบ Serial นี้ในรายการซิมใกล้หมดอายุ</span>' : hit.slice(0, 3).map(line).join('') + (hit.length > 3 ? '<div>…และอีก ' + (hit.length - 3) + ' รายการ (พิมพ์ให้ครบขึ้น)</div>' : ''); };
+  const mount = () => { const b = document.getElementById('w-exp-ov'); if (!b || document.getElementById('wlk-q')) return;
+    const st = document.createElement('style'); st.textContent = css; document.head.append(st);
+    const w = document.createElement('div'); w.className = 'wlk';
+    w.innerHTML = '<input id="wlk-q" type="search" inputmode="numeric" autocomplete="off" placeholder="กรอก Serial เพื่อดูวันหมดอายุ (หรือ 6 หลักท้าย)" aria-label="ค้นหาวันหมดอายุจาก Serial"><div class="wlk-r" aria-live="polite"></div>';
+    b.before(w); const inp = w.querySelector('input'), out = w.querySelector('.wlk-r'); inp.addEventListener('input', () => run(inp, out)); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount(); setTimeout(mount, 1500); })();
