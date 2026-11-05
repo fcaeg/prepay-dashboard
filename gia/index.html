@@ -144,7 +144,7 @@ tr.det > td { background: var(--bg); padding: 10px 12px 14px; white-space: norma
 <div class="wrap">
   <header class="top">
     <h1>GIA Dashboard <small>Gadget · IOT · Accessory — North</small></h1>
-    <div class="asof"><span id="asof"></span><span>หน้าเว็บสร้างเมื่อ 5 พ.ย. 2569 19:10 น.</span><span><a href="../" style="color:var(--accent)">Prepay Dashboard</a></span></div>
+    <div class="asof"><span id="asof"></span><span>หน้าเว็บสร้างเมื่อ 5 พ.ย. 2569 19:11 น.</span><span><a href="../" style="color:var(--accent)">Prepay Dashboard</a></span></div>
   </header>
 
   <div class="filters">
@@ -363,7 +363,7 @@ $('foot').innerHTML = `ที่มา: POS Sale Report (TSM) daily_sales ใน
 function excelImage(area, d) {
   const all = D.shops.filter(s => s.area === area); if (!all.length) return null;
   const SC = 2, F = 'Arial, "Noto Sans Thai", Tahoma, sans-serif';
-  const COLS = [['Shop Code', 92], ['__SEC__', 268], ['QTY Per Day', 92], [`Revenue Day ${d}`, 104], ['%Per Day', 92], ['Today QTY', 88], ['%Per Day QTY', 104],
+  const COLS = [['Shop Code', 92], ['__SEC__', 268], ['Target Revenue Month', 104], ['Target QTY Month', 88], ['Target Per Day', 92], ['QTY Per Day', 84], [`Revenue Day ${d}`, 104], ['%Per Day', 92], ['Today QTY', 88], ['%Per Day QTY', 104],
     [`Total Revenue ${D.mon}`, 112], [`Total QTY ${D.mon}`, 96], [`%Ach Revenue ${D.mon}`, 108], [`%Ach QTY ${D.mon}`, 108]];
   const W = COLS.reduce((a, c) => a + c[1], 0), HH = 46, RH = 22, CAP = 30;
   const secs = [...new Set(all.map(s => s.sec))];
@@ -372,18 +372,18 @@ function excelImage(area, d) {
   const g = cv.getContext('2d'); g.scale(SC, SC); g.fillStyle = '#fff'; g.fillRect(0, 0, W + 2, H);
   const SEC = ['#70AD47', '#8497B0', '#7030A0', '#5B9BD5', '#A5A5A5'];
   const val = s => { const c = cellAll(s.shop, d), m = mtdAll(s.shop, d), tpd = s.tr / D.dim, qpd = s.tq / D.dim;
-    return [s.shop, s.name, qpd, c[0], tpd ? c[0] / tpd : 0, c[1], qpd ? c[1] / qpd : 0, m[0], m[1], s.tr ? m[0] / s.tr : 0, s.tq ? m[1] / s.tq : 0]; };
+    return [s.shop, s.name, s.tr, s.tq, tpd, qpd, c[0], tpd ? c[0] / tpd : 0, c[1], qpd ? c[1] / qpd : 0, m[0], m[1], s.tr ? m[0] / s.tr : 0, s.tq ? m[1] / s.tq : 0]; };
   const rows = all.map(val);
   // Excel 3-colour scale (min / 50th percentile / max) on %Ach columns, shop rows of this sheet only
   const scale = ci => { const v = rows.map(r => r[ci]).sort((a, b) => a - b), n = v.length;
     const pos = (n - 1) * .5, mid = v[Math.floor(pos)] + (v[Math.ceil(pos)] - v[Math.floor(pos)]) * (pos - Math.floor(pos));
     return { min: v[0], mid, max: v[n - 1] }; };
-  const SCL = { 9: scale(9), 10: scale(10) };
+  const SCL = { 12: scale(12), 13: scale(13) };
   const mix = (a, b, t) => { const p = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)); const x = p(a), y = p(b);
     return 'rgb(' + x.map((c, i) => Math.round(c + (y[i] - c) * t)).join(',') + ')'; };
   const csc = (ci, v) => { const s = SCL[ci]; if (s.max === s.min) return '#FFEB84';
     return v <= s.mid ? mix('#F8696B', '#FFEB84', s.mid === s.min ? 1 : (v - s.min) / (s.mid - s.min)) : mix('#FFEB84', '#63BE7B', s.max === s.mid ? 1 : (v - s.mid) / (s.max - s.mid)); };
-  const fmt = (ci, v) => ci === 2 ? f0(v) : [4, 6, 9, 10].includes(ci) ? (v * 100).toFixed(2) + '%' : typeof v === 'number' ? f0(v) : v;
+  const fmt = (ci, v) => [7, 9, 12, 13].includes(ci) ? (v * 100).toFixed(2) + '%' : typeof v === 'number' ? f0(v) : v;
   const text = (t, x, y, w, h, al, font, color) => {
     g.font = font; g.fillStyle = color; g.textBaseline = 'middle';
     // wrap header text into up to 2 lines
@@ -399,20 +399,20 @@ function excelImage(area, d) {
   let y = CAP;
   secs.forEach((sc, k) => {
     const sl = all.filter(s => s.sec === sc), col = SEC[Math.min(sc, 5) - 1]; let x = 0;
-    COLS.forEach(([t, w], ci) => { const first = k === 0, org = first && ci >= 3 && ci <= 6;
+    COLS.forEach(([t, w], ci) => { const first = k === 0, org = first && ci >= 6 && ci <= 9;
       box(x, y, w, HH, org ? '#ED7D31' : col, '#ffffff'); text(t === '__SEC__' ? sl[0].section : t, x, y, w, HH, 'c', (first ? 'bold ' : '') + '12px ' + F, '#fff'); x += w; });
     y += HH;
     for (const s of sl) {
       const r = val(s), dt = /\(D\)\s*$/.test(s.name); x = 0;
       COLS.forEach(([, w], ci) => {
-        const fill = ci >= 9 ? csc(ci, r[ci]) : (ci >= 3 && ci <= 6) ? (dt ? '#BDD7EE' : '#FCE4D6') : dt ? '#BDD7EE' : '#ffffff';
-        box(x, y, w, RH, fill); const red = ci === 4 || ci === 6;
+        const fill = ci >= 12 ? csc(ci, r[ci]) : (ci >= 6 && ci <= 9) ? (dt ? '#BDD7EE' : '#FCE4D6') : dt ? '#BDD7EE' : '#ffffff';
+        box(x, y, w, RH, fill); const red = ci === 7 || ci === 9;
         text(fmt(ci, r[ci]), x, y, w, RH, ci <= 1 ? 'l' : 'r', (red ? 'bold ' : '') + '12px ' + F, red ? '#FF0000' : '#000'); x += w; });
       y += RH;
     }
   });
   // total row
-  const t = rowValsAll(all, d); const tr = ['', 'Total (รวม)', t.qpd, t.dn, t.pd, t.dq, t.pq, t.mn, t.mq, t.ar, t.aq]; let x = 0;
+  const t = rowValsAll(all, d); const tr = ['', 'Total (รวม)', t.tr, t.tq, t.tpd, t.qpd, t.dn, t.pd, t.dq, t.pq, t.mn, t.mq, t.ar, t.aq]; let x = 0;
   COLS.forEach(([, w], ci) => { box(x, y, w, RH, '#FFC000'); text(ci === 1 ? tr[1] : ci === 0 ? '' : fmt(ci, tr[ci] || 0), x, y, w, RH, ci <= 1 ? 'l' : 'r', '12px ' + F, '#000'); x += w; });
   return cv;
 }
@@ -420,7 +420,7 @@ function cellAll(shop, d) { const x = (D.daily[shop] || {})[d] || {}; let n = 0,
 function mtdAll(shop, d) { let n = 0, q = 0; for (let i = 1; i <= d; i++) { const c = cellAll(shop, i); n += c[0]; q += c[1]; } return [n, q]; }
 function rowValsAll(list, d) { let tr = 0, tq = 0, dn = 0, dq = 0, mn = 0, mq = 0;
   for (const s of list) { tr += s.tr; tq += s.tq; const c = cellAll(s.shop, d), m = mtdAll(s.shop, d); dn += c[0]; dq += c[1]; mn += m[0]; mq += m[1]; }
-  const tpd = tr / D.dim, qpd = tq / D.dim; return { qpd, dn, dq, mn, mq, pd: tpd ? dn / tpd : 0, pq: qpd ? dq / qpd : 0, ar: tr ? mn / tr : 0, aq: tq ? mq / tq : 0 }; }
+  const tpd = tr / D.dim, qpd = tq / D.dim; return { tr, tq, tpd, qpd, dn, dq, mn, mq, pd: tpd ? dn / tpd : 0, pq: qpd ? dq / qpd : 0, ar: tr ? mn / tr : 0, aq: tq ? mq / tq : 0 }; }
 let PNGS = [];
 async function openPng() {
   try { await document.fonts.ready; } catch (e) {}
