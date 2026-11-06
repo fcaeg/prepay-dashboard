@@ -80,7 +80,7 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
 Gadget / IOT / Accessory sales of Nami's North shops, same daily_sales input (`pipeline/gia.py`, hooked into update.py; a GIA error never stops Prepay).
 - GIA rule: ACC → Accessory · WATCH / OTT / IT → Gadget · IOT, T,IOT → IOT · lines with a `FOC` part are not counted; H/S, SIM, IPAD, scratch cards are not GIA
   (checked against Nami's GIA_North_Nov_1.xlsx: 27/28 shops identical, the 28th had a sale after her file's time).
-- A daily_sales file is a snapshot: for its main days (>= 20% of its rows) the newer file REPLACES that day (cancelled bills drop out);
+- A daily_sales file is a snapshot: for its main days (>= 100 rows of that bill date) the newer file REPLACES that day (cancelled bills drop out);
   `meta.json gia_day_asof` keeps the latest bill time per day, an older snapshot never overwrites a newer one. → `state/gia_sales_<YYYY-MM>.csv.gz`
 - Shops, sections, order and month targets come from Nami's report `GIA_North_<Mon>_<d>.xlsx` (sheets UN / LN) →
   `python3 -I pipeline/update.py --gia-target <file>` (Drive: any xlsx whose name starts with "GIA") → `state/gia_targets.csv`; the file is kept as

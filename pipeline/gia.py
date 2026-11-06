@@ -56,11 +56,11 @@ def add_sales(raw):
     v = v[['key'] + KEEP]
     bd = pd.to_datetime(v.BILL_DATE, format=FMT, errors='coerce'); v['_d'] = bd.dt.strftime('%Y-%m-%d')
     # A daily_sales file is a snapshot of its day(s): a bill cancelled later disappears from later files.
-    # So for the file's main days (>= 20% of all its rows) the newer snapshot REPLACES that day;
-    # stray rows of other days (late credit notes etc.) are only added if not there yet.
+    # So for the file's main days (>= 100 rows: a real day of sales, also in a 1st-to-today export) the newer snapshot
+    # REPLACES that day; stray rows of other days (late credit notes, old bills: a handful each) are only added if not there yet.
     rb = pd.to_datetime(raw.BILL_DATE, format=FMT, errors='coerce'); rd = rb.dt.strftime('%Y-%m-%d')
-    share = rd.value_counts() / max(len(raw), 1)
-    main = {d for d, x in share.items() if x >= 0.2}
+    cnt = rd.value_counts()
+    main = {d for d, x in cnt.items() if x >= 100}
     day_asof = _meta().get('gia_day_asof', {}); file_asof = {d: rb[rd == d].max().strftime('%Y-%m-%d %H:%M:%S') for d in main}
     replace = {d for d in main if file_asof[d] >= day_asof.get(d, '')}
     added = 0; repl = 0
