@@ -535,11 +535,12 @@ const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 const num = (v) => v == null || !isFinite(v) ? '–' : nf0.format(Math.round(v));
 const nf2 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-// baht values show 2 decimals (Net Amount mode); units and counts stay whole numbers
-const money = (v) => S.metric === 'q' ? num(v) : v == null || !isFinite(v) ? '–' : nf2.format(v);
-const tgtF = (v) => v == null || !isFinite(v) || v === 0 ? '–' : (S.metric !== 'q' ? nf2.format(v) : Math.abs(v) < 100 && Math.abs(v - Math.round(v)) > 0.05 ? nf1.format(v) : nf0.format(Math.round(v)));
+const money = num; // baht values: whole numbers
+// percentages show 2 decimals
+const P2 = (x) => isFinite(x) ? (x * 100).toFixed(2) : '0.00';
+const tgtF = (v) => v == null || !isFinite(v) || v === 0 ? '–' : (S.metric === 'q' && Math.abs(v) < 100 && Math.abs(v - Math.round(v)) > 0.05 ? nf1.format(v) : nf0.format(Math.round(v)));
 const pctCls = (p) => p >= 1 ? 'ok' : p >= 0.8 ? 'warn' : 'bad';
-const pct = (p) => p == null || !isFinite(p) ? '<span class="na">–</span>' : `<span class="p ${pctCls(p)}">${Math.round(p * 100)}%</span>`;
+const pct = (p) => p == null || !isFinite(p) ? '<span class="na">–</span>' : `<span class="p ${pctCls(p)}">${P2(p)}%</span>`;
 const ratio = (a, b) => b > 0 ? a / b : null;
 const HASSTOCK = D.stock.length > 0;
 // Cover Week bands: enough stock = 4-6 weeks of sales
@@ -656,7 +657,7 @@ function areaTopBottom(mi, A) {
     const best = shops.filter((x) => x.gap > 0).sort((a, b) => b.gap - a.gap)[0], worst = tShops.filter((x) => x.gap < 0).sort((a, b) => a.gap - b.gap)[0];
     const shopLine = (x, good) => { if (!x) return null; const f = famOf(x.c).sort((a, b) => good ? b.gap - a.gap : a.gap - b.gap)[0];
       const hc = x.share >= 0.15 ? ' <span class="pc">High Contribute</span>' : '';
-      return `${good ? 'สาขาเด่น' : 'สาขาฉุด'} <b>${sname(x.c)}</b>${hc} เดิน ${x.ach == null ? '–' : Math.round(x.ach * 100) + '%'} (เป้า ${Math.round(x.share * 100)}% ของ Area)`
+      return `${good ? 'สาขาเด่น' : 'สาขาฉุด'} <b>${sname(x.c)}</b>${hc} เดิน ${x.ach == null ? '–' : P2(x.ach) + '%'} (เป้า ${P2(x.share)}% ของ Area)`
         + (f && (good ? f.gap > 0 : f.gap < 0) ? ` · ${good ? 'มาจาก' : 'ตกจาก'} ${esc(f.f)} ${gapF(f.gap)}` : '') + (x.mom != null && (good ? x.mom > 0 : x.mom < 0) ? ` · MoM ${sgn(x.mom)}` : '') + (x.pc > 0 && good ? ' · มี PC' : ''); };
     return { fUp: fUp && `${esc(fUp.f)} เกินเป้า ${gapF(fUp.gap)} ${u}`, fDn: fDn && `${esc(fDn.f)} ขาดเป้า ${gapF(fDn.gap)} ${u}`,
       sGood: shopLine(best, true), sBad: shopLine(worst, false), ns: ns ? `No Sale ${ns}/${tShops.length} สาขา` : null };
@@ -665,7 +666,7 @@ function areaTopBottom(mi, A) {
     const main = (isTop ? [w.fUp, w.sGood, r.mom > 0.05 ? `โตจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : r.wow > 0.05 ? `สัปดาห์นี้โต ${sgn(r.wow)}` : null] : [w.fDn, w.sBad, w.ns, r.mom < -0.05 ? `ลดลงจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : null]).filter(Boolean), other = []; // Top shows only positives, Bottom only negatives
     return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${money(r.act)} ${u}${r.mom != null && (isTop ? r.mom >= 0 : r.mom < 0) ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null && (isTop ? r.wow >= 0 : r.wow < 0) ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
       + `<ul>${main.map((x) => `<li><span class="${isTop ? 'up' : 'dn'}">${isTop ? '▲' : '▼'}</span> ${x}</li>`).join('')}${other.map((x) => `<li><span class="${isTop ? 'dn' : 'up'}">${isTop ? '▼' : '▲'}</span> ${x}</li>`).join('')}</ul></div>`; };
-  box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· %ACH ถึงวันนี้ (เฉลี่ย ${avgAch == null ? '–' : Math.round(avgAch * 100) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
+  box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· %ACH ถึงวันนี้ (เฉลี่ย ${avgAch == null ? '–' : P2(avgAch) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
     + `<div class="col"><h3>⚠ Bottom ${n} Area</h3>${bot.map((r, i) => card(r, i, false)).join('')}</div>`
     + `<p class="note" style="grid-column:1/-1;margin:0">Top แสดงปัจจัยที่ช่วย (▲) · Bottom แสดงปัจจัยที่ฉุด (▼) · สาขาเด่น / สาขาฉุด = สาขาที่ยอดเกิน / ขาดเป้าถึงวันนี้มากที่สุดใน Area · <span class="pc">High Contribute</span> = สาขาที่มีเป้า ≥ 15% ของ Area</p>`;
   const strip = (h) => h.replace(/<[^>]+>/g, '');
@@ -725,7 +726,7 @@ function sShop(mi) {
   }
   nsRows.push(tot);
   const ncols = [{ h: 'Region / Area', v: (r) => r.name, cls: 't' }, { h: 'สาขาที่มี Target', v: (r) => r.n, f: num },
-    { h: 'No Sale', v: (r) => r.x, f: (v) => v > 0 ? `<b style="color:var(--bad)">${num(v)}</b>` : '0' }, { h: '% No Sale', p: 1, v: (r) => ratio(r.x, r.n), f: (v) => v == null ? '–' : Math.round(v * 100) + '%' },
+    { h: 'No Sale', v: (r) => r.x, f: (v) => v > 0 ? `<b style="color:var(--bad)">${num(v)}</b>` : '0' }, { h: '% No Sale', p: 1, v: (r) => ratio(r.x, r.n), f: (v) => v == null ? '–' : P2(v) + '%' },
     ...NST.map((t) => ({ g: 'No Sale แยกตามประเภทสาขา', h: t.replace('Dtac ', ''), v: (r) => r.ty[t], f: (v) => v ? num(v) : '<span class="na">–</span>' })),
     { g: 'No Sale แยกตามประเภทสาขา', h: 'สรุป', v: (r) => NST.filter((t) => r.ty[t]).map((t) => `${t.replace('Dtac ', '')} ${r.ty[t]}`).join(' · ') || '–', cls: 't' },
     ...(hasT ? [{ h: `Target เดือนของสาขา No Sale (${unit()})`, v: (r) => r.t, f: tgtF }] : []), ...(HASSTOCK ? [{ h: 'Stock ในสาขา No Sale', v: (r) => r.st, f: num }] : [])];
@@ -734,10 +735,10 @@ function sShop(mi) {
   const never = ns.filter((r) => !r.last).length, idle30 = ns.filter((r) => r.idle != null && r.idle > 30).length;
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
   const tcards = NST.map((t) => { const u = uni.filter((r) => r.type === t), x = u.filter((r) => r.ns);
-    return `<div class="kpi"><div class="l">No Sale · ${t}</div><div class="v"><span style="color:var(--bad)">${num(x.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">จาก ${num(u.length)} สาขา</span></div><div class="s">${u.length ? Math.round(x.length / u.length * 100) : 0}% · Target ค้าง ${tgtF(x.reduce((s, r) => s + r.tfull, 0))} ${unit()}</div>${u.length ? `<div class="bar"><i style="width:${x.length / u.length * 100}%;background:var(--bad)"></i></div>` : ''}</div>`; }).join('');
+    return `<div class="kpi"><div class="l">No Sale · ${t}</div><div class="v"><span style="color:var(--bad)">${num(x.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">จาก ${num(u.length)} สาขา</span></div><div class="s">${u.length ? P2(x.length / u.length) : 0}% · Target ค้าง ${tgtF(x.reduce((s, r) => s + r.tfull, 0))} ${unit()}</div>${u.length ? `<div class="bar"><i style="width:${x.length / u.length * 100}%;background:var(--bad)"></i></div>` : ''}</div>`; }).join('');
   $('#ns-type').innerHTML = tcards;
-  $('#ns-kpi').innerHTML = kc('สาขา No Sale', `<span style="color:var(--bad)">${num(ns.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">จาก ${num(uni.length)} สาขา</span>`, `${uni.length ? Math.round(ns.length / uni.length * 100) : 0}% ของสาขา${hasT ? 'ที่มี Target' : ''}`)
-    + (hasT ? kc(`Target ของสาขา No Sale`, tgtF(ns.reduce((s, r) => s + r.tfull, 0)), `${unit()} · ${Math.round(ratio(ns.reduce((s, r) => s + r.tfull, 0), uni.reduce((s, r) => s + r.tfull, 0)) * 100 || 0)}% ของ Target รวม`) : '')
+  $('#ns-kpi').innerHTML = kc('สาขา No Sale', `<span style="color:var(--bad)">${num(ns.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">จาก ${num(uni.length)} สาขา</span>`, `${uni.length ? P2(ns.length / uni.length) : 0}% ของสาขา${hasT ? 'ที่มี Target' : ''}`)
+    + (hasT ? kc(`Target ของสาขา No Sale`, tgtF(ns.reduce((s, r) => s + r.tfull, 0)), `${unit()} · ${P2(ratio(ns.reduce((s, r) => s + r.tfull, 0), uni.reduce((s, r) => s + r.tfull, 0)) || 0)}% ของ Target รวม`) : '')
     + kc('ไม่มีขายเกิน 30 วัน', num(idle30), `ไม่เคยขายเลยตั้งแต่ ${thDate(D.meta.first_sales)}: ${num(never)} สาขา`)
     + (HASSTOCK ? kc('No Sale และไม่มี Stock', num(noStock), 'สาเหตุอาจมาจากไม่มีของ') : '');
   const mlab = modelLabel(4);
@@ -910,7 +911,7 @@ function downloadGapPNG() {
 function sPCsum(mi) {
   const P = pcSummary(mi); const u = unit();
   const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
-    return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? Math.round(g.length / P.rows.length * 100) : 0}% ของสาขามี PC · ยอด ${money(act)} ${u}</div></div>`; };
+    return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? P2(g.length / P.rows.length) : 0}% ของสาขามี PC · ยอด ${money(act)} ${u}</div></div>`; };
   $('#pc-tiers').innerHTML = TIERS.map(card).join('');
   $('#n-pcsum').innerHTML = `สาขาที่มี PC Vivo ${num(P.rows.length)} สาขา · แบ่งตาม %ACH เทียบ Target ถึงวันที่ ${mi.asofDay} · หน่วย ${u} · ทุกรุ่น · ตามตัวกรอง Region / Area / ประเภท ด้านบน`;
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
@@ -935,11 +936,11 @@ function downloadPCSummary() {
   tierRows.push(['รวมสาขาที่มี PC', P.rows.length, 1, tt.tf, tt.act, ratio(tt.act, tt.td)]);
   const best = P.rows.filter((r) => r.ach != null && r.act > 0).sort((a, b) => b.ach - a.ach).slice(0, 5);
   const lines = [`ข้อมูลยอดขายถึง ${thDate(LATEST)} (Day-1) · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
-    `ยอดขายรวม ${money(tt.act)} ${u}${SHOWA() ? ` (Amount ${money(tt.amt)} บาท)` : ''} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
+    `ยอดขายรวม ${money(tt.act)} ${u}${SHOWA() ? ` (Amount ${money(tt.amt)} บาท)` : ''} · %ACH ถึงวันนี้ ${tt.td ? P2(tt.act / tt.td) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
     ...TIERS.map((t) => { const n = P.rows.filter((r) => r.tk === t.k).length; return `${t.name}: ${n} สาขา`; }),
     `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา`,
     ...GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap)); return `   • ${b.name}: ${g.length} สาขา` + (g.length ? ` — ${g.map((r) => r.name.replace(/^True Shop /i, '') + (b.k === 'g4' ? ` (${gapTxt(r)})` : '')).join(', ')}` : ''); }),
-    best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${Math.round(r.ach * 100)}%`).join(', ')}` : ''].filter(Boolean);
+    best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${P2(r.ach)}%`).join(', ')}` : ''].filter(Boolean);
   const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: ['', '', '', '', '', ''],
     head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', MK(), MK(), 'ach'],
     body: [...tierRows, [], ['สรุปภาพรวม'], ...lines.map((l) => [l])], rowCls: [...tierRows.map((_, i) => i === tierRows.length - 1 ? 'tot' : ''), 'gap', 'line-h', ...lines.map(() => 'line')],
@@ -969,7 +970,7 @@ function sMS(mi) {
     return { n: x.length, act: t.act, amt: t.amt, avg: x.length ? t.act / x.length : 0, ach: ratio(t.act, t.tf), s28: t.s28 }; };
   const pcY = grp((r) => r.pc > 0), pcN = grp((r) => !(r.pc > 0));
   const card = (lab, g) => `<div class="kpi"><div class="l">${lab} · ${g.n} สาขา</div><div class="v">${money(g.act)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span></div>
-    <div class="s">${SHOWA() ? `Amount ${money(g.amt)} · ` : ''}เฉลี่ย ${S.metric === 'q' ? nf1.format(g.avg) : money(g.avg)} ต่อสาขา · %ACH เดือน ${g.ach == null ? '–' : Math.round(g.ach * 100) + '%'}</div></div>`;
+    <div class="s">${SHOWA() ? `Amount ${money(g.amt)} · ` : ''}เฉลี่ย ${S.metric === 'q' ? nf1.format(g.avg) : money(g.avg)} ต่อสาขา · %ACH เดือน ${g.ach == null ? '–' : P2(g.ach) + '%'}</div></div>`;
   $('#ms-cmp').innerHTML = card('<span class="pc">PC</span> สาขาที่มี PC Vivo', pcY) + card('สาขาที่ไม่มี PC', pcN)
     + (pcN.avg > 0 ? `<div class="kpi"><div class="l">สาขามี PC ขายได้ต่อสาขา</div><div class="v">${nf1.format(pcY.avg / pcN.avg)}×</div><div class="s">ของสาขาที่ไม่มี PC</div></div>` : '');
   const list = rows.filter((r) => qMatch(S.q.ms, r)).sort(sorter('ms'));
@@ -991,9 +992,9 @@ function shopAgg(c, ym, d1, d2, area) {
     if (area ? (!SH[sc] || SH[sc].area !== area) : sc !== c) continue; const x = out.get(k) || { u: 0, n: 0, a: 0 }; x.u += u; x.n += n; x.a += am; out.set(k, x); }
   return out;
 }
-const momF = (v, r) => r && r._new ? '<span class="up">ใหม่</span>' : v == null || !isFinite(v) ? '<span class="na">–</span>' : `<span class="${v >= 0 ? 'up' : 'dn'}">${v >= 0 ? '+' : ''}${Math.round(v * 100)}%</span>`;
-const shareF = (v) => v == null || !isFinite(v) ? '<span class="na">–</span>' : Math.round(v * 100) + '%';
-const sgn = (v) => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
+const momF = (v, r) => r && r._new ? '<span class="up">ใหม่</span>' : v == null || !isFinite(v) ? '<span class="na">–</span>' : `<span class="${v >= 0 ? 'up' : 'dn'}">${v >= 0 ? '+' : ''}${P2(v)}%</span>`;
+const shareF = (v) => v == null || !isFinite(v) ? '<span class="na">–</span>' : P2(v) + '%';
+const sgn = (v) => (v >= 0 ? '+' : '') + P2(v) + '%';
 function sPC(mi) {
   const c = S.pcshop, s = SH[c]; const pm = prevYm(mi.ym), pmi = monthInfo(pm); const d = mi.asofDay; const dp = Math.min(d, pmi.days);
   const cur = shopAgg(c, mi.ym, 1, d), prv = shopAgg(c, pm, 1, dp), pfull = shopAgg(c, pm, 1, pmi.days), area = shopAgg(null, mi.ym, 1, d, s.area);
@@ -1021,30 +1022,30 @@ function sPC(mi) {
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
   const pl = `${THF[pmi.m - 1]} 1–${dp}`;
   $('#pd-head').innerHTML = `<b>${esc(s.n)}</b><span>${esc(c)} · ${esc(s.area)} · ${esc(s.type)}</span>${s.pc > 0 ? `<span class="pc">PC Vivo ${s.pc} คน</span>` : '<span class="cw warn">ไม่มี PC Vivo</span>'}`;
-  $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, money(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${SHOWA() ? `Amount ${money(tot.am)} · ` : ''}Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : Math.round(tot.ach * 100) + '%'}`)
+  $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, money(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${SHOWA() ? `Amount ${money(tot.am)} · ` : ''}Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : P2(tot.ach) + '%'}`)
     + kc(`MoM เทียบ ${pl}`, momF(tot.mom, tot), `${pl}: ${money(tot.prv)} · ทั้งเดือน ${THF[pmi.m - 1]} ${money(tot.pfull)}`)
-    + kc(`%ACH ถึงวันที่ ${d}`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${Math.round(tot.achd * 100)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
+    + kc(`%ACH ถึงวันที่ ${d}`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${P2(tot.achd)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
     + (HASSTOCK ? kc('Stock ในสาขา', `${num(tot.st)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `ขาย 28 วัน ${num(tot.s28)} · Cover ${tot.s28 > 0 ? nf1.format(tot.st / (tot.s28 / 4)) + ' สัปดาห์' : '–'}`) : '')
-    + kc('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : Math.round(ratio(rr, tot.tgt) * 100) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
+    + kc('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : P2(ratio(rr, tot.tgt)) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
   // analysis
   const u = unit(), li = [];
   if (tot.cur === 0 && tot.prv === 0) li.push(`ยังไม่มียอดขาย Vivo ทั้งเดือนนี้และช่วงเดียวกันของเดือนก่อน`);
   else li.push(`ภาพรวม: ขายได้ <b>${money(tot.cur)}</b> ${u} ${tot.prv > 0 ? `${tot.mom >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${sgn(tot.mom)}</b> จาก ${pl} (${money(tot.prv)})` : 'ช่วงเดียวกันเดือนก่อนไม่มียอด'}`
-    + (tot.tgt > 0 ? ` · เดินได้ <b>${Math.round(tot.achd * 100)}%</b> ของ Target ถึงวันนี้ Runrate ${Math.round(ratio(rr, tot.tgt) * 100)}% ของเป้าเดือน${ratio(rr, tot.tgt) < 1 ? ` ต้องทำเพิ่มเฉลี่ยวันละ ${S.metric === 'q' ? nf1.format(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d)) : money(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d))} ${u} จึงจะถึงเป้า` : ''}` : ''));
+    + (tot.tgt > 0 ? ` · เดินได้ <b>${P2(tot.achd)}%</b> ของ Target ถึงวันนี้ Runrate ${P2(ratio(rr, tot.tgt))}% ของเป้าเดือน${ratio(rr, tot.tgt) < 1 ? ` ต้องทำเพิ่มเฉลี่ยวันละ ${S.metric === 'q' ? nf1.format(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d)) : money(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d))} ${u} จึงจะถึงเป้า` : ''}` : ''));
   const gd = grows.map((r) => ({ r, diff: r.cur - r.prv })).filter((x) => x.r.cur || x.r.prv).sort((a, b) => b.diff - a.diff);
   if (gd.length && gd[0].diff > 0) li.push(`กลุ่มที่โตมากสุด: <b>${esc(gd[0].r.name)}</b> ${money(gd[0].r.prv)} → ${money(gd[0].r.cur)} ${u} (${gd[0].r._new ? 'ใหม่' : sgn(gd[0].r.mom)})`);
   const gdn = gd.filter((x) => x.diff < 0); if (gdn.length) { const x = gdn[gdn.length - 1]; li.push(`กลุ่มที่ลดลงมากสุด: <b>${esc(x.r.name)}</b> ${money(x.r.prv)} → ${money(x.r.cur)} ${u} (${sgn(x.r.mom)})`); }
   const best = mrows.filter((r) => r.cur > 0).sort((a, b) => b.cur - a.cur)[0];
-  if (best) li.push(`Model ขายดีสุด: <b>${esc(best.name)}</b> ${money(best.cur)} ${u} คิดเป็น ${shareF(best.sh)} ของยอดสาขา${best.tgt > 0 ? ` (%ACH ${Math.round(best.ach * 100)}%)` : ''}`);
+  if (best) li.push(`Model ขายดีสุด: <b>${esc(best.name)}</b> ${money(best.cur)} ${u} คิดเป็น ${shareF(best.sh)} ของยอดสาขา${best.tgt > 0 ? ` (%ACH ${P2(best.ach)}%)` : ''}`);
   if (HASSTOCK) { const ns = mrows.filter((r) => r.tgt > 0 && r.st === 0); const lowc = mrows.filter((r) => r.st > 0 && r.s28 > 0 && r.st / (r.s28 / 4) < CW_RISK);
     if (ns.length) li.push(`มี Target แต่ไม่มี Stock ${ns.length} รุ่น: ${ns.slice(0, 6).map((r) => `<b>${esc(r.name)}</b>`).join(', ')}${ns.length > 6 ? ' …' : ''} — ขอโอน / เติมของ`);
     if (lowc.length) li.push(`Stock เสี่ยงขาด (Cover &lt; ${CW_RISK} สัปดาห์): ${lowc.map((r) => `<b>${esc(r.name)}</b> เหลือ ${num(r.st)} เครื่อง`).join(', ')}`); }
   const zero = mrows.filter((r) => r.tgt > 0 && r.cur <= 0).sort((a, b) => b.tgt - a.tgt);
   if (zero.length && d) li.push(`มี Target แต่ยังไม่มียอด ${zero.length} รุ่น: ${zero.slice(0, 5).map((r) => `<b>${esc(r.name)}</b> (เป้า ${tgtF(r.tgt)})`).join(', ')}${zero.length > 5 ? ' …' : ''} — ควรเช็ก Stock และเร่งนำเสนอ`);
   const lag = grows.filter((r) => r.tgt > 0 && r.cur > 0 && r.achd < 0.7).sort((a, b) => a.achd - b.achd);
-  if (lag.length) li.push(`กลุ่มที่เดินช้ากว่าเป้าถึงวันนี้ (&lt;70%): ${lag.slice(0, 4).map((r) => `<b>${esc(r.name)}</b> ${Math.round(r.achd * 100)}%`).join(', ')}`);
+  if (lag.length) li.push(`กลุ่มที่เดินช้ากว่าเป้าถึงวันนี้ (&lt;70%): ${lag.slice(0, 4).map((r) => `<b>${esc(r.name)}</b> ${P2(r.achd)}%`).join(', ')}`);
   const ahead = grows.filter((r) => r.tgt > 0 && r.achd >= 1).sort((a, b) => b.achd - a.achd);
-  if (ahead.length) li.push(`กลุ่มที่นำหน้าเป้า: ${ahead.slice(0, 4).map((r) => `<b>${esc(r.name)}</b> ${Math.round(r.achd * 100)}%`).join(', ')}`);
+  if (ahead.length) li.push(`กลุ่มที่นำหน้าเป้า: ${ahead.slice(0, 4).map((r) => `<b>${esc(r.name)}</b> ${P2(r.achd)}%`).join(', ')}`);
   const mix = grows.filter((r) => r.ash != null && tot.cur > 0 && r.ash - (r.sh || 0) >= 0.1).sort((a, b) => (b.ash - (b.sh || 0)) - (a.ash - (a.sh || 0)));
   if (mix.length) li.push(`เทียบสัดส่วนกับ ${esc(s.area)}: ${mix.slice(0, 3).map((r) => `<b>${esc(r.name)}</b> สาขา ${shareF(r.sh || 0)} vs Area ${shareF(r.ash)}`).join(', ')} — สาขายังขายกลุ่มนี้น้อยกว่าค่าเฉลี่ย Area`);
   const mup = mrows.filter((r) => r.prv > 0 || r.cur > 0).map((r) => ({ r, diff: r.cur - r.prv })).sort((a, b) => a.diff - b.diff);
@@ -1207,12 +1208,12 @@ function sToday() {
   const noYet = [...TOT.tshops].filter((c) => !TOT.shops.has(c)).length;
   const bar = (p) => p == null ? '' : `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>`;
   $('#td-kpi').innerHTML = `<div class="kpi main"><div class="l">ยอดขาย ${thDate(d)}${tm ? ` · ถึง ${tm} น.` : ''}</div><div class="v">${money(TOT.d)} <span style="font-size:14px;font-weight:500;color:var(--muted)">${unit()}</span></div><div class="s">${SHOWA() ? `Amount ${money(TOT.a)} บาท · ` : ''}${num(TOT.u)} เครื่อง · ขายได้ ${num(TOT.shops.size)} สาขา · ยังไม่มียอด ${num(noYet)} จาก ${num(TOT.tshops.size)} สาขาที่มี Target</div></div>`
-    + kc('%ACH วันนี้', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
+    + kc('%ACH วันนี้', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${P2(ach)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
     + kc(`เทียบเมื่อวาน · ${shortD(y1)}`, fmtP(dod), `${money(TOT.y)} ${unit()}`)
     + kc(`เทียบสัปดาห์ก่อน · ${shortD(w1)}`, fmtP(wow), `${money(TOT.w)} ${unit()}`);
   // region strip
   $('#td-zone').innerHTML = arows.filter((r) => r._cls === 'sub').map((r) => { const a = ratio(r.d, r.t), dd = pctD(r.d, r.y);
-    return `<div class="z"><b>${esc(r.name)}</b><span class="v">${money(r.d)}</span><span class="s">%ACH ${a == null ? '–' : Math.round(a * 100) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
+    return `<div class="z"><b>${esc(r.name)}</b><span class="v">${money(r.d)}</span><span class="s">%ACH ${a == null ? '–' : P2(a) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
   $('#t-td-area').hidden = S.tdview !== 'area'; $('#t-td-model').hidden = S.tdview !== 'model';
   $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
   EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
@@ -1224,9 +1225,9 @@ function kpis(mi, tot, ts) {
   const a1 = ratio(V(tot), T(tot)), a2 = ratio(V(tot), T(tot) * mi.todate), a3 = ratio(rr, T(tot));
   const cW = S.metric === 'q' ? tot.cu : tot.cn, qW = S.metric === 'q' ? tot.qu : tot.qn;
   $('#kpis').innerHTML = k(`Target ${THF[mi.m - 1]}`, tgtF(T(tot)) || '–', unit()) +
-    k(SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', money(V(tot)), `${SHOWA() ? `Amount ${money(tot.a)} · ` : ''}%ACH เดือน ${a1 == null ? '–' : Math.round(a1 * 100) + '%'}`, a1) +
-    k(`%ACH ถึงวันที่ ${mi.asofDay}`, a2 == null ? '–' : Math.round(a2 * 100) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
-    k('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${a3 == null ? '–' : Math.round(a3 * 100) + '%'}`, a3) +
+    k(SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', money(V(tot)), `${SHOWA() ? `Amount ${money(tot.a)} · ` : ''}%ACH เดือน ${a1 == null ? '–' : P2(a1) + '%'}`, a1) +
+    k(`%ACH ถึงวันที่ ${mi.asofDay}`, a2 == null ? '–' : P2(a2) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
+    k('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${a3 == null ? '–' : P2(a3) + '%'}`, a3) +
     k(`WoW · W${mi.wk} vs W${mi.pwk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, qW > 0 ? `<span class="${cW >= qW ? 'up' : 'dn'}">${sgn(cW / qW - 1)}</span>` : '–', `W${mi.wk} ${money(cW)} · W${mi.pwk} ${money(qW)}`) +
     k('Stock คงเหลือ', HASSTOCK ? num(ts.stock) : '–', !HASSTOCK ? 'รอไฟล์ Stock ที่มีเครื่อง Vivo' : `Cover ${ts.s28 > 0 ? nf1.format(ts.stock / (ts.s28 / 4)) + ' สัปดาห์' : '–'} · ขาย 28 วัน ${num(ts.s28)} เครื่อง`);
 }
@@ -1288,7 +1289,7 @@ window.addEventListener('scroll', () => { const o = document.querySelector('.tip
 function sheetPNG(sh, tb, fname) {
   const F = '"Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif'; const sc = 2;
   const meas = document.createElement('canvas').getContext('2d');
-  const txt = (v, k) => v == null || v === '' ? '–' : typeof v === 'number' ? (k === 'ach' || k === 'pct' ? Math.round(v * 100) + '%' : k === 'mom' ? (v >= 0 ? '+' : '') + Math.round(v * 100) + '%' : k === 'cover' ? nf1.format(v) : k === 'money' ? nf2.format(v) : num(v)) : String(v);
+  const txt = (v, k) => v == null || v === '' ? '–' : typeof v === 'number' ? (k === 'ach' || k === 'pct' ? P2(v) + '%' : k === 'mom' ? (v >= 0 ? '+' : '') + P2(v) + '%' : k === 'cover' ? nf1.format(v) : num(v)) : String(v);
   const nc = sh.head.length, pad = 10, rh = 26, x0 = 24;
   const hsplit = (h) => { const m = String(h).match(/^(.*?)\s*\((.*)\)\s*$/); return m ? [m[1], m[2]] : [String(h), '']; }; const hh = sh.head.some((h) => hsplit(h)[1]) ? 40 : 26;
   meas.font = `600 12px ${F}`; const cw = sh.head.map((h, c) => { meas.font = `600 12px ${F}`; const [h1, h2] = hsplit(h); let w = meas.measureText(h1).width; meas.font = `11px ${F}`; w = Math.max(w, meas.measureText(h2).width);
@@ -1299,7 +1300,7 @@ function sheetPNG(sh, tb, fname) {
   let tbLines = []; const colW = (W - x0 * 2 - 20) / 2;
   const wrap = (t, w, font) => { meas.font = font; const M = (x) => meas.measureText(x).width, IND = '   '; const out = []; let line = ''; const toks = String(t).split(/(\s+)/); for (const tk of toks) { if (!tk) continue; if (M(line + tk) <= w || !line.trim()) { if (M(line + tk) <= w) { line += tk; continue; } for (const ch of [...tk]) { if (M(line + ch) > w && line.trim()) { out.push(line); line = IND + ch; } else line += ch; } continue; } out.push(line.replace(/\s+$/, '')); line = /^\s+$/.test(tk) ? IND : IND + tk; } if (line.trim()) out.push(line); return out; };
   if (tb && tb.body.length) { const tops = tb.body.filter((r) => String(r[0]).startsWith('Top')), bots = tb.body.filter((r) => String(r[0]).startsWith('Bottom'));
-    const block = (rows, good) => rows.flatMap((r) => [{ t: `${r[0]} · ${r[1]} · ${Math.round(r[2] * 100)}%`, b: 1, good }, ...String(good ? r[5] : r[6]).split(' | ').filter(Boolean).flatMap((x) => wrap(`${good ? '▲' : '▼'} ${x}`, colW - 16, `12.5px ${F}`).map((t) => ({ t, good })) ), { t: '', sp: 1 }]);
+    const block = (rows, good) => rows.flatMap((r) => [{ t: `${r[0]} · ${r[1]} · ${P2(r[2])}%`, b: 1, good }, ...String(good ? r[5] : r[6]).split(' | ').filter(Boolean).flatMap((x) => wrap(`${good ? '▲' : '▼'} ${x}`, colW - 16, `12.5px ${F}`).map((t) => ({ t, good })) ), { t: '', sp: 1 }]);
     tbLines = [block(tops, true), block(bots, false)]; }
   const tbH = tbLines.length ? 40 + Math.max(...tbLines.map((l) => l.length)) * 19 : 0;
   const top = 86, H = top + (hasG ? rh : 0) + hh + sh.body.length * rh + 24 + tbH + 20;
@@ -1483,12 +1484,12 @@ function downloadXlsx(sheets, fname) {
         if (s.fillCols && s.fillCols.includes(c) && s.rowFill[ri]) { o.fill = s.rowFill[ri]; o.font = 1; }
         if (k === 'gap') { o.h = 'center'; o.nf = 3; if (v === 'ไม่เคยขาย' || v >= 2) { o.fill = 'FBE6E4'; o.font = 5; } }
         else if (k === 'text' || k === 'note') { o.h = 'left'; if (c === 0 && rc === 'ind') o.indent = 1; if (k === 'note') o.wrap = 1; }
-        else if (k === 'ach' || k === 'pct') { o.nf = 9; o.h = 'right'; if (k === 'ach' && typeof v === 'number') Object.assign(o, achStyle(v)); }
+        else if (k === 'ach' || k === 'pct') { o.nf = 10; o.h = 'right'; if (k === 'ach' && typeof v === 'number') Object.assign(o, achStyle(v)); }
         else if (k === 'mom') { o.nf = 166; o.h = 'right'; if (typeof v === 'number') o.font = v >= 0 ? 4 : 5; else if (v === 'ใหม่') o.font = 4; }
         else if (k === 'cover') { o.nf = 164; o.h = 'right'; Object.assign(o, coverStyle(v)); }
-        else if (k === 'money') { o.h = 'right'; o.nf = 4; }
+        else if (k === 'money') { o.h = 'right'; o.nf = 3; }
         else { o.h = 'right'; o.nf = typeof v === 'number' && Math.abs(v - Math.round(v)) > 1e-6 && Math.abs(v) < 100 ? 164 : 3; }
-        widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? (k === 'money' ? nf2 : nf0).format(k === 'money' ? v : Math.round(v)).length + 3 : String(v ?? '').length + 2)));
+        widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? nf0.format(Math.round(v)).length + 3 : String(v ?? '').length + 2)));
         return cell(colL(c) + r, v, xf(o)); }).join('') + '</row>'); r++; });
     const last = s.rowCls.indexOf('gap') >= 0 ? hr + s.rowCls.indexOf('gap') : r - 1;
     const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
@@ -1502,7 +1503,7 @@ function downloadXlsx(sheets, fname) {
     files.push([`xl/worksheets/sheet${si + 1}.xml`, sheetXml]);
   });
   const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.0"/><numFmt numFmtId="166" formatCode="+0%;-0%;0%"/></numFmts>'
+    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.0"/><numFmt numFmtId="166" formatCode="+0.00%;-0.00%;0.00%"/></numFmts>'
     + `<fonts count="${FONTS.length}">${FONTS.join('')}</fonts><fills count="${FILLS.length}">${FILLS.join('')}</fills>`
     + '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9D6CE"/></left><right style="thin"><color rgb="FFD9D6CE"/></right><top style="thin"><color rgb="FFD9D6CE"/></top><bottom style="thin"><color rgb="FFD9D6CE"/></bottom><diagonal/></border></borders>'
     + `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${XF.length}">${XF.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
