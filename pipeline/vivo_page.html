@@ -534,7 +534,10 @@ function stockBy(keyFn, modelSel) {
 const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 const num = (v) => v == null || !isFinite(v) ? '–' : nf0.format(Math.round(v));
-const tgtF = (v) => v == null || !isFinite(v) || v === 0 ? '–' : (S.metric === 'q' && Math.abs(v) < 100 && Math.abs(v - Math.round(v)) > 0.05 ? nf1.format(v) : nf0.format(Math.round(v)));
+const nf2 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+// baht values show 2 decimals (Net Amount mode); units and counts stay whole numbers
+const money = (v) => S.metric === 'q' ? num(v) : v == null || !isFinite(v) ? '–' : nf2.format(v);
+const tgtF = (v) => v == null || !isFinite(v) || v === 0 ? '–' : (S.metric !== 'q' ? nf2.format(v) : Math.abs(v) < 100 && Math.abs(v - Math.round(v)) > 0.05 ? nf1.format(v) : nf0.format(Math.round(v)));
 const pctCls = (p) => p >= 1 ? 'ok' : p >= 0.8 ? 'warn' : 'bad';
 const pct = (p) => p == null || !isFinite(p) ? '<span class="na">–</span>' : `<span class="p ${pctCls(p)}">${Math.round(p * 100)}%</span>`;
 const ratio = (a, b) => b > 0 ? a / b : null;
@@ -549,8 +552,9 @@ const coverF = (c, stock) => c == null ? '<span class="na">–</span>' : c === -
 const unit = () => S.metric === 'q' ? 'เครื่อง' : 'บาท';
 // Amount = ยอดขายก่อนหักส่วนลด (ราคาเต็ม) · shown next to Net Amount when the unit is Net Amount
 const SHOWA = () => S.metric !== 'q';
+const MK = () => SHOWA() ? 'money' : 'num';
 const AMT_TIP = 'ก่อนหักส่วนลด';
-const amtCol = (v, o = {}) => SHOWA() ? [Object.assign({ h: 'Amount', tip: AMT_TIP, v, f: num }, o)] : [];
+const amtCol = (v, o = {}) => SHOWA() ? [Object.assign({ h: 'Amount', tip: AMT_TIP, v, f: money }, o)] : [];
 
 // ---------- generic table: cols [{h, g?, v(row) -> raw, f(raw,row) -> html, cls, sort?, x?(raw)->excel}]
 let EXPORT = {};
@@ -576,7 +580,7 @@ function renderTable(el, cols, rows, opt = {}) {
 }
 function toSheet(name, t, title) {
   const clean = (x) => String(x || '').replace(/<[^>]+>/g, '').replace('●', '').trim();
-  const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : (c.h === 'MoM %' || c.h === 'WoW %') ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : 'num';
+  const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : (c.h === 'MoM %' || c.h === 'WoW %') ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : SHOWA() && c.f && (c.f === money || c.f === tgtF || /\bmoney\(|tgtF\(/.test(String(c.f))) ? 'money' : 'num';
   const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (/Cover/.test(c.h) && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
   return { name, title, groups: t.cols.map((c) => clean(c.g)), head: t.cols.map((c) => clean(c.h) + (c.tip ? ` (${c.tip})` : '')), body, rowCls: t.rows.map((r) => r._cls || ''), kinds: t.cols.map(kind) };
 }
@@ -586,21 +590,21 @@ function weeklyCols(mi, first) {
   const cols = [first, { h: 'Target เดือน', v: (r) => T(r), f: tgtF }];
   const P = (r) => S.metric === 'q' ? r.pu : r.pn, PF = (r) => S.metric === 'q' ? r.fu : r.fn;
   const mg = `MoM vs ${TH[mi.prevM - 1]}`;
-  cols.push({ g: 'MTD', h: SHOWA() ? 'Net Amount' : 'Actual', v: (r) => V(r), f: num }, ...amtCol((r) => r.a, { g: 'MTD' }), { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
+  cols.push({ g: 'MTD', h: SHOWA() ? 'Net Amount' : 'Actual', v: (r) => V(r), f: money }, ...amtCol((r) => r.a, { g: 'MTD' }), { g: 'MTD', h: '%ACH เดือน', p: 1, v: (r) => ratio(V(r), T(r)), f: pct },
     { g: `ถึงวันที่ ${mi.asofDay}`, h: 'Target', v: (r) => T(r) * mi.todate, f: tgtF },
     { g: `ถึงวันที่ ${mi.asofDay}`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
-    { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: num },
+    { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: money },
     { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct },
-    { g: mg, gtip: `${THF[mi.m - 1]} 1–${mi.asofDay} เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame} (ช่วงวันเดียวกัน)`, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: num },
+    { g: mg, gtip: `${THF[mi.m - 1]} 1–${mi.asofDay} เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame} (ช่วงวันเดียวกัน)`, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: money },
     { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
-    { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: num });
+    { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: money });
   const C = (r) => S.metric === 'q' ? r.cu : r.cn, Q = (r) => S.metric === 'q' ? r.qu : r.qn, G = (r) => S.metric === 'q' ? r.gu : r.gn;
   const wg = `WoW · W${mi.wk} vs W${mi.pwk}`;
   const wgt = `W${mi.wk} = ${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`} เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : 'วันเดียวกัน'} = ${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)}`;
-  cols.push({ g: wg, gtip: wgt, h: `W${mi.wk}`, tip: `${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, v: (r) => C(r), f: num },
-    { g: wg, h: mi.fullWeek ? `W${mi.pwk}` : `W${mi.pwk} วันเดียวกัน`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)}`, v: (r) => Q(r), f: num },
+  cols.push({ g: wg, gtip: wgt, h: `W${mi.wk}`, tip: `${shortD(mi.cwFrom)}–${shortD(mi.ref)}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, v: (r) => C(r), f: money },
+    { g: wg, h: mi.fullWeek ? `W${mi.pwk}` : `W${mi.pwk} วันเดียวกัน`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.fullWeek ? mi.pwTo : mi.pwSame)}`, v: (r) => Q(r), f: money },
     { g: wg, h: 'WoW %', p: 1, v: (r) => Q(r) > 0 ? C(r) / Q(r) - 1 : null, f: (v, r) => !(Q(r) > 0) && C(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(Q(r) > 0) && C(r) > 0 ? 'ใหม่' : v == null ? '' : v },
-    ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.pwTo)}`, v: (r) => G(r), f: num }]));
+    ...(mi.fullWeek ? [] : [{ g: wg, h: `W${mi.pwk} ทั้งสัปดาห์`, tip: `${shortD(mi.pwFrom)}–${shortD(mi.pwTo)}`, v: (r) => G(r), f: money }]));
   return cols;
 }
 const portionNote = (mi) => `Target ถึงวันนี้ = Target เดือน ÷ ${mi.days} วัน × ${mi.asofDay} วัน (${Math.round(mi.todate * 1000) / 10}% ของเดือน) · ข้อมูลถึงวันที่ ${mi.asofDay} จาก ${mi.days} วัน · WoW = สัปดาห์ ISO จันทร์–อาทิตย์ · หน่วย: ${unit()}`;
@@ -640,7 +644,7 @@ function areaTopBottom(mi, A) {
   const sf = aggregate(mi, (c, k) => c + '|' + ((MD[k] && MD[k].family) || k));
   const shp = aggregate(mi, (c) => c);
   const avgAch = (() => { const t = areas.reduce((a, r) => (a.v += r.act, a.t += r.td, a), { v: 0, t: 0 }); return t.t ? t.v / t.t : null; })();
-  const gapF = (g) => `${g >= 0 ? '+' : '−'}${num(Math.abs(g))}`;
+  const gapF = (g) => `${g >= 0 ? '+' : '−'}${money(Math.abs(g))}`;
   const sname = (c) => esc(SH[c].n.replace(/^True Shop /i, ''));
   const famOf = (prefix) => [...sf.entries()].filter(([k]) => k.startsWith(prefix + '|')).map(([k, x]) => ({ f: k.slice(prefix.length + 1), gap: V(x) - T(x) * mi.todate, act: V(x) }));
   const why = (r) => {
@@ -659,7 +663,7 @@ function areaTopBottom(mi, A) {
   };
   const card = (r, i, isTop) => { const w = why(r);
     const main = (isTop ? [w.fUp, w.sGood, r.mom > 0.05 ? `โตจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : r.wow > 0.05 ? `สัปดาห์นี้โต ${sgn(r.wow)}` : null] : [w.fDn, w.sBad, w.ns, r.mom < -0.05 ? `ลดลงจากเดือนก่อนช่วงเดียวกัน ${sgn(r.mom)}` : null]).filter(Boolean), other = []; // Top shows only positives, Bottom only negatives
-    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${num(r.act)} ${u}${r.mom != null && (isTop ? r.mom >= 0 : r.mom < 0) ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null && (isTop ? r.wow >= 0 : r.wow < 0) ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
+    return `<div class="tbc${isTop ? '' : ' bot'}"><div class="hd"><span class="rk">#${isTop ? i + 1 : areas.length - i}</span><b>${esc(r.k)}</b>${pct(r.ach)}<span class="sm">${money(r.act)} ${u}${r.mom != null && (isTop ? r.mom >= 0 : r.mom < 0) ? ` · MoM ${sgn(r.mom)}` : ''}${r.wow != null && (isTop ? r.wow >= 0 : r.wow < 0) ? ` · WoW ${sgn(r.wow)}` : ''}</span></div>`
       + `<ul>${main.map((x) => `<li><span class="${isTop ? 'up' : 'dn'}">${isTop ? '▲' : '▼'}</span> ${x}</li>`).join('')}${other.map((x) => `<li><span class="${isTop ? 'dn' : 'up'}">${isTop ? '▼' : '▲'}</span> ${x}</li>`).join('')}</ul></div>`; };
   box.innerHTML = `<div class="col"><h3>🏆 Top ${n} Area <span class="sm" style="font-weight:400">· %ACH ถึงวันนี้ (เฉลี่ย ${avgAch == null ? '–' : Math.round(avgAch * 100) + '%'})</span></h3>${top.map((r, i) => card(r, i, true)).join('')}</div>`
     + `<div class="col"><h3>⚠ Bottom ${n} Area</h3>${bot.map((r, i) => card(r, i, false)).join('')}</div>`
@@ -670,7 +674,7 @@ function areaTopBottom(mi, A) {
   top.forEach((r, i) => { const w = why(r); lines.push([`Top ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
   bot.forEach((r, i) => { const w = why(r); lines.push([`Bottom ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
   return { name: '3 Top-Bottom Area', title: `Top ${n} / Bottom ${n} Area · %ACH ถึงวันที่ ${mi.asofDay} ${THF[mi.m - 1]} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: Array(7).fill(''),
-    head: ['อันดับ', 'Area', '%ACH ถึงวันนี้', 'ยอดขาย', 'Target ถึงวันนี้', 'ทำได้ดีจาก', 'ยอดไม่ดีจาก'], kinds: ['text', 'text', 'ach', 'num', 'num', 'note', 'note'], body: lines, rowCls: lines.map(() => '') };
+    head: ['อันดับ', 'Area', '%ACH ถึงวันนี้', 'ยอดขาย', 'Target ถึงวันนี้', 'ทำได้ดีจาก', 'ยอดไม่ดีจาก'], kinds: ['text', 'text', 'ach', MK(), MK(), 'note', 'note'], body: lines, rowCls: lines.map(() => '') };
 }
 function sArea(mi) {
   const a = aggregate(mi, (c) => SH[c].area);
@@ -744,9 +748,9 @@ function sShop(mi) {
     { h: 'รหัส', v: (r) => r.c, cls: 't' },
     { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' }, { h: 'ประเภท', v: (r) => r.type, cls: 't' },
     { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
-    { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: SHOWA() ? 'Net Amount' : 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: num }, ...amtCol((r) => r.amt, { sort: 'amt' }),
+    { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: SHOWA() ? 'Net Amount' : 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: money }, ...amtCol((r) => r.amt, { sort: 'amt' }),
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
-    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: num }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
+    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: money }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
     { h: 'ขายล่าสุด', sort: 'last', v: (r) => r.last, f: (v, r) => r._cls === 'tot' ? '' : v ? `${thDate(v)}${r.idle > 0 ? ` <span class="na">(${r.idle} วัน)</span>` : ''}` : '<span class="cw bad">ไม่เคยขาย</span>', x: (v, r) => r._cls === 'tot' ? '' : v || 'ไม่เคยขาย' },
     ...(HASSTOCK ? [{ h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }] : [])];
   rows.forEach((r) => { if (r.ns) r._cls = 'ns-row'; });
@@ -906,7 +910,7 @@ function downloadGapPNG() {
 function sPCsum(mi) {
   const P = pcSummary(mi); const u = unit();
   const card = (t) => { const g = P.rows.filter((r) => r.tk === t.k); const act = g.reduce((s, r) => s + r.act, 0);
-    return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? Math.round(g.length / P.rows.length * 100) : 0}% ของสาขามี PC · ยอด ${num(act)} ${u}</div></div>`; };
+    return `<div class="kpi"><div class="l">${t.name}</div><div class="v"><span class="cw ${t.col}">${num(g.length)}</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">สาขา</span></div><div class="s">${P.rows.length ? Math.round(g.length / P.rows.length * 100) : 0}% ของสาขามี PC · ยอด ${money(act)} ${u}</div></div>`; };
   $('#pc-tiers').innerHTML = TIERS.map(card).join('');
   $('#n-pcsum').innerHTML = `สาขาที่มี PC Vivo ${num(P.rows.length)} สาขา · แบ่งตาม %ACH เทียบ Target ถึงวันที่ ${mi.asofDay} · หน่วย ${u} · ทุกรุ่น · ตามตัวกรอง Region / Area / ประเภท ด้านบน`;
   const al = $('#pc-alert'); al.hidden = false; al.classList.toggle('okay', !P.alert.length);
@@ -919,7 +923,7 @@ function sPCsum(mi) {
       + (g.length ? `<ol>${g.map((r) => `<li>${esc(r.name.replace(/^True Shop /i, ''))} <span>· ${esc(r.area)}${b.k === 'g4' ? ' · ' + gapTxt(r) : ''} · PC ${r.pc}</span></li>`).join('')}</ol>` : '<div class="s">ไม่มีสาขา</div>') + '</div>'; }).join('');
   renderTable($('#t-pcalert'), [{ h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => `<span class="pc">PC ${v}</span>` },
     { h: 'ไม่มียอดติดต่อกัน', v: (r) => r.gap, f: (v) => v == null ? '<span class="cw bad">ไม่เคยขาย</span>' : `<b class="dn">${v} วัน</b>` }, { h: 'ขายล่าสุด', v: (r) => r.last, f: (v) => v ? thDate(v) : '–' },
-    { h: SHOWA() ? 'Net Amount MTD' : `ยอด MTD (${u})`, v: (r) => r.act, f: num }, ...amtCol((r) => r.amt), { h: '%ACH ถึงวันนี้', p: 1, v: (r) => r.ach, f: pct }], P.alert);
+    { h: SHOWA() ? 'Net Amount MTD' : `ยอด MTD (${u})`, v: (r) => r.act, f: money }, ...amtCol((r) => r.amt), { h: '%ACH ถึงวันนี้', p: 1, v: (r) => r.ach, f: pct }], P.alert);
   $('#pc-alert').parentElement.querySelector('#t-pcalert').hidden = !P.alert.length;
   return P;
 }
@@ -931,24 +935,24 @@ function downloadPCSummary() {
   tierRows.push(['รวมสาขาที่มี PC', P.rows.length, 1, tt.tf, tt.act, ratio(tt.act, tt.td)]);
   const best = P.rows.filter((r) => r.ach != null && r.act > 0).sort((a, b) => b.ach - a.ach).slice(0, 5);
   const lines = [`ข้อมูลยอดขายถึง ${thDate(LATEST)} (Day-1) · สาขาที่มี PC Vivo ${P.rows.length} สาขา`,
-    `ยอดขายรวม ${num(tt.act)} ${u}${SHOWA() ? ` (Amount ${num(tt.amt)} บาท)` : ''} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
+    `ยอดขายรวม ${money(tt.act)} ${u}${SHOWA() ? ` (Amount ${money(tt.amt)} บาท)` : ''} · %ACH ถึงวันนี้ ${tt.td ? Math.round(tt.act / tt.td * 100) : 0}% · MoM ${tt.pv > 0 ? sgn(tt.act / tt.pv - 1) : '–'} (เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame})`,
     ...TIERS.map((t) => { const n = P.rows.filter((r) => r.tk === t.k).length; return `${t.name}: ${n} สาขา`; }),
     `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา`,
     ...GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap)); return `   • ${b.name}: ${g.length} สาขา` + (g.length ? ` — ${g.map((r) => r.name.replace(/^True Shop /i, '') + (b.k === 'g4' ? ` (${gapTxt(r)})` : '')).join(', ')}` : ''); }),
     best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${Math.round(r.ach * 100)}%`).join(', ')}` : ''].filter(Boolean);
   const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: ['', '', '', '', '', ''],
-    head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', 'num', 'num', 'ach'],
+    head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', MK(), MK(), 'ach'],
     body: [...tierRows, [], ['สรุปภาพรวม'], ...lines.map((l) => [l])], rowCls: [...tierRows.map((_, i) => i === tierRows.length - 1 ? 'tot' : ''), 'gap', 'line-h', ...lines.map(() => 'line')],
     rowFill: tierRows.map((_, i) => TIERS[i] ? TIERS[i].x : null) };
   const cols = ['Performance', 'Region', 'Area', 'สาขา', 'รหัส', 'ประเภท', 'PC', `Target เดือน`, `Target ถึงวันนี้`, SHOWA() ? 'Net Amount MTD' : `ยอด MTD`, ...(SHOWA() ? ['Amount MTD'] : []), '%ACH ถึงวันนี้', 'Runrate %ACH', `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, 'MoM %', 'ขายล่าสุด', 'ไม่มียอดติดต่อกัน (วัน)'];
   const body = P.rows.map((r) => [r.tier, r.zone, r.area, r.name, r.c, r.type, r.pc, r.tf, r.td, r.act, ...(SHOWA() ? [r.amt] : []), r.ach, r.rach, r.pv, r.isNew ? 'ใหม่' : r.mom, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.gap == null ? 'ไม่เคยขาย' : r.gap]);
   const S2 = { name: 'PC รายสาขา', title: `PC รายสาขา ตามกลุ่ม Performance · ${ml} · หน่วย ${u}`, groups: cols.map(() => ''), head: cols,
-    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'num', 'num', 'num', ...(SHOWA() ? ['num'] : []), 'ach', 'ach', 'num', 'mom', 'text', 'gap'], body, rowCls: body.map(() => ''),
+    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', MK(), MK(), MK(), ...(SHOWA() ? [MK()] : []), 'ach', 'ach', MK(), 'mom', 'text', 'gap'], body, rowCls: body.map(() => ''),
     rowFill: P.rows.map((r) => (TIERS.find((t) => t.k === r.tk) || {}).x || null), fillCols: [0] };
   const acols = ['กลุ่ม', 'Region', 'Area', 'สาขา', 'รหัส', 'PC', 'ไม่มียอดติดต่อกัน (วัน)', 'ขายล่าสุด', SHOWA() ? 'Net Amount MTD' : `ยอด MTD (${u})`, ...(SHOWA() ? ['Amount MTD'] : []), '%ACH ถึงวันนี้', 'Performance'];
   const abody = P.alert.slice().sort((a, b) => (a.gap ?? 999) - (b.gap ?? 999) || a.area.localeCompare(b.area)).map((r) => [GAPB.find((b) => b.t(r.gap)).name, r.zone, r.area, r.name, r.c, r.pc, r.gap == null ? 'ไม่เคยขาย' : r.gap, r.last ? thDate(r.last) : 'ไม่เคยขาย', r.act, ...(SHOWA() ? [r.amt] : []), r.ach, r.tier]);
   const S3 = { name: 'Alert ไม่มียอด 2 วัน', title: `Alert: สาขาที่มี PC ไม่มียอด Vivo ติดต่อกัน 2 วันขึ้นไป · นับถึง ${thDate(P.ref)}`, groups: acols.map(() => ''), head: acols,
-    kinds: ['text', 'text', 'text', 'text', 'text', 'num', 'gap', 'text', 'num', ...(SHOWA() ? ['num'] : []), 'ach', 'text'], body: abody.length ? abody : [['ไม่มีสาขาที่เข้าเงื่อนไข']], rowCls: abody.map(() => '') };
+    kinds: ['text', 'text', 'text', 'text', 'text', 'num', 'gap', 'text', MK(), ...(SHOWA() ? [MK()] : []), 'ach', 'text'], body: abody.length ? abody : [['ไม่มีสาขาที่เข้าเงื่อนไข']], rowCls: abody.map(() => '') };
   downloadXlsx([S1, S2, S3], `PC_Summary_Update_${(D.meta.sales_asof || '').slice(0, 10)}.xlsx`);
 }
 function sMS(mi) {
@@ -964,14 +968,14 @@ function sMS(mi) {
   const grp = (f) => { const x = rows.filter(f); const t = x.reduce((a, r) => (a.act += r.act, a.amt += r.amt || 0, a.tf += r.tfull, a.s28 += r.s28, a), { act: 0, amt: 0, tf: 0, s28: 0 });
     return { n: x.length, act: t.act, amt: t.amt, avg: x.length ? t.act / x.length : 0, ach: ratio(t.act, t.tf), s28: t.s28 }; };
   const pcY = grp((r) => r.pc > 0), pcN = grp((r) => !(r.pc > 0));
-  const card = (lab, g) => `<div class="kpi"><div class="l">${lab} · ${g.n} สาขา</div><div class="v">${num(g.act)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span></div>
-    <div class="s">${SHOWA() ? `Amount ${num(g.amt)} · ` : ''}เฉลี่ย ${S.metric === 'q' ? nf1.format(g.avg) : num(g.avg)} ต่อสาขา · %ACH เดือน ${g.ach == null ? '–' : Math.round(g.ach * 100) + '%'}</div></div>`;
+  const card = (lab, g) => `<div class="kpi"><div class="l">${lab} · ${g.n} สาขา</div><div class="v">${money(g.act)} <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span></div>
+    <div class="s">${SHOWA() ? `Amount ${money(g.amt)} · ` : ''}เฉลี่ย ${S.metric === 'q' ? nf1.format(g.avg) : money(g.avg)} ต่อสาขา · %ACH เดือน ${g.ach == null ? '–' : Math.round(g.ach * 100) + '%'}</div></div>`;
   $('#ms-cmp').innerHTML = card('<span class="pc">PC</span> สาขาที่มี PC Vivo', pcY) + card('สาขาที่ไม่มี PC', pcN)
     + (pcN.avg > 0 ? `<div class="kpi"><div class="l">สาขามี PC ขายได้ต่อสาขา</div><div class="v">${nf1.format(pcY.avg / pcN.avg)}×</div><div class="s">ของสาขาที่ไม่มี PC</div></div>` : '');
   const list = rows.filter((r) => qMatch(S.q.ms, r)).sort(sorter('ms'));
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' }, { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' },
     { h: 'PC Vivo', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">ไม่มี</span>', x: (v) => v > 0 ? 'PC ' + v : 'ไม่มี' },
-    { h: 'Target เดือน', sort: 'tfull', v: (r) => r.tfull, f: tgtF }, { h: SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', sort: 'act', v: (r) => r.act, f: num }, ...amtCol((r) => r.amt, { sort: 'amt' }),
+    { h: 'Target เดือน', sort: 'tfull', v: (r) => r.tfull, f: tgtF }, { h: SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', sort: 'act', v: (r) => r.act, f: money }, ...amtCol((r) => r.amt, { sort: 'amt' }),
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => ratio(r.act, r.tfull), f: pct }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
     { h: 'ขาย 28 วัน (เครื่อง)', sort: 's28', v: (r) => r.s28, f: num }, { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
   const mlab = S.msmodel !== 'ALL' ? $('#f-msmodel').selectedOptions[0].textContent.trim() : modelLabel(4);
@@ -1017,21 +1021,21 @@ function sPC(mi) {
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
   const pl = `${THF[pmi.m - 1]} 1–${dp}`;
   $('#pd-head').innerHTML = `<b>${esc(s.n)}</b><span>${esc(c)} · ${esc(s.area)} · ${esc(s.type)}</span>${s.pc > 0 ? `<span class="pc">PC Vivo ${s.pc} คน</span>` : '<span class="cw warn">ไม่มี PC Vivo</span>'}`;
-  $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, num(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${SHOWA() ? `Amount ${num(tot.am)} · ` : ''}Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : Math.round(tot.ach * 100) + '%'}`)
-    + kc(`MoM เทียบ ${pl}`, momF(tot.mom, tot), `${pl}: ${num(tot.prv)} · ทั้งเดือน ${THF[pmi.m - 1]} ${num(tot.pfull)}`)
+  $('#pd-kpi').innerHTML = kc(`ยอดขาย ${THF[mi.m - 1]} 1–${d}`, money(tot.cur) + ` <span style="font-size:13px;font-weight:500;color:var(--muted)">${unit()}</span>`, `${SHOWA() ? `Amount ${money(tot.am)} · ` : ''}Target เดือน ${tgtF(tot.tgt)} · %ACH ${tot.ach == null ? '–' : Math.round(tot.ach * 100) + '%'}`)
+    + kc(`MoM เทียบ ${pl}`, momF(tot.mom, tot), `${pl}: ${money(tot.prv)} · ทั้งเดือน ${THF[pmi.m - 1]} ${money(tot.pfull)}`)
     + kc(`%ACH ถึงวันที่ ${d}`, tot.achd == null ? '–' : `<span class="cw ${pctCls(tot.achd)}">${Math.round(tot.achd * 100)}%</span>`, `Target ถึงวันนี้ ${tgtF(tot.tgt * mi.todate)}`)
     + (HASSTOCK ? kc('Stock ในสาขา', `${num(tot.st)} <span style="font-size:13px;font-weight:500;color:var(--muted)">เครื่อง</span>`, `ขาย 28 วัน ${num(tot.s28)} · Cover ${tot.s28 > 0 ? nf1.format(tot.st / (tot.s28 / 4)) + ' สัปดาห์' : '–'}`) : '')
-    + kc('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : Math.round(ratio(rr, tot.tgt) * 100) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
+    + kc('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${ratio(rr, tot.tgt) == null ? '–' : Math.round(ratio(rr, tot.tgt) * 100) + '%'} · เทียบทั้งเดือนก่อน ${tot.pfull > 0 ? sgn(rr / tot.pfull - 1) : '–'}`);
   // analysis
   const u = unit(), li = [];
   if (tot.cur === 0 && tot.prv === 0) li.push(`ยังไม่มียอดขาย Vivo ทั้งเดือนนี้และช่วงเดียวกันของเดือนก่อน`);
-  else li.push(`ภาพรวม: ขายได้ <b>${num(tot.cur)}</b> ${u} ${tot.prv > 0 ? `${tot.mom >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${sgn(tot.mom)}</b> จาก ${pl} (${num(tot.prv)})` : 'ช่วงเดียวกันเดือนก่อนไม่มียอด'}`
-    + (tot.tgt > 0 ? ` · เดินได้ <b>${Math.round(tot.achd * 100)}%</b> ของ Target ถึงวันนี้ Runrate ${Math.round(ratio(rr, tot.tgt) * 100)}% ของเป้าเดือน${ratio(rr, tot.tgt) < 1 ? ` ต้องทำเพิ่มเฉลี่ยวันละ ${S.metric === 'q' ? nf1.format(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d)) : num(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d))} ${u} จึงจะถึงเป้า` : ''}` : ''));
+  else li.push(`ภาพรวม: ขายได้ <b>${money(tot.cur)}</b> ${u} ${tot.prv > 0 ? `${tot.mom >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} <b>${sgn(tot.mom)}</b> จาก ${pl} (${money(tot.prv)})` : 'ช่วงเดียวกันเดือนก่อนไม่มียอด'}`
+    + (tot.tgt > 0 ? ` · เดินได้ <b>${Math.round(tot.achd * 100)}%</b> ของ Target ถึงวันนี้ Runrate ${Math.round(ratio(rr, tot.tgt) * 100)}% ของเป้าเดือน${ratio(rr, tot.tgt) < 1 ? ` ต้องทำเพิ่มเฉลี่ยวันละ ${S.metric === 'q' ? nf1.format(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d)) : money(Math.max(0, tot.tgt - tot.cur) / Math.max(1, mi.days - d))} ${u} จึงจะถึงเป้า` : ''}` : ''));
   const gd = grows.map((r) => ({ r, diff: r.cur - r.prv })).filter((x) => x.r.cur || x.r.prv).sort((a, b) => b.diff - a.diff);
-  if (gd.length && gd[0].diff > 0) li.push(`กลุ่มที่โตมากสุด: <b>${esc(gd[0].r.name)}</b> ${num(gd[0].r.prv)} → ${num(gd[0].r.cur)} ${u} (${gd[0].r._new ? 'ใหม่' : sgn(gd[0].r.mom)})`);
-  const gdn = gd.filter((x) => x.diff < 0); if (gdn.length) { const x = gdn[gdn.length - 1]; li.push(`กลุ่มที่ลดลงมากสุด: <b>${esc(x.r.name)}</b> ${num(x.r.prv)} → ${num(x.r.cur)} ${u} (${sgn(x.r.mom)})`); }
+  if (gd.length && gd[0].diff > 0) li.push(`กลุ่มที่โตมากสุด: <b>${esc(gd[0].r.name)}</b> ${money(gd[0].r.prv)} → ${money(gd[0].r.cur)} ${u} (${gd[0].r._new ? 'ใหม่' : sgn(gd[0].r.mom)})`);
+  const gdn = gd.filter((x) => x.diff < 0); if (gdn.length) { const x = gdn[gdn.length - 1]; li.push(`กลุ่มที่ลดลงมากสุด: <b>${esc(x.r.name)}</b> ${money(x.r.prv)} → ${money(x.r.cur)} ${u} (${sgn(x.r.mom)})`); }
   const best = mrows.filter((r) => r.cur > 0).sort((a, b) => b.cur - a.cur)[0];
-  if (best) li.push(`Model ขายดีสุด: <b>${esc(best.name)}</b> ${num(best.cur)} ${u} คิดเป็น ${shareF(best.sh)} ของยอดสาขา${best.tgt > 0 ? ` (%ACH ${Math.round(best.ach * 100)}%)` : ''}`);
+  if (best) li.push(`Model ขายดีสุด: <b>${esc(best.name)}</b> ${money(best.cur)} ${u} คิดเป็น ${shareF(best.sh)} ของยอดสาขา${best.tgt > 0 ? ` (%ACH ${Math.round(best.ach * 100)}%)` : ''}`);
   if (HASSTOCK) { const ns = mrows.filter((r) => r.tgt > 0 && r.st === 0); const lowc = mrows.filter((r) => r.st > 0 && r.s28 > 0 && r.st / (r.s28 / 4) < CW_RISK);
     if (ns.length) li.push(`มี Target แต่ไม่มี Stock ${ns.length} รุ่น: ${ns.slice(0, 6).map((r) => `<b>${esc(r.name)}</b>`).join(', ')}${ns.length > 6 ? ' …' : ''} — ขอโอน / เติมของ`);
     if (lowc.length) li.push(`Stock เสี่ยงขาด (Cover &lt; ${CW_RISK} สัปดาห์): ${lowc.map((r) => `<b>${esc(r.name)}</b> เหลือ ${num(r.st)} เครื่อง`).join(', ')}`); }
@@ -1044,14 +1048,14 @@ function sPC(mi) {
   const mix = grows.filter((r) => r.ash != null && tot.cur > 0 && r.ash - (r.sh || 0) >= 0.1).sort((a, b) => (b.ash - (b.sh || 0)) - (a.ash - (a.sh || 0)));
   if (mix.length) li.push(`เทียบสัดส่วนกับ ${esc(s.area)}: ${mix.slice(0, 3).map((r) => `<b>${esc(r.name)}</b> สาขา ${shareF(r.sh || 0)} vs Area ${shareF(r.ash)}`).join(', ')} — สาขายังขายกลุ่มนี้น้อยกว่าค่าเฉลี่ย Area`);
   const mup = mrows.filter((r) => r.prv > 0 || r.cur > 0).map((r) => ({ r, diff: r.cur - r.prv })).sort((a, b) => a.diff - b.diff);
-  if (mup.length && mup[0].diff < 0) li.push(`Model ที่ลดลงมากสุด: <b>${esc(mup[0].r.name)}</b> ${num(mup[0].r.prv)} → ${num(mup[0].r.cur)} ${u}`);
-  if (mup.length && mup[mup.length - 1].diff > 0) { const x = mup[mup.length - 1]; li.push(`Model ที่เพิ่มขึ้นมากสุด: <b>${esc(x.r.name)}</b> ${num(x.r.prv)} → ${num(x.r.cur)} ${u}`); }
+  if (mup.length && mup[0].diff < 0) li.push(`Model ที่ลดลงมากสุด: <b>${esc(mup[0].r.name)}</b> ${money(mup[0].r.prv)} → ${money(mup[0].r.cur)} ${u}`);
+  if (mup.length && mup[mup.length - 1].diff > 0) { const x = mup[mup.length - 1]; li.push(`Model ที่เพิ่มขึ้นมากสุด: <b>${esc(x.r.name)}</b> ${money(x.r.prv)} → ${money(x.r.cur)} ${u}`); }
   $('#pd-ai').innerHTML = `<h4>บทวิเคราะห์ · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl}</h4><ul>${li.map((x) => `<li>${x}</li>`).join('')}</ul>`;
   // tables
-  const cols = (first) => [first, { h: 'Target เดือน', v: (r) => r.tgt, f: tgtF }, { g: `${THF[mi.m - 1]} 1–${d}`, h: SHOWA() ? 'Net Amount' : 'ยอดขาย', v: (r) => r.cur, f: num }, ...amtCol((r) => r.am, { g: `${THF[mi.m - 1]} 1–${d}` }),
+  const cols = (first) => [first, { h: 'Target เดือน', v: (r) => r.tgt, f: tgtF }, { g: `${THF[mi.m - 1]} 1–${d}`, h: SHOWA() ? 'Net Amount' : 'ยอดขาย', v: (r) => r.cur, f: money }, ...amtCol((r) => r.am, { g: `${THF[mi.m - 1]} 1–${d}` }),
     { g: `${THF[mi.m - 1]} 1–${d}`, h: '%ACH เดือน', p: 1, v: (r) => r.ach, f: pct }, { g: `${THF[mi.m - 1]} 1–${d}`, h: `%ACH ถึงวันนี้`, p: 1, v: (r) => r.achd, f: pct },
-    { g: 'MoM', h: pl, v: (r) => r.prv, f: num }, { g: 'MoM', h: 'MoM %', p: 1, v: (r) => r.mom, f: momF, x: (v, r) => r._new ? 'ใหม่' : v == null ? '' : v },
-    { h: `${THF[pmi.m - 1]} ทั้งเดือน`, v: (r) => r.pfull, f: num },
+    { g: 'MoM', h: pl, v: (r) => r.prv, f: money }, { g: 'MoM', h: 'MoM %', p: 1, v: (r) => r.mom, f: momF, x: (v, r) => r._new ? 'ใหม่' : v == null ? '' : v },
+    { h: `${THF[pmi.m - 1]} ทั้งเดือน`, v: (r) => r.pfull, f: money },
     { g: 'สัดส่วนยอดขาย', h: 'สาขา', p: 1, v: (r) => r.sh, f: shareF }, { g: 'สัดส่วนยอดขาย', h: 'Area', p: 1, v: (r) => r.ash, f: shareF },
     { g: `Stock ณ ${thDate(D.meta.stock_asof).replace(/ \d\d:\d\d น\.$/, '')}`, h: 'Stock (เครื่อง)', v: (r) => HASSTOCK ? r.st : null, f: (v) => v == null ? '<span class="na">–</span>' : v ? `<b>${num(v)}</b>` : '<span class="cw bad">0</span>' },
     { g: `Stock ณ ${thDate(D.meta.stock_asof).replace(/ \d\d:\d\d น\.$/, '')}`, h: 'ขาย 28 วัน', v: (r) => r.s28, f: num },
@@ -1068,8 +1072,8 @@ function sPC(mi) {
   for (const [dt, sc, k, e, su, sn, sa] of (D.staff ? D.staff.r : [])) { if (sc !== c || dt.slice(0, 7) !== mi.ym) continue;
     const x = st.get(e) || { name: (D.staff.e[e] || e), e, cur: 0, am: 0, m: new Map() }; const v = S.metric === 'q' ? su : sn; x.cur += v; x.am += sa ?? sn; x.m.set(k, (x.m.get(k) || 0) + v); st.set(e, x); }
   const srows = [...st.values()].sort((a, b) => b.cur - a.cur).map((x) => { const top = [...x.m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    return { name: x.name, e: x.e, cur: x.cur, am: x.am, sh: ratio(x.cur, tot.cur), top: top.map(([k, v]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${num(v)})`).join(', ') }; });
-  const stab = renderTable($('#t-pd-s'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'รหัส', v: (r) => r.e, cls: 't' }, { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${u})`, v: (r) => r.cur, f: num }, ...amtCol((r) => r.am),
+    return { name: x.name, e: x.e, cur: x.cur, am: x.am, sh: ratio(x.cur, tot.cur), top: top.map(([k, v]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${money(v)})`).join(', ') }; });
+  const stab = renderTable($('#t-pd-s'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'รหัส', v: (r) => r.e, cls: 't' }, { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${u})`, v: (r) => r.cur, f: money }, ...amtCol((r) => r.am),
     { h: 'สัดส่วนของสาขา', p: 1, v: (r) => r.sh, f: shareF }, { h: 'Model ที่ขายมากสุด', v: (r) => r.top, cls: 't' }], srows);
   $('#n-pd-s').innerHTML = `ข้อมูลรายพนักงานมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}` + (srows.length ? '' : ' — ยังไม่มีข้อมูลในเดือนนี้');
   EXPORT.ms = [toSheet('5 PC กลุ่ม Model', gtab, `${s.n} (${c}) · ยอดขายตามกลุ่ม Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
@@ -1129,10 +1133,10 @@ function sTrend(mi) {
     out.push(mk(label(key), [key], dim === 'model' || dim === 'area' ? 'ind' : '')); }
   const T0 = { name: 'รวมทั้งหมด', _cls: 'tot', w: tot, c: cT, am: cA, p: pT }; out.push(T0);
   const cols = [{ h: dim === 'model' ? 'Model' : dim === 'area' ? 'Region / Area' : dim === 'zone' ? 'Region' : 'ประเภทสาขา', v: (r) => r.name, cls: 't' }];
-  B.forEach((b, i) => cols.push({ g: gl, h: b.l, v: (r) => r.w[i], f: (v) => v ? num(v) : '<span class="na">–</span>', cls: b.cur ? 'wcur' : '' }));
+  B.forEach((b, i) => cols.push({ g: gl, h: b.l, v: (r) => r.w[i], f: (v) => v ? money(v) : '<span class="na">–</span>', cls: b.cur ? 'wcur' : '' }));
   const cg = 'เทียบ'; const sh = (t) => t.replace(/\s*\(.*\)\s*$/, ''); const tp = (t) => (t.match(/\((.*)\)\s*$/) || [])[1] || '';
-  cols.push({ g: cg, h: sh(cur.l), tip: tp(cur.l), v: (r) => r.c, f: (v) => `<b>${num(v)}</b>` }, ...amtCol((r) => r.am, { g: cg, h: `Amount ${sh(cur.l)}`, tip: `${tp(cur.l) ? tp(cur.l) + ' · ' : ''}${AMT_TIP}` }));
-  comps.forEach((x, i) => { cols.push({ g: cg, h: sh(x.l), tip: tp(x.l), v: (r) => r.p[i], f: num });
+  cols.push({ g: cg, h: sh(cur.l), tip: tp(cur.l), v: (r) => r.c, f: (v) => `<b>${money(v)}</b>` }, ...amtCol((r) => r.am, { g: cg, h: `Amount ${sh(cur.l)}`, tip: `${tp(cur.l) ? tp(cur.l) + ' · ' : ''}${AMT_TIP}` }));
+  comps.forEach((x, i) => { cols.push({ g: cg, h: sh(x.l), tip: tp(x.l), v: (r) => r.p[i], f: money });
     if (!x.nopct) cols.push({ g: cg, h: x.pl, p: 1, v: (r) => r.p[i] > 0 ? r.c / r.p[i] - 1 : null, f: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '<span class="na">ไม่มีข้อมูลปีก่อน</span>' : '<span class="up">ใหม่</span>') : momF(v), x: (v, r) => !(r.p[i] > 0) && r.c > 0 ? (per === 'ytd' ? '' : 'ใหม่') : v == null ? '' : v }); });
   const t = renderTable($('#t-wk'), cols, out);
   const tw = $('#t-wk'); requestAnimationFrame(() => { const th = tw.querySelector('th.wcur'); if (th) tw.scrollLeft = Math.max(0, th.offsetLeft - tw.clientWidth + 420); });
@@ -1142,11 +1146,11 @@ function sTrend(mi) {
   for (let i = 0; i <= 4; i++) { const y = 8 + (H0 - pb - 8) * (1 - i / 4); svg += `<line x1="${pl}" x2="${W0}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${pl - 4}" y="${y + 3}" text-anchor="end">${S.metric === 'q' ? num(mx * i / 4) : (mx * i / 4 / 1e6).toFixed(1) + 'M'}</text>`; }
   const every = nb > 40 ? 4 : nb > 20 ? 3 : 1;
   B.forEach((b, i) => { const v = tot[i], h = (H0 - pb - 8) * v / mx, x = pl + i * bw;
-    svg += `<rect class="wb${b.cur ? ' cur' : ''}" x="${x + 1}" y="${H0 - pb - h}" width="${Math.max(1, bw - 2)}" height="${h}"><title>${b.l}: ${num(v)} ${unit()}</title></rect>`;
+    svg += `<rect class="wb${b.cur ? ' cur' : ''}" x="${x + 1}" y="${H0 - pb - h}" width="${Math.max(1, bw - 2)}" height="${h}"><title>${b.l}: ${money(v)} ${unit()}</title></rect>`;
     if (i === 0 || i % every === 0 || i === nb - 1) svg += `<text x="${x + bw / 2}" y="${H0 - 6}" text-anchor="middle">${b.l.replace('*', '')}</text>`; });
   $('#wk-chart').innerHTML = svg + '</svg>';
   const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
-  $('#wk-kpi').innerHTML = kc(cur.l, num(cT), unit() + (SHOWA() ? ` · Amount ${num(cA)}` : '')) + comps.map((x, i) => kc(x.l, num(pT[i]), x.nopct ? unit() : (pT[i] > 0 ? `${x.pl} <span class="${cT >= pT[i] ? 'up' : 'dn'}">${sgn(cT / pT[i] - 1)}</span> · ${cT - pT[i] >= 0 ? '+' : ''}${num(cT - pT[i])}` : (per === 'ytd' ? 'ไม่มีข้อมูลปีก่อนในระบบ' : '–')))).join('');
+  $('#wk-kpi').innerHTML = kc(cur.l, money(cT), unit() + (SHOWA() ? ` · Amount ${money(cA)}` : '')) + comps.map((x, i) => kc(x.l, money(pT[i]), x.nopct ? unit() : (pT[i] > 0 ? `${x.pl} <span class="${cT >= pT[i] ? 'up' : 'dn'}">${sgn(cT / pT[i] - 1)}</span> · ${cT - pT[i] >= 0 ? '+' : ''}${money(cT - pT[i])}` : (per === 'ytd' ? 'ไม่มีข้อมูลปีก่อนในระบบ' : '–')))).join('');
   const notes = { day: `เทียบวันล่าสุด ${thDate(ref)} กับเมื่อวานและวันเดียวกันของสัปดาห์ก่อน${ref === LATEST && (D.meta.sales_asof || '').length > 10 ? ` · วันนี้มีข้อมูลถึง ${D.meta.sales_asof.slice(11, 16)} น.` : ''}`,
     week: `สัปดาห์แบบ ISO (จันทร์–อาทิตย์) · W${mi.wk} = ${thDate(mi.cwFrom)} – ${thDate(ref)}${mi.fullWeek ? '' : ' (ยังไม่ครบสัปดาห์ · * = ถึงวันที่ข้อมูลล่าสุด)'} · เทียบ W${mi.pwk} ${mi.fullWeek ? 'ทั้งสัปดาห์' : 'วันเดียวกัน'}`,
     mtd: `ยอดรายเดือน · เดือนปัจจุบัน 1–${mi.asofDay} เทียบช่วงวันเดียวกันของ${THF[mi.prevM - 1]} (MoM)`,
@@ -1165,9 +1169,9 @@ function sToday() {
     for (const [c, k, tu, tn] of (D.targets[ym] || [])) { if (!okShop(c) || !okModel(k)) continue; for (const key of [].concat(keyFn(c, k))) { const x = g(key); x.t += vv(tu, tn) / dim; if (tu > 0 || tn > 0) x.tshops.add(c); } }
     return m; };
   const pctD = (a, b) => b > 0 ? a / b - 1 : null;
-  const cols = (first) => [first, { g: thDate(d), h: SHOWA() ? 'Net Amount' : 'ยอดขาย', v: (r) => r.d, f: (v) => `<b>${num(v)}</b>` }, ...amtCol((r) => r.a, { g: thDate(d) }), { g: thDate(d), h: 'Target/วัน', v: (r) => r.t, f: tgtF }, { g: thDate(d), h: '%ACH', p: 1, v: (r) => ratio(r.d, r.t), f: pct },
-    { g: 'เทียบเมื่อวาน', h: shortD(y1), v: (r) => r.y, f: num }, { g: 'เทียบเมื่อวาน', h: 'DoD %', p: 1, v: (r) => pctD(r.d, r.y), f: (v, r) => !(r.y > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.y > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v },
-    { g: 'วันเดียวกันสัปดาห์ก่อน', h: shortD(w1), v: (r) => r.w, f: num }, { g: 'วันเดียวกันสัปดาห์ก่อน', h: 'WoW %', p: 1, v: (r) => pctD(r.d, r.w), f: (v, r) => !(r.w > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.w > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v }];
+  const cols = (first) => [first, { g: thDate(d), h: SHOWA() ? 'Net Amount' : 'ยอดขาย', v: (r) => r.d, f: (v) => `<b>${money(v)}</b>` }, ...amtCol((r) => r.a, { g: thDate(d) }), { g: thDate(d), h: 'Target/วัน', v: (r) => r.t, f: tgtF }, { g: thDate(d), h: '%ACH', p: 1, v: (r) => ratio(r.d, r.t), f: pct },
+    { g: 'เทียบเมื่อวาน', h: shortD(y1), v: (r) => r.y, f: money }, { g: 'เทียบเมื่อวาน', h: 'DoD %', p: 1, v: (r) => pctD(r.d, r.y), f: (v, r) => !(r.y > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.y > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v },
+    { g: 'วันเดียวกันสัปดาห์ก่อน', h: shortD(w1), v: (r) => r.w, f: money }, { g: 'วันเดียวกันสัปดาห์ก่อน', h: 'WoW %', p: 1, v: (r) => pctD(r.d, r.w), f: (v, r) => !(r.w > 0) && r.d > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.w > 0) && r.d > 0 ? 'ใหม่' : v == null ? '' : v }];
   const sumR = (name, xs, cls) => xs.reduce((a, x) => { a.d += x.d; a.y += x.y; a.w += x.w; a.t += x.t; a.u += x.u; a.a += x.a; x.shops.forEach((c) => a.shops.add(c)); x.tshops.forEach((c) => a.tshops.add(c)); return a; }, { name, _cls: cls, d: 0, y: 0, w: 0, t: 0, u: 0, a: 0, shops: new Set(), tshops: new Set() });
   // area
   const A = agg((c) => SH[c].area); const arows = [];
@@ -1189,12 +1193,12 @@ function sToday() {
   const srows = [...SHP.entries()].filter(([, x]) => x.u > 0 || x.v > 0).map(([c, x]) => ({ c, name: SH[c].n.replace(/^True Shop /i, ''), area: SH[c].area, pc: SH[c].pc, v: x.v, u: x.u, a: x.a,
     top: [...x.m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, q]) => `${(MD[k] || { name: k }).name.replace(/^VIVO /, '')} (${q})`).join(', ') })).sort((a, b) => b.v - a.v);
   const tS = renderTable($('#t-td-shop'), [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'Area', v: (r) => r.area, cls: 't' }, { h: 'PC', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
-    { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, ...amtCol((r) => r.a), { h: 'เครื่อง', v: (r) => r.u, f: num }, { h: 'รุ่นที่ขาย', v: (r) => r.top, cls: 't' }], srows);
+    { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${money(v)}</b>` }, ...amtCol((r) => r.a), { h: 'เครื่อง', v: (r) => r.u, f: num }, { h: 'รุ่นที่ขาย', v: (r) => r.top, cls: 't' }], srows);
   // staff (TSM only)
   const ST = new Map(); for (const [dd, c, k, e, u, n, sa] of (D.staffAll ? D.staffAll.r : [])) { if (dd !== d || !okShop(c) || !okModel(k)) continue; const x = ST.get(e) || { e, name: D.staffAll.e[e] || e, c, v: 0, u: 0, a: 0 }; x.v += vv(u, n); x.u += u; x.a += sa ?? n; ST.set(e, x); }
   const strows = [...ST.values()].filter((x) => x.u > 0 || x.v > 0).sort((a, b) => b.v - a.v);
   const tE = renderTable($('#t-td-staff'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'สาขา', v: (r) => SH[r.c] ? SH[r.c].n.replace(/^True Shop /i, '') : r.c, cls: 't' },
-    { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${num(v)}</b>` }, ...amtCol((r) => r.a), { h: 'เครื่อง', v: (r) => r.u, f: num }], strows);
+    { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${unit()})`, v: (r) => r.v, f: (v) => `<b>${money(v)}</b>` }, ...amtCol((r) => r.a), { h: 'เครื่อง', v: (r) => r.u, f: num }], strows);
   $('#n-td-staff').innerHTML = d > (D.meta.hist_asof || '') ? '' : `ข้อมูลรายพนักงานมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}`;
   // KPIs
   const kc = (l, v, sub, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
@@ -1202,13 +1206,13 @@ function sToday() {
   const isLatest = d === LATEST_ALL; const tm = isLatest && (D.meta.sales_asof || '').length > 10 ? D.meta.sales_asof.slice(11, 16) : '';
   const noYet = [...TOT.tshops].filter((c) => !TOT.shops.has(c)).length;
   const bar = (p) => p == null ? '' : `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>`;
-  $('#td-kpi').innerHTML = `<div class="kpi main"><div class="l">ยอดขาย ${thDate(d)}${tm ? ` · ถึง ${tm} น.` : ''}</div><div class="v">${num(TOT.d)} <span style="font-size:14px;font-weight:500;color:var(--muted)">${unit()}</span></div><div class="s">${SHOWA() ? `Amount ${num(TOT.a)} บาท · ` : ''}${num(TOT.u)} เครื่อง · ขายได้ ${num(TOT.shops.size)} สาขา · ยังไม่มียอด ${num(noYet)} จาก ${num(TOT.tshops.size)} สาขาที่มี Target</div></div>`
+  $('#td-kpi').innerHTML = `<div class="kpi main"><div class="l">ยอดขาย ${thDate(d)}${tm ? ` · ถึง ${tm} น.` : ''}</div><div class="v">${money(TOT.d)} <span style="font-size:14px;font-weight:500;color:var(--muted)">${unit()}</span></div><div class="s">${SHOWA() ? `Amount ${money(TOT.a)} บาท · ` : ''}${num(TOT.u)} เครื่อง · ขายได้ ${num(TOT.shops.size)} สาขา · ยังไม่มียอด ${num(noYet)} จาก ${num(TOT.tshops.size)} สาขาที่มี Target</div></div>`
     + kc('%ACH วันนี้', ach == null ? '–' : `<span class="cw ${pctCls(ach)}">${Math.round(ach * 100)}%</span>`, `Target/วัน ${tgtF(TOT.t)}`, ach)
-    + kc(`เทียบเมื่อวาน · ${shortD(y1)}`, fmtP(dod), `${num(TOT.y)} ${unit()}`)
-    + kc(`เทียบสัปดาห์ก่อน · ${shortD(w1)}`, fmtP(wow), `${num(TOT.w)} ${unit()}`);
+    + kc(`เทียบเมื่อวาน · ${shortD(y1)}`, fmtP(dod), `${money(TOT.y)} ${unit()}`)
+    + kc(`เทียบสัปดาห์ก่อน · ${shortD(w1)}`, fmtP(wow), `${money(TOT.w)} ${unit()}`);
   // region strip
   $('#td-zone').innerHTML = arows.filter((r) => r._cls === 'sub').map((r) => { const a = ratio(r.d, r.t), dd = pctD(r.d, r.y);
-    return `<div class="z"><b>${esc(r.name)}</b><span class="v">${num(r.d)}</span><span class="s">%ACH ${a == null ? '–' : Math.round(a * 100) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
+    return `<div class="z"><b>${esc(r.name)}</b><span class="v">${money(r.d)}</span><span class="s">%ACH ${a == null ? '–' : Math.round(a * 100) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
   $('#t-td-area').hidden = S.tdview !== 'area'; $('#t-td-model').hidden = S.tdview !== 'model';
   $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
   EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
@@ -1220,10 +1224,10 @@ function kpis(mi, tot, ts) {
   const a1 = ratio(V(tot), T(tot)), a2 = ratio(V(tot), T(tot) * mi.todate), a3 = ratio(rr, T(tot));
   const cW = S.metric === 'q' ? tot.cu : tot.cn, qW = S.metric === 'q' ? tot.qu : tot.qn;
   $('#kpis').innerHTML = k(`Target ${THF[mi.m - 1]}`, tgtF(T(tot)) || '–', unit()) +
-    k(SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', num(V(tot)), `${SHOWA() ? `Amount ${num(tot.a)} · ` : ''}%ACH เดือน ${a1 == null ? '–' : Math.round(a1 * 100) + '%'}`, a1) +
+    k(SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', money(V(tot)), `${SHOWA() ? `Amount ${money(tot.a)} · ` : ''}%ACH เดือน ${a1 == null ? '–' : Math.round(a1 * 100) + '%'}`, a1) +
     k(`%ACH ถึงวันที่ ${mi.asofDay}`, a2 == null ? '–' : Math.round(a2 * 100) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
-    k('Runrate ทั้งเดือน', num(rr), `Runrate %ACH ${a3 == null ? '–' : Math.round(a3 * 100) + '%'}`, a3) +
-    k(`WoW · W${mi.wk} vs W${mi.pwk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, qW > 0 ? `<span class="${cW >= qW ? 'up' : 'dn'}">${sgn(cW / qW - 1)}</span>` : '–', `W${mi.wk} ${num(cW)} · W${mi.pwk} ${num(qW)}`) +
+    k('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${a3 == null ? '–' : Math.round(a3 * 100) + '%'}`, a3) +
+    k(`WoW · W${mi.wk} vs W${mi.pwk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, qW > 0 ? `<span class="${cW >= qW ? 'up' : 'dn'}">${sgn(cW / qW - 1)}</span>` : '–', `W${mi.wk} ${money(cW)} · W${mi.pwk} ${money(qW)}`) +
     k('Stock คงเหลือ', HASSTOCK ? num(ts.stock) : '–', !HASSTOCK ? 'รอไฟล์ Stock ที่มีเครื่อง Vivo' : `Cover ${ts.s28 > 0 ? nf1.format(ts.stock / (ts.s28 / 4)) + ' สัปดาห์' : '–'} · ขาย 28 วัน ${num(ts.s28)} เครื่อง`);
 }
 
@@ -1284,7 +1288,7 @@ window.addEventListener('scroll', () => { const o = document.querySelector('.tip
 function sheetPNG(sh, tb, fname) {
   const F = '"Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif'; const sc = 2;
   const meas = document.createElement('canvas').getContext('2d');
-  const txt = (v, k) => v == null || v === '' ? '–' : typeof v === 'number' ? (k === 'ach' || k === 'pct' ? Math.round(v * 100) + '%' : k === 'mom' ? (v >= 0 ? '+' : '') + Math.round(v * 100) + '%' : k === 'cover' ? nf1.format(v) : num(v)) : String(v);
+  const txt = (v, k) => v == null || v === '' ? '–' : typeof v === 'number' ? (k === 'ach' || k === 'pct' ? Math.round(v * 100) + '%' : k === 'mom' ? (v >= 0 ? '+' : '') + Math.round(v * 100) + '%' : k === 'cover' ? nf1.format(v) : k === 'money' ? nf2.format(v) : num(v)) : String(v);
   const nc = sh.head.length, pad = 10, rh = 26, x0 = 24;
   const hsplit = (h) => { const m = String(h).match(/^(.*?)\s*\((.*)\)\s*$/); return m ? [m[1], m[2]] : [String(h), '']; }; const hh = sh.head.some((h) => hsplit(h)[1]) ? 40 : 26;
   meas.font = `600 12px ${F}`; const cw = sh.head.map((h, c) => { meas.font = `600 12px ${F}`; const [h1, h2] = hsplit(h); let w = meas.measureText(h1).width; meas.font = `11px ${F}`; w = Math.max(w, meas.measureText(h2).width);
@@ -1482,8 +1486,9 @@ function downloadXlsx(sheets, fname) {
         else if (k === 'ach' || k === 'pct') { o.nf = 9; o.h = 'right'; if (k === 'ach' && typeof v === 'number') Object.assign(o, achStyle(v)); }
         else if (k === 'mom') { o.nf = 166; o.h = 'right'; if (typeof v === 'number') o.font = v >= 0 ? 4 : 5; else if (v === 'ใหม่') o.font = 4; }
         else if (k === 'cover') { o.nf = 164; o.h = 'right'; Object.assign(o, coverStyle(v)); }
+        else if (k === 'money') { o.h = 'right'; o.nf = 4; }
         else { o.h = 'right'; o.nf = typeof v === 'number' && Math.abs(v - Math.round(v)) > 1e-6 && Math.abs(v) < 100 ? 164 : 3; }
-        widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? nf0.format(Math.round(v)).length + 3 : String(v ?? '').length + 2)));
+        widths[c] = Math.max(widths[c], Math.min(k === 'note' ? 120 : 46, (typeof v === 'number' ? (k === 'money' ? nf2 : nf0).format(k === 'money' ? v : Math.round(v)).length + 3 : String(v ?? '').length + 2)));
         return cell(colL(c) + r, v, xf(o)); }).join('') + '</row>'); r++; });
     const last = s.rowCls.indexOf('gap') >= 0 ? hr + s.rowCls.indexOf('gap') : r - 1;
     const sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
