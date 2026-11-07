@@ -100,6 +100,21 @@ def merge_target(fp):
 def merge_pc(fp):
     import openpyxl
     wb = openpyxl.load_workbook(fp, read_only=True, data_only=True)
+    # Format 2 ("Update PC vivo as. 7.11.26"): one sheet, header row has "Shop Code WW" and "PC Active".
+    for n in wb.sheetnames:
+        rows = list(wb[n].iter_rows(values_only=True))
+        norm = lambda r: [re.sub(r'\s+', ' ', str(c)).strip().lower() if c is not None else '' for c in r]
+        hr = next((i for i, r in enumerate(rows) if r and 'shop code ww' in norm(r) and 'pc active' in norm(r)), None)
+        if hr is None: continue
+        h = norm(rows[hr]); iw, iv = h.index('shop code ww'), h.index('pc active')
+        def num(v):
+            try: return int(float(v))
+            except (TypeError, ValueError): return 0
+        out = [{'shop': str(r[iw]).strip().replace('.0', ''), 'vivo_pc': num(r[iv])} for r in rows[hr + 1:] if r and r[iw] and str(r[iw]).strip()[:1].isdigit()]
+        df = pd.DataFrame(out).drop_duplicates('shop'); _save(df, 'vivo_pc.csv')
+        _meta_set(vivo_pc_sheet=f'{os.path.basename(str(fp))} · PC Active')
+        print(f'vivo PC (PC Active): {len(df)} shops, {int((df.vivo_pc > 0).sum())} with Vivo PC ({int(df.vivo_pc.sum())} PC)')
+        return
     best = None
     for n in wb.sheetnames:
         m = re.match(r'^PC\s+([A-Za-z]+)\s+(\d{2})\s*$', n.strip())

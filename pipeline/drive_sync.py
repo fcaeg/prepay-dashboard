@@ -76,7 +76,7 @@ def kind(name):
     if n.startswith('daily_sales'): return 'sales'
     if 'vivo' in n and 'target' in n: return 'vivotarget'
     if 'vivo' in n and 'sale' in n: return 'vivohist'
-    if re.search(r'pc[ _]?brand', n): return 'pc'
+    if re.search(r'pc[ _]?brand', n) or re.search(r'\bpc\b', n.replace('_', ' ')) and 'vivo' in n: return 'pc'
     if n.startswith('gia') and n.endswith(('.xlsx', '.xlsm', '.zip')): return 'giatarget'
     if n.startswith('stock_balance_report'): return 'stock'
     if re.search(r'individual[ _]target[ _]of', n): return 'indtarget'
