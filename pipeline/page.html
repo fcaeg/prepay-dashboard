@@ -950,6 +950,7 @@ body.pc-noscroll { overflow: hidden; }
         <label class="pc-field">ค้นหาสาขา / สินค้า
           <input id="q-stock" class="pc-q" data-q="stock" type="search" aria-label="ค้นหาสาขาหรือสินค้า">
         </label>
+        <button class="pc-export pc-csv" id="stk-csv" type="button">⬇ Export CSV</button>
       </div>
       <div class="pc-scroll"><table data-draw="tb_stock" data-source="stock_cover" data-row-key="shop,level,key"></table></div>
     </article>
@@ -1582,7 +1583,7 @@ dash.draw('ml_14', (el) => { el.textContent = PC.mlabel(); });
 
 dash.onData(() => {
   document.querySelectorAll('#f-period').forEach((sel) => { sel.value = dash.params().period || 'today'; });
-  document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'group'; });
+  document.querySelectorAll('#f-slevel').forEach((sel) => { sel.value = dash.params().slevel || 'mat'; });
   document.querySelectorAll('#f-ascope').forEach((sel) => { sel.value = dash.params().ascope || 'current'; });
   document.querySelectorAll('#f-wstatus').forEach((sel) => { sel.value = dash.params().wstatus || 'ALL'; });
   document.querySelectorAll('#f-mperiod').forEach((sel) => { sel.value = dash.params().mperiod || 'mtd'; });
@@ -1985,7 +1986,7 @@ dash.draw('c_s_matrix', (el) => {
       el.append(c); } }
 });
 dash.draw('tb_stock', (el) => {
-  const lv = dash.params().slevel || 'group', sf = dash.params().sstatus || 'ALL'; let r = stRows(lv);
+  const lv = dash.params().slevel || 'mat', sf = dash.params().sstatus || 'ALL'; let r = stRows(lv);
   if (r && sf !== 'ALL') r = r.filter((x) => (sf === 'risk' ? x.status === 'out' || x.status === 'low' : x.status === sf));
   const rank = (s) => ST_ORDER.indexOf(s);
   r = r && r.map((x) => ({ ...x, srank: rank(x.status) * 1e6 + (x.cover_days ?? 1e5) }));

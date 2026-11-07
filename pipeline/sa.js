@@ -994,3 +994,27 @@ const NSXP = async () => { try { await document.fonts.ready; } catch (e) {}
 if (!window.PC_NSXP_BOUND) { window.PC_NSXP_BOUND = true;
   document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#shns-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
     try { const { cv, name } = await NSXP(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
+
+/* ---------- Stock table: Type Sim + ประเภทซิม + Matcode / ชื่อซิม columns, CSV export ---------- */
+const stkRows = () => { const lv = dash.params().slevel || 'mat', sf = dash.params().sstatus || 'ALL'; let r = stRows(lv); if (!r) return null;
+  if (sf !== 'ALL') r = r.filter((x) => (sf === 'risk' ? x.status === 'out' || x.status === 'low' : x.status === sf));
+  const mm = new Map((PC.rows('matcodes') || []).map((m) => [String(m.matcode), m])); const rank = (s) => ST_ORDER.indexOf(s);
+  return r.map((x) => { const m = lv === 'mat' ? mm.get(String(x.key)) || {} : {};
+    return { ...x, sub: lv === 'group' ? null : lv === 'sub' ? x.key : (m.subgroup || m.group || '-'), mat: lv === 'mat' ? x.key : null, mname: lv === 'mat' ? (m.name || x.label) : null, price: lv === 'mat' ? (m.price ?? null) : null, srank: rank(x.status) * 1e6 + (x.cover_days ?? 1e5) }; }); };
+dash.draw('tb_stock', (el) => { const lv = dash.params().slevel || 'mat';
+  PC.table(el, 'tb_stock', stkRows(), { key: ['shop', 'level', 'key'], def: 'srank', dir: 1, q: 'stock', limit: 3000, cols: [
+    { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'group', label: 'Type Sim' },
+    ...(lv !== 'group' ? [{ f: 'sub', label: 'ประเภทซิม' }] : []), ...(lv === 'mat' ? [{ f: 'mat', label: 'Matcode' }, { f: 'mname', label: 'ชื่อซิม', wrap: true }, { f: 'price', label: 'ราคา', num: true, fmt: PC.nf }] : []),
+    { f: 'stock', label: 'Stock', num: true, fmt: PC.nf, bar: true }, { f: 'sold28', label: 'ขาย 28 วัน', num: true, fmt: PC.nf },
+    { f: 'avg_week', label: 'เฉลี่ย/สัปดาห์', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt }, { f: 'trend', label: 'แนวโน้ม 7 วัน', num: true, pill: (d) => trendPill(d.trend) },
+    { f: 'srank', label: 'สถานะ', num: true, pill: (d) => [ST[d.status][2], ST[d.status][0]] }, { f: 'need28', label: 'ควรเติม (ให้พอ 4 สัปดาห์)', num: true, fmt: (v) => (v ? PC.nf(v) : '–') } ] }); });
+if (!window.PC_STK_BOUND) { window.PC_STK_BOUND = true;
+  document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#stk-csv'))) return; let r = stkRows(); if (!r) return; const lv = dash.params().slevel || 'mat';
+    const q = ((document.getElementById('q-stock') || {}).value || '').trim().toLowerCase(); if (q) r = r.filter((d) => [d.shop, d.name, d.area, d.group, d.sub, d.mat, d.mname, d.label].some((v) => v != null && String(v).toLowerCase().includes(q)));
+    r = r.slice().sort((a, b) => a.srank - b.srank);
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; const rs = r[0] || {};
+    const head = ['รหัสสาขา', 'สาขา', 'Area', 'ประเภทสาขา', 'Type Sim', ...(lv !== 'group' ? ['ประเภทซิม'] : []), ...(lv === 'mat' ? ['Matcode', 'ชื่อซิม', 'ราคา'] : []), 'Stock', 'ขาย 28 วัน', 'ขาย 7 วัน', 'เฉลี่ย/สัปดาห์', 'Cover (สัปดาห์)', 'แนวโน้ม 7 วัน', 'สถานะ', 'ควรเติม (ให้พอ 4 สัปดาห์)'];
+    const lines = [head.join(',')].concat(r.map((d) => ['="' + d.shop + '"', esc(d.name), esc(d.area), esc(d.stype), esc(d.group), ...(lv !== 'group' ? [esc(d.sub)] : []), ...(lv === 'mat' ? ['="' + d.mat + '"', esc(d.mname), d.price ?? ''] : []),
+      d.stock, d.sold28, d.sold7, d.avg_week, d.cover_wk ?? '', d.trend == null ? '' : Math.round(d.trend * 1000) / 10 + '%', esc(ST[d.status][0]), d.need28 || ''].join(',')));
+    const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url;
+    a.download = 'Stock_' + ({ group: 'TypeSim', sub: 'SimType', mat: 'Matcode' })[lv] + '_' + String(rs.to || '') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
