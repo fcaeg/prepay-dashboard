@@ -188,7 +188,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
   #x-all { grid-column: 2 / 3; grid-row: 2; font-size: 12.5px; }
   .fmore { display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 8px; }
   .fmore.open { display: grid; }
-  .fmore .f:last-child { grid-column: 1 / -1; }
+  .fmore .f:last-child, .fmore .f:nth-last-child(2) { grid-column: 1 / -1; }
   .f label { font-size: 11px; }
   .msel, .msel > button { width: 100%; max-width: none; } .msel > button { font-size: 15px; padding: 8px 28px 8px 10px; } .msel .pop { width: 100%; } .msel label.o { padding: 8px 4px; font-size: 14px; }
   /* iOS zooms into inputs under 16px */
@@ -241,6 +241,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <div class="f"><label>Area</label><div class="msel" id="f-area"></div></div>
     <div class="f"><label>ประเภทสาขา</label><div class="msel" id="f-type"></div></div>
     <div class="f"><label>PC Vivo</label><div class="msel" id="f-pc"></div></div>
+    <div class="f"><label>สาขา</label><div class="msel" id="f-shop"></div></div>
     <div class="f"><label>Model</label><div class="msel" id="f-model"></div></div>
     </div>
     <div class="spacer"></div>
@@ -448,7 +449,7 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), shop: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '' } };
 try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
 const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
@@ -476,7 +477,11 @@ function monthInfo(ym) {
 // ---------- filters
 const okShop = (c) => { const s = SH[c]; if (!s) return false;
   if (S.zone.size && !S.zone.has(zoneOf(s.area))) return false; if (S.area.size && !S.area.has(s.area)) return false;
-  if (S.type.size && !S.type.has(s.type)) return false; if (S.pc.size && !S.pc.has(s.pc > 0 ? 'Y' : 'N')) return false; return true; };
+  if (S.type.size && !S.type.has(s.type)) return false; if (S.pc.size && !S.pc.has(s.pc > 0 ? 'Y' : 'N')) return false;
+  if (S.shop.size && !S.shop.has(c)) return false; return true; };
+// shops allowed by Region / Area / Type / PC (the list behind the Shop filter)
+const okShopBase = (s) => (!S.zone.size || S.zone.has(zoneOf(s.area))) && (!S.area.size || S.area.has(s.area)) && (!S.type.size || S.type.has(s.type)) && (!S.pc.size || S.pc.has(s.pc > 0 ? 'Y' : 'N'));
+const shopShort = (c) => SH[c] ? SH[c].n.replace(/^True Shop /i, '') : c;
 const modelOk = (sel, k) => sel instanceof Set ? (sel.size === 0 || sel.has(k)) : sel === 'ALL' || (sel.startsWith('F:') ? (MD[k] && MD[k].family === sel.slice(2)) : sel.startsWith('S:') ? (MD[k] && MD[k].series === sel.slice(2)) : k === sel.slice(2));
 const okModel = (k) => modelOk(S.model, k);
 const PCLAB = { Y: 'มี PC', N: 'ไม่มี PC' };
@@ -484,7 +489,7 @@ const pcTag = (c) => SH[c] && SH[c].pc > 0 ? `<span class="pc">PC ${SH[c].pc}</s
 const pcTxt = (c) => SH[c] && SH[c].pc > 0 ? `PC ${SH[c].pc}` : 'No PC';
 const setLab = (set, all, f = (x) => x, max = 2) => { if (!set.size) return all; const a = [...set].map(f); return a.length <= max ? a.join(', ') : `${a.slice(0, max).join(', ')} +${a.length - max}`; };
 const modelLabel = (max = 2) => setLab(S.model, 'ทุกรุ่น', (k) => (MD[k] || { name: k }).name.replace(/^VIVO /, ''), max);
-const filterParts = () => [S.zone.size && setLab(S.zone, '', undefined, 3), S.area.size && setLab(S.area, '', undefined, 3), S.type.size && setLab(S.type, '', undefined, 4), S.pc.size && setLab(S.pc, '', (x) => PCLAB[x]), S.model.size && modelLabel(3)].filter(Boolean);
+const filterParts = () => [S.zone.size && setLab(S.zone, '', undefined, 3), S.area.size && setLab(S.area, '', undefined, 3), S.type.size && setLab(S.type, '', undefined, 4), S.pc.size && setLab(S.pc, '', (x) => PCLAB[x]), S.shop.size && setLab(S.shop, '', shopShort, 2), S.model.size && modelLabel(3)].filter(Boolean);
 
 // ---------- aggregation
 const AGG_F = ['u', 'n', 'a', 'tu', 'tn', 'pu', 'pn', 'fu', 'fn', 'cu', 'cn', 'qu', 'qn', 'gu', 'gn'];
@@ -748,7 +753,7 @@ function sShop(mi) {
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' },
     { h: 'รหัส', v: (r) => r.c, cls: 't' },
     { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' }, { h: 'ประเภท', v: (r) => r.type, cls: 't' },
-    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v) => v > 0 ? `PC ${v}` : 'No PC' },
+    { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `PC ${v}` : 'No PC' },
     { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: SHOWA() ? 'Net Amount' : 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: money }, ...amtCol((r) => r.amt, { sort: 'amt' }),
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
     { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: money }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
@@ -1333,11 +1338,15 @@ function sheetPNG(sh, tb, fname) {
 function initControls() {
   fillSelect($('#f-month'), months.map((m) => [m, `${THF[+m.slice(5) - 1]} ${+m.slice(0, 4) + 543}`]), S.month);
   const MS = {};
-  MS.zone = multiSelect($('#f-zone'), 'zone', 'ทุก Region', () => ZONES.map((z) => ({ v: z, l: z })), () => { for (const a of [...S.area]) if (S.zone.size && !S.zone.has(zoneOf(a))) S.area.delete(a); MS.area.refresh(); });
+  // shop list follows Region / Area / Type / PC; shops no longer in it are dropped from the selection
+  const syncShop = () => { for (const c of [...S.shop]) if (!SH[c] || !okShopBase(SH[c])) S.shop.delete(c); if (MS.shop) MS.shop.refresh(); };
+  MS.zone = multiSelect($('#f-zone'), 'zone', 'ทุก Region', () => ZONES.map((z) => ({ v: z, l: z })), () => { for (const a of [...S.area]) if (S.zone.size && !S.zone.has(zoneOf(a))) S.area.delete(a); MS.area.refresh(); syncShop(); });
   // Area list only (Region has its own filter); limited to the Regions picked there
-  MS.area = multiSelect($('#f-area'), 'area', 'ทุก Area', () => AREAS.filter((a) => !S.zone.size || S.zone.has(zoneOf(a))).map((a) => ({ v: a, l: a })), null, true);
-  MS.type = multiSelect($('#f-type'), 'type', 'ทุกประเภท', () => TYPES.map((t) => ({ v: t, l: t })));
-  MS.pc = multiSelect($('#f-pc'), 'pc', 'ทั้งหมด', () => [{ v: 'Y', l: 'มี PC' }, { v: 'N', l: 'ไม่มี PC' }]);
+  MS.area = multiSelect($('#f-area'), 'area', 'ทุก Area', () => AREAS.filter((a) => !S.zone.size || S.zone.has(zoneOf(a))).map((a) => ({ v: a, l: a })), syncShop, true);
+  MS.type = multiSelect($('#f-type'), 'type', 'ทุกประเภท', () => TYPES.map((t) => ({ v: t, l: t })), syncShop);
+  MS.pc = multiSelect($('#f-pc'), 'pc', 'ทั้งหมด', () => [{ v: 'Y', l: 'มี PC' }, { v: 'N', l: 'ไม่มี PC' }], syncShop);
+  MS.shop = multiSelect($('#f-shop'), 'shop', 'ทุกสาขา', () => AREAS.map((a) => ({ g: a, kids: D.shops.filter((s) => s.area === a && okShopBase(s)).sort((x, y) => x.n.localeCompare(y.n))
+      .map((s) => ({ v: s.c, l: `${shopShort(s.c)} · ${s.c}${s.pc > 0 ? ' · PC' : ''}` })) })).filter((g) => g.kids.length), null, true);
   MS.model = multiSelect($('#f-model'), 'model', 'ทุกรุ่น', () => { const out = []; const grp = new Map();
       for (const m of D.models) { const g = m.tgt ? `${m.series} Series` : 'Non Target Model'; if (!grp.has(g)) grp.set(g, []); grp.get(g).push({ v: m.k, l: m.name.replace(/^VIVO /, '') }); }
       const order = (g) => g === 'Non Target Model' ? 99 : ({ X: 0, V: 1, Y: 2, T: 3 }[g[0]] ?? 9);
