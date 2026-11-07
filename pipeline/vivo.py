@@ -136,7 +136,7 @@ def _area(a):
     if m: return f'{m.group(1)} - {m.group(2)}'
     return a if a.startswith(('BMA', 'UPC')) or not a or a == 'NOT_CLASSIFIED' else 'UPC - ' + a
 
-HCOLS = ['YEAR', 'MONTH', 'DAY', 'TRANSACTION_DATE', 'DATA_ASOF_DATE', 'SHOP_CODE', 'SHOP_NAME', 'SHOP_TYPE', 'AREA', 'SIZE_SHOP', 'WW_FLAG', 'PRODUCT_DESCRIPTION', 'SUB_MODEL', 'QTY', 'NET_AMOUNT']
+HCOLS = ['YEAR', 'MONTH', 'DAY', 'TRANSACTION_DATE', 'DATA_ASOF_DATE', 'SHOP_CODE', 'SHOP_NAME', 'SHOP_TYPE', 'AREA', 'SIZE_SHOP', 'WW_FLAG', 'PRODUCT_DESCRIPTION', 'SUB_MODEL', 'QTY', 'AMOUNT', 'NET_AMOUNT']
 def merge_hist(fp):
     """Central-system Vivo sales (e.g. 'VIVO Sale Jan-Nov.xlsx', one row per order line with SUB_MODEL, QTY, NET_AMOUNT, DATA_ASOF_DATE).
     WW shops only, kept per day x shop x model in state/vivo_hist.csv.gz; dates in the file replace the same dates already kept.
@@ -151,7 +151,8 @@ def merge_hist(fp):
     add = pd_ & ~h['sub'].str.upper().str.contains('PHOTOSET'); h.loc[add, 'sub'] = h.loc[add, 'sub'] + ' PHOTOSET'
     h['m'] = h['sub'].map(lambda x: key_from_target(x)[0])
     h['u'] = pd.to_numeric(h.QTY, errors='coerce').fillna(0); h['n'] = pd.to_numeric(h.NET_AMOUNT, errors='coerce').fillna(0)
-    g = h.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(name=('sub', 'first'), u=('u', 'sum'), n=('n', 'sum')).rename(columns={'SHOP_CODE': 'shop'})
+    h['a'] = pd.to_numeric(h.AMOUNT, errors='coerce').fillna(0) if 'AMOUNT' in h else h.n
+    g = h.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(name=('sub', 'first'), u=('u', 'sum'), n=('n', 'sum'), a=('a', 'sum')).rename(columns={'SHOP_CODE': 'shop'})
     asof = pd.to_datetime(h.DATA_ASOF_DATE).max().strftime('%Y-%m-%d')
     lo = g.date.min(); old = _load('vivo_hist.csv.gz')
     if old is not None: g = pd.concat([old[(old.date < lo) | (old.date > asof)], g])
@@ -178,7 +179,7 @@ def _pack(rows):
     """[date, shop, model, u, n] -> index-coded rows (the page unpacks them)"""
     ds = sorted({r[0] for r in rows}); ss = sorted({r[1] for r in rows}); ms = sorted({r[2] for r in rows})
     di = {v: i for i, v in enumerate(ds)}; si = {v: i for i, v in enumerate(ss)}; mi = {v: i for i, v in enumerate(ms)}
-    return {'d': ds, 's': ss, 'm': ms, 'r': [[di[r[0]], si[r[1]], mi[r[2]], r[3], r[4]] for r in rows]}
+    return {'d': ds, 's': ss, 'm': ms, 'r': [[di[r[0]], si[r[1]], mi[r[2]], *r[3:]] for r in rows]}
 
 def build():
     meta = _meta()
@@ -227,22 +228,24 @@ def build():
     s['sign'] = s.ORDER_STATUS.map({'Payment': 1, 'CreditNote': -1}).fillna(0)
     s['units'] = s.sign * pd.to_numeric(s.QTY, errors='coerce').fillna(1).clip(lower=1)
     s['net'] = s.sign * pd.to_numeric(s.NET_AMOUNT, errors='coerce').fillna(0)
+    # Amount = full price before discount (POS: PRICE x QTY; central system: AMOUNT)
+    s['amt'] = s.sign * pd.to_numeric(s.PRICE, errors='coerce').fillna(0) * pd.to_numeric(s.QTY, errors='coerce').fillna(1).clip(lower=1)
     km = s.DESCRIPTION.map(key_from_desc); s['m'] = km.str[0]
     for kk, nm in set(km): addm(kk, nm, False)
     s['date'] = s.BD.dt.strftime('%Y-%m-%d')
-    stf = s.groupby(['date', 'SHOP_CODE', 'm', 'SALE_CODE'], as_index=False, dropna=False).agg(u=('units', 'sum'), n=('net', 'sum'))
+    stf = s.groupby(['date', 'SHOP_CODE', 'm', 'SALE_CODE'], as_index=False, dropna=False).agg(u=('units', 'sum'), n=('net', 'sum'), a=('amt', 'sum'))
     enames = s.dropna(subset=['SALE_CODE']).groupby('SALE_CODE').SALE_NAME.agg(lambda x: x.mode().iat[0] if len(x.mode()) else '').to_dict()
-    f = s.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(u=('units', 'sum'), n=('net', 'sum'))
+    f = s.groupby(['date', 'SHOP_CODE', 'm'], as_index=False).agg(u=('units', 'sum'), n=('net', 'sum'), a=('amt', 'sum'))
     f = f[(f.u != 0) | (f.n != 0)]
     # central-system figures up to their as-of date, POS (TSM) rows only after it
     hz = _load('vivo_hist.csv.gz'); hasof = meta.get('vivo_hist_asof', '')
     pos_asof = max(meta.get('vivo_sales_asof', ''), s.BD.max().strftime('%Y-%m-%d %H:%M') if len(s) else '')
     if hz is not None and hasof:
         f = f[f.date > hasof]; stf = stf[stf.date > hasof]
-        hz = hz[hz.shop.isin(ww)]; hz['u'] = pd.to_numeric(hz.u); hz['n'] = pd.to_numeric(hz.n)
+        hz = hz[hz.shop.isin(ww)]; hz['u'] = pd.to_numeric(hz.u); hz['n'] = pd.to_numeric(hz.n); hz['a'] = pd.to_numeric(hz['a'], errors='coerce').fillna(hz.n) if 'a' in hz else hz.n
         for kk, nm in set(zip(hz.m, hz.name)): addm(kk, nm, False)
-        f = pd.concat([hz.rename(columns={'shop': 'SHOP_CODE'})[['date', 'SHOP_CODE', 'm', 'u', 'n']], f])
-    sales = [[r.date, r.SHOP_CODE, r.m, int(r.u), round(float(r.n))] for r in f.itertuples() if r.u != 0 or r.n != 0]
+        f = pd.concat([hz.rename(columns={'shop': 'SHOP_CODE'})[['date', 'SHOP_CODE', 'm', 'u', 'n', 'a']], f])
+    sales = [[r.date, r.SHOP_CODE, r.m, int(r.u), round(float(r.n)), round(float(r.a))] for r in f.itertuples() if r.u != 0 or r.n != 0]
     sales_asof = pos_asof if pos_asof[:10] > hasof else hasof
     # targets
     targets = {}
@@ -279,13 +282,13 @@ def build():
                      'first_sales': min((r[0] for r in sales), default='')},
             'portions': portions, 'models': ml, 'shops': sorted(shops.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
             'sales': _pack(sales),
-            'staff': {'e': {str(k_): v for k_, v in enames.items()}, 'r': [[r.date, r.SHOP_CODE, r.m, str(r.SALE_CODE), int(r.u), round(float(r.n))] for r in stf.itertuples() if r.u != 0 or r.n != 0]},
+            'staff': {'e': {str(k_): v for k_, v in enames.items()}, 'r': [[r.date, r.SHOP_CODE, r.m, str(r.SALE_CODE), int(r.u), round(float(r.n)), round(float(r.a))] for r in stf.itertuples() if r.u != 0 or r.n != 0]},
             'targets': targets, 'stock': stock, 'locs': locs}
     os.makedirs(OUT, exist_ok=True)
     json.dump(data, open(os.path.join(OUT, 'vivo_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     lm = max((r[0] for r in sales), default='')[:7]
     mt = [r for r in sales if r[0][:7] == lm]
-    print(f"vivo built: sales {data['meta']['first_sales']}..{data['meta']['sales_asof']} ({len(sales)} rows), month {lm} QTY {sum(r[3] for r in mt):,} Net {sum(r[4] for r in mt):,}"
+    print(f"vivo built: sales {data['meta']['first_sales']}..{data['meta']['sales_asof']} ({len(sales)} rows), month {lm} QTY {sum(r[3] for r in mt):,} Net {sum(r[4] for r in mt):,} Amount {sum(r[5] for r in mt):,}"
           f" | stock {sum(r[3] for r in stock):,} as of {data['meta']['stock_asof']} | models {len(ml)} shops {len(shops)} | target months {sorted(targets)} | PC {pcsrc}")
     unk = sorted({x['name'] for x in ml if not x['tgt']})
     if unk: print('  models without target:', ', '.join(unk[:30]))
