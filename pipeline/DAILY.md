@@ -97,3 +97,7 @@ inbox folder it calls the GitHub workflow_dispatch API, so the update starts wit
 Stock files may be dropped in the "Stock" folder next to the inbox ("POS Sale Report (TSM)"). The Apps Script (drive_trigger.gs,
 copyNewStock) copies each new stock_balance_report file into the inbox (original stays in Stock); files older than 3 days are skipped.
 Stock time = the date/time in the file name ("... 7 Nov 2026 Time 1100.zip" -> 2026-11-07 11:00), else the file's upload time.
+
+### Rebuilding pages by hand
+pipeline/out/ is gitignored, so a local copy can be stale. Always run `python3 -I pipeline/update.py` (no args) before
+`build_page.py`, or the Prepay page is rebuilt from old data (happened 7 Nov 2026: stock went back to 5 Nov).
