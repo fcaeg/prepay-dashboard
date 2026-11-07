@@ -1018,3 +1018,16 @@ if (!window.PC_STK_BOUND) { window.PC_STK_BOUND = true;
       d.stock, d.sold28, d.sold7, d.avg_week, d.cover_wk ?? '', d.trend == null ? '' : Math.round(d.trend * 1000) / 10 + '%', esc(ST[d.status][0]), d.need28 || ''].join(',')));
     const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url;
     a.download = 'Stock_' + ({ group: 'TypeSim', sub: 'SimType', mat: 'Matcode' })[lv] + '_' + String(rs.to || '') + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- Stock transfer suggestions: CSV export ---------- */
+(() => { const mount = () => { const c = document.getElementById('card-s-move'); if (!c || document.getElementById('mv-csv')) return; const n = c.querySelector('[data-draw="s_move_sum"]'); if (!n) return;
+    const bar = document.createElement('div'); bar.className = 'pc-tools'; bar.style.alignItems = 'center'; n.replaceWith(bar); const b = document.createElement('button'); b.className = 'pc-export pc-csv'; b.id = 'mv-csv'; b.type = 'button'; b.textContent = '⬇ Export CSV'; bar.append(n, b); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount(); setTimeout(mount, 1500); })();
+if (!window.PC_MV_BOUND) { window.PC_MV_BOUND = true;
+  document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#mv-csv'))) return; const r = moveRows(); if (!r) return;
+    const mm = new Map((PC.rows('matcodes') || []).map((m) => [String(m.matcode), m])); const to = ((PC.rows('stock_cover') || [])[0] || {}).to || '';
+    const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const head = ['Area', 'Matcode', 'ชื่อซิม', 'Type Sim', 'ประเภทซิม', 'รหัสสาขาต้นทาง', 'จากสาขา (Stock เกิน)', 'Stock ต้นทาง', 'Cover ต้นทาง (สัปดาห์)', 'รหัสสาขาปลายทาง', 'ไปสาขา (ขาด)', 'Stock ปลายทาง', 'ปลายทางขาย/สัปดาห์', 'แนะนำโอน (ชิ้น)'];
+    const rows = r.slice().sort((a, b) => String(a.area).localeCompare(String(b.area)) || b.qty - a.qty);
+    const lines = [head.join(',')].concat(rows.map((d) => { const m = mm.get(String(d.key)) || {}; return [esc(d.area), '="' + d.key + '"', esc(m.name || d.label), esc(m.group), esc(m.subgroup || m.group), '="' + d.from + '"', esc(d.from_name), d.from_stock, d.from_cover >= 999 ? 'ไม่มียอดขาย' : d.from_cover, '="' + d.to + '"', esc(d.to_name), d.to_stock, d.to_week, d.qty].join(','); }));
+    const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'Stock_Transfer_' + to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
