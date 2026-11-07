@@ -866,7 +866,7 @@ body.pc-noscroll { overflow: hidden; }
     </article>
 
     <article class="pc-card" id="card-s-move">
-      <h3>แนะนำโอนย้าย Stock ภายใน Area <span class="pc-info" tabindex="0" role="note" aria-label="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์" data-tip="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน · สาขาต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ · สาขาปลายทางเติมให้พอ 4 สัปดาห์">i</span></h3>
+      <h3>แนะนำโอนย้าย Stock ภายใน Area <span class="pc-info" tabindex="0" role="note" aria-label="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน โดยเลือกสาขาในจังหวัดเดียวกันก่อน · ต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ (ไม่มียอดขาย 4 สัปดาห์ = โอนได้ 80% ของ Stock) · ปลายทางเติมให้พอ 4 สัปดาห์" data-tip="จับคู่สาขาที่ Stock เกิน (Cover &gt; 8 สัปดาห์ หรือไม่มียอดขาย) กับสาขาใน Area เดียวกันที่ขาด Matcode เดียวกัน โดยเลือกสาขาในจังหวัดเดียวกันก่อน · ต้นทางเก็บไว้ให้พอขาย 6 สัปดาห์ (ไม่มียอดขาย 4 สัปดาห์ = โอนได้ 80% ของ Stock) · ปลายทางเติมให้พอ 4 สัปดาห์">i</span></h3>
       <p class="pc-note" data-draw="s_move_sum" data-source="stock_cover"></p>
       <div class="pc-scroll"><table data-draw="tb_s_move" data-source="stock_cover" data-row-key="area,key,from,to"></table></div>
     </article>
@@ -1895,13 +1895,13 @@ const hotRows = () => { const r = stRows('mat'); if (!r) return null; const by =
   return [...by.values()].filter((a) => a.sold28 > 0).map((a) => { const w = a.sold28 / 4, cw = w > 0 ? a.stock / w : null, pw = (a.sold28 - a.sold7) / 3, tr = pw > 0 ? a.sold7 / pw - 1 : null;
     const sig = (cw != null && cw < 2) || (tr != null && tr > 0.2 && cw < 4) ? 'urgent' : (cw < 4 || a.risk >= 3 || (tr != null && tr > 0.2)) ? 'watch' : 'ok';
     return { ...a, avg_week: Math.round(w * 10) / 10, cover_wk: cw == null ? null : Math.round(cw * 10) / 10, trend: tr == null ? null : Math.round(tr * 1000) / 1000, share: tot ? a.sold28 / tot : 0, sig, srt: { urgent: 0, watch: 1, ok: 2 }[sig] * 1e7 - a.sold28 }; }); };
-const moveRows = () => { const r = stRowsArea('mat'); if (!r) return null; const p = PC.P(); const groups = new Map();
+const moveRows = () => { const r = stRowsArea('mat'); if (!r) return null; const p = PC.P(); const groups = new Map(); const PV = new Map((PC.rows('shops') || []).map((s) => [s.shop, s.province || '']));
   for (const x of r) { const k = x.area + '|' + x.key; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(x); }
   const out = [];
-  for (const [k, xs] of groups) { const donors = xs.filter((x) => (x.status === 'over' || x.status === 'idle') && x.stock > 0).map((x) => ({ x, left: Math.max(0, x.stock - Math.ceil(x.avg_week * 6)) })).filter((d) => d.left > 0).sort((a, b) => b.left - a.left);
+  for (const [k, xs] of groups) { const donors = xs.filter((x) => (x.status === 'over' || x.status === 'idle') && x.stock > 0).map((x) => ({ x, left: x.sold28 <= 0 ? Math.floor(x.stock * 0.8) : Math.max(0, x.stock - Math.ceil(x.avg_week * 6)) })).filter((d) => d.left > 0).sort((a, b) => b.left - a.left);
     const needs = xs.filter((x) => ['out', 'low', 'short'].includes(x.status)).map((x) => ({ x, need: Math.max(0, Math.ceil(x.avg_week * 4) - x.stock) })).filter((n) => n.need > 0).sort((a, b) => b.x.avg_week - a.x.avg_week);
-    for (const n of needs) for (const d of donors) { if (n.need <= 0) break; if (d.left <= 0) continue; const q = Math.min(n.need, d.left); n.need -= q; d.left -= q;
-      out.push({ area: n.x.area, key: n.x.key, label: n.x.label, from: d.x.shop, from_name: d.x.name, from_stock: d.x.stock, from_cover: d.x.cover_wk == null ? 999 : d.x.cover_wk, to: n.x.shop, to_name: n.x.name, to_stock: n.x.stock, to_week: n.x.avg_week, to_status: n.x.status, qty: q }); } }
+    for (const n of needs) { const pv = PV.get(n.x.shop); for (const d of donors.slice().sort((a, b) => (PV.get(a.x.shop) === pv ? 0 : 1) - (PV.get(b.x.shop) === pv ? 0 : 1))) { if (n.need <= 0) break; if (d.left <= 0) continue; const q = Math.min(n.need, d.left); n.need -= q; d.left -= q;
+      out.push({ near: PV.get(d.x.shop) === pv && pv ? 'จังหวัดเดียวกัน (' + pv + ')' : 'Area เดียวกัน', area: n.x.area, key: n.x.key, label: n.x.label, from: d.x.shop, from_name: d.x.name, from_stock: d.x.stock, from_cover: d.x.cover_wk == null ? 999 : d.x.cover_wk, to: n.x.shop, to_name: n.x.name, to_stock: n.x.stock, to_week: n.x.avg_week, to_status: n.x.status, qty: q }); } } }
   return p.shop === 'ALL' ? out : out.filter((m) => m.from === p.shop || m.to === p.shop); };
 dash.draw('tb_s_short', (el) => PC.table(el, 'tb_s_short', shortByType(), { key: ['key'], def: 'n_out', cols: [
   { f: 'key', label: 'Type Sim' }, { f: 'stock', label: 'Stock', num: true, fmt: PC.nf }, { f: 'avg_week', label: 'ขาย/สัปดาห์', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'cover_wk', label: 'Cover (สัปดาห์)', num: true, fmt: wkTxt },
@@ -1917,7 +1917,7 @@ dash.draw('s_move_sum', (el) => { const m = moveRows(); if (!m) { el.textContent
   el.textContent = m.length ? 'โอนได้ ' + PC.nf(m.length) + ' รายการ รวม ' + PC.nf(q) + ' ชิ้น โดยไม่ต้องสั่งของเพิ่ม' : 'ไม่มีสาขาที่โอนย้ายระหว่างกันได้ตาม Filter นี้'; });
 dash.draw('tb_s_move', (el) => PC.table(el, 'tb_s_move', moveRows(), { key: ['area', 'key', 'from', 'to'], def: 'qty', limit: 500, cols: [
   { f: 'area', label: 'Area' }, { f: 'label', label: 'Matcode', wrap: true }, { f: 'from_name', label: 'จากสาขา (Stock เกิน)', wrap: true }, { f: 'from_stock', label: 'Stock ต้นทาง', num: true, fmt: PC.nf },
-  { f: 'from_cover', label: 'Cover ต้นทาง (สป.)', num: true, fmt: (v) => (v >= 999 ? 'ไม่มียอดขาย' : wkTxt(v)) }, { f: 'to_name', label: 'ไปสาขา (ขาด)', wrap: true }, { f: 'to_stock', label: 'Stock ปลายทาง', num: true, fmt: PC.nf },
+  { f: 'from_cover', label: 'Cover ต้นทาง (สป.)', num: true, fmt: (v) => (v >= 999 ? 'ไม่มียอดขาย' : wkTxt(v)) }, { f: 'to_name', label: 'ไปสาขา (ขาด)', wrap: true }, { f: 'near', label: 'ความใกล้' }, { f: 'to_stock', label: 'Stock ปลายทาง', num: true, fmt: PC.nf },
   { f: 'to_week', label: 'ปลายทางขาย/สป.', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'qty', label: 'แนะนำโอน', num: true, fmt: PC.nf, bar: true } ] }));
 dash.draw('s_insight', (el) => { el.replaceChildren(); const t0 = stTot(); if (!t0) return; const r = t0.r; const li = (parts) => { const l = document.createElement('li'); for (const p of parts) { if (Array.isArray(p)) { const b = document.createElement('b'); b.textContent = p[0]; if (p[1]) b.style.color = p[1]; l.append(b); } else l.append(p); } el.append(l); };
   if (!r.length) { li(['ไม่มีข้อมูล Stock หรือยอดขายตาม Filter นี้']); return; }
