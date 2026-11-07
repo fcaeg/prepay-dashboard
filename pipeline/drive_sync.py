@@ -13,7 +13,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   Master Prepaid*                      -> matcode master
   *VIVO*Target*                        -> Vivo Dashboard targets
   *VIVO*Sale*                          -> Vivo Dashboard central-system sales (used up to its DATA_ASOF_DATE)
-  *PC Brand*                           -> Vivo Dashboard PC per shop
+  *PC Brand* / *PC*vivo*              -> Vivo Dashboard PC per shop (PC Brand Update, or Update PC vivo with a "PC Active" column)
   GIA*.xlsx                            -> GIA Dashboard shop list + month targets (Nami's daily GIA report)
 Processed files are moved to the sub-folder "Done" (or "Error" if the update failed) and remembered in
 pipeline/state/drive_done.json, so a file is never processed twice. Raw files never leave Drive / the runner.
@@ -85,6 +85,15 @@ def kind(name):
     if n.startswith('master prepaid') or n.startswith('master_prepaid'): return 'master'
     return None
 
+MONS = {m: i + 1 for i, m in enumerate(['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'])}
+def stock_time(name):
+    """'stock_balance_report as of 30 Oct 2026 Time 16.50.zip' / '... Stock Update 7 Nov 2026 Time 1100.zip' -> '2026-11-07 11:00' (None if not in the name)"""
+    m = re.search(r'(\d{1,2})\s*([A-Za-z]{3})[a-z]*\.?\s*(\d{4})\D+?(\d{1,2})[.:]?(\d{2})\b', name)
+    if not m or m.group(2).lower() not in MONS: return None
+    d, mo, y, hh, mm = int(m.group(1)), MONS[m.group(2).lower()], int(m.group(3)), int(m.group(4)), int(m.group(5))
+    try: return datetime.datetime(y, mo, d, hh, mm).strftime('%Y-%m-%d %H:%M')
+    except ValueError: return None
+
 def unpack(fp, k):
     """zip -> the file update.py needs (sales/stock keep the zip; xlsx inputs are extracted)"""
     if not fp.lower().endswith('.zip') or k in ('sales', 'stock'): return fp
@@ -118,8 +127,8 @@ def main():
         if v: merged += [k] + v
     env = dict(os.environ)
     if keep_stock:
-        st = next(f for f, k in todo if f['id'] == keep_stock); t = datetime.datetime.fromisoformat(st['createdTime'].replace('Z', '+00:00')).astimezone(BKK)
-        env['STOCK_ASOF'] = t.strftime('%Y-%m-%d %H:%M')
+        st = next(f for f, k in todo if f['id'] == keep_stock)
+        env['STOCK_ASOF'] = stock_time(st['name']) or datetime.datetime.fromisoformat(st['createdTime'].replace('Z', '+00:00')).astimezone(BKK).strftime('%Y-%m-%d %H:%M')
     log('update.py', ' '.join(os.path.basename(a) if os.path.sep in a else a for a in merged))
     r = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'update.py')] + merged, env=env, capture_output=True, text=True)
     log(r.stdout[-6000:]); log(r.stderr[-6000:])

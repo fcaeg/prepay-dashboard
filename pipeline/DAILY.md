@@ -92,3 +92,8 @@ Gadget / IOT / Accessory sales of Nami's North shops, same daily_sales input (`p
 `pipeline/drive_trigger.gs` runs every minute in Nami's Google account (script.google.com): when a data file appears in the
 inbox folder it calls the GitHub workflow_dispatch API, so the update starts within ~1 minute instead of waiting for GitHub's
 (often late) schedule. Script Properties: FOLDER_ID, GITHUB_TOKEN (fine-grained, fcaeg/prepay-dashboard, Actions read/write).
+
+### Stock folder
+Stock files may be dropped in the "Stock" folder next to the inbox ("POS Sale Report (TSM)"). The Apps Script (drive_trigger.gs,
+copyNewStock) copies each new stock_balance_report file into the inbox (original stays in Stock); files older than 3 days are skipped.
+Stock time = the date/time in the file name ("... 7 Nov 2026 Time 1100.zip" -> 2026-11-07 11:00), else the file's upload time.
