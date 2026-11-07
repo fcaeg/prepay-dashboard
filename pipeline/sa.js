@@ -399,7 +399,7 @@ const RKX = (() => {
     const FF = getComputedStyle(document.body).fontFamily || 'sans-serif'; const F = (w, s) => w + ' ' + s + 'px ' + FF;
     const f = rkF(), N = PC.isNet(), d = rDate(), rk = rkRows() || [], rd = rdRows() || [], zr = zoneRows(); const ar = PC.rows('area_rank'); const r0 = ar && ar[0];
     const W = 2000, P = 48, GAP = 32, ROW = 64; const n = Math.max(rk.length, rd.length);
-    const H = P + 110 + 50 + 250 + 30 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
+    const H = P + 110 + 94 + 50 + 250 + 30 + 40 + 50 + 34 + n * ROW + 14 + P; const S = 2;
     const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S; const g = cv.getContext('2d'); g.scale(S, S); g.textBaseline = 'alphabetic';
     g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
     // header
@@ -408,10 +408,14 @@ const RKX = (() => {
     const meta = [upd, d ? 'Daily: ' + PC.day(d) : '', p.area !== 'ALL' ? 'Filter: ' + p.area : '', p.stype !== 'ALL' ? 'ประเภทสาขา: ' + p.stype : ''].filter(Boolean).join('  ·  ');
     g.font = F(400, 20); g.fillStyle = C.mu; g.textAlign = 'right'; g.fillText(meta, W - P, y); g.textAlign = 'left';
     const tot = rkTot('area_rank'), dtot = rkTot('area_day'); y += 44;
-    if (tot) { g.font = F(400, 22); g.fillStyle = C.fg; let x = P; const seg = (s, c, w) => { g.fillStyle = c || C.fg; g.font = F(w || 400, 22); g.fillText(s, x, y); x += g.measureText(s).width; };
-      seg('รวม  สะสม '); seg(PC.pf(tot[f.ach]), col(tot[f.ach]), 700); seg('  (' + PC.mfmt(tot[f.act]) + ' / Target ถึงวันนี้ ' + PC.mfmt(tot[f.ttd]) + ')', C.mu);
-      if (dtot) { seg('     Daily '); seg(PC.pf(dtot[f.ach]), col(dtot[f.ach]), 700); seg('  (' + PC.mfmt(dtot[f.d]) + ' / Target ต่อวัน ' + PC.mfmt(dtot[f.tpd]) + ')', C.mu); }
-      seg('     Target ทั้งเดือน ' + PC.mfmt(tot[f.tgt]), C.mu); }
+    y -= 20; { const TW = (W - 2 * P - 3 * 20) / 4, TH = 120; const tiles = [
+        ['Daily · % เทียบ Target ต่อวัน' + (d ? ' (' + PC.day(d) + ')' : ''), dtot ? PC.pf(dtot[f.ach]) : '–', dtot ? col(dtot[f.ach]) : C.fg, dtot ? 'Target ต่อวัน ' + PC.mfmt(dtot[f.tpd]) + ' · ยอด ' + PC.mfmt(dtot[f.d]) : ''],
+        ['สะสม · % เทียบ Target ถึงวันนี้', tot ? PC.pf(tot[f.ach]) : '–', tot ? col(tot[f.ach]) : C.fg, tot ? 'Target ถึงวันนี้ ' + PC.mfmt(tot[f.ttd]) + ' · ยอดสะสม ' + PC.mfmt(tot[f.act]) : ''],
+        ['Target ทั้งเดือน', tot ? PC.mfmt(tot[f.tgt]) : '–', C.fg, tot && tot[f.need] != null ? 'ต้องทำต่อวันเพื่อให้ถึง Target เดือน ' + PC.mfmt(tot[f.need]) : ''],
+        ['วันที่ผ่านไปของเดือน', r0 ? r0.elapsed + ' / ' + r0.days + ' วัน' : '–', C.fg, r0 ? 'ข้อมูลถึง ' + PC.day(r0.today) : '']];
+      tiles.forEach((t, i) => { const x = P + i * (TW + 20); g.fillStyle = C.bg; rr(g, x, y, TW, TH, 10); g.fill(); g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
+        g.font = F(400, 17); g.fillStyle = C.mu; g.fillText(fit(g, t[0], TW - 36), x + 18, y + 32); g.font = F(700, 40); g.fillStyle = t[2]; g.fillText(t[1], x + 18, y + 78);
+        g.font = F(400, 16); g.fillStyle = C.mu; g.fillText(fit(g, t[3], TW - 36), x + 18, y + 106); }); y += TH + 20; }
     y += 26; g.fillStyle = C.line; g.fillRect(P, y, W - 2 * P, 2);
     // region cards
     y += 46; g.fillStyle = C.fg; g.font = F(700, 26); g.fillText('สรุปราย Region', P, y); y += 18;
