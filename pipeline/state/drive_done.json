@@ -130,5 +130,11 @@
   "kind": "sales",
   "at": "2026-11-07 16:12",
   "ok": true
+ },
+ "1_qu7GagRdAcF8sVCrPAoXJy33C_b2i_W": {
+  "name": "daily_sales (2).csv (1).crdownload",
+  "kind": "sales",
+  "at": "2026-11-07 19:59",
+  "ok": false
  }
 }
