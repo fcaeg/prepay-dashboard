@@ -16,19 +16,21 @@ const TABS = {
   results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
   attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
-  daily:    ['Daily', ['daily_id', 'title', 'link', 'detail', 'deadline', 'days', 'branches', 'active']]
+  daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active']]
 };
 
 const Q = {
   msg:      'รายละเอียดงาน (วางข้อความ + ลิงก์จากไลน์)',
   type:     'ประเภทงาน',
   due:      'Due (เว้นว่าง = อ่านจากข้อความ)',
+  freq:     'รอบงาน',
   area:     'ส่งถึง',
   branches: 'รหัสสาขา (ถ้าเลือก "ระบุสาขาเอง")',
   title:    'ชื่องาน'
 };
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
+const FREQS = ['One Time (ครั้งเดียว)', 'Daily (ทุกวัน)', 'Weekly (ทุกสัปดาห์)', 'Monthly (ทุกเดือน)'];
 const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'งานประจำวัน', 'อบรม', 'การสอบ', 'อื่นๆ'];
 
 /* ===================== ตั้งค่าครั้งแรก ===================== */
@@ -95,6 +97,8 @@ function ensureQuestions_(form) {
   if (!find(Q.type))  form.addListItem().setTitle(Q.type).setChoiceValues(TYPES).setRequired(false);
   else find(Q.type).asListItem().setChoiceValues(TYPES);
   if (!find(Q.due))   form.addDateItem().setTitle(Q.due).setRequired(false);
+  if (!find(Q.freq))  form.addMultipleChoiceItem().setTitle(Q.freq).setChoiceValues(FREQS).setRequired(true)
+    .setHelpText('Daily / Weekly / Monthly จะไปอยู่ใน Tab งานประจำ (วันในสัปดาห์หรือวันที่ของเดือน ระบบอ่านจากข้อความ ถ้าไม่มีจะใช้วันที่ส่งฟอร์ม)');
   if (!find(Q.area))  form.addMultipleChoiceItem().setTitle(Q.area).setChoiceValues(AREAS).setRequired(false);
   if (!find(Q.branches)) form.addTextItem().setTitle(Q.branches);
   if (!find(Q.title)) form.addTextItem().setTitle(Q.title);
@@ -106,7 +110,7 @@ function ensureQuestions_(form) {
   if (!find(OPT)) form.addSectionHeaderItem().setTitle(OPT)
     .setHelpText('ชื่องาน, ประเภทงาน, Due และลิงก์ ระบบอ่านจากข้อความให้อัตโนมัติ กรอกเฉพาะเมื่ออยากกำหนดเอง');
   // เรียงลำดับ: รายละเอียด | (เว้นว่างได้) ชื่องาน > ส่งถึง > Due > ประเภท > รหัสสาขา
-  [Q.msg, OPT, Q.title, Q.area, Q.due, Q.type, Q.branches].forEach((t, i) => {
+  [Q.msg, Q.freq, OPT, Q.title, Q.area, Q.due, Q.type, Q.branches].forEach((t, i) => {
     const it = find(t); if (it && it.getIndex() !== i) form.moveItem(it.getIndex(), i);
   });
 }
@@ -136,7 +140,8 @@ function onTaskForm(e) {
   const roster = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName()))
     .map(f => readTable_(f)).flatMap(t => parseRoster(t, branchList_()));
 
-  const type = (v('type') && v('type') !== TYPE_AUTO) ? v('type') : p.type;
+  let type = (v('type') && v('type') !== TYPE_AUTO) ? v('type') : p.type;
+  if (type === 'งานประจำวัน' && /one\s*time/i.test(v('freq'))) type = detectType(p.links, p.raw);
   const title = v('title') || p.title;
   const due = v('due') ? toIso(new Date(v('due'))) : p.due;
   const area = v('area');
@@ -144,7 +149,15 @@ function onTaskForm(e) {
   if (v('branches')) branches = v('branches').replace(/\s*,\s*/g, ',');
   else if (area && area !== 'ทุกสาขา' && area !== 'ระบุสาขาเอง') branches = area;
 
-  if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
+  const freq = v('freq');
+  const recurring = /daily|weekly|monthly/i.test(freq) || (!freq && type === 'งานประจำวัน');
+  if (recurring) {
+    const sh = ss.getSheetByName(TABS.daily[0]);
+    const f = /weekly/i.test(freq) ? 'Weekly' : /monthly/i.test(freq) ? 'Monthly' : 'Daily';
+    const tm = (p.raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || p.raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
+    appendObj_(sh, {daily_id: nextId(sh, 'D'), title, frequency: f, link: p.links.join(' '), detail: p.detail,
+      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, p.raw, new Date()), branches, active: 'Y'});
+  } else if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
     const tr = p.training || {};
     const sh = ss.getSheetByName(TABS.trainings[0]);
     const id = nextId(sh, 'TR');
@@ -158,12 +171,6 @@ function onTaskForm(e) {
       const ex = ss.getSheetByName(TABS.exams[0]);
       appendObj_(ex, {exam_id: nextId(ex, 'E'), title: 'สอบ – ' + title, due: p.exam.due || '', raw_message: p.exam.text || p.raw});
     }
-  } else if (type === 'งานประจำวัน') {
-    const sh = ss.getSheetByName(TABS.daily[0]);
-    const tm = (p.raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || p.raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
-    const days = /จ\s*[-–]\s*ศ|วันทำการ|จันทร์\s*[-–]\s*ศุกร์/.test(p.raw) ? 'จ-ศ' : 'ทุกวัน';
-    appendObj_(sh, {daily_id: nextId(sh, 'D'), title, link: p.links.join(' '), detail: p.detail,
-      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days, branches, active: 'Y'});
   } else if (type === 'การสอบ') {
     const sh = ss.getSheetByName(TABS.exams[0]);
     appendObj_(sh, {exam_id: nextId(sh, 'E'), title, link: p.links.join(' '), due, raw_message: p.raw, attachments});
@@ -175,6 +182,23 @@ function onTaskForm(e) {
     appendObj_(sh, {task_id: nextId(sh, 'T'), title, type, link: p.links.join(' '), detail: p.detail,
       assigned: today, due, branches, raw_message: p.raw, attachments});
   }
+}
+
+/* วันที่ต้องทำของงานประจำ: Daily = ทุกวัน/จ-ศ, Weekly = วันในสัปดาห์, Monthly = วันที่ของเดือน */
+function recurDays(freq, text, now) {
+  text = String(text || '');
+  const TH = [['อา', 'อาทิตย์'], ['จ', 'จันทร์'], ['อ', 'อังคาร'], ['พ', 'พุธ'], ['พฤ', 'พฤหัส'], ['ศ', 'ศุกร์'], ['ส', 'เสาร์']];
+  if (freq === 'Daily') return /จ\s*[-–]\s*ศ|วันทำการ|จันทร์\s*[-–]\s*ศุกร์/.test(text) ? 'จ-ศ' : 'ทุกวัน';
+  if (freq === 'Weekly') {
+    const found = TH.map((d, i) => ({i, k: d[0], hit: new RegExp('วัน' + d[1] + '|ทุก' + d[1]).test(text)})).filter(x => x.hit);
+    return (found.length ? found : [{k: TH[now.getDay()][0]}]).map(x => x.k).join(',');
+  }
+  if (freq === 'Monthly') {
+    if (/สิ้นเดือน|วันสุดท้ายของเดือน|end of month/i.test(text)) return 'สิ้นเดือน';
+    const m = text.match(/(?:ทุก)?วันที่\s*(\d{1,2})(?!\s*(?:\/|ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย|ต\.ค|พ\.ย|ธ\.ค|มกรา|กุมภา|มีนา|เมษา|พฤษภา|มิถุนา|กรกฎา|สิงหา|กันยา|ตุลา|พฤศจิกา|ธันวา))/);
+    return 'วันที่ ' + (m ? m[1] : now.getDate());
+  }
+  return 'ทุกวัน';
 }
 
 /* เขียนแถวตามชื่อหัวคอลัมน์ (คอลัมน์ไหนไม่มีก็ข้าม) */
@@ -601,4 +625,4 @@ function onOpen() {
 }
 
 // ให้ทดสอบใน Node ได้ (Apps Script จะไม่สนใจบรรทัดนี้)
-if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable };
+if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable, recurDays };

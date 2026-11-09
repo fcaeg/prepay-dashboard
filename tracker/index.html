@@ -106,7 +106,7 @@ td.num{text-align:right;white-space:nowrap}
   <div class="areas" id="areas"></div>
   <nav class="tabs">
     <button class="tab active" data-tab="summary">สรุปทุกงาน</button>
-    <button class="tab" data-tab="daily">งานประจำวัน</button>
+    <button class="tab" data-tab="daily">งานประจำ</button>
     <button class="tab" data-tab="branch">รายสาขา</button>
     <button class="tab" data-tab="exam">ติดตามการสอบ</button>
     <button class="tab" data-tab="training">แจ้งอบรม</button>
@@ -157,9 +157,12 @@ td.num{text-align:right;white-space:nowrap}
   <!-- ========== TAB: DAILY ========== -->
   <section id="tab-daily" hidden>
     <div class="toolbar">
-      <button class="chip-btn active" data-dy="today">เฉพาะวันนี้</button>
+      <button class="chip-btn active" data-dy="today">ต้องทำวันนี้</button>
+      <button class="chip-btn" data-dy="Daily">Daily</button>
+      <button class="chip-btn" data-dy="Weekly">Weekly</button>
+      <button class="chip-btn" data-dy="Monthly">Monthly</button>
       <button class="chip-btn" data-dy="all">ทั้งหมด</button>
-      <button class="btn" id="dy-copy">📋 คัดลอกงานประจำวันนี้ส่งไลน์</button>
+      <button class="btn" id="dy-copy">📋 คัดลอกงานที่ต้องทำวันนี้ส่งไลน์</button>
     </div>
     <div class="kpis" id="dy-kpis"></div>
     <div id="dy-list"></div>
@@ -309,7 +312,9 @@ function sampleData(){
     {daily_id:'D01',title:'กรอกยอดขาย Prepay ประจำวัน',link:'https://docs.google.com/spreadsheets/',detail:'ลงยอดของเมื่อวาน',deadline:'11:00',days:'ทุกวัน',branches:'ALL',active:'Y'},
     {daily_id:'D02',title:'Monitor ยอดติดตั้ง TOL (Link Pending)',link:'https://docs.google.com/spreadsheets/',detail:'เช็กรายการ Pending แล้วโทรตามลูกค้า',deadline:'15:00',days:'จ-ศ',branches:'ALL',active:'Y'},
     {daily_id:'D03',title:'ส่งรูปเปิดร้าน',link:'https://forms.google.com/',detail:'ถ่ายหน้าร้านหลังเปิด 10 นาที',deadline:'10:30',days:'ทุกวัน',branches:'Lower North',active:'Y'},
-    {daily_id:'D04',title:'สรุปยอดสัปดาห์',link:'https://docs.google.com/spreadsheets/',detail:'',deadline:'17:00',days:'ศ',branches:'ALL',active:'Y'}
+    {daily_id:'D04',title:'สรุปยอดสัปดาห์',frequency:'Weekly',link:'https://docs.google.com/spreadsheets/',detail:'',deadline:'17:00',days:'ศ',branches:'ALL',active:'Y'},
+    {daily_id:'D05',title:'ตรวจนับสต็อกประจำเดือน',frequency:'Monthly',link:'https://forms.google.com/',detail:'นับสต็อกเครื่องและซิมทั้งหมด',deadline:'18:00',days:'สิ้นเดือน',branches:'ALL',active:'Y'},
+    {daily_id:'D06',title:'ส่งแผนกิจกรรมเดือนหน้า',frequency:'Monthly',link:'https://docs.google.com/document/',detail:'',deadline:'12:00',days:'วันที่ '+TODAY.getDate(),branches:'ALL',active:'Y'}
   ];
   return {branches, tasks, done, exams, staff, results, trainings, attendees, daily};
 }
@@ -400,7 +405,7 @@ function build(data){
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
   const daily = (data.daily||[]).filter(d => d.title && !/^(n|no|ไม่|0|false)$/i.test(String(d.active||'').trim())).map(d => {
     const list = targetsOf(d, allBr, bmapAll).filter(b=>bmap[b.code]);
-    return {...d, list, deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY.getDay())};
+    return {...d, list, deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY), frequency: d.frequency || 'Daily'};
   }).filter(d => d.list.length).sort((a,b)=> (a.deadline||'99').localeCompare(b.deadline||'99'));
   return {branches, bmap, tasks, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
 }
@@ -510,7 +515,7 @@ function renderBranch(){
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
   const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b));
   $('#br-body').replaceChildren(
-    ...(myDaily.length ? [h('h2',{text:`📅 งานประจำวันนี้ (${myDaily.length})`}), h('div',null, myDaily.map(d=>dailyCard(d,true)))] : []),
+    ...(myDaily.length ? [h('h2',{text:`📅 งานประจำที่ต้องทำวันนี้ (${myDaily.length})`}), h('div',null, myDaily.map(d=>dailyCard(d,true)))] : []),
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
     pend.length ? h('div',null, pend.map(x=>card(x,false))) : h('div',{class:'empty',text:'ไม่มีงานค้าง เยี่ยมมาก! 🎉'}),
     ...(() => {
@@ -568,8 +573,16 @@ function renderExam(){
 let dyFilter = 'today';
 const TH_DOW = [['อา','อาทิตย์','sun'],['จ','จันทร์','mon'],['อ','อังคาร','tue'],['พ','พุธ','wed'],['พฤ','พฤหัส','thu'],['ศ','ศุกร์','fri'],['ส','เสาร์','sat']];
 function dowOf(tok){ tok = tok.trim().toLowerCase().replace(/\.$/,''); return TH_DOW.findIndex(a => a.some(x => tok === x || (x.length > 2 && tok.startsWith(x)))); }
-function dayMatch(spec, dow){
+function dayMatch(spec, date){
+  if (typeof date === 'number'){ const d = new Date(TODAY); d.setDate(d.getDate() + (date - d.getDay())); date = d; }
+  const dow = date.getDay();
   spec = String(spec||'').trim();
+  // รายเดือน: "วันที่ 5", "วันที่ 1,15", "สิ้นเดือน"
+  const last = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
+  if (/สิ้นเดือน|end of month/i.test(spec)) return date.getDate() === last;
+  const mm = spec.match(/วันที่\s*([\d,\s\-–]+)/);
+  if (mm) return mm[1].split(/[,\s]+/).filter(Boolean).some(x => { const r = x.split(/[-–]/).map(Number); const dd = date.getDate();
+    return r.length === 2 ? dd >= r[0] && dd <= r[1] : (dd === r[0] || (r[0] > last && dd === last)); });
   if (!spec || /ทุกวัน|every|daily|all/i.test(spec)) return true;
   if (/จ\s*[-–]\s*ศ|weekday|วันทำการ/i.test(spec)) return dow>=1 && dow<=5;
   if (/เสาร์\s*[-–]?\s*อาทิตย์|ส\s*[-–]\s*อา|weekend/i.test(spec)) return dow===0 || dow===6;
@@ -588,25 +601,25 @@ const scopeTxt = d => d.list.length === MODEL.branches.length ? (AREA==='ALL'?'�
 function dailyCard(d, compact){
   return h('div',{class:'card '+(d.today?'':'complete'),style:d.today?'':'opacity:.6'},
     h('div',{class:'t-title',text:d.title}),
-    h('div',{class:'meta'}, deadlineBadge(d), h('span',{class:'badge type',text:'📅 '+(d.days||'ทุกวัน')}), compact?null:h('span',{class:'badge',text:'🏪 '+scopeTxt(d)})),
+    h('div',{class:'meta'}, deadlineBadge(d), h('span',{class:'badge type',text:'🔁 '+d.frequency}), h('span',{class:'badge',text:'📅 '+(d.days||'ทุกวัน')}), compact?null:h('span',{class:'badge',text:'🏪 '+scopeTxt(d)})),
     d.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:d.detail}) : null,
     splitLinks(d.link).length ? h('div',{class:'actions'}, linkBtns(d,true,'เปิดลิงก์')) : null);
 }
 function dailyMsg(){
   const ds = MODEL.daily.filter(d=>d.today);
-  return `📌 งานประจำวัน ${thDay(TODAY)}${AREA!=='ALL'?' ['+AREA+']':''}\n` + ds.map(d =>
-    `━━━━━━━━━━\n${d.deadline?'⏰ ภายใน '+d.deadline+' น. ':''}${d.title}` + (d.detail?`\n📝 ${d.detail}`:'') +
+  return `📌 งานประจำที่ต้องทำ ${thDay(TODAY)}${AREA!=='ALL'?' ['+AREA+']':''}\n` + ds.map(d =>
+    `━━━━━━━━━━\n${d.frequency!=='Daily'?'['+d.frequency+'] ':''}${d.deadline?'⏰ ภายใน '+d.deadline+' น. ':''}${d.title}` + (d.detail?`\n📝 ${d.detail}`:'') +
     (d.list.length < MODEL.branches.length ? `\n🏪 ${d.list.map(b=>b.name).join(', ')}` : '') +
     splitLinks(d.link).map(u=>`\n🔗 ${u}`).join('')).join('\n');
 }
 function renderDaily(){
   const all = MODEL.daily, today = all.filter(d=>d.today);
-  const list = dyFilter==='today' ? today : all;
+  const list = dyFilter==='today' ? today : dyFilter==='all' ? all : all.filter(d=>d.frequency===dyFilter);
   const now = new Date(), late = today.filter(d => d.deadline && now.getHours()*60+now.getMinutes() > d.deadline.split(':').reduce((a,x,i)=>a+(i?+x:+x*60),0));
   $('#dy-kpis').replaceChildren(
-    kpi('งานประจำวันนี้', today.length+' งาน', `จากทั้งหมด ${all.length} งาน`),
+    kpi('งานประจำที่ต้องทำวันนี้', today.length+' งาน', `Daily ${today.filter(d=>d.frequency==='Daily').length} · Weekly ${today.filter(d=>d.frequency==='Weekly').length} · Monthly ${today.filter(d=>d.frequency==='Monthly').length}`),
     kpi('เลยเวลาที่กำหนดแล้ว', late.length+' งาน', 'ของวันนี้', late.length?'bad':'ok'));
-  $('#dy-list').replaceChildren(...(list.length ? list.map(d=>dailyCard(d)) : [h('div',{class:'empty',text:'ยังไม่มีงานประจำวัน – เพิ่มได้ในแท็บ Daily ของ Sheet หรือเลือกประเภท "งานประจำวัน" ในฟอร์ม'})]));
+  $('#dy-list').replaceChildren(...(list.length ? list.map(d=>dailyCard(d)) : [h('div',{class:'empty',text: dyFilter==='today' ? 'วันนี้ไม่มีงานประจำที่ต้องทำ' : 'ยังไม่มีงานประจำ – เลือกรอบงาน Daily / Weekly / Monthly ในฟอร์ม'})]));
 }
 
 /* ---------- TAB 4: แจ้งอบรม ---------- */
