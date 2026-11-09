@@ -28,7 +28,7 @@ const Q = {
 };
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
-const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'การสอบ', 'อื่นๆ'];
+const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'อบรม', 'การสอบ', 'อื่นๆ'];
 
 /* ===================== ตั้งค่าครั้งแรก ===================== */
 function setup() {
@@ -81,6 +81,7 @@ function ensureQuestions_(form) {
   rename('ชื่องาน (เว้นว่าง = ตั้งให้อัตโนมัติ)', Q.title);
   if (!find(Q.msg))   form.addParagraphTextItem().setTitle(Q.msg).setRequired(true);
   if (!find(Q.type))  form.addListItem().setTitle(Q.type).setChoiceValues(TYPES).setRequired(false);
+  else find(Q.type).asListItem().setChoiceValues(TYPES);
   if (!find(Q.due))   form.addDateItem().setTitle(Q.due).setRequired(false);
   if (!find(Q.area))  form.addMultipleChoiceItem().setTitle(Q.area).setChoiceValues(AREAS).setRequired(false);
   if (!find(Q.branches)) form.addTextItem().setTitle(Q.branches);
@@ -114,7 +115,16 @@ function onTaskForm(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const today = toIso(new Date());
 
-  if (type === 'การสอบ') {
+  if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
+    const tr = p.training || {};
+    const sh = ss.getSheetByName(TABS.trainings[0]);
+    const trDate = v('due') ? due : (tr.date || due);
+    sh.appendRow([nextId(sh, 'TR'), trDate, tr.start || '', tr.end || '', title, tr.location || '', p.links.join(' '), '', p.detail]);
+    if (p.exam) {                              // มีสอบต่อท้ายการอบรม
+      const ex = ss.getSheetByName(TABS.exams[0]);
+      ex.appendRow([nextId(ex, 'E'), 'สอบ – ' + title, '', p.exam.due || '', '', p.exam.text || p.raw]);
+    }
+  } else if (type === 'การสอบ') {
     const sh = ss.getSheetByName(TABS.exams[0]);
     sh.appendRow([nextId(sh, 'E'), title, p.links.join(' '), due, '', p.raw]);
   } else {
@@ -220,10 +230,16 @@ function parseLineMessage(raw, now) {
     .map(l => l.replace(/^(ลิงก์|ลิ้งค์|ลิงค์|link|คลิก|กด)\s*[:：]?\s*$/i, '').trim())
     .filter(l => l && !/^[\p{P}\p{S}\s]+$/u.test(l));
 
-  const isGreeting = l => /^(?:[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*)(แจ้ง(ทุก)?สาขา|เรียน|สวัสดี|ถึง|ทุกสาขา|ด่วน|ประกาศ)\S{0,15}$/u.test(l);
+  const labelOf = l => { const m = l.match(/^([^:：]{2,30})\s*[:：]\s*(.*)$/); return m ? {k: m[1].trim(), v: m[2].trim()} : null; };
+  const TITLE_LABEL = /^(หัวข้อ|เรื่อง|หลักสูตร|ชื่อหลักสูตร|ชื่องาน|topic|course)/i;
+  const INFO_LABEL  = /(วันที่|วัน|เวลา|ช่องทาง|สถานที่|สอบ|ลิงก์|ลิ้งค์|link|หมายเหตุ|กำหนด|ผู้เข้า|วิทยากร|ระยะเวลา|รูปแบบ)/i;
+  const isGreeting = l => /^(?:[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*)(แจ้ง(ทุก)?สาขา|แจ้งอบรม|แจ้งเตือน|แจ้งข่าว|เรียน|สวัสดี|ถึง|ทุกสาขา|ด่วน|ประกาศ)\S{0,15}$/u.test(l);
   const isThanks  = l => /^(ขอบคุณ|thank|รบกวนด้วย|ขอบพระคุณ)/i.test(l);
   const body = lines.filter(l => !isThanks(l));
-  const titleLine = body.find(l => !isGreeting(l)) || body[0] || 'งานใหม่';
+  const labeled = body.map(labelOf);
+  const titleByLabel = labeled.find(x => x && TITLE_LABEL.test(x.k) && x.v);
+  const titleLine = titleByLabel ? titleByLabel.v
+    : (body.find((l, i) => !isGreeting(l) && !(labeled[i] && INFO_LABEL.test(labeled[i].k))) || '');
 
   let title = titleLine
     .replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s•\-*#]+/u, '')
@@ -234,15 +250,41 @@ function parseLineMessage(raw, now) {
     .replace(/(ค่ะ|ครับ|นะคะ|นะครับ)\s*$/, '')
     .trim();
   if (title.length > 80) title = title.slice(0, 77) + '…';
-  if (!title) title = 'งานใหม่';
 
   const detail = body.filter(l => !isGreeting(l)).join('\n');
+
+  // ---------- อบรม / สอบ ----------
+  const val = re => { const x = labeled.find(y => y && re.test(y.k)); return x ? x.v : ''; };
+  const isTraining = /อบรม|training|workshop|สัมมนา/i.test(noUrl);
+  let training = null, exam = null;
+  if (isTraining) {
+    const dateTxt = val(/วันที่อบรม|วันอบรม|วันที่/) || noUrl;
+    const d = findDates(dateTxt, now)[0] || findDates(noUrl, now)[0];
+    const tm = (val(/เวลา/) || noUrl).match(/(\d{1,2})[.:](\d{2})\s*(?:น\.?)?\s*(?:-|–|—|ถึง)\s*(\d{1,2})[.:](\d{2})/);
+    let loc = val(/ช่องทาง|สถานที่|รูปแบบ/).replace(/join the meeting now/ig, '').replace(/^ผ่าน\s*/, '').trim();
+    if (!loc) { const all = links.join(' '); loc = /teams\./i.test(all) ? 'Microsoft Teams' : /zoom\./i.test(all) ? 'Zoom' : /meet\.google/i.test(all) ? 'Google Meet' : ''; }
+    training = {
+      date: d ? toIso(d.d) : '',
+      start: tm ? tm[1].padStart(2, '0') + ':' + tm[2] : '',
+      end:   tm ? tm[3].padStart(2, '0') + ':' + tm[4] : '',
+      location: loc
+    };
+    const exLine = labeled.find(y => y && /สอบ/.test(y.k));
+    const exText = exLine ? exLine.v : (body.find(l => /สอบ/.test(l) && !/อบรม/.test(l)) || '');
+    if (exText) { const ed = findDates(exText, now); exam = { due: ed.length ? toIso(ed[ed.length - 1].d) : '', text: exText }; }
+  }
+  if (!title) {
+    const th = s => { const [y, m, d] = s.split('-').map(Number); return d + ' ' + TH_MONTHS[m - 1][0]; };
+    title = training ? ('อบรม' + (training.date ? ' ' + th(training.date) : '') + (training.start ? ' ' + training.start + (training.end ? '–' + training.end : '') : '') + (training.location ? ' (' + training.location + ')' : ''))
+                     : 'งานใหม่';
+  }
 
   return {
     title,
     detail: detail || titleLine,
     links,
-    type: detectType(links, raw),
+    type: training ? 'อบรม' : detectType(links, raw),
+    training, exam,
     due: pickDue(noUrl, now),
     raw
   };
