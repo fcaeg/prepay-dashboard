@@ -17,7 +17,7 @@ const TABS = {
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
   attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
   taskstaff:['TaskStaff', ['task_id', 'emp_id', 'name', 'branch_code', 'branch_raw', 'region', 'status_src', 'done', 'checked_by', 'checked_at']],
-  daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']]
+  daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active', 'attachments', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']]
 };
 
 const Q = {
@@ -169,50 +169,57 @@ function onTaskForm(e) {
 
   const freq = v('freq');
   const recurring = /daily|weekly|monthly/i.test(freq) || (!freq && type === 'งานประจำวัน');
+  // รายชื่อระดับ Staff จากไฟล์แนบ (ใช้ได้กับงานทุกประเภท)
+  const staffTabs = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
+  const withStaff = id => staffTabs.length ? importStaff_(id, staffTabs, false) : false;
+  // Reminder ชื่อเรื่องเดิม + มีไฟล์รายชื่อ → อัปเดตรายการเดิม (คนที่หายไปจากไฟล์ใหม่ = ทำแล้ว)
+  const reuse = sh => { const same = staffTabs.length ? findOpenTaskByTitle_(sh, title) : null; return same && importStaff_(same, staffTabs, true) ? same : null; };
+
   if (recurring) {
     const sh = ss.getSheetByName(TABS.daily[0]);
+    if (reuse(sh)) return;
     const f = /weekly/i.test(freq) ? 'Weekly' : /monthly/i.test(freq) ? 'Monthly' : 'Daily';
     const tm = (p.raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || p.raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
-    appendObj_(sh, {daily_id: nextId(sh, 'D'), title, frequency: f, link: p.links.join(' '), detail: p.detail,
+    const id = nextId(sh, 'D');
+    appendObj_(sh, {daily_id: id, title, frequency: f, link: p.links.join(' '), detail: p.detail,
       deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, p.raw, new Date()), branches, active: 'Y',
       check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
+    withStaff(id);
   } else if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
     const tr = p.training || {};
     const sh = ss.getSheetByName(TABS.trainings[0]);
+    if (reuse(sh)) return;
     const id = nextId(sh, 'TR');
     appendObj_(sh, {training_id: id, date: v('due') ? due : (tr.date || due), start: tr.start || '', end: tr.end || '',
       title, location: tr.location || '', link: p.links.join(' '), detail: p.detail, attachments});
-    if (roster.length) {
-      const at = ss.getSheetByName(TABS.attendees[0]);
-      roster.filter(r => r.name || r.emp_id).forEach(r => appendObj_(at, {training_id: id, name: r.name, branch_code: r.code, emp_id: r.emp_id, note: r.note}));
-    }
-    if (p.exam) {                              // มีสอบต่อท้ายการอบรม
+    const list = withStaff(id);
+    const people = roster.filter(r => r.name || r.emp_id).length ? roster
+      : (Array.isArray(list) ? list.map(x => ({name: x.name, code: x.code, emp_id: x.emp_id, note: ''})) : []);
+    const at = ss.getSheetByName(TABS.attendees[0]);
+    people.filter(r => r.name || r.emp_id).forEach(r => appendObj_(at, {training_id: id, name: r.name, branch_code: r.code, emp_id: r.emp_id, note: r.note}));
+    if (p.exam) {                              // มีสอบต่อท้ายการอบรม → รายชื่อชุดเดียวกัน
       const ex = ss.getSheetByName(TABS.exams[0]);
-      appendObj_(ex, {exam_id: nextId(ex, 'E'), title: 'สอบ – ' + title, due: p.exam.due || '', raw_message: p.exam.text || p.raw});
+      const eid = nextId(ex, 'E');
+      appendObj_(ex, {exam_id: eid, title: 'สอบ – ' + title, due: p.exam.due || '', raw_message: p.exam.text || p.raw, attachments});
+      withStaff(eid);
     }
   } else if (type === 'การสอบ') {
     const sh = ss.getSheetByName(TABS.exams[0]);
-    // ไฟล์รายชื่อคนที่ยังไม่สอบ: Reminder ชื่อเดิม → อัปเดตรายชื่อในการสอบเดิม
-    const staffTabs = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
-    const same = findOpenTaskByTitle_(sh, title);
-    if (same && staffTabs.length && importStaff_(same, staffTabs, true)) return;
+    if (reuse(sh)) return;
     const eid = nextId(sh, 'E');
     appendObj_(sh, {exam_id: eid, title, link: p.links.join(' '), due, raw_message: p.raw, attachments});
-    if (staffTabs.length) importStaff_(eid, staffTabs, false);
+    withStaff(eid);
   } else {
     // Excel ที่มีแต่สาขา (ไม่มีชื่อคน) = รายชื่อสาขาที่ต้องทำงานนี้
     const codes = [...new Set(roster.filter(r => r.code && !r.name).map(r => r.code))];
     if (branches === 'ALL' && codes.length) branches = codes.join(',');
     const sh = ss.getSheetByName(TABS.tasks[0]);
-    // ไฟล์รายชื่อพนักงาน + งานชื่อเดิมที่ยังเปิดอยู่ (เช่น Reminder ซ้ำ) → อัปเดตรายชื่อในงานเดิมแทนการสร้างงานใหม่
-    const staffTabs = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
-    const same = findOpenTaskByTitle_(sh, title);
-    if (same && staffTabs.length && importStaff_(same, staffTabs, true)) return;
+    if (reuse(sh)) return;
     const tid = nextId(sh, 'T');
     appendObj_(sh, {task_id: tid, title, type, link: p.links.join(' '), detail: p.detail,
       assigned: today, due, branches, raw_message: p.raw, attachments,
       check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
-    if (staffTabs.length) importStaff_(tid, staffTabs, false);
+    withStaff(tid);
   }
 }
 
@@ -308,8 +315,10 @@ function parseStaffList(values, branches, areas) {
 function findOpenTaskByTitle_(tsh, title) {
   const N = s => String(s || '').toLowerCase().replace(/\(?\s*remind\w*\s*\)?|reminder|แจ้งเตือน|ติดตาม/g, '').replace(/[^a-z0-9ก-๙]/g, '').slice(0, 40);
   const key = N(title); if (key.length < 8 || tsh.getLastRow() < 2) return null;
-  const v = tsh.getRange(2, 1, tsh.getLastRow() - 1, 2).getDisplayValues();
-  const hit = v.reverse().find(r => N(r[1]) === key);
+  const head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  const tc = head.indexOf('title'); if (tc < 0) return null;
+  const v = tsh.getRange(2, 1, tsh.getLastRow() - 1, head.length).getDisplayValues();
+  const hit = v.reverse().find(r => N(r[tc]) === key);
   return hit ? hit[0] : null;
 }
 
@@ -343,7 +352,7 @@ function importStaff_(tid, tables, update) {
       status_src: x.status_src, done: x.done ? 'Y' : '', checked_by: x.done ? 'จากไฟล์' : '', checked_at: x.done ? stamp : ''});
   });
   syncStaffDone_(tid);
-  return true;
+  return list;
 }
 
 /* สรุปสถานะสาขาจากรายชื่อพนักงาน → แท็บ Done (note = staff) + tracked_branches */
@@ -361,11 +370,14 @@ function syncStaffDone_(tid) {
     for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid && dv[k][3] === 'staff') dsh.deleteRow(k + 2); }
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
   Object.entries(per).forEach(([code, a]) => { if (a.d) appendObj_(dsh, {task_id: tid, branch_code: code, status: a.d >= a.n ? 'done' : 'partial', note: 'staff', updated: stamp}); });
-  const tsh = ss.getSheetByName(TABS.tasks[0]);
-  const th = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
-  let tc = th.indexOf('tracked_branches'); if (tc < 0) { tc = th.length; tsh.getRange(1, tc + 1).setValue('tracked_branches'); }
-  const ids = tsh.getLastRow() > 1 ? tsh.getRange(2, 1, tsh.getLastRow() - 1, 1).getDisplayValues().flat() : [];
-  const i = ids.indexOf(tid); if (i >= 0) tsh.getRange(i + 2, tc + 1).setValue(Object.keys(per).join(','));
+  [TABS.tasks[0], TABS.daily[0]].forEach(name => {
+    const tsh = ss.getSheetByName(name); if (!tsh || tsh.getLastRow() < 2) return;
+    const ids = tsh.getRange(2, 1, tsh.getLastRow() - 1, 1).getDisplayValues().flat();
+    const i = ids.indexOf(tid); if (i < 0) return;
+    const th = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+    let tc = th.indexOf('tracked_branches'); if (tc < 0) { tc = th.length; tsh.getRange(1, tc + 1).setValue('tracked_branches'); }
+    tsh.getRange(i + 2, tc + 1).setValue(Object.keys(per).join(','));
+  });
 }
 
 /* Web App: หน้าเว็บส่งการติ๊กรายชื่อมาที่นี่ (Deploy > New deployment > Web app, Execute as: Me, Access: Anyone) */
@@ -395,7 +407,7 @@ function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).set
 /* เมนู: อ่านรายชื่อพนักงานจากไฟล์แนบของงานที่เลือก (สำหรับงานที่ลงไปแล้ว) */
 function importStaffSelected() {
   const ui = SpreadsheetApp.getUi(), ss = SpreadsheetApp.getActiveSpreadsheet(), sh = ss.getActiveSheet();
-  if (![TABS.tasks[0], TABS.exams[0]].includes(sh.getName())) { ui.alert('ไปที่แท็บ Tasks หรือ Exams แล้วคลิกเลือกแถวที่มีไฟล์ Excel แนบก่อน'); return; }
+  if (![TABS.tasks[0], TABS.exams[0], TABS.daily[0], TABS.trainings[0]].includes(sh.getName())) { ui.alert('ไปที่แท็บ Tasks / Daily / Exams / Trainings แล้วคลิกเลือกแถวที่มีไฟล์ Excel แนบก่อน'); return; }
   const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
   const r = sh.getActiveRange().getRow(); if (r < 2) return;
   const v = sh.getRange(r, 1, 1, head.length).getDisplayValues()[0];

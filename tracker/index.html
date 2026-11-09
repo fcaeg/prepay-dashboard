@@ -394,6 +394,7 @@ function sampleData(){
   ];
   history.forEach(t => branches.filter(b => t.branches==='ALL' || b.area===t.branches).forEach(b => done.push({task_id:t.task_id,branch_code:b.code,status:'done'})));
   const taskstaff = [];
+  branches.slice(12,15).forEach(b => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'D01', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k%2 ? 'Y':''})));
   branches.slice(5,12).forEach((b,i) => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'E02', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k % 3 === 0 ? 'Y':''})));
   branches.slice(0,5).forEach((b,i) => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'T005', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k < i ? 'Y':'', checked_by: k < i ? 'หน้าเว็บ':''})));
   return {branches, tasks, done, exams, staff, results, trainings, attendees, daily, history, taskstaff};
@@ -463,17 +464,21 @@ function build(data){
   const staffBy = {};
   (data.taskstaff||[]).forEach(x => { if (!x.task_id || !x.name) return; const k = x.emp_id || x.name;
     ((staffBy[x.task_id] = staffBy[x.task_id] || {})[x.branch_code] = staffBy[x.task_id][x.branch_code] || []).push({...x, key: k, done: /^y/i.test(x.done||'')}); });
+  const staffOf = id => { const sb = staffBy[id]; if (!sb) return null; const o = {}; Object.entries(sb).forEach(([c,l]) => { if (bmap[c]) o[c] = l; }); return Object.keys(o).length ? o : null; };
+  const staffSt = (staff, code) => { const l = staff && staff[code]; if (!l) return null; const d = l.filter(x=>x.done).length; return d===l.length ? 'done' : d ? 'partial' : 'pending'; };
   const mkTask = t => {
     const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
     const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
     const due = parseDate(t.due);
-    const per = list.map(b => ({b, st: doneMap[t.task_id+'|'+b.code] || 'pending'}));
+    const staffT = staffOf(t.task_id);
+    const per = (staffT ? allBr.filter(b => staffT[b.code]) : list).map(b => ({b, st: staffT ? staffSt(staffT, b.code) : (doneMap[t.task_id+'|'+b.code] || 'pending')}));
+    if (staffT) list.splice(0, list.length, ...per.map(x=>x.b));
     const doneN = per.filter(x=>x.st==='done').length;
     const pending = per.filter(x=>x.st!=='done');
     const pct = list.length ? doneN/list.length : 1;
     const complete = pending.length === 0;
     const dl = daysLeft(due);
-    const staff = staffBy[t.task_id] || null;
+    const staff = staffT;
     return {...t, due, list, per, doneN, pending, pct, complete, staff, overdue: !complete && dl!=null && dl<0, soon: !complete && dl!=null && dl>=0 && dl<=1};
   };
   const tasks = data.tasks.filter(t=>t.task_id).map(mkTask).filter(t => t.list.length);
@@ -495,7 +500,7 @@ function build(data){
       const code = a.branch_code || st.branch_code || '';
       return {name: a.name || st.name || a.emp_id || '-', code, b: bmapAll[code] || null, note: a.note || ''};
     }).filter(a => AREA==='ALL' || (a.b && bmap[a.code]));
-    return {...t, date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
+    return {...t, task_id: t.training_id, staff: staffOf(t.training_id), date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
   }).filter(t => t.date && (AREA==='ALL' || t.att.length))
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
   const todayIso = iso(TODAY);
@@ -506,10 +511,12 @@ function build(data){
     const auto = /^(y|yes|✓|true|1|ใช่)$/i.test(flag) || (!flag && String(d.check_tab||'').trim() !== '');
     // สถานะของวันนี้เท่านั้น (ผลตรวจของวันก่อนไม่นับ)
     const st = {}; (data.done||[]).forEach(x => { if (x.task_id===d.daily_id && String(x.updated||'').slice(0,10)===todayIso) st[x.branch_code] = String(x.status||'done').includes('partial') ? 'partial' : 'done'; });
-    const checkedToday = String(d.check_log||'').slice(0,10)===todayIso;
-    const per = list.map(b => ({b, st: st[b.code] || 'pending'}));
+    const staffD = staffOf(d.daily_id);
+    const checkedToday = !!staffD || String(d.check_log||'').slice(0,10)===todayIso;
+    const per = (staffD ? allBr.filter(b => staffD[b.code]) : list).map(b => ({b, st: staffD ? staffSt(staffD, b.code) : (st[b.code] || 'pending')}));
+    if (staffD) list.splice(0, list.length, ...per.map(x=>x.b));
     const doneN = per.filter(x=>x.st==='done').length;
-    return {...d, list, per, doneN, pending: per.filter(x=>x.st!=='done'), auto, checkedToday,
+    return {...d, task_id: d.daily_id, staff: staffD, list, per, doneN, pending: per.filter(x=>x.st!=='done'), auto: auto || !!staffD, checkedToday,
       deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY), frequency: d.frequency || 'Daily'};
   }).filter(d => d.list.length).sort((a,b)=> (a.deadline||'99').localeCompare(b.deadline||'99'));
   return {branches, bmap, tasks, history, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
@@ -820,6 +827,7 @@ function dailyCard(d, compact){
         branchGroups(d.per))
       : h('div',{class:'small',style:'margin-top:6px',text:'🔄 ตรวจอัตโนมัติ – ยังไม่มีผลตรวจของวันนี้'})) : null,
     (d.auto && d.today && compact && d.checkedToday && d._me) ? h('div',{style:'margin-top:6px'}, d._me.st==='done' ? h('span',{class:'badge ok',text:'✓ ทำแล้ววันนี้'}) : d._me.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : h('span',{class:'badge bad',text:'ยังไม่ทำวันนี้'})) : null,
+    d.staff ? staffBox(d, compact && d._me ? d._me.b.code : null) : null,
     h('div',{class:'actions'}, splitLinks(d.link).length ? linkBtns(d,true,'เปิดลิงก์') : null,
       (!compact && d.auto && d.today && d.checkedToday && d.pending.length) ? h('button',{class:'btn',onclick:()=>copy(`📌 ${d.title} (${thDay(TODAY)})\nยังไม่ดำเนินการ ${d.pending.length}/${d.list.length} สาขา:\n`+d.pending.map(x=>'• '+x.b.name+(x.st==='partial'?' (บางส่วน)':'')).join('\n')+(splitLinks(d.link)[0]?'\n\nลิงก์: '+splitLinks(d.link)[0]:'')+'\nรบกวนดำเนินการด้วยครับ/ค่ะ 🙏'),text:'📋 คัดลอกข้อความตามสาขาที่ค้าง'}) : null));
 }
@@ -898,7 +906,8 @@ function renderTraining(){
             h('div',{class:'small',text:`👥 ผู้เข้าอบรม ${t.att.length} คน`}),
             t.att.length ? groupByBranch(t.att).map(([b,ps]) => h('div',{class:'att-row'},
               h('b',{text:b+': '}), ps.map(p => h('span',{class:'person'+(hit(p)?' hit':''),text:p.name+(p.note?` (${p.note})`:'')}))))
-              : h('div',{class:'small',text:'ยังไม่มีรายชื่อ'})))))));
+              : h('div',{class:'small',text:'ยังไม่มีรายชื่อ'})),
+          t.staff ? staffBox(t) : null)))));
   }));
 }
 
