@@ -369,9 +369,9 @@ function parseLineMessage(raw, now) {
  * เปิดใช้ต่องานในแท็บ Tasks:
  *   auto_check       = Y
  *   check_tab        = ชื่อแท็บในลิงก์งาน (หลายแท็บคั่นด้วย ,) เว้นว่าง = ทุกแท็บ
- *   check_done_col   = หัวคอลัมน์ (หรือตัวอักษรคอลัมน์ เช่น K) ที่บอกว่าสาขาทำแล้ว
- *                      เว้นว่าง = แค่มีชื่อ/รหัสสาขาในชีตก็ถือว่าทำแล้ว (เหมาะกับชีตคำตอบฟอร์ม)
- *   check_done_value = ค่าที่ถือว่าเสร็จ คั่นด้วย / เช่น ส่งแล้ว/ครบ  | เว้นว่าง = ช่องไม่ว่าง
+ *   check_done_col   = เว้นว่าง = ระบบหาคอลัมน์สถานะเอง (ชีตคำตอบฟอร์ม: มีชื่อสาขา = ทำแล้ว)
+ *                      ใส่เองได้: หัวคอลัมน์ หรือตัวอักษรคอลัมน์ เช่น K
+ *   check_done_value = เว้นว่าง = ระบบเดาเอง | ใส่เองได้ คั่นด้วย / เช่น ส่งแล้ว/ครบ
  *                      ขึ้นต้นด้วย ! = เสร็จเมื่อไม่ใช่ค่านั้น เช่น !รอส่ง
  * ผลตรวจเขียนลงแท็บ Done (note = auto) และสรุปไว้ใน check_log
  * แถวใน Done ที่คุณใส่เอง (note ไม่ใช่ auto) จะไม่ถูกแตะ */
@@ -398,10 +398,16 @@ function autoCheck() {
       const sheets = wanted.length ? wanted.map(n => book.getSheetByName(n)).filter(Boolean) : book.getSheets();
       if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', '));
       const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim() };
-      const res = {}; let headers = [];
+      const res = {}; let headers = []; const usedList = [];
       sheets.forEach(sh => {
         const out = evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule);
         if (!headers.length) headers = out.headers;
+        usedList.push(sh.getName() + ': ' + (
+          out.used.mode === 'auto'     ? `คอลัมน์ "${out.used.col}" = ${out.used.val}` :
+          out.used.mode === 'presence' ? 'มีชื่อสาขา = ทำแล้ว' :
+          out.used.mode === 'unknown'  ? '⚠️ หาคอลัมน์สถานะไม่เจอ (กรอก check_done_col เอง)' :
+          out.used.mode === 'error'    ? `⚠️ ไม่พบคอลัมน์ "${out.used.col}"` :
+                                         `คอลัมน์ "${out.used.col}" = ${out.used.val}`));
         Object.entries(out.status).forEach(([code, st]) => {
           const a = res[code] || {found: 0, done: 0}; a.found += st.found; a.done += st.done; res[code] = a;
         });
@@ -417,7 +423,7 @@ function autoCheck() {
         appendObj_(dsh, {task_id: tid, branch_code: code, status: st, note: 'auto', updated: stamp});
       });
       log = `${stamp} ✓ พบ ${Object.keys(res).length} สาขา · เสร็จ ${nDone} · บางส่วน ${nPart}` +
-            (rule.col ? '' : ' (โหมด: มีชื่อสาขา = ทำแล้ว)') +
+            ` | ใช้กฎ: ${usedList.join(' ; ')}` +
             (headers.length ? ` | หัวคอลัมน์: ${headers.slice(0, 25).join(' | ')}` : '');
     } catch (err) { log = `${stamp} ✗ ${err.message}`; }
     tsh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
@@ -439,48 +445,99 @@ function openLinkedBook_(links) {
   return null;
 }
 
-/* ตรวจตาราง 1 แท็บ: คืนสถานะต่อสาขา {found: จำนวนแถวที่พบ, done: จำนวนแถวที่เสร็จ} */
+/* ตรวจตาราง 1 แท็บ: คืนสถานะต่อสาขา {found, done} + หัวคอลัมน์ + กฎที่ใช้ */
+const DONE_RE = /^(?:(?:ส่งแล้ว|ส่ง|ครบ(?:แล้ว)?|เรียบร้อย(?:แล้ว)?|เสร็จ(?:แล้ว)?|ได้รับ(?:แล้ว)?|ดำเนินการแล้ว|ตอบแล้ว|ผ่าน|มี|คืนแล้ว|รับแล้ว)(?:\s.{0,20})?|done|completed?|ok|yes|y|true|✓|✔|☑|\/)$/i;
+const PEND_RE = /^(รอ|ยังไม่|ไม่|ค้าง|pending|false|no|n|-|x|✗|✘|$)/i;
+const STATUS_HEAD_RE = /สถานะ|status|ส่งแล้ว|การส่ง|ได้รับ|ตอบ|ดำเนินการ|เรียบร้อย|ผลการ|check|done|complete|รับเอกสาร|คืน|confirm|ยืนยัน/i;
+
 function evaluateTable(values, branches, rule) {
   const N = s => String(s || '').toLowerCase().replace(/true\s*shop|ทรูช็อป|[\s'’\-_.,]/g, '');
   const byCode = {}, byName = {};
   branches.forEach(b => { byCode[String(b.code).trim()] = b.code; byName[N(b.name)] = b.code; });
-  // หาแถวหัวตาราง + คอลัมน์สถานะ
-  let hRow = -1, dCol = -1;
+  const codeOf = row => {
+    for (const c of row) {
+      const t = String(c).trim().replace(/\.0$/, '');
+      if (byCode[t]) return byCode[t];
+      const n = N(t); if (n.length > 5 && byName[n]) return byName[n];
+    }
+    return null;
+  };
+  // แถวหัวตาราง = แถวแรกที่มีข้อความ ≥3 ช่อง และก่อนแถวแรกที่มีสาขา
+  const firstData = values.findIndex(r => codeOf(r));
+  let hRow = -1;
+  for (let i = 0; i < Math.min(15, firstData < 0 ? values.length : firstData); i++) {
+    const row = values[i].map(c => String(c).trim());
+    if (row.filter(c => c && !/^\d+([.,]\d+)?$/.test(c)).length >= 3) hRow = i;     // เอาแถวที่ใกล้ข้อมูลที่สุด
+  }
+  const headRow = hRow >= 0 ? values[hRow].map(c => String(c).trim()) : [];
+  const headers = headRow.filter(Boolean);
+  const dataRows = values.slice(hRow + 1).filter(r => codeOf(r));
+
+  // ----- หาคอลัมน์สถานะ -----
+  let dCol = -1, used = {col: rule.col, val: rule.val, mode: 'manual'};
   const letter = /^[A-Z]{1,2}$/i.test(rule.col) ? rule.col.toUpperCase() : '';
   if (letter) dCol = letter.split('').reduce((a, c) => a * 26 + c.charCodeAt(0) - 64, 0) - 1;
-  for (let i = 0; i < Math.min(15, values.length); i++) {
-    const row = values[i].map(c => String(c).trim());
-    if (rule.col && !letter) {
-      const j = row.findIndex(c => c && c.toLowerCase().includes(rule.col.toLowerCase()));
-      if (j >= 0) { hRow = i; dCol = j; break; }
-    } else if (row.filter(Boolean).length >= 3 && row.every(c => !/^\d{6,}$/.test(c))) { hRow = i; break; }
-  }
-  const headers = hRow >= 0 ? values[hRow].map(c => String(c).trim()).filter(Boolean) : [];
-  if (rule.col && dCol < 0) return {status: {}, headers};
-  const vals = rule.val ? rule.val.replace(/^!/, '').split('/').map(x => x.trim().toLowerCase()).filter(Boolean) : [];
-  const neg = rule.val.startsWith('!');
+  else if (rule.col) dCol = headRow.findIndex(c => c && c.toLowerCase().includes(rule.col.toLowerCase()));
+  if (rule.col && dCol < 0) return {status: {}, headers, used: {mode: 'error', col: rule.col}};
+
+  let vals = rule.val ? rule.val.replace(/^!/, '').split('/').map(x => x.trim().toLowerCase()).filter(Boolean) : [];
+  let neg = rule.val.startsWith('!');
+  let presence = false;
+
+  if (!rule.col) {                                         // ----- โหมดอัตโนมัติ -----
+    const ncol = Math.max(...values.map(r => r.length));
+    let best = {score: 0, col: -1};
+    for (let j = 0; j < ncol; j++) {
+      const cells = dataRows.map(r => String(r[j] || '').trim());
+      const filled = cells.filter(Boolean);
+      const distinct = new Set(filled.map(c => c.toLowerCase()));
+      const doneHits = filled.filter(c => DONE_RE.test(c)).length;
+      const pendHits = cells.filter(c => PEND_RE.test(c)).length;
+      const isBool = filled.length && filled.every(c => /^(true|false)$/i.test(c));
+      let score = 0;
+      if (STATUS_HEAD_RE.test(headRow[j] || '')) score += 3;
+      if (isBool) score += 3;
+      if (doneHits) score += 2 + Math.min(2, doneHits / Math.max(1, cells.length) * 4);
+      if (distinct.size && distinct.size <= 6 && (doneHits || pendHits)) score += 1;
+      if (distinct.size > 12) score -= 3;                  // ข้อความอิสระ/ตัวเลข ไม่ใช่สถานะ
+      if (cells.length && cells.every(c => /^\d{6,}$/.test(c))) score -= 5;   // คอลัมน์รหัส
+      if (dataRows.filter(r => codeOf([r[j]])).length > dataRows.length / 2) score -= 10; // คอลัมน์รหัส/ชื่อสาขา
+      if (score > best.score) best = {score, col: j};
+    }
+    const isFormSheet = /ประทับเวลา|timestamp/i.test(headRow[0] || '');
+    if (best.score >= 3 && !isFormSheet) {
+      dCol = best.col;
+      const cells = dataRows.map(r => String(r[dCol] || '').trim());
+      vals = [...new Set(cells.filter(c => DONE_RE.test(c)).map(c => c.toLowerCase()))];
+      neg = false;
+      used = {mode: 'auto', col: headRow[dCol] || ('คอลัมน์ ' + colLetter_(dCol)), val: vals.join('/') || '(ไม่ว่าง)'};
+    } else if (isFormSheet || dataRows.length < branches.length * 0.8) {
+      presence = true;
+      used = {mode: 'presence', col: '', val: ''};
+    } else {
+      // มีรายชื่อเกือบทุกสาขาอยู่แล้ว แต่หาคอลัมน์สถานะไม่เจอ → ไม่เดา
+      return {status: {}, headers, used: {mode: 'unknown'}};
+    }
+  } else if (!rule.val) used.val = '(ไม่ว่าง)';
+
   const isDone = cell => {
+    if (presence) return true;
     const c = String(cell || '').trim().toLowerCase();
-    if (!rule.col) return true;
-    if (!vals.length) return c !== '' && !/^(false|0|-|รอ|ยังไม่|ไม่|pending|no)/.test(c);
+    if (!vals.length) return c !== '' && !PEND_RE.test(c);
     const hit = vals.some(v => c === v || c.includes(v));
     return neg ? (c !== '' && !hit) : hit;
   };
   const status = {};
-  values.slice(hRow + 1).forEach(row => {
-    let code = null;
-    for (const c of row) {
-      const t = String(c).trim().replace(/\.0$/, '');
-      if (byCode[t]) { code = byCode[t]; break; }
-      const n = N(t); if (n.length > 5 && byName[n]) { code = byName[n]; break; }
-    }
-    if (!code) return;
+  dataRows.forEach(row => {
+    const code = codeOf(row);
     const a = status[code] || {found: 0, done: 0};
-    a.found++; if (isDone(dCol >= 0 ? row[dCol] : 'x')) a.done++;
+    a.found++; if (isDone(dCol >= 0 ? row[dCol] : '')) a.done++;
     status[code] = a;
   });
-  return {status, headers};
+  return {status, headers, used};
 }
+
+function colLetter_(j) { let s = ''; j++; while (j > 0) { const m = (j - 1) % 26; s = String.fromCharCode(65 + m) + s; j = Math.floor((j - 1) / 26); } return s; }
 
 /* ===================== อ่านรายชื่อจากตาราง ===================== */
 function parseRoster(rows, branches) {
