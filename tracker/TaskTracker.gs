@@ -13,7 +13,9 @@ const TABS = {
   done:     ['Done',     ['task_id', 'branch_code', 'status', 'note', 'updated']],
   exams:    ['Exams',    ['exam_id', 'title', 'link', 'due', 'pass_score', 'raw_message']],
   staff:    ['Staff',    ['emp_id', 'name', 'branch_code', 'position']],
-  results:  ['ExamResults', ['exam_id', 'emp_id', 'score']]
+  results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
+  trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail']],
+  attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']]
 };
 
 const Q = {

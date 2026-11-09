@@ -79,6 +79,16 @@ td.num{text-align:right;white-space:nowrap}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d2330;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
 .toast.show{opacity:1}
 .banner{background:var(--warn-soft);color:#6b4500;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:16px}
+.day-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:22px 0 10px}
+.day-head h2{margin:0}
+.session{display:grid;grid-template-columns:110px 1fr;gap:14px}
+@media (max-width:600px){.session{grid-template-columns:1fr;gap:4px}}
+.s-time{font-weight:700;color:var(--accent);font-size:15px;white-space:nowrap}
+.att{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.att-row{font-size:13.5px;margin:3px 0}
+.att-row b{font-weight:600}
+.person{display:inline-block;background:#eef0f4;border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:13px}
+.person.hit{background:var(--warn-soft);color:#6b4500;font-weight:600}
 .names{font-size:13px;color:#9b1c1c}
 </style>
 </head>
@@ -96,6 +106,7 @@ td.num{text-align:right;white-space:nowrap}
     <button class="tab active" data-tab="summary">สรุปทุกงาน</button>
     <button class="tab" data-tab="branch">รายสาขา</button>
     <button class="tab" data-tab="exam">ติดตามการสอบ</button>
+    <button class="tab" data-tab="training">แจ้งอบรม</button>
   </nav>
 </header>
 
@@ -140,6 +151,18 @@ td.num{text-align:right;white-space:nowrap}
     <div class="kpis" id="ex-kpis"></div>
     <div class="table-wrap"><table id="ex-table"></table></div>
   </section>
+  <!-- ========== TAB 4: TRAINING ========== -->
+  <section id="tab-training" hidden>
+    <div class="toolbar">
+      <button class="chip-btn active" data-tr="upcoming">วันนี้เป็นต้นไป</button>
+      <button class="chip-btn" data-tr="week">7 วันข้างหน้า</button>
+      <button class="chip-btn" data-tr="past">ที่ผ่านมา</button>
+      <button class="chip-btn" data-tr="all">ทั้งหมด</button>
+      <input type="search" id="tr-q" class="grow" placeholder="ค้นหาหัวข้อ / ชื่อผู้เข้าอบรม / สาขา…">
+    </div>
+    <div class="kpis" id="tr-kpis"></div>
+    <div id="tr-list"></div>
+  </section>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -151,7 +174,7 @@ td.num{text-align:right;white-space:nowrap}
    ===================================================================== */
 const CONFIG = {
   sheetId: '',
-  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults' }
+  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees' }
 };
 
 /* ---------- helpers ---------- */
@@ -244,7 +267,20 @@ function sampleData(){
   branches.forEach(b => { const n = 4 + Math.floor(r()*5); for (let i=0;i<n;i++) staff.push({emp_id:String(id++), name:first[Math.floor(r()*first.length)]+' '+'กขคงจฉชซ'[Math.floor(r()*8)]+'.', branch_code:b.code, position:i===0?'ผู้จัดการสาขา':'พนักงานขาย'}); });
   const results = [];
   exams.forEach((e,ei) => { const p = ei===0 ? .7 : .35; staff.forEach(s => { if (r() < p) results.push({exam_id:e.exam_id, emp_id:s.emp_id, score:String(55+Math.floor(r()*46))}); }); });
-  return {branches, tasks, done, exams, staff, results};
+  const trainings = [
+    {training_id:'TR01',date:plus(0),start:'13:30',end:'16:30',title:'อบรมเทคนิคการขาย Prepay & Retention',location:'Online (Microsoft Teams)',link:'https://teams.microsoft.com/',trainer:'ทีม Retention ภาคเหนือ',detail:'เปิดกล้องตลอดการอบรม เตรียมยอดขายเดือนล่าสุดของสาขา'},
+    {training_id:'TR02',date:plus(1),start:'09:00',end:'12:00',title:'อบรม Product Knowledge มือถือรุ่นใหม่',location:'ห้องประชุม สนง. เชียงใหม่ ชั้น 3',link:'',trainer:'ทีม Training',detail:'แต่งกายชุดยูนิฟอร์ม นำเครื่องเดโมมาด้วย'},
+    {training_id:'TR03',date:plus(1),start:'13:00',end:'15:00',title:'อบรม Compliance & PDPA',location:'Online (Zoom)',link:'https://zoom.us/',trainer:'ฝ่าย Compliance',detail:'มีแบบทดสอบหลังอบรม'},
+    {training_id:'TR04',date:plus(3),start:'09:30',end:'16:00',title:'อบรมผู้จัดการสาขาใหม่ รุ่นที่ 2',location:'โรงแรมในเมืองพิษณุโลก',link:'',trainer:'HR ภาคเหนือ',detail:'อบรมเต็มวัน มีอาหารกลางวัน'},
+    {training_id:'TR05',date:plus(8),start:'10:00',end:'12:00',title:'อบรมระบบ POS เวอร์ชันใหม่',location:'Online (Microsoft Teams)',link:'https://teams.microsoft.com/',trainer:'ทีม IT Support',detail:''},
+    {training_id:'TR06',date:plus(-2),start:'09:00',end:'12:00',title:'อบรมบริการลูกค้า (Service Mind)',location:'ห้องประชุม สนง. ลำปาง',link:'',trainer:'ทีม Training',detail:''}
+  ];
+  const pick = (pool, n) => { const a = pool.slice(), out = []; while (out.length < n && a.length) out.push(a.splice(Math.floor(r()*a.length),1)[0]); return out; };
+  const byArea = a => staff.filter(s => branches.find(b=>b.code===s.branch_code).area === a);
+  const plan = {TR01:[staff,10], TR02:[byArea('Upper North'),7], TR03:[staff,12], TR04:[byArea('Lower North').filter(s=>s.position==='ผู้จัดการสาขา'),5], TR05:[staff,8], TR06:[byArea('Upper North'),6]};
+  const attendees = [];
+  Object.entries(plan).forEach(([tid,[pool,n]]) => pick(pool,n).forEach(s => attendees.push({training_id:tid, name:s.name, branch_code:s.branch_code, emp_id:s.emp_id})));
+  return {branches, tasks, done, exams, staff, results, trainings, attendees};
 }
 
 /* ---------- โหลดจาก Google Sheet ---------- */
@@ -266,8 +302,14 @@ async function loadSheet(){
   const out = {};
   for (const [key, tab] of Object.entries(CONFIG.tabs)){
     const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
-    const res = await fetch(url); if (!res.ok) throw new Error(tab);
-    out[key] = parseCSV(await res.text());
+    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id'};
+    const OPTIONAL = ['trainings','attendees'];
+    try {
+      const res = await fetch(url); if (!res.ok) throw new Error(tab);
+      const rows = parseCSV(await res.text());
+      // ถ้าไม่มีแท็บนี้ Google จะส่งแท็บแรกมาแทน จึงเช็กหัวคอลัมน์ก่อน
+      out[key] = rows.length && !(KEYCOL[key] in rows[0]) ? [] : rows;
+    } catch (err) { if (OPTIONAL.includes(key)) out[key] = []; else throw err; }
   }
   return out;
 }
@@ -313,7 +355,18 @@ function build(data){
     const res = {}; data.results.filter(x=>x.exam_id===e.exam_id).forEach(x => { const s = Number(x.score); if (!(x.emp_id in res) || s > res[x.emp_id]) res[x.emp_id] = s; });
     return {...e, due: parseDate(e.due), res, pass: passOf(e)};
   });
-  return {branches, bmap, tasks, exams, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
+  const staffById = Object.fromEntries((data.staff||[]).map(s=>[s.emp_id,s]));
+  const hhmm = t => { const m = String(t||'').match(/(\d{1,2})[:.](\d{2})/); return m ? m[1].padStart(2,'0')+':'+m[2] : ''; };
+  const trainings = (data.trainings||[]).filter(t=>t.training_id).map(t => {
+    const att = (data.attendees||[]).filter(a=>a.training_id===t.training_id).map(a => {
+      const st = staffById[a.emp_id] || {};
+      const code = a.branch_code || st.branch_code || '';
+      return {name: a.name || st.name || a.emp_id || '-', code, b: bmapAll[code] || null, note: a.note || ''};
+    }).filter(a => AREA==='ALL' || (a.b && bmap[a.code]));
+    return {...t, date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
+  }).filter(t => t.date && (AREA==='ALL' || t.att.length))
+    .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
+  return {branches, bmap, tasks, exams, trainings, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
 }
 function lineMsg(t){
   const dl = daysLeft(t.due);
@@ -419,6 +472,14 @@ function renderBranch(){
   $('#br-body').replaceChildren(
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
     pend.length ? h('div',null, pend.map(x=>card(x,false))) : h('div',{class:'empty',text:'ไม่มีงานค้าง เยี่ยมมาก! 🎉'}),
+    ...(() => {
+      const tr = MODEL.trainings.filter(t=>daysLeft(t.date)>=0).map(t=>({t, ps:t.att.filter(a=>a.code===code)})).filter(x=>x.ps.length);
+      return tr.length ? [h('h2',{text:`📚 อบรมที่จะถึง (${tr.length})`}), h('div',null, tr.map(x => h('div',{class:'card'},
+        h('div',{class:'t-title',text:x.t.title}),
+        h('div',{class:'meta'}, h('span',{class:'badge warn',text:`${thDay(x.t.date)} · ${x.t.start}${x.t.end?'–'+x.t.end:''}`}), h('span',{class:'badge',text:dayRel(x.t.date)}), x.t.location?h('span',{class:'badge type',text:'📍 '+x.t.location}):null),
+        h('div',{class:'att-row',style:'margin-top:6px'}, h('b',{text:'ผู้เข้าอบรมจากสาขา: '}), x.ps.map(p=>h('span',{class:'person',text:p.name})))
+      )))] : [];
+    })(),
     h('h2',{text:`✅ ดำเนินการแล้ว (${done.length})`}),
     done.length ? h('div',null, done.map(x=>card(x,true))) : h('div',{class:'empty',text:'ยังไม่มีงานที่ดำเนินการแล้ว'})
   );
@@ -460,6 +521,67 @@ function renderExam(){
   };
 }
 
+/* ---------- TAB 4: แจ้งอบรม ---------- */
+let trFilter = 'upcoming';
+const thDay = d => d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short',year:'2-digit'});
+const dayRel = d => { const n = daysLeft(d); return n===0?'วันนี้':n===1?'พรุ่งนี้':n===-1?'เมื่อวาน':n>0?`อีก ${n} วัน`:`${-n} วันที่แล้ว`; };
+function groupByBranch(att){
+  const g = new Map();
+  att.forEach(a => { const k = a.b ? a.b.name : (a.code || 'ไม่ระบุสาขา'); if (!g.has(k)) g.set(k, []); g.get(k).push(a); });
+  return [...g.entries()];
+}
+function agendaMsg(d, list){
+  return `📅 Agenda อบรม ${thDay(d)}${AREA!=='ALL'?' ['+AREA+']':''}\n` + list.map(t =>
+    `━━━━━━━━━━\n🕘 ${t.start}${t.end?'–'+t.end:''} ${t.title}` +
+    (t.location?`\n📍 ${t.location}`:'') + (t.trainer?`\n🎤 ${t.trainer}`:'') +
+    `\n👥 ผู้เข้าอบรม ${t.att.length} คน` +
+    groupByBranch(t.att).map(([b,ps]) => `\n• ${b}: ${ps.map(p=>p.name).join(', ')}`).join('') +
+    (splitLinks(t.link)[0]?`\n🔗 ${splitLinks(t.link)[0]}`:'') + (t.detail?`\n📝 ${t.detail}`:'')
+  ).join('\n');
+}
+function renderTraining(){
+  const q = $('#tr-q').value.trim().toLowerCase();
+  let list = MODEL.trainings.filter(t => {
+    const n = daysLeft(t.date);
+    return trFilter==='all' || (trFilter==='upcoming' && n>=0) || (trFilter==='week' && n>=0 && n<=7) || (trFilter==='past' && n<0);
+  });
+  if (trFilter==='past') list = list.slice().reverse();
+  const hit = p => q && (p.name.toLowerCase().includes(q) || (p.b && p.b.name.toLowerCase().includes(q)) || p.code.toLowerCase().includes(q));
+  if (q) list = list.filter(t => (t.title+' '+(t.location||'')+' '+(t.trainer||'')).toLowerCase().includes(q) || t.att.some(hit));
+  const up = MODEL.trainings.filter(t=>daysLeft(t.date)>=0);
+  const soon = MODEL.trainings.filter(t=>{const n=daysLeft(t.date); return n===0||n===1;});
+  $('#tr-kpis').replaceChildren(
+    kpi('หัวข้ออบรมที่จะถึง', up.length, 'ตั้งแต่วันนี้เป็นต้นไป'),
+    kpi('ผู้เข้าอบรมที่จะถึง', up.reduce((a,t)=>a+t.att.length,0)+' คน', `จาก ${new Set(up.flatMap(t=>t.att.map(a=>a.code))).size} สาขา`),
+    kpi('วันนี้–พรุ่งนี้', soon.length+' รายการ', soon.reduce((a,t)=>a+t.att.length,0)+' คน', soon.length?'warn':'')
+  );
+  const box = $('#tr-list');
+  if (!list.length){ box.replaceChildren(h('div',{class:'empty',text: q ? 'ไม่พบรายการที่ค้นหา' : 'ไม่มีรายการอบรมในช่วงนี้'})); return; }
+  const days = new Map(); list.forEach(t => { const k = iso(t.date); if (!days.has(k)) days.set(k, []); days.get(k).push(t); });
+  box.replaceChildren(...[...days.values()].map(ts => { const d = ts[0].date, n = daysLeft(d); return h('div',null,
+    h('div',{class:'day-head'},
+      h('h2',{text:'📅 '+thDay(d)}),
+      h('span',{class:'badge '+(n===0?'bad':n===1?'warn':''),text:dayRel(d)}),
+      h('span',{class:'small',text:`${ts.length} รายการ · ${ts.reduce((a,t)=>a+t.att.length,0)} คน`}),
+      h('button',{class:'btn',onclick:()=>copy(agendaMsg(d,ts)),text:'📋 คัดลอก Agenda วันนี้ส่งไลน์'})),
+    ts.map(t => h('div',{class:'card '+(n===0?'soon':'')},
+      h('div',{class:'session'},
+        h('div',{class:'s-time',text:t.start ? t.start+(t.end?' – '+t.end:'') : 'ไม่ระบุเวลา'}),
+        h('div',null,
+          h('div',{class:'t-title',text:t.title}),
+          h('div',{class:'meta'},
+            t.location ? h('span',{class:'badge type',text:'📍 '+t.location}) : null,
+            t.trainer ? h('span',{class:'badge',text:'🎤 '+t.trainer}) : null),
+          t.detail ? h('div',{class:'detail',text:t.detail}) : null,
+          splitLinks(t.link).length ? h('div',{class:'actions'}, linkBtns(t,true,'เข้าร่วม / รายละเอียด')) : null,
+          h('div',{class:'att'},
+            h('div',{class:'small',text:`👥 ผู้เข้าอบรม ${t.att.length} คน`}),
+            t.att.length ? groupByBranch(t.att).map(([b,ps]) => h('div',{class:'att-row'},
+              h('b',{text:b+': '}), ps.map(p => h('span',{class:'person'+(hit(p)?' hit':''),text:p.name+(p.note?` (${p.note})`:'')}))))
+              : h('div',{class:'small',text:'ยังไม่มีรายชื่อ'})))))));
+  }));
+}
+
 /* ---------- Area ---------- */
 function renderAreaBar(){
   const areas = allAreas();
@@ -486,13 +608,14 @@ function setArea(a){
   AREA = a; try { localStorage.setItem('tt-area', a); } catch(e){}
   MODEL = build(D); renderAreaBar(); fillSelects();
   renderSummary(); renderExam();
+  renderTraining();
   if (!$('#tab-branch').hidden) renderBranch();
 }
 
 /* ---------- tabs & init ---------- */
 function showTab(name){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  ['summary','branch','exam'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  ['summary','branch','exam','training'].forEach(n=>$('#tab-'+n).hidden = n!==name);
   if (name==='branch'){ renderBranch(); try{ history.replaceState(null,'','#br-'+$('#br-select').value); }catch(e){} }
   else { try{ history.replaceState(null,'','#'+name); }catch(e){} }
   window.scrollTo(0,0);
@@ -513,14 +636,17 @@ async function init(){
   $('#br-select').onchange = () => showTab('branch');
   $('#br-link').onclick = () => copy(location.href.split('#')[0] + '#br-' + $('#br-select').value);
   $('#ex-select').onchange = renderExam; $('#ex-branch').onchange = renderExam;
+  document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{ trFilter=b.dataset.tr; document.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('active',x===b)); renderTraining(); });
+  $('#tr-q').oninput = renderTraining;
 
-  renderSummary(); renderExam();
+  renderSummary(); renderExam(); renderTraining();
   const hash = location.hash.slice(1);
   if (hash.startsWith('br-')){
     const c = hash.slice(3), b = D.branches.find(x=>x.code===c);
     if (b && !MODEL.bmap[c]){ AREA = areaOf(b); MODEL = build(D); renderAreaBar(); fillSelects(); renderSummary(); renderExam(); }
     if (MODEL.bmap[c]) $('#br-select').value = c; showTab('branch'); }
   else if (hash==='exam') showTab('exam');
+  else if (hash==='training') showTab('training');
 }
 init();
 </script>
