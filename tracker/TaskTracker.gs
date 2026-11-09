@@ -254,14 +254,23 @@ function branchList_() {
 }
 
 /* ===================== รายชื่อพนักงานรายงาน (Checklist) ===================== */
+const TH_EN_ = [['โลตัสส์','lotus\'s '],['โลตัส','lotus\'s '],['เทสโก้','lotus\'s '],['บิ๊กซี','big c '],['บิ๊ก ซี','big c '],['เซ็นทรัล','central '],['โรบินสัน','robinson '],
+  ['เฟสติวัล','festival '],['แอร์พอร์ต','airport '],['พลาซ่า','plaza '],['มินิ','mini '],['มาย่า','maya '],['เมญ่า','maya '],['เมือง','mueang '],
+  ['เชียงใหม่','chiangmai '],['เชียงราย','chiangrai '],['ลำปาง','lampang '],['พะเยา','phayao '],['น่าน','nan '],['หางดง','hangdong '],['เชียงของ','chiang khong '],
+  ['ฝาง','fang '],['รวมโชค','ruamchok '],['จอมทอง','jomthong '],['แม่สาย','mae sai '],['แม่ฮ่องสอน','maehongson '],['เชียงคำ','chiangkham '],
+  ['ขาณุวรลักษบุรี','kanuworaluk '],['ขาณุ','kanuworaluk '],['แม่สอด','maesod '],['ตาก','tak '],['บึงสามพัน','bueng samphan '],['พิษณุโลก','phitsanulok '],
+  ['หล่มสัก','lomsak '],['เพชรบูรณ์','phetchabun '],['กำแพงเพชร','kamphaengphet '],['ท่าหลวง','thaluang '],['พิจิตร','phichit '],['ตะพานหิน','taphan hin '],['สลกบาตร','salokbat '],
+  ['ดีแทค','dtac '],['ทรูช็อป','true shop '],['ทรู ช็อป','true shop ']];
 function branchKey_(s) {
   s = String(s || '').toLowerCase();
+  TH_EN_.forEach(([th, en]) => { if (s.includes(th)) s = s.split(th).join(en); });
+  s = s.replace(/^\s*ww\b|\bww\s/g, ' ');
   const d = /\(d\)|\(dtac\)|\bdtac\b/.test(s);
   let c = s.replace(/true\s*shop|\(dtac\)|\(d\)|\bdtac\b|\bmini\b|\bplaza\b|\d+\s*fl\.?|\bfl\.?\b|\bat\b|\bfloor\b/g, ' ')
     .replace(/khamphaeng/g, 'kamphaeng').replace(/[^a-z0-9ก-๙]/g, '');
   const bm = c.match(/^(lotuss|lotus|bigc|central|robinson|themall|tesco)/);
   const brand = bm ? bm[1].replace(/^lotus$/, 'lotuss') : '';
-  return {d, c, brand, rest: brand ? c.slice(bm[1].length) : c};
+  return {d, c, brand, rest: brand ? c.slice(bm[1].length).replace(/^(lotuss|lotus|bigc|central)/, '') : c};
 }
 function matchBranch_(raw, branches) {
   const k = branchKey_(raw); if (k.c.length < 3) return null;
@@ -816,7 +825,17 @@ function checkSheet_(tabName, idCol, quick) {
     try {
       const book = openLinkedBook_(links);
       if (!book) throw new Error('เปิดลิงก์งานไม่ได้ (ต้องเป็น Google Sheet/Form ที่บัญชีนี้มีสิทธิ์)');
-      const wanted = String(r[C('check_tab')] || '').split(',').map(x => x.trim()).filter(Boolean);
+      const tokens = String(r[C('check_tab')] || '').split(',').map(x => x.trim()).filter(Boolean);
+      // Codeshop / ชื่อสาขา ใน check_tab = ติดตามเฉพาะสาขานั้น | ไม่ระบุ = ทุกสาขาในแท็บ Branches
+      const allBr = branchList_();
+      const pick = new Set(), wanted = [];
+      tokens.forEach(tk => {
+        const byC = allBr.find(b => b.code === tk.replace(/\.0$/, ''));
+        const byN = !byC && /true|shop|lotus|central|robinson|big ?c|mini|\(d\)|โลตัส|เซ็นทรัล/i.test(tk) ? matchBranch_(tk, allBr) : null;
+        if (byC || byN) pick.add((byC || byN).code); else wanted.push(tk);
+      });
+      if (pick.size) { branches.length = 0; allBr.filter(b => pick.has(b.code)).forEach(b => branches.push(b)); }
+      else if (branches.length !== allBr.length) { branches.length = 0; allBr.forEach(b => branches.push(b)); }
       const sheets = resolveTabs_(book, wanted);
       if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', ') + ' | แท็บที่มี: ' + book.getSheets().map(x => x.getName()).slice(0, 15).join(', '));
       const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim(), areas: wanted };
@@ -959,12 +978,23 @@ function evaluateTable(values, branches, rule) {
   const N = s => String(s || '').toLowerCase().replace(/true\s*shop|ทรูช็อป|[\s'’\-_.,]/g, '');
   const byCode = {}, byName = {};
   branches.forEach(b => { byCode[String(b.code).trim()] = b.code; byName[N(b.name)] = b.code; });
+  const fz = {};                                  // cache ชื่อสาขาแบบยืดหยุ่น (ไทย/อังกฤษ/(dtac)/1Fl.)
+  const fuzzy = t => {
+    if (t in fz) return fz[t];
+    let r = null;
+    if (t.length >= 4 && t.length <= 80 && /[a-zก-๙]/i.test(t) && /true|shop|lotus|big ?c|central|robinson|mini|dtac|ww|โลตัส|เซ็นทรัล|บิ๊กซี|โรบินสัน|สาขา|ทรู/i.test(t)) {
+      const b = matchBranch_(t, branches); r = b ? b.code : null;
+    }
+    return (fz[t] = r);
+  };
   const codeOf0 = row => {
     for (const c of row) {
       const t = String(c).trim().replace(/\.0$/, '');
+      if (!t) continue;
       if (byCode[t]) return byCode[t];
       const n = N(t); if (n.length > 5 && byName[n]) return byName[n];
     }
+    for (const c of row) { const f = fuzzy(String(c).trim()); if (f) return f; }
     return null;
   };
   // ----- แถวหัวตาราง: แถวที่มีคำแบบหัวคอลัมน์มากที่สุด (ภายใน 40 แถวแรก) -----
