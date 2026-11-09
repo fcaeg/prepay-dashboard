@@ -16,6 +16,7 @@ const TABS = {
   results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
   attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
+  taskstaff:['TaskStaff', ['task_id', 'emp_id', 'name', 'branch_code', 'branch_raw', 'region', 'status_src', 'done', 'checked_by', 'checked_at']],
   daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']]
 };
 
@@ -31,6 +32,7 @@ const Q = {
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
 const DEFAULT_CHECK_TAB = 'UPC - Upper North, UPC - Lower North, Upper North, Lower North, UN, LN, North';
 const SET_CHECK_TAB = 'check_tab เริ่มต้น (ใช้กับทุกงานที่เป็น Google Sheet/Form)';
+const SET_WEBAPP = 'Web App URL';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
 const FREQS = ['One Time (ครั้งเดียว)', 'Daily (ทุกวัน)', 'Weekly (ทุกสัปดาห์)', 'Monthly (ทุกเดือน)'];
 const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'งานประจำวัน', 'อบรม', 'การสอบ', 'อื่นๆ'];
@@ -75,12 +77,14 @@ function setup() {
 
   let st = ss.getSheetByName('Settings') || ss.insertSheet('Settings');
   const keepTab = getSetting_(SET_CHECK_TAB) || DEFAULT_CHECK_TAB;
+  const keepWeb = getSetting_(SET_WEBAPP);
   st.clear();
-  st.getRange('A1:B4').setValues([
+  st.getRange('A1:B5').setValues([
     ['ลิงก์ฟอร์มลงงาน (เปิดบนมือถือ)', form.getPublishedUrl()],
     ['แก้ไขฟอร์ม', form.getEditUrl()],
     ['Sheet ID (ใส่ในหน้าเว็บ)', ss.getId()],
-    [SET_CHECK_TAB, keepTab]
+    [SET_CHECK_TAB, keepTab],
+    [SET_WEBAPP, keepWeb]
   ]);
   st.getRange('A:B').setNumberFormat('@');
   st.autoResizeColumns(1, 2);
@@ -194,9 +198,15 @@ function onTaskForm(e) {
     const codes = [...new Set(roster.filter(r => r.code && !r.name).map(r => r.code))];
     if (branches === 'ALL' && codes.length) branches = codes.join(',');
     const sh = ss.getSheetByName(TABS.tasks[0]);
-    appendObj_(sh, {task_id: nextId(sh, 'T'), title, type, link: p.links.join(' '), detail: p.detail,
+    // ไฟล์รายชื่อพนักงาน + งานชื่อเดิมที่ยังเปิดอยู่ (เช่น Reminder ซ้ำ) → อัปเดตรายชื่อในงานเดิมแทนการสร้างงานใหม่
+    const staffTabs = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
+    const same = findOpenTaskByTitle_(sh, title);
+    if (same && staffTabs.length && importStaff_(same, staffTabs, true)) return;
+    const tid = nextId(sh, 'T');
+    appendObj_(sh, {task_id: tid, title, type, link: p.links.join(' '), detail: p.detail,
       assigned: today, due, branches, raw_message: p.raw, attachments,
       check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
+    if (staffTabs.length) importStaff_(tid, staffTabs, false);
   }
 }
 
@@ -229,7 +239,182 @@ function branchList_() {
   return sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues().map(([code, name]) => ({code: String(code).trim(), name: String(name).trim()}));
 }
 
+/* ===================== รายชื่อพนักงานรายงาน (Checklist) ===================== */
+function branchKey_(s) {
+  s = String(s || '').toLowerCase();
+  const d = /\(d\)|\(dtac\)|\bdtac\b/.test(s);
+  let c = s.replace(/true\s*shop|\(dtac\)|\(d\)|\bdtac\b|\bmini\b|\bplaza\b|\d+\s*fl\.?|\bfl\.?\b|\bat\b|\bfloor\b/g, ' ')
+    .replace(/khamphaeng/g, 'kamphaeng').replace(/[^a-z0-9ก-๙]/g, '');
+  const bm = c.match(/^(lotuss|lotus|bigc|central|robinson|themall|tesco)/);
+  const brand = bm ? bm[1].replace(/^lotus$/, 'lotuss') : '';
+  return {d, c, brand, rest: brand ? c.slice(bm[1].length) : c};
+}
+function matchBranch_(raw, branches) {
+  const k = branchKey_(raw); if (k.c.length < 3) return null;
+  const big = s => { const m = {}; for (let i = 0; i < s.length - 1; i++) { const g = s.substr(i, 2); m[g] = (m[g] || 0) + 1; } return m; };
+  const dice = (a, b) => { const A = big(a), B = big(b); let x = 0, n = 0, m = 0; for (const g in A) { n += A[g]; if (B[g]) x += Math.min(A[g], B[g]); } for (const g in B) m += B[g]; return n + m ? 2 * x / (n + m) : 0; };
+  let best = null, bs = 0;
+  branches.forEach(b => {
+    const bk = branchKey_(b.name);
+    if (bk.d !== k.d || bk.brand !== k.brand) return;
+    const a = bk.rest, r = k.rest;
+    let sc = a === r ? 1 : (Math.min(a.length, r.length) >= 4 && (a.startsWith(r) || r.startsWith(a))) ? 0.9 : dice(a, r);
+    if (sc > bs) { bs = sc; best = b; }
+  });
+  return bs >= 0.6 ? best : null;
+}
+
+
+/* อ่านรายชื่อพนักงานจากตาราง: ต้องมีคอลัมน์ชื่อ + สาขา (รหัสพนักงาน/โซน/สถานะ ถ้ามี) */
+function parseStaffList(values, branches, areas) {
+  values = values || [];
+  const H = {emp: /รหัสพนักงาน|emp(loyee)?\s*(id|code|no)|staff\s*id/i, name: /ชื่อ|name/i,
+    branch: /สาขา|shop|branch|กลุ่มย่อย|ร้าน|store/i, region: /โซน|zone|region|^area$|ภาค|เขต/i, status: /สถานะ|status|รับทราบ/i};
+  let hRow = -1, best = 0;
+  for (let i = 0; i < Math.min(30, values.length); i++) {
+    const r = values[i].map(c => String(c).trim());
+    const sc = Object.values(H).filter(re => r.some(c => c && c.length < 40 && re.test(c))).length;
+    if (sc > best) { best = sc; hRow = i; }
+  }
+  if (hRow < 0 || best < 3) return [];
+  const head = values[hRow].map(c => String(c).trim());
+  const col = (re, not) => head.findIndex(c => c && re.test(c) && !(not && not.test(c)));
+  const cEmp = col(H.emp), cBr = col(H.branch, /รหัส|code|ช่องทาง/i), cName = col(H.name, /สาขา|shop|branch|ร้าน|กลุ่ม/i),
+        cReg = col(H.region), cSt = col(H.status);
+  if (cName < 0 || cBr < 0) return [];
+  const ar = (areas || []).map(a => a.trim().toLowerCase()).filter(Boolean);
+  const out = [];
+  values.slice(hRow + 1).forEach(r => {
+    const name = String(r[cName] || '').trim(); if (!name) return;
+    const raw = String(r[cBr] || '').trim(), region = cReg >= 0 ? String(r[cReg] || '').trim() : '';
+    const b = matchBranch_(raw, branches) || branches.find(x => x.code === raw);
+    const inArea = region && ar.includes(region.toLowerCase());
+    if (!b && !inArea) return;                   // ไม่ใช่สาขาเรา และไม่ได้อยู่ในพื้นที่
+    if (ar.length && region && !inArea && !b) return;
+    if (b && region && ar.length && !inArea && /upc|bma|vcs/i.test(region)) return;   // ชื่อคล้ายแต่อยู่คนละภาค
+    const st = cSt >= 0 ? String(r[cSt] || '').trim() : '';
+    out.push({emp_id: cEmp >= 0 ? String(r[cEmp] || '').trim() : '', name, code: b ? b.code : '', raw, region, status_src: st,
+      done: /อ่านแล้ว|รับทราบแล้ว|ดำเนินการแล้ว|เรียบร้อย|^✅|^done|^complete|^yes$/i.test(st) && !/ยังไม่/.test(st)});
+  });
+  return out;
+}
+
+function findOpenTaskByTitle_(tsh, title) {
+  const N = s => String(s || '').toLowerCase().replace(/\(?\s*remind\w*\s*\)?|reminder|แจ้งเตือน|ติดตาม/g, '').replace(/[^a-z0-9ก-๙]/g, '').slice(0, 40);
+  const key = N(title); if (key.length < 8 || tsh.getLastRow() < 2) return null;
+  const v = tsh.getRange(2, 1, tsh.getLastRow() - 1, 2).getDisplayValues();
+  const hit = v.reverse().find(r => N(r[1]) === key);
+  return hit ? hit[0] : null;
+}
+
+/* เขียนรายชื่อพนักงานของงานลงแท็บ TaskStaff | update = รายชื่อใหม่แทนชุดเดิม (คนที่หายไปจากไฟล์ = ทำแล้ว) */
+function importStaff_(tid, tables, update) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const branches = branchList_();
+  const areas = defaultCheckTab_().split(',').map(x => x.trim());
+  let list = [];
+  for (const t of tables) { const l = parseStaffList(t, branches, areas); if (l.length) { list = l; break; } }
+  if (!list.length) return false;
+  let sh = ss.getSheetByName(TABS.taskstaff[0]);
+  if (!sh) { sh = ss.insertSheet(TABS.taskstaff[0]); sh.getRange('A:Z').setNumberFormat('@');
+    sh.getRange(1, 1, 1, TABS.taskstaff[1].length).setValues([TABS.taskstaff[1]]).setFontWeight('bold').setBackground('#e8eeff'); sh.setFrozenRows(1); }
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  const key = x => (x.emp_id || x.name).toString().trim();
+  const newKeys = new Set(list.map(key));
+  const existing = {};
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getValues().forEach((r, i) => {
+    if (String(r[C('task_id')]) === tid) existing[String(r[C('emp_id')] || r[C('name')]).trim()] = i + 2;
+  });
+  if (update) Object.entries(existing).forEach(([k, row]) => {        // ไม่อยู่ในรายชื่อชุดใหม่ = ทำแล้ว
+    if (!newKeys.has(k) && !sh.getRange(row, C('done') + 1).getValue()) {
+      sh.getRange(row, C('done') + 1).setValue('Y'); sh.getRange(row, C('checked_by') + 1).setValue('อัปเดตจากไฟล์ใหม่'); sh.getRange(row, C('checked_at') + 1).setValue(stamp);
+    }
+  });
+  list.forEach(x => {
+    if (existing[key(x)]) return;
+    appendObj_(sh, {task_id: tid, emp_id: x.emp_id, name: x.name, branch_code: x.code, branch_raw: x.raw, region: x.region,
+      status_src: x.status_src, done: x.done ? 'Y' : '', checked_by: x.done ? 'จากไฟล์' : '', checked_at: x.done ? stamp : ''});
+  });
+  syncStaffDone_(tid);
+  return true;
+}
+
+/* สรุปสถานะสาขาจากรายชื่อพนักงาน → แท็บ Done (note = staff) + tracked_branches */
+function syncStaffDone_(tid) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(TABS.taskstaff[0]); if (!sh || sh.getLastRow() < 2) return;
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
+  const per = {};
+  sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues().forEach(r => {
+    if (r[C('task_id')] !== tid || !r[C('branch_code')]) return;
+    const a = per[r[C('branch_code')]] || {n: 0, d: 0}; a.n++; if (/^y/i.test(r[C('done')])) a.d++; per[r[C('branch_code')]] = a;
+  });
+  const dsh = ss.getSheetByName(TABS.done[0]);
+  if (dsh.getLastRow() > 1) { const dv = dsh.getRange(2, 1, dsh.getLastRow() - 1, 4).getValues();
+    for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid && dv[k][3] === 'staff') dsh.deleteRow(k + 2); }
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  Object.entries(per).forEach(([code, a]) => { if (a.d) appendObj_(dsh, {task_id: tid, branch_code: code, status: a.d >= a.n ? 'done' : 'partial', note: 'staff', updated: stamp}); });
+  const tsh = ss.getSheetByName(TABS.tasks[0]);
+  const th = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  let tc = th.indexOf('tracked_branches'); if (tc < 0) { tc = th.length; tsh.getRange(1, tc + 1).setValue('tracked_branches'); }
+  const ids = tsh.getLastRow() > 1 ? tsh.getRange(2, 1, tsh.getLastRow() - 1, 1).getDisplayValues().flat() : [];
+  const i = ids.indexOf(tid); if (i >= 0) tsh.getRange(i + 2, tc + 1).setValue(Object.keys(per).join(','));
+}
+
+/* Web App: หน้าเว็บส่งการติ๊กรายชื่อมาที่นี่ (Deploy > New deployment > Web app, Execute as: Me, Access: Anyone) */
+function doPost(e) {
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const q = JSON.parse(e.postData.contents || '{}');
+    if (q.action !== 'staffCheck') return out_({ok: false, error: 'unknown action'});
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.taskstaff[0]);
+    const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
+    const v = sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues();
+    const i = v.findIndex(r => r[C('task_id')] === q.task_id && (r[C('emp_id')] || r[C('name')]) === q.key);
+    if (i < 0) return out_({ok: false, error: 'not found'});
+    const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+    sh.getRange(i + 2, C('done') + 1).setValue(q.done ? 'Y' : '');
+    sh.getRange(i + 2, C('checked_by') + 1).setValue(q.done ? String(q.by || 'หน้าเว็บ').slice(0, 60) : '');
+    sh.getRange(i + 2, C('checked_at') + 1).setValue(q.done ? stamp : '');
+    syncStaffDone_(q.task_id);
+    archiveCompleted_();
+    return out_({ok: true});
+  } catch (err) { return out_({ok: false, error: String(err)}); }
+  finally { lock.releaseLock(); }
+}
+function doGet() { return out_({ok: true, app: 'Task Tracker'}); }
+function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+/* เมนู: อ่านรายชื่อพนักงานจากไฟล์แนบของงานที่เลือก (สำหรับงานที่ลงไปแล้ว) */
+function importStaffSelected() {
+  const ui = SpreadsheetApp.getUi(), ss = SpreadsheetApp.getActiveSpreadsheet(), sh = ss.getActiveSheet();
+  if (sh.getName() !== TABS.tasks[0]) { ui.alert('ไปที่แท็บ Tasks แล้วคลิกเลือกแถวงานที่มีไฟล์ Excel แนบก่อน'); return; }
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+  const r = sh.getActiveRange().getRow(); if (r < 2) return;
+  const v = sh.getRange(r, 1, 1, head.length).getDisplayValues()[0];
+  const tid = v[head.indexOf('task_id')], att = v[head.indexOf('attachments')] || '';
+  const ids = (att.match(/\/d\/([\w-]{20,})/g) || []).map(x => x.slice(3));
+  const tables = ids.map(id => { try { return DriveApp.getFileById(id); } catch (e) { return null; } }).filter(Boolean)
+    .filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
+  if (!tables.length) { ui.alert('งานนี้ไม่มีไฟล์ Excel/CSV แนบ'); return; }
+  const ok = importStaff_(tid, tables, true);
+  ui.alert(ok ? `อ่านรายชื่อพนักงานของ ${tid} แล้ว ✅ ดูได้ในแท็บ TaskStaff และหน้าเว็บ` : 'ไม่พบตารางรายชื่อ (ต้องมีคอลัมน์ชื่อ + สาขา) หรือไม่มีพนักงานในพื้นที่');
+}
+
 /* อ่านตารางจากไฟล์: CSV อ่านตรง, Excel แปลงเป็น Google Sheet ชั่วคราว (ต้องเปิดบริการ Drive API) */
+function readTables_(file) {                  // ทุกแท็บของไฟล์ → [values, values, ...]
+  try {
+    const mt = file.getMimeType();
+    if (/csv/i.test(mt) || /\.csv$/i.test(file.getName())) return [Utilities.parseCsv(file.getBlob().getDataAsString('UTF-8'))];
+    let id = file.getId(), tmp = null;
+    if (mt !== MimeType.GOOGLE_SHEETS) { tmp = Drive.Files.copy({name: '_tmp_staff', mimeType: MimeType.GOOGLE_SHEETS}, id); id = tmp.id; }
+    const out = SpreadsheetApp.openById(id).getSheets().map(sh => sh.getDataRange().getDisplayValues());
+    if (tmp) DriveApp.getFileById(tmp.id).setTrashed(true);
+    return out;
+  } catch (err) { Logger.log('อ่านไฟล์ไม่ได้: ' + file.getName() + ' ' + err); return []; }
+}
+
 function readTable_(file) {
   try {
     const mt = file.getMimeType();
@@ -922,10 +1107,11 @@ function onOpen() {
     .addItem('🔄 ตรวจสถานะสาขาจากลิงก์งานตอนนี้', 'autoCheck')
     .addItem('🔁 ย้ายงานที่เลือก (แท็บ Tasks) ไปเป็นงานประจำ', 'moveSelectedToDaily')
     .addItem('🏁 ย้ายงานที่ครบทุกสาขาไป History ตอนนี้', 'archiveNow')
+    .addItem('👥 อ่านรายชื่อพนักงานจากไฟล์แนบ (งานที่เลือก)', 'importStaffSelected')
     .addItem('↩️ ย้ายงานที่เลือก (แท็บ History) กลับไป Tasks', 'restoreSelected')
     .addItem('ตั้งค่า / อัปเดตฟอร์ม', 'setup')
     .addToUi();
 }
 
 // ให้ทดสอบใน Node ได้ (Apps Script จะไม่สนใจบรรทัดนี้)
-if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable, recurDays };
+if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable, recurDays, parseStaffList, matchBranch_ };

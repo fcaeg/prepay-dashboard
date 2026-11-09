@@ -91,6 +91,14 @@ td.num{text-align:right;white-space:nowrap}
 .person.hit{background:var(--warn-soft);color:#6b4500;font-weight:600}
 .attach{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .attach img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eef0f4;display:block}
+.staffbox{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.staffbox details{border:1px solid var(--line);border-radius:8px;margin:6px 0;background:#fafbfc}
+.staffbox summary{cursor:pointer;padding:6px 10px;font-size:13.5px;font-weight:600;list-style:none}
+.staffbox summary::-webkit-details-marker{display:none}
+.staffbox .who{display:flex;align-items:center;gap:8px;padding:4px 12px;font-size:13.5px;border-top:1px solid #eef0f4}
+.staffbox .who input{width:18px;height:18px;accent-color:var(--ok)}
+.staffbox .who.done span{color:var(--muted);text-decoration:line-through}
+.staffbox .who small{color:var(--muted);margin-left:auto;font-size:12px}
 .names{font-size:13px;color:#9b1c1c}
 </style>
 </head>
@@ -211,7 +219,7 @@ td.num{text-align:right;white-space:nowrap}
    ===================================================================== */
 const CONFIG = {
   sheetId: '1309rgyaiWMWj-Xik2-4T3wWgizLMivLrwH2JTx08qCg',
-  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees', daily:'Daily', history:'History' }
+  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees', daily:'Daily', history:'History', taskstaff:'TaskStaff' }
 };
 
 /* ---------- helpers ---------- */
@@ -259,6 +267,40 @@ function dueBadge(d, finished){
 const pctTxt = p => Math.round(p*100) + '%';
 const splitLinks = s => String(s||'').split(/\s+/).filter(u=>/^https?:\/\//.test(u));
 function linkLabel(u){ return /forms\.gle|\/forms\//.test(u)?'ฟอร์ม':/spreadsheets/.test(u)?'ชีต':/document/.test(u)?'เอกสาร':/presentation/.test(u)?'สไลด์':/drive\.google/.test(u)?'โฟลเดอร์':/lookerstudio|datastudio/.test(u)?'Dashboard':'ลิงก์'; }
+const openDet = new Set();
+let pendingPosts = 0;
+async function postCheck(t, x, done){
+  x.done = done;
+  const row = (D.taskstaff||[]).find(r => r.task_id===t.task_id && (r.emp_id||r.name)===x.key);
+  if (row) { row.done = done ? 'Y' : ''; row.checked_by = done ? 'หน้าเว็บ' : ''; }
+  MODEL = build(D); rerenderAll();
+  if (!D.webAppUrl) { toast('⚠️ ยังไม่ได้ตั้งค่า Web App URL – การติ๊กจะไม่ถูกบันทึก'); return; }
+  pendingPosts++;
+  try {
+    await fetch(D.webAppUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'staffCheck', task_id:t.task_id, key:x.key, done, by:'หน้าเว็บ'})});
+    toast(done ? '✓ บันทึกแล้ว: '+x.name : 'ยกเลิกติ๊ก: '+x.name);
+  } catch (e) { toast('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+  finally { pendingPosts--; }
+}
+function staffBox(t, onlyCode){
+  if (!t.staff) return null;
+  const codes = Object.keys(t.staff).filter(c => !onlyCode || c===onlyCode);
+  if (!codes.length) return null;
+  const all = codes.flatMap(c => t.staff[c]), dn = all.filter(x=>x.done).length;
+  const bname = c => (MODEL.bmap[c] && MODEL.bmap[c].name) || (t.staff[c][0] && t.staff[c][0].branch_raw) || c || 'ไม่ระบุสาขา';
+  codes.sort((a,b) => { const pa = t.staff[a].filter(x=>!x.done).length, pb = t.staff[b].filter(x=>!x.done).length; return (pb>0)-(pa>0) || pb-pa || bname(a).localeCompare(bname(b)); });
+  return h('div',{class:'staffbox'},
+    h('div',{class:'small',text:`👥 รายชื่อพนักงาน: ดำเนินการแล้ว ${dn}/${all.length} คน`+(D.webAppUrl?' · ติ๊กชื่อคนที่ทำแล้วได้เลย':' · (ตั้งค่า Web App URL เพื่อให้ติ๊กแล้วบันทึกได้)')}),
+    codes.map(c => { const ps = t.staff[c], d = ps.filter(x=>x.done).length, id = t.task_id+'|'+c;
+      const det = h('details',{open: onlyCode || openDet.has(id) ? true : null},
+        h('summary',null, (d===ps.length?'✅ ':'⏳ ') + `${bname(c)} — ${d}/${ps.length} คน`),
+        ps.slice().sort((a,b)=>a.done-b.done).map(x => h('label',{class:'who'+(x.done?' done':'')},
+          h('input',{type:'checkbox', checked: x.done ? true : null, onchange: ev => postCheck(t, x, ev.target.checked)}),
+          h('span',{text:x.name}), h('small',{text:[x.emp_id, x.done && x.checked_by ? '✓ '+x.checked_by : ''].filter(Boolean).join(' · ')}))));
+      det.addEventListener('toggle', () => det.open ? openDet.add(id) : openDet.delete(id));
+      return det; }));
+}
 function branchGroups(per){
   const pend = per.filter(x=>x.st!=='done'), done = per.filter(x=>x.st==='done');
   return h('div',null,
@@ -351,7 +393,9 @@ function sampleData(){
     {task_id:'T00A',title:'ส่งรูปการจัดบูธ Lower North',type:'Google Form',link:'https://forms.google.com/',detail:'',assigned:plus(-6),due:plus(-4),branches:'Lower North',completed_at:plus(-3)+' 10:05'}
   ];
   history.forEach(t => branches.filter(b => t.branches==='ALL' || b.area===t.branches).forEach(b => done.push({task_id:t.task_id,branch_code:b.code,status:'done'})));
-  return {branches, tasks, done, exams, staff, results, trainings, attendees, daily, history};
+  const taskstaff = [];
+  branches.slice(0,5).forEach((b,i) => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'T005', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k < i ? 'Y':'', checked_by: k < i ? 'หน้าเว็บ':''})));
+  return {branches, tasks, done, exams, staff, results, trainings, attendees, daily, history, taskstaff};
 }
 
 /* ---------- โหลดจาก Google Sheet ---------- */
@@ -373,8 +417,8 @@ async function loadSheet(){
   const out = {};
   for (const [key, tab] of Object.entries(CONFIG.tabs)){
     const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
-    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id',daily:'title',history:'task_id'};
-    const OPTIONAL = ['trainings','attendees','daily','history'];
+    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id',daily:'title',history:'task_id',taskstaff:'task_id'};
+    const OPTIONAL = ['trainings','attendees','daily','history','taskstaff'];
     try {
       const res = await fetch(url); if (!res.ok) throw new Error(tab);
       const rows = parseCSV(await res.text());
@@ -382,6 +426,11 @@ async function loadSheet(){
       out[key] = rows.length && !(KEYCOL[key] in rows[0]) ? [] : rows;
     } catch (err) { if (OPTIONAL.includes(key)) out[key] = []; else throw err; }
   }
+  try {   // Settings ไม่มีหัวตาราง → อ่านเป็นแถว key,value
+    const res = await fetch(`https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&headers=0&sheet=Settings`);
+    const txt = await res.text();
+    txt.split(/\r?\n/).forEach(line => { const m = line.match(/^"Web App URL","([^"]+)"/); if (m && /^https:\/\/script\.google\.com\//.test(m[1])) out.webAppUrl = m[1]; });
+  } catch (e) {}
   return out;
 }
 
@@ -410,6 +459,9 @@ function build(data){
   const bmap = Object.fromEntries(branches.map(b=>[b.code,b]));
   const doneMap = {};
   data.done.forEach(d => { const st = (d.status||'done').toLowerCase().includes('partial') || d.status==='บางส่วน' ? 'partial' : 'done'; doneMap[d.task_id+'|'+d.branch_code] = st; });
+  const staffBy = {};
+  (data.taskstaff||[]).forEach(x => { if (!x.task_id || !x.name) return; const k = x.emp_id || x.name;
+    ((staffBy[x.task_id] = staffBy[x.task_id] || {})[x.branch_code] = staffBy[x.task_id][x.branch_code] || []).push({...x, key: k, done: /^y/i.test(x.done||'')}); });
   const mkTask = t => {
     const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
     const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
@@ -420,7 +472,8 @@ function build(data){
     const pct = list.length ? doneN/list.length : 1;
     const complete = pending.length === 0;
     const dl = daysLeft(due);
-    return {...t, due, list, per, doneN, pending, pct, complete, overdue: !complete && dl!=null && dl<0, soon: !complete && dl!=null && dl>=0 && dl<=1};
+    const staff = staffBy[t.task_id] || null;
+    return {...t, due, list, per, doneN, pending, pct, complete, staff, overdue: !complete && dl!=null && dl<0, soon: !complete && dl!=null && dl>=0 && dl<=1};
   };
   const tasks = data.tasks.filter(t=>t.task_id).map(mkTask).filter(t => t.list.length);
   const history = (data.history||[]).filter(t=>t.task_id).map(mkTask).filter(t => t.list.length)
@@ -474,7 +527,7 @@ function taskCard(t){ return h('div',{class:'card '+(t.complete?'complete':t.ove
         h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete),
           /^(y|yes|✓|true|1|ใช่)$/i.test(String(t.auto_check||'').trim()) ? h('span',{class:'badge ok',title:t.check_log||'',text:'🔄 ตรวจอัตโนมัติ'+((t.check_log||'').match(/^\S+ (\d{2}:\d{2})/)?' · '+t.check_log.match(/^\S+ (\d{2}:\d{2})/)[1]:'')}) : null),
         t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
-        attachBox(t)),
+        attachBox(t), staffBox(t)),
       h('div',null,
         h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
         bar(t.pct),
@@ -611,7 +664,7 @@ function renderBranch(){
       isDone ? h('span',{class:'badge ok',text:'✓ ดำเนินการแล้ว'}) : x.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : null,
       isDone ? null : dueBadge(x.t.due,false)),
     x.t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:x.t.detail}) : null,
-    attachBox(x.t),
+    attachBox(x.t), staffBox(x.t, b.code),
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
   const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b)).map(d => ({...d, _me: d.per.find(x=>x.b===b)}));
   $('#br-body').replaceChildren(
@@ -841,7 +894,7 @@ function rerenderAll(){
 let lastLoad = null;
 function stampLoad(){ lastLoad = new Date(); const el = $('#upd'); if (el) el.textContent = ' · อัปเดตล่าสุด ' + lastLoad.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.'; }
 async function refreshData(){
-  if (!CONFIG.sheetId || document.hidden) return;
+  if (!CONFIG.sheetId || document.hidden || pendingPosts) return;
   try { D = await loadSheet(); MODEL = build(D); rerenderAll(); stampLoad(); } catch (e) { /* เก็บข้อมูลเดิมไว้ */ }
 }
 function setArea(a){
