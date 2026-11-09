@@ -116,6 +116,40 @@ body.pc-noscroll { overflow: hidden; }
 .pc-xbtns .pri { background: var(--color-ok); border-color: var(--color-ok); color: #fff; font-weight: 600; }
 .pc-xbtns .hint { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 @media print { .pc-expand { display: none; } }
+.pc-alist { margin: 0; padding: 0; list-style: none; counter-reset: al; display: grid; gap: 10px; }
+.pc-alist li { counter-increment: al; position: relative; padding: 10px 12px 10px 2.6rem; border-radius: var(--cds-radius); border-left: 4px solid var(--al); background: color-mix(in srgb, var(--al) 7%, transparent); font-size: var(--cds-font-size-body); line-height: 1.7; --al: var(--color-fg-muted); }
+.pc-alist li.bad { --al: var(--color-bad); } .pc-alist li.warn { --al: var(--color-warn); } .pc-alist li.ok { --al: var(--color-ok); }
+.pc-alist li::before { content: counter(al); position: absolute; left: 10px; top: 11px; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--al); color: #fff; display: grid; place-items: center; font-size: .8rem; font-weight: 600; line-height: 1; }
+.pc-alist .k { font-weight: 600; color: var(--al); }
+.pc-alist b { font-weight: 600; color: var(--color-fg); font-variant-numeric: tabular-nums; }
+.pc-alist b.bad { color: var(--color-bad); } .pc-alist b.ok { color: var(--color-ok); } .pc-alist b.warn { color: var(--color-warn); }
+.pc-zcards { gap: 8px; } .pc-full .pc-zc { padding: 8px 10px; gap: 2px; } .pc-full .pc-zc .zb { font-size: 1.5rem; } .pc-full .pc-field { display: none; } }
+.pc-agtiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.pc-agtile { border-top: 4px solid var(--agc); }
+.pc-agtile .pc-big { color: var(--agc); }
+.pc-agtile .lv { font-weight: 600; color: var(--agc); }
+.pc-agbars { display: grid; gap: 4px; }
+.pc-agrow { display: grid; grid-template-columns: minmax(0, 10rem) minmax(4rem, 1fr) 7.5rem; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); padding: 3px 0; }
+.pc-agrow.z { font-weight: 600; border-top: 1px solid var(--color-border-line); padding-top: 8px; margin-top: 4px; }
+.pc-agrow .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-agrow .s { display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--cds-chart-grid); }
+.pc-agrow .s i { display: block; height: 100%; }
+.pc-agrow .v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 560px) { .pc-agrow { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; } .pc-agrow .s { grid-column: 1 / -1; grid-row: 2; height: 12px; } }
+.pill.ag0 { color: var(--ag0); } .pill.ag1 { color: var(--ag1); } .pill.ag2 { color: var(--ag2); } .pill.ag3 { color: var(--ag3); } .pill.ag4 { color: var(--ag4); }
+.pc { --ag0: var(--color-ok); --ag1: #c9a227; --ag2: #e07b24; --ag3: var(--color-bad); --ag4: color-mix(in srgb, var(--color-bad) 65%, var(--color-fg)); }
+.pc-rkbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pc-export { font: inherit; font-size: var(--cds-font-size-caption); font-weight: 600; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-ok); background: var(--color-ok); color: #fff; cursor: pointer; }
+.pc-csv { align-self: end; }
+.pc-export:disabled { opacity: .6; cursor: progress; }
+.pc-xmodal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; }
+.pc-xbox { background: var(--color-panel); color: var(--color-fg); border-radius: 12px; padding: 14px; max-width: min(1200px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 10px; }
+.pc-xbox img { width: 100%; height: auto; border: 1px solid var(--color-border-line); border-radius: 6px; }
+.pc-xbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pc-xbtns button, .pc-xbtns a { font: inherit; font-size: var(--cds-font-size-caption); padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); cursor: pointer; text-decoration: none; }
+.pc-xbtns .pri { background: var(--color-ok); border-color: var(--color-ok); color: #fff; font-weight: 600; }
+.pc-xbtns .hint { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+@media print { .pc-expand { display: none; } }
 .pc-alerts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
 .pc-al { --al: var(--color-fg-muted); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; align-content: start; border-top: 4px solid var(--al); min-width: 0; }
 .pc-al.bad { --al: var(--color-bad); } .pc-al.warn { --al: var(--color-warn); } .pc-al.ok { --al: var(--color-ok); }
@@ -809,7 +843,7 @@ body.pc-noscroll { overflow: hidden; }
         <p class="pc-fullnote" data-draw="rf_4" data-source="area_rank"></p>
       <h3>⚠ Alert Issue วันนี้ · Top 3 <span class="pc-info" tabindex="0" role="note" aria-label="เทียบยอดของวันที่เลือก (ตามช่อง วันที่ ของ Daily Ranking) กับค่าเฉลี่ย 7 วันก่อนหน้า ของแต่ละสาขา · ถ้าเป็นวันล่าสุดที่ยังไม่ครบวัน ค่าเฉลี่ยจะคิดเฉพาะช่วงเวลาเดียวกัน (สัดส่วนยอดรายชั่วโมงของวันก่อน ๆ) · มีนัยสำคัญ = ต่างจากค่าเฉลี่ยตั้งแต่ 15% ขึ้นไป · 1) Need Improve = Area ที่ลดลงมากที่สุด และสาขาที่ทำให้ลด · 2) Stock Issue = สาขาที่ Matcode ที่ขายประจำ (มียอดใน 7 วัน) หมดหรือเหลือไม่ถึง 3 วัน โดย Stock คงเหลือโดยประมาณ = Stock ในไฟล์ล่าสุด − ยอดขายหลังเวลาของไฟล์ Stock · ยอดที่หายไป = ค่าเฉลี่ยของ Matcode ที่หมด − ยอดวันนี้ · 3) Top Performance = Area ที่เพิ่มขึ้นมากที่สุด และสาขาที่ทำให้เพิ่ม · ตามตัวกรอง Region / Area / ประเภทสาขา และปุ่ม Net Amount / QTY" data-tip="เทียบยอดของวันที่เลือก (ตามช่อง วันที่ ของ Daily Ranking) กับค่าเฉลี่ย 7 วันก่อนหน้า ของแต่ละสาขา · ถ้าเป็นวันล่าสุดที่ยังไม่ครบวัน ค่าเฉลี่ยจะคิดเฉพาะช่วงเวลาเดียวกัน (สัดส่วนยอดรายชั่วโมงของวันก่อน ๆ) · มีนัยสำคัญ = ต่างจากค่าเฉลี่ยตั้งแต่ 15% ขึ้นไป · 1) Need Improve = Area ที่ลดลงมากที่สุด และสาขาที่ทำให้ลด · 2) Stock Issue = สาขาที่ Matcode ที่ขายประจำ (มียอดใน 7 วัน) หมดหรือเหลือไม่ถึง 3 วัน โดย Stock คงเหลือโดยประมาณ = Stock ในไฟล์ล่าสุด − ยอดขายหลังเวลาของไฟล์ Stock · ยอดที่หายไป = ค่าเฉลี่ยของ Matcode ที่หมด − ยอดวันนี้ · 3) Top Performance = Area ที่เพิ่มขึ้นมากที่สุด และสาขาที่ทำให้เพิ่ม · ตามตัวกรอง Region / Area / ประเภทสาขา และปุ่ม Net Amount / QTY">i</span></h3>
       <p data-draw="al_note" data-source="enriched sales_hourly area_day"></p>
-      <div class="pc-alerts" data-draw="c_rank_alert" data-source="enriched sales_hourly stock_by_shop shops matcodes area_day"></div>
+      <div data-draw="c_rank_alert" data-source="enriched sales_hourly stock_by_shop shops matcodes area_day"></div>
     </article>
 
     <article class="pc-card pc-canfull" id="card-rank-zone">
@@ -1894,46 +1928,40 @@ dash.draw('al_note', (el) => { const A = ALERT(); if (!A) { el.textContent = '';
   el.textContent = 'วันที่ ' + PC.day(A.d) + (A.cut ? ' ถึง ' + A.cut + ' น.' : '') + ' เทียบค่าเฉลี่ย ' + A.nd + ' วันก่อนหน้า (' + PC.day(r[0]) + ' – ' + PC.day(r[1]) + ')' + (A.cut ? ' ช่วงเวลาเดียวกัน' : '') +
     ' · ' + (A.N ? 'Net Amount' : 'QTY') + (A.stockOk ? ' · Stock ณ ' + PC.day(A.sAsof.slice(0, 10)) + (A.sAsof.length > 10 ? ' ' + A.sAsof.slice(11, 16) + ' น.' : '') + ' หักยอดขายหลังจากนั้นแล้ว' + ((Date.parse(A.d) - Date.parse(A.sAsof.slice(0, 10))) / 864e5 >= 2 ? ' (ไฟล์ Stock เก่ากว่า 2 วัน สาขาอาจได้รับของเพิ่มแล้ว ควรเช็กกับสาขา)' : '') : ''); });
 dash.draw('c_rank_alert', (el) => { el.replaceChildren(); const A = ALERT(); if (!A) return; const N = A.N;
-  const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10));
+  const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10) + ' ชิ้น');
   const SF = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + F(Math.abs(v)), SP = (p) => (p == null ? '' : (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%');
-  const sn = (s) => String(s || '').replace(/^True Shop\s*/i, '');
-  const avgL = 'เฉลี่ย 7 วัน' + (A.cut ? ' (ถึง ' + A.cut + ')' : '');
-  const mk = (tag, cls, no, title) => { const c = document.createElement('div'); c.className = 'pc-al ' + cls; const t = document.createElement('div'); t.className = 'at'; const n = document.createElement('span'); n.className = 'no'; n.textContent = no; t.append(n, title); c.append(t); el.append(c); return c; };
-  const line = (cls, parts) => { const p = document.createElement('div'); p.className = cls; for (const x of parts) { if (typeof x === 'string') p.append(x); else { const b = document.createElement(x[0]); if (x[2]) b.className = x[2]; b.textContent = x[1]; p.append(b); } } return p; };
-  const shopLi = (s, share) => { const li = document.createElement('li'); const n = document.createElement('span'); n.className = 'sn'; n.textContent = sn(s.name) + ' (' + s.shop + ')';
-    const x = A.SI.get(s.shop); if (x && x.out.length) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'Stock หมด ' + x.out.length + ' รายการ'; n.append(tg); }
-    else if (x && x.low.length) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'Stock ใกล้หมด'; n.append(tg); }
-    li.append(n, 'วันนี้ ', mkB(F(s.t)), ' · ' + avgL + ' ', mkB(F(s.exp)), ' → ', mkS(SF(s.dv) + (s.pct == null ? '' : ' (' + SP(s.pct) + ')'))); if (share != null && share > 0) li.append(' · คิดเป็น ' + Math.round(share * 100) + '% ของส่วนต่างทั้ง Area'); return li; };
-  const mkB = (s) => { const b = document.createElement('b'); b.textContent = s; return b; }, mkS = (s) => { const b = document.createElement('span'); b.className = 'dv'; b.textContent = s; return b; };
+  const sn = (s) => String(s || '').replace(/^True Shop\s*/i, ''), an = (a) => String(a || '').replace(/^UPC - /, '');
+  const dl = A.d === rDates().slice(-1)[0] ? 'วันนี้' : 'วันที่ ' + PC.day(A.d);
+  const avgL = 'ค่าเฉลี่ย 7 วัน' + (A.cut ? 'ช่วงเวลาเดียวกัน (ถึง ' + A.cut + ' น.)' : '');
+  const ol = document.createElement('ol'); ol.className = 'pc-alist'; el.append(ol);
+  // parts: string | [text, cls] -> cls 'b' bold, 'bad' / 'ok' / 'warn' coloured bold
+  const item = (cls, label, parts) => { const li = document.createElement('li'); li.className = cls; const k = document.createElement('span'); k.className = 'k'; k.textContent = label + ':'; li.append(k, ' ');
+    for (const x of parts) { if (typeof x === 'string') li.append(x); else { const b = document.createElement('b'); if (x[1] && x[1] !== 'b') b.className = x[1]; b.textContent = x[0]; li.append(b); } } ol.append(li); };
+  const stockNote = (shop) => { const x = A.SI.get(shop); return x && x.out.length ? ' ซึ่งมี Stock หมด ' + x.out.length + ' รายการ (' + x.out.slice(0, 2).map((m) => m.name).join(', ') + ')' : x && x.low.length ? ' Stock ใกล้หมด (' + x.low[0].name + ')' : ''; };
+  const shopTxt = (s, z, i) => [(i ? ' และ ' : ''), [sn(s.name), 'b'], ' (' + s.shop + ') ' + dl + ' ' + F(s.t) + ' จากปกติ ' + F(s.exp) + ' (', [SF(s.dv) + (s.pct == null ? '' : ' / ' + SP(s.pct)), s.dv < 0 ? 'bad' : 'ok'], ', คิดเป็น ' + Math.round((s.dv / z.dv) * 100) + '% ของส่วนต่างทั้ง Area)' + (s.dv < 0 ? stockNote(s.shop) : '')];
   // 1) Need Improve
-  { const z = A.down[0]; const sig = z && z.pct <= -A.SIG; const c = mk('down', z && z.pct < 0 ? 'bad' : 'ok', '1', 'Need Improve · Area ที่ลดลงมากที่สุด');
-    if (!z || z.pct >= 0) c.append(line('ah', ['ทุก Area ทำได้ไม่ต่ำกว่าค่าเฉลี่ย 7 วัน']));
-    else { c.append(line('ah', [z.area.replace(/^UPC - /, '') + ' ', ['b', SP(z.pct)], sig ? ' ลดลงอย่างมีนัยสำคัญ' : ' ต่ำกว่าค่าเฉลี่ยเล็กน้อย']));
-      c.append(line('as', ['วันนี้ ', ['b', F(z.t)], ' · ' + avgL + ' ', ['b', F(z.exp)], ' · ส่วนต่าง ', ['b', SF(z.dv)]]));
-      const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2); if (dr.length) { c.append(line('as', ['สาขาที่ทำให้ลดลง'])); const ul = document.createElement('ul'); for (const s of dr) ul.append(shopLi(s, z.dv < 0 ? s.dv / z.dv : null)); c.append(ul); }
-      const oth = A.down.slice(1).filter((x) => x.pct <= -A.SIG).slice(0, 3); if (oth.length) c.append(line('more', ['Area อื่นที่ลดลงอย่างมีนัยสำคัญ: ' + oth.map((x) => x.area.replace(/^UPC - /, '') + ' ' + SP(x.pct)).join(' · ')])); } }
+  { const z = A.down[0];
+    if (!z || z.pct >= 0) item('ok', 'Need Improve', ['ทุก Area ทำยอด' + dl + 'ได้ไม่ต่ำกว่า' + avgL]);
+    else { const sig = z.pct <= -A.SIG; const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2); const oth = A.down.slice(1).filter((x) => x.pct <= -A.SIG).slice(0, 3);
+      item('bad', 'Need Improve', ['Area ', [an(z.area), 'b'], ' ยอด' + dl + (sig ? 'ลดลงอย่างมีนัยสำคัญ ' : 'ต่ำกว่าค่าเฉลี่ยเล็กน้อย '), [SP(z.pct), 'bad'], ' ทำได้ ' + F(z.t) + ' เทียบ' + avgL + ' ' + F(z.exp) + ' (ส่วนต่าง ', [SF(z.dv), 'bad'], ')',
+        ...(dr.length ? [' โดยมีสาเหตุหลักจากสาขา ', ...dr.flatMap((s, i) => shopTxt(s, z, i))] : []),
+        ...(oth.length ? [' · Area อื่นที่ลดลงอย่างมีนัยสำคัญ ได้แก่ ' + oth.map((x) => an(x.area) + ' ' + SP(x.pct)).join(', ')] : [])]); } }
   // 2) Stock Issue
-  { const c = mk('stock', 'warn', '2', 'Stock Issue · สาขาที่อาจขายไม่ได้เพราะของหมด');
-    if (!A.stockOk) c.append(line('ah', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนี้']));
-    else if (!A.stockList.length && !A.lowList.length) c.append(line('ah', ['ไม่พบสาขาที่ Matcode ขายประจำหมด Stock']));
-    else { const L = A.stockList, lostAll = L.reduce((a, x) => a + x.lost, 0);
-      if (L.length) { c.append(line('ah', [PC.nf(L.length) + ' สาขามี Matcode ขายประจำหมด Stock · ยอดที่อาจหายไป ', ['b', F(lostAll)]])); }
-      else c.append(line('ah', ['ยังไม่มีของหมด แต่ ' + PC.nf(A.lowList.length) + ' สาขามี Matcode เหลือไม่ถึง 3 วัน']));
-      const ul = document.createElement('ul');
-      for (const x of (L.length ? L : A.lowList).slice(0, 2)) { const li = document.createElement('li'); const n = document.createElement('span'); n.className = 'sn'; n.textContent = sn(x.name) + ' (' + x.shop + ') · ' + String(x.area || '').replace(/^UPC - /, ''); li.append(n);
-        if (x.out.length) { li.append('หมด: ', mkB(x.out.slice(0, 3).map((m) => m.name).join(', ') + (x.out.length > 3 ? ' +' + (x.out.length - 3) : '')), ' · ยอดที่อาจหายไป ', mkS(F(x.lost)));
-          li.append(' · ยอดสาขาวันนี้ ', mkB(F(x.t)), ' เทียบ' + avgL + ' ', mkB(F(x.exp)), x.pct == null ? '' : ' (' + SP(x.pct) + ')'); }
-        if (x.low.length) { li.append(document.createElement('br')); li.append('ใกล้หมด: ' + x.low.slice(0, 2).map((m) => m.name + ' เหลือ ~' + PC.nf(Math.round(m.est)) + ' (ขาย ~' + (Math.round(m.perDay * 10) / 10) + '/วัน)').join(', ')); }
-        ul.append(li); }
-      c.append(ul);
-      if (L.length > 2 || (L.length && A.lowList.length)) c.append(line('more', [(L.length > 2 ? 'หมด Stock อีก ' + PC.nf(L.length - 2) + ' สาขา' : '') + (L.length > 2 && A.lowList.length ? ' · ' : '') + (A.lowList.length ? 'ใกล้หมด (ไม่ถึง 3 วัน) อีก ' + PC.nf(A.lowList.length) + ' สาขา' : '') + ' · ดูรายละเอียดที่หน้า Stock'])); } }
+  { if (!A.stockOk) item('warn', 'Stock Issue', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนั้น']);
+    else if (!A.stockList.length && !A.lowList.length) item('ok', 'Stock Issue', ['ไม่พบสาขาที่ Matcode ขายประจำหมด Stock']);
+    else { const L = A.stockList, lostAll = L.reduce((a, x) => a + x.lost, 0); const top = (L.length ? L : A.lowList).slice(0, 2);
+      const shopS = (x, i) => [(i ? ' และ ' : ''), [sn(x.name), 'b'], ' (' + an(x.area) + ')',
+        ...(x.out.length ? [' ที่ ' + x.out.slice(0, 2).map((m) => m.name).join(', ') + (x.out.length > 2 ? ' และอีก ' + (x.out.length - 2) + ' รายการ' : '') + ' หมด ทำให้ยอดอาจหายไป ', [F(x.lost), 'warn'], ' ยอดสาขา' + dl + ' ' + F(x.t) + ' จากปกติ ' + F(x.exp) + (x.pct == null ? '' : ' (' + SP(x.pct) + ')')]
+          : [' ที่ ' + x.low.slice(0, 2).map((m) => m.name + ' เหลือประมาณ ' + PC.nf(Math.round(m.est)) + ' ชิ้น (ขายเฉลี่ย ' + Math.round(m.perDay * 10) / 10 + ' ชิ้น/วัน)').join(', ')])];
+      item('warn', 'Stock Issue', [...(L.length ? ['มี ', [PC.nf(L.length) + ' สาขา', 'b'], ' ที่ Matcode ขายประจำหมด Stock คาดว่าทำให้ยอดหายไปรวม ', [F(lostAll), 'warn'], ' กระทบมากที่สุดที่สาขา '] : ['ยังไม่มีของหมด แต่มี ', [PC.nf(A.lowList.length) + ' สาขา', 'b'], ' ที่ Stock เหลือไม่ถึง 3 วัน เช่น ']),
+        ...top.flatMap(shopS), ...(L.length && A.lowList.length ? [' · นอกจากนี้อีก ' + PC.nf(A.lowList.length) + ' สาขามี Stock เหลือไม่ถึง 3 วัน ควรเติมก่อนกระทบยอด'] : []), ' (ดูรายละเอียดที่หน้า Stock)']); } }
   // 3) Top Performance
-  { const z = A.up[0]; const sig = z && z.pct >= A.SIG; const c = mk('up', 'ok', '3', 'Top Performance · Area ที่เพิ่มขึ้นมากที่สุด');
-    if (!z || z.pct <= 0) c.append(line('ah', ['ยังไม่มี Area ที่สูงกว่าค่าเฉลี่ย 7 วัน']));
-    else { c.append(line('ah', [z.area.replace(/^UPC - /, '') + ' ', ['b', SP(z.pct)], sig ? ' เพิ่มขึ้นอย่างมีนัยสำคัญ' : ' สูงกว่าค่าเฉลี่ยเล็กน้อย']));
-      c.append(line('as', ['วันนี้ ', ['b', F(z.t)], ' · ' + avgL + ' ', ['b', F(z.exp)], ' · ส่วนต่าง ', ['b', SF(z.dv)]]));
-      const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2); if (dr.length) { c.append(line('as', ['สาขาที่ทำให้เพิ่มขึ้น'])); const ul = document.createElement('ul'); for (const s of dr) ul.append(shopLi(s, z.dv > 0 ? s.dv / z.dv : null)); c.append(ul); }
-      const oth = A.up.slice(1).filter((x) => x.pct >= A.SIG).slice(0, 3); if (oth.length) c.append(line('more', ['Area อื่นที่เพิ่มขึ้นอย่างมีนัยสำคัญ: ' + oth.map((x) => x.area.replace(/^UPC - /, '') + ' ' + SP(x.pct)).join(' · ')])); } }
+  { const z = A.up[0];
+    if (!z || z.pct <= 0) item('mute', 'Top Performance', ['ยังไม่มี Area ที่ทำได้สูงกว่า' + avgL]);
+    else { const sig = z.pct >= A.SIG; const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2); const oth = A.up.slice(1).filter((x) => x.pct >= A.SIG).slice(0, 3);
+      item('ok', 'Top Performance', ['Area ', [an(z.area), 'b'], ' ยอด' + dl + (sig ? 'เพิ่มขึ้นอย่างมีนัยสำคัญ ' : 'สูงกว่าค่าเฉลี่ยเล็กน้อย '), [SP(z.pct), 'ok'], ' ทำได้ ' + F(z.t) + ' เทียบ' + avgL + ' ' + F(z.exp) + ' (ส่วนต่าง ', [SF(z.dv), 'ok'], ')',
+        ...(dr.length ? [' โดยมีสาขาที่ทำได้โดดเด่นคือ ', ...dr.flatMap((s, i) => shopTxt(s, z, i))] : []),
+        ...(oth.length ? [' · Area อื่นที่เพิ่มขึ้นอย่างมีนัยสำคัญ ได้แก่ ' + oth.map((x) => an(x.area) + ' ' + SP(x.pct)).join(', ')] : [])]); } }
 });
 if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
   const close = () => { document.querySelectorAll('.pc-full').forEach((c) => c.classList.remove('pc-full')); document.body.classList.remove('pc-noscroll'); };
