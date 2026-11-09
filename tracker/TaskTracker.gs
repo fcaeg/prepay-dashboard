@@ -616,10 +616,45 @@ function parseRoster(rows, branches) {
   }).filter(x => x.name || x.code || x.emp_id);
 }
 
+/* ===================== ย้ายงาน One Time ไปเป็นงานประจำ ===================== */
+function moveSelectedToDaily() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getActiveSheet();
+  if (sh.getName() !== TABS.tasks[0]) { ui.alert('ไปที่แท็บ Tasks แล้วคลิกเลือกแถวงานที่ต้องการย้ายก่อน'); return; }
+  const rows = [...new Set(sh.getActiveRangeList().getRanges().flatMap(r => Array.from({length: r.getNumRows()}, (_, k) => r.getRow() + k)))]
+    .filter(r => r > 1).sort((a, b) => b - a);
+  if (!rows.length) { ui.alert('ยังไม่ได้เลือกแถวงาน'); return; }
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+  const ids = rows.map(r => sh.getRange(r, head.indexOf('task_id') + 1).getDisplayValue());
+  const ans = ui.prompt('ย้าย ' + ids.join(', ') + ' ไปเป็นงานประจำ', 'พิมพ์รอบงาน: Daily / Weekly / Monthly (เว้นว่าง = Daily)', ui.ButtonSet.OK_CANCEL);
+  if (ans.getSelectedButton() !== ui.Button.OK) return;
+  const f = /^w/i.test(ans.getResponseText().trim()) ? 'Weekly' : /^m/i.test(ans.getResponseText().trim()) ? 'Monthly' : 'Daily';
+  const dsh = ss.getSheetByName(TABS.daily[0]);
+  const done = ss.getSheetByName(TABS.done[0]);
+  rows.forEach(r => {
+    const v = sh.getRange(r, 1, 1, head.length).getDisplayValues()[0];
+    const g = n => v[head.indexOf(n)] || '';
+    const raw = g('raw_message') || g('detail');
+    const tm = (raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
+    appendObj_(dsh, {daily_id: nextId(dsh, 'D'), title: g('title'), frequency: f, link: g('link'), detail: g('detail'),
+      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, raw, new Date()), branches: g('branches') || 'ALL', active: 'Y'});
+    // ลบสถานะเดิมของงานนี้ในแท็บ Done แล้วลบแถวงาน
+    const tid = g('task_id');
+    if (done && done.getLastRow() > 1) {
+      const dv = done.getRange(2, 1, done.getLastRow() - 1, 1).getValues();
+      for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid) done.deleteRow(k + 2);
+    }
+    sh.deleteRow(r);
+  });
+  ui.alert('ย้ายแล้ว ✅ ' + ids.join(', ') + ' → แท็บ Daily (' + f + ')\nแก้ชื่องาน / เวลา / วัน ได้ในแท็บ Daily');
+}
+
 /* ===================== เมนูใน Sheet ===================== */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Task Tracker')
     .addItem('🔄 ตรวจสถานะสาขาจากลิงก์งานตอนนี้', 'autoCheck')
+    .addItem('🔁 ย้ายงานที่เลือก (แท็บ Tasks) ไปเป็นงานประจำ', 'moveSelectedToDaily')
     .addItem('ตั้งค่า / อัปเดตฟอร์ม', 'setup')
     .addToUi();
 }
