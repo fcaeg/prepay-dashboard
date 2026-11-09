@@ -251,8 +251,8 @@ function linkLabel(u){ return /forms\.gle|\/forms\//.test(u)?'ฟอร์ม':/
 function branchGroups(per){
   const pend = per.filter(x=>x.st!=='done'), done = per.filter(x=>x.st==='done');
   return h('div',null,
-    h('div',{class:'small',style:'margin-top:6px',text:`⏳ ยังไม่ดำเนินการ (${pend.length})`+(pend.some(x=>x.st==='partial')?' · ½ = ทำบางส่วน':'')}),
-    pend.length ? h('div',{class:'chips'}, pend.map(x => h('button',{class:'chip '+(x.st==='partial'?'partial':''),onclick:()=>goBranch(x.b.code),text:x.b.name+(x.st==='partial'?' ½':'')})))
+    h('div',{class:'small',style:'margin-top:6px',text:`⏳ ยังไม่ดำเนินการ (${pend.length})`+(pend.some(x=>x.st==='partial')?' · สีเหลือง = ทำบางส่วน':'')}),
+    pend.length ? h('div',{class:'chips'}, pend.map(x => h('button',{class:'chip '+(x.st==='partial'?'partial':''),onclick:()=>goBranch(x.b.code),text:x.b.name+(x.st==='partial'?' (ทำบางส่วน)':'')})))
                 : h('div',{class:'small',style:'color:var(--ok)',text:'— ไม่มี ครบทุกสาขาแล้ว 🎉'}),
     h('div',{class:'small',style:'margin-top:8px',text:`✅ ดำเนินการเรียบร้อยแล้ว (${done.length})`}),
     done.length ? h('div',{class:'chips'}, done.map(x => h('button',{class:'chip done',style:'cursor:pointer',onclick:()=>goBranch(x.b.code),text:'✓ '+x.b.name})))
@@ -687,7 +687,7 @@ function dailyCard(d, compact){
         bar(d.list.length?d.doneN/d.list.length:1),
         branchGroups(d.per))
       : h('div',{class:'small',style:'margin-top:6px',text:'🔄 ตรวจอัตโนมัติ – ยังไม่มีผลตรวจของวันนี้'})) : null,
-    (d.auto && d.today && compact && d.checkedToday && d._me) ? h('div',{style:'margin-top:6px'}, d._me.st==='done' ? h('span',{class:'badge ok',text:'✓ ทำแล้ววันนี้'}) : d._me.st==='partial' ? h('span',{class:'badge warn',text:'½ ทำบางส่วน'}) : h('span',{class:'badge bad',text:'ยังไม่ทำวันนี้'})) : null,
+    (d.auto && d.today && compact && d.checkedToday && d._me) ? h('div',{style:'margin-top:6px'}, d._me.st==='done' ? h('span',{class:'badge ok',text:'✓ ทำแล้ววันนี้'}) : d._me.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : h('span',{class:'badge bad',text:'ยังไม่ทำวันนี้'})) : null,
     h('div',{class:'actions'}, splitLinks(d.link).length ? linkBtns(d,true,'เปิดลิงก์') : null,
       (!compact && d.auto && d.today && d.checkedToday && d.pending.length) ? h('button',{class:'btn',onclick:()=>copy(`📌 ${d.title} (${thDay(TODAY)})\nยังไม่ดำเนินการ ${d.pending.length}/${d.list.length} สาขา:\n`+d.pending.map(x=>'• '+x.b.name+(x.st==='partial'?' (บางส่วน)':'')).join('\n')+(splitLinks(d.link)[0]?'\n\nลิงก์: '+splitLinks(d.link)[0]:'')+'\nรบกวนดำเนินการด้วยครับ/ค่ะ 🙏'),text:'📋 คัดลอกข้อความตามสาขาที่ค้าง'}) : null));
 }
