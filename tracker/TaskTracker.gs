@@ -466,7 +466,7 @@ function checkSheet_(tabName, idCol) {
       sheets.forEach(sh => {
         const out = evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule);
         if (!headers.length) headers = out.headers;
-        usedList.push(sh.getName() + ': ' + (
+        usedList.push(sh.getName() + (sh._autoPicked ? ' [' + sh._autoPicked + ']' : '') + ': ' + (
           out.used.mode === 'auto'     ? `คอลัมน์ "${out.used.col}" = ${out.used.val}` :
           out.used.mode === 'presence' ? 'มีชื่อสาขา = ทำแล้ว' :
           out.used.mode === 'unknown'  ? '⚠️ หาคอลัมน์สถานะไม่เจอ (กรอก check_done_col เอง)' :
@@ -515,7 +515,44 @@ function resolveTabs_(book, wanted) {
     const pick = hits.find(sh => todayRe.test(sh.getName())) || hits[hits.length - 1];
     if (!out.includes(pick)) out.push(pick);
   });
-  return out;
+  if (out.length) return out;
+  // ไม่มีแท็บตรงชื่อ: ถ้าไฟล์แยกแท็บตามวันที่ → ใช้แท็บของวันนี้ (ไม่มีก็ใช้วันล่าสุดที่ไม่เกินวันนี้)
+  const dated = all.map(sh => ({sh, d: tabDate_(sh.getName(), now)})).filter(x => x.d);
+  if (dated.length) {
+    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const past = dated.filter(x => x.d.getTime() <= t0).sort((a, b) => b.d - a.d);
+    const pick = dated.find(x => x.d.getTime() === t0) || past[0] || dated[dated.length - 1];
+    pick.sh._autoPicked = 'แท็บวันที่ (อัตโนมัติ)';
+    return [pick.sh];
+  }
+  all.forEach(sh => sh._autoPicked = 'ทุกแท็บ');      // ไม่มีแท็บตรงชื่อ/วันที่ → ตรวจทุกแท็บ (นับเฉพาะแถวที่มีสาขาเรา)
+  return all;
+}
+
+/* อ่านวันที่จากชื่อแท็บ เช่น "Pending WW 9 November", "9 Nov", "09/11", "9 พ.ย." */
+function tabDate_(name, now) {
+  const MON = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  const THM = ['ม.ค','ก.พ','มี.ค','เม.ย','พ.ค','มิ.ย','ก.ค','ส.ค','ก.ย','ต.ค','พ.ย','ธ.ค'];
+  const THF = ['มกรา','กุมภา','มีนา','เมษา','พฤษภา','มิถุนา','กรกฎา','สิงหา','กันยา','ตุลา','พฤศจิกา','ธันวา'];
+  let m = name.match(/(?:^|\D)(\d{1,2})\s*[-/ ]?\s*([A-Za-z]{3,9}|[ก-๙.]{3,12})/);
+  let day, mon = -1;
+  if (m) {
+    day = +m[1]; const w = m[2].toLowerCase();
+    mon = MON.findIndex(x => w.startsWith(x));
+    if (mon < 0) mon = THM.findIndex(x => w.replace(/\./g, '').startsWith(x.replace(/\./g, '')));
+    if (mon < 0) mon = THF.findIndex(x => w.startsWith(x));
+  }
+  if (mon < 0) {
+    m = name.match(/(?:^|\D)(\d{1,2})[/.-](\d{1,2})(?:[/.-](\d{2,4}))?(?!\d)/);
+    if (!m) return null;
+    day = +m[1]; mon = +m[2] - 1;
+    if (mon < 0 || mon > 11) return null;
+  }
+  if (!(day >= 1 && day <= 31)) return null;
+  let y = now.getFullYear();
+  const d = new Date(y, mon, day);
+  if (d - now > 180 * 86400000) d.setFullYear(y - 1);          // ธ.ค. ตอนเดือน ม.ค.
+  return d;
 }
 
 function openLinkedBook_(links) {
