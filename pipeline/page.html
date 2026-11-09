@@ -1932,36 +1932,29 @@ dash.draw('c_rank_alert', (el) => { el.replaceChildren(); const A = ALERT(); if 
   const SF = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + F(Math.abs(v)), SP = (p) => (p == null ? '' : (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%');
   const sn = (s) => String(s || '').replace(/^True Shop\s*/i, ''), an = (a) => String(a || '').replace(/^UPC - /, '');
   const dl = A.d === rDates().slice(-1)[0] ? 'วันนี้' : 'วันที่ ' + PC.day(A.d);
-  const avgL = 'ค่าเฉลี่ย 7 วัน' + (A.cut ? 'ช่วงเวลาเดียวกัน (ถึง ' + A.cut + ' น.)' : '');
   const ol = document.createElement('ol'); ol.className = 'pc-alist'; el.append(ol);
-  // parts: string | [text, cls] -> cls 'b' bold, 'bad' / 'ok' / 'warn' coloured bold
+  // parts: string | [text, cls] -> 'b' bold, 'bad' / 'ok' / 'warn' coloured bold
   const item = (cls, label, parts) => { const li = document.createElement('li'); li.className = cls; const k = document.createElement('span'); k.className = 'k'; k.textContent = label + ':'; li.append(k, ' ');
     for (const x of parts) { if (typeof x === 'string') li.append(x); else { const b = document.createElement('b'); if (x[1] && x[1] !== 'b') b.className = x[1]; b.textContent = x[0]; li.append(b); } } ol.append(li); };
-  const stockNote = (shop) => { const x = A.SI.get(shop); return x && x.out.length ? ' ซึ่งมี Stock หมด ' + x.out.length + ' รายการ (' + x.out.slice(0, 2).map((m) => m.name).join(', ') + ')' : x && x.low.length ? ' Stock ใกล้หมด (' + x.low[0].name + ')' : ''; };
-  const shopTxt = (s, z, i) => [(i ? ' และ ' : ''), [sn(s.name), 'b'], ' (' + s.shop + ') ' + dl + ' ' + F(s.t) + ' จากปกติ ' + F(s.exp) + ' (', [SF(s.dv) + (s.pct == null ? '' : ' / ' + SP(s.pct)), s.dv < 0 ? 'bad' : 'ok'], ', คิดเป็น ' + Math.round((s.dv / z.dv) * 100) + '% ของส่วนต่างทั้ง Area)' + (s.dv < 0 ? stockNote(s.shop) : '')];
-  // 1) Need Improve
-  { const z = A.down[0];
-    if (!z || z.pct >= 0) item('ok', 'Need Improve', ['ทุก Area ทำยอด' + dl + 'ได้ไม่ต่ำกว่า' + avgL]);
-    else { const sig = z.pct <= -A.SIG; const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2); const oth = A.down.slice(1).filter((x) => x.pct <= -A.SIG).slice(0, 3);
-      item('bad', 'Need Improve', ['Area ', [an(z.area), 'b'], ' ยอด' + dl + (sig ? 'ลดลงอย่างมีนัยสำคัญ ' : 'ต่ำกว่าค่าเฉลี่ยเล็กน้อย '), [SP(z.pct), 'bad'], ' ทำได้ ' + F(z.t) + ' เทียบ' + avgL + ' ' + F(z.exp) + ' (ส่วนต่าง ', [SF(z.dv), 'bad'], ')',
-        ...(dr.length ? [' โดยมีสาเหตุหลักจากสาขา ', ...dr.flatMap((s, i) => shopTxt(s, z, i))] : []),
-        ...(oth.length ? [' · Area อื่นที่ลดลงอย่างมีนัยสำคัญ ได้แก่ ' + oth.map((x) => an(x.area) + ' ' + SP(x.pct)).join(', ')] : [])]); } }
-  // 2) Stock Issue
-  { if (!A.stockOk) item('warn', 'Stock Issue', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนั้น']);
-    else if (!A.stockList.length && !A.lowList.length) item('ok', 'Stock Issue', ['ไม่พบสาขาที่ Matcode ขายประจำหมด Stock']);
-    else { const L = A.stockList, lostAll = L.reduce((a, x) => a + x.lost, 0); const top = (L.length ? L : A.lowList).slice(0, 2);
-      const shopS = (x, i) => [(i ? ' และ ' : ''), [sn(x.name), 'b'], ' (' + an(x.area) + ')',
-        ...(x.out.length ? [' ที่ ' + x.out.slice(0, 2).map((m) => m.name).join(', ') + (x.out.length > 2 ? ' และอีก ' + (x.out.length - 2) + ' รายการ' : '') + ' หมด ทำให้ยอดอาจหายไป ', [F(x.lost), 'warn'], ' ยอดสาขา' + dl + ' ' + F(x.t) + ' จากปกติ ' + F(x.exp) + (x.pct == null ? '' : ' (' + SP(x.pct) + ')')]
-          : [' ที่ ' + x.low.slice(0, 2).map((m) => m.name + ' เหลือประมาณ ' + PC.nf(Math.round(m.est)) + ' ชิ้น (ขายเฉลี่ย ' + Math.round(m.perDay * 10) / 10 + ' ชิ้น/วัน)').join(', ')])];
-      item('warn', 'Stock Issue', [...(L.length ? ['มี ', [PC.nf(L.length) + ' สาขา', 'b'], ' ที่ Matcode ขายประจำหมด Stock คาดว่าทำให้ยอดหายไปรวม ', [F(lostAll), 'warn'], ' กระทบมากที่สุดที่สาขา '] : ['ยังไม่มีของหมด แต่มี ', [PC.nf(A.lowList.length) + ' สาขา', 'b'], ' ที่ Stock เหลือไม่ถึง 3 วัน เช่น ']),
-        ...top.flatMap(shopS), ...(L.length && A.lowList.length ? [' · นอกจากนี้อีก ' + PC.nf(A.lowList.length) + ' สาขามี Stock เหลือไม่ถึง 3 วัน ควรเติมก่อนกระทบยอด'] : []), ' (ดูรายละเอียดที่หน้า Stock)']); } }
-  // 3) Top Performance
+  const shops = (list, cls) => list.flatMap((s, i) => [(i ? (i === list.length - 1 ? ' และ ' : ', ') : ''), [sn(s.name), 'b'], ' (', [SF(s.dv), cls], ')']);
+  const area = (z, cls, word) => ['Area ', [an(z.area), 'b'], ' ยอด' + dl + word + 'ค่าเฉลี่ย 7 วัน ', [SP(z.pct), cls], ' (' + F(z.t) + ' เทียบ ' + F(z.exp) + ')'];
+  // 1) Best Performance
   { const z = A.up[0];
-    if (!z || z.pct <= 0) item('mute', 'Top Performance', ['ยังไม่มี Area ที่ทำได้สูงกว่า' + avgL]);
-    else { const sig = z.pct >= A.SIG; const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2); const oth = A.up.slice(1).filter((x) => x.pct >= A.SIG).slice(0, 3);
-      item('ok', 'Top Performance', ['Area ', [an(z.area), 'b'], ' ยอด' + dl + (sig ? 'เพิ่มขึ้นอย่างมีนัยสำคัญ ' : 'สูงกว่าค่าเฉลี่ยเล็กน้อย '), [SP(z.pct), 'ok'], ' ทำได้ ' + F(z.t) + ' เทียบ' + avgL + ' ' + F(z.exp) + ' (ส่วนต่าง ', [SF(z.dv), 'ok'], ')',
-        ...(dr.length ? [' โดยมีสาขาที่ทำได้โดดเด่นคือ ', ...dr.flatMap((s, i) => shopTxt(s, z, i))] : []),
-        ...(oth.length ? [' · Area อื่นที่เพิ่มขึ้นอย่างมีนัยสำคัญ ได้แก่ ' + oth.map((x) => an(x.area) + ' ' + SP(x.pct)).join(', ')] : [])]); } }
+    if (!z || z.pct <= 0) item('mute', 'Best Performance', ['ยังไม่มี Area ที่ทำได้สูงกว่าค่าเฉลี่ย 7 วัน']);
+    else { const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2);
+      item('ok', 'Best Performance', [...area(z, 'ok', 'สูงกว่า'), ...(dr.length ? [' โดยมีสาขา ', ...shops(dr, 'ok'), ' ทำยอดเพิ่มขึ้นมากที่สุด'] : [])]); } }
+  // 2) Need Improve
+  { const z = A.down[0];
+    if (!z || z.pct >= 0) item('ok', 'Need Improve', ['ทุก Area ทำยอดได้ไม่ต่ำกว่าค่าเฉลี่ย 7 วัน']);
+    else { const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2);
+      item('bad', 'Need Improve', [...area(z, 'bad', 'ต่ำกว่า'), ...(dr.length ? [' โดยมีสาเหตุหลักจากสาขา ', ...shops(dr, 'bad')] : [])]); } }
+  // 3) Stock Issue: 3 shops whose regular Matcode has no stock today and dropped the most vs its 7-day average
+  { if (!A.stockOk) item('warn', 'Stock Issue', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนั้น']);
+    else { const L = A.stockList.map((x) => ({ ...x, m: x.out[0] })).filter((x) => x.m && x.m.lost > 0).sort((a, b) => b.m.lost - a.m.lost);
+      if (!L.length) item('ok', 'Stock Issue', ['ไม่พบสาขาที่ยอดตกเพราะ Matcode ขายประจำหมด Stock']);
+      else { const lostAll = L.reduce((a, x) => a + x.lost, 0);
+        item('warn', 'Stock Issue', [L.length >= 3 ? '3 สาขาที่ยอดตกมากที่สุดเพราะไม่มี Stock: ' : 'สาขาที่ยอดตกเพราะไม่มี Stock: ', ...L.slice(0, 3).flatMap((x, i, a) => [(i ? (i === a.length - 1 ? ' และ ' : ', ') : ''), [sn(x.name), 'b'], ' – ' + x.m.name + ' (', [SF(-x.m.lost), 'warn'], ')']),
+          ' · รวม ' + PC.nf(L.length) + ' สาขามีสินค้าขายประจำหมด ยอดที่อาจหายไป ', [F(lostAll), 'warn']]); } } }
 });
 if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
   const close = () => { document.querySelectorAll('.pc-full').forEach((c) => c.classList.remove('pc-full')); document.body.classList.remove('pc-noscroll'); };
