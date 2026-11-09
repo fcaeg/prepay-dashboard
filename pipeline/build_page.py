@@ -15,6 +15,7 @@ d3=open(HERE+'/vendor/d3.min.js',encoding='utf-8').read()
 pako=open(HERE+'/vendor/pako_inflate.min.js',encoding='utf-8').read()
 last=max(l.split(',',1)[0] for l in raw['sales_daily_csv'].splitlines()[1:])
 meta=json.load(open(O+'/meta.json'))
+PC_META=json.dumps({'sales_asof':meta.get('sales_asof',''),'stock_asof':meta.get('stock_asof','')})
 def thd(v):
     if not v: return ''
     y,m,d=map(int,v[:10].split('-')); return f'{d} {TH[m-1]} {y+543}' + (f' {v[11:16]} น.' if len(v)>10 else '')
@@ -66,6 +67,7 @@ body {{ margin: 0; background: var(--color-bg); color: var(--color-fg); font-fam
 </style>
 <script>{d3}</script>
 <script>{pako}</script>
+<script>window.PC_META = {PC_META};</script>
 <script>
 window.dash = (() => {{
   const DEF = {{ area: 'ALL', stype: 'ALL', group: 'ALL', shop: 'ALL', life: 365, period: 'today', metric: 'net', slevel: 'mat', sstatus: 'ALL', ascope: 'current', alevel: 'core', wstatus: 'ALL', mperiod: 'mtd', zone: 'ALL', saperiod: 'mtd', salevel: 'zone', stperiod: 'mtd', shperiod: 'mtd', aglv: 'risk', agser: 'all', gview: 'shop', mq: '', strole: 'sales', nsr: 'all', prole: 'all', plevel: 'area', pcmp: 'retail', nst: 'all', vmonth: '', mq8: '' }};

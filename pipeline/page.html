@@ -116,6 +116,22 @@ body.pc-noscroll { overflow: hidden; }
 .pc-xbtns .pri { background: var(--color-ok); border-color: var(--color-ok); color: #fff; font-weight: 600; }
 .pc-xbtns .hint { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 @media print { .pc-expand { display: none; } }
+.pc-alerts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
+.pc-al { --al: var(--color-fg-muted); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; align-content: start; border-top: 4px solid var(--al); min-width: 0; }
+.pc-al.bad { --al: var(--color-bad); } .pc-al.warn { --al: var(--color-warn); } .pc-al.ok { --al: var(--color-ok); }
+.pc-al .at { display: flex; align-items: center; gap: 8px; font-size: var(--cds-font-size-caption); font-weight: 600; color: var(--al); }
+.pc-al .at .no { width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--al); color: #fff; display: inline-grid; place-items: center; font-size: .78rem; flex: none; }
+.pc-al .ah { font-weight: 600; font-size: 1.02rem; line-height: 1.35; }
+.pc-al .ah b { color: var(--al); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pc-al .as { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+.pc-al .as b { color: var(--color-fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pc-al ul { margin: 2px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.pc-al li { font-size: var(--cds-font-size-caption); line-height: 1.5; padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--al) 8%, transparent); color: var(--color-fg-muted); }
+.pc-al li .sn { display: block; font-weight: 600; color: var(--color-fg); }
+.pc-al li b { color: var(--color-fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pc-al li .dv { color: var(--al); font-weight: 600; white-space: nowrap; }
+.pc-al .tag { display: inline-block; font-size: .72rem; line-height: 1.5; padding: 0 6px; margin-left: 4px; border-radius: 999px; border: 1px solid var(--color-warn); color: var(--color-warn); font-weight: 600; white-space: nowrap; }
+.pc-al .more { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
 .pc-zcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
 .pc-zc { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: 6px; border-top: 4px solid var(--zc, var(--color-border-line)); }
 .pc-zc .zt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -787,6 +803,14 @@ body.pc-noscroll { overflow: hidden; }
       </div>
     </div>
     <div class="pc-rkbar"><p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p><button class="pc-export" id="rk-export" type="button" title="ดาวน์โหลดรูป (แนวนอน) รวม Region · Daily Ranking · Ranking สะสม">⬇ Export รูป (Region + Daily + สะสม)</button></div>
+
+    <article class="pc-card pc-canfull" id="card-rank-alert">
+        <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
+        <p class="pc-fullnote" data-draw="rf_4" data-source="area_rank"></p>
+      <h3>⚠ Alert Issue วันนี้ · Top 3 <span class="pc-info" tabindex="0" role="note" aria-label="เทียบยอดของวันที่เลือก (ตามช่อง วันที่ ของ Daily Ranking) กับค่าเฉลี่ย 7 วันก่อนหน้า ของแต่ละสาขา · ถ้าเป็นวันล่าสุดที่ยังไม่ครบวัน ค่าเฉลี่ยจะคิดเฉพาะช่วงเวลาเดียวกัน (สัดส่วนยอดรายชั่วโมงของวันก่อน ๆ) · มีนัยสำคัญ = ต่างจากค่าเฉลี่ยตั้งแต่ 15% ขึ้นไป · 1) Need Improve = Area ที่ลดลงมากที่สุด และสาขาที่ทำให้ลด · 2) Stock Issue = สาขาที่ Matcode ที่ขายประจำ (มียอดใน 7 วัน) หมดหรือเหลือไม่ถึง 3 วัน โดย Stock คงเหลือโดยประมาณ = Stock ในไฟล์ล่าสุด − ยอดขายหลังเวลาของไฟล์ Stock · ยอดที่หายไป = ค่าเฉลี่ยของ Matcode ที่หมด − ยอดวันนี้ · 3) Top Performance = Area ที่เพิ่มขึ้นมากที่สุด และสาขาที่ทำให้เพิ่ม · ตามตัวกรอง Region / Area / ประเภทสาขา และปุ่ม Net Amount / QTY" data-tip="เทียบยอดของวันที่เลือก (ตามช่อง วันที่ ของ Daily Ranking) กับค่าเฉลี่ย 7 วันก่อนหน้า ของแต่ละสาขา · ถ้าเป็นวันล่าสุดที่ยังไม่ครบวัน ค่าเฉลี่ยจะคิดเฉพาะช่วงเวลาเดียวกัน (สัดส่วนยอดรายชั่วโมงของวันก่อน ๆ) · มีนัยสำคัญ = ต่างจากค่าเฉลี่ยตั้งแต่ 15% ขึ้นไป · 1) Need Improve = Area ที่ลดลงมากที่สุด และสาขาที่ทำให้ลด · 2) Stock Issue = สาขาที่ Matcode ที่ขายประจำ (มียอดใน 7 วัน) หมดหรือเหลือไม่ถึง 3 วัน โดย Stock คงเหลือโดยประมาณ = Stock ในไฟล์ล่าสุด − ยอดขายหลังเวลาของไฟล์ Stock · ยอดที่หายไป = ค่าเฉลี่ยของ Matcode ที่หมด − ยอดวันนี้ · 3) Top Performance = Area ที่เพิ่มขึ้นมากที่สุด และสาขาที่ทำให้เพิ่ม · ตามตัวกรอง Region / Area / ประเภทสาขา และปุ่ม Net Amount / QTY">i</span></h3>
+      <p data-draw="al_note" data-source="enriched sales_hourly area_day"></p>
+      <div class="pc-alerts" data-draw="c_rank_alert" data-source="enriched sales_hourly stock_by_shop shops matcodes area_day"></div>
+    </article>
 
     <article class="pc-card pc-canfull" id="card-rank-zone">
         <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
@@ -1811,6 +1835,106 @@ const rfNote = (el, daily) => { const all = PC.rows('area_rank'); const r = all 
 dash.draw('rf_1', (el) => rfNote(el, false));
 dash.draw('rf_2', (el) => rfNote(el, true));
 dash.draw('rf_3', (el) => rfNote(el, false));
+dash.draw('rf_4', (el) => rfNote(el, true));
+/* ---------- Alert Issue (Top 3): selected day vs average of the 7 days before, same time of day ---------- */
+const ALERT = (() => {
+  let key = null, val = null;
+  const D = (id) => { const d = dash.data(id); return d.status === 'ok' ? d.data : null; };
+  const addD = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  return () => {
+    const en = D('enriched'), shops = D('shops'); if (!en || !shops) return null;
+    const hr = D('sales_hourly') || [], stock = D('stock_by_shop') || [], mats = D('matcodes') || [];
+    const d = rDate(); if (!d) return null;
+    const P = PC.P(), N = PC.isNet(), SIG = 0.15;
+    const k = [d, P.stype, P.area, N].join('|'); if (k === key && val && val.en === en) return val;
+    const sh = new Map(shops.map((s) => [String(s.shop), s])), mm = new Map(mats.map((m) => [String(m.matcode), m]));
+    const inScope = (s) => s && s.area && s.area !== '-' && !/Unidentified/i.test(s.area) && +(s.stype_order ?? 9) < 90 && PCin(s.area, P.area) && (P.stype === 'ALL' || s.stype === P.stype);
+    // the 7 days before d (only days that have any sales in the file count)
+    const have = new Set(en.map((r) => r.date)); const W = []; for (let i = 1; i <= 7; i++) { const x = addD(d, -i); if (have.has(x)) W.push(x); }
+    if (!W.length) return null; const W7 = new Set(W), nd = W.length;
+    // time of day: selected day still running -> compare with the same hours of the earlier days
+    let frac = 1, cut = null; const hMax = hr.reduce((a, r) => (r.date > a ? r.date : a), '');
+    if (d === hMax) {
+      const H = Math.max(...hr.filter((r) => r.date === d).map((r) => +r.hour));
+      const meta = String((window.PC_META || {}).sales_asof || ''); const mf = meta.slice(0, 10) === d && +meta.slice(11, 13) === H ? Math.max(0.05, (+meta.slice(14, 16) || 0) / 60) : 1;
+      let up = 0, tot = 0;
+      for (const r of hr) { if (r.date >= d || !W7.has(r.date)) continue; const s = sh.get(String(r.shop)); if (!inScope(s)) continue; const v = N ? +r.net : +r.units; tot += v; if (+r.hour < H) up += v; else if (+r.hour === H) up += v * mf; }
+      if (tot > 0) frac = up / tot; if (frac > 0.97) frac = 1; else cut = meta.slice(0, 10) === d ? meta.slice(11, 16) : String(H + 1).padStart(2, '0') + ':00';
+    }
+    // stock snapshot -> estimated stock now = stock − sales after the stock time
+    const sAsof = String((stock[0] || {}).asof || ''), sDay = sAsof.slice(0, 10), sHr = +sAsof.slice(11, 13) || 0; const stockOk = sDay && sDay <= d;
+    const stk = new Map(), stShops = new Set(); for (const r of stock) { const s = String(r.shop); stShops.add(s); const kk = s + '|' + r.matcode; stk.set(kk, (stk.get(kk) || 0) + (+r.qty || 0)); }
+    const after = new Map();
+    if (stockOk) { const hrDays = new Set(hr.map((r) => r.date));
+      for (const r of en) if (r.date > sDay && r.date <= d) { const kk = String(r.shop) + '|' + r.matcode; after.set(kk, (after.get(kk) || 0) + r.units); }
+      if (hrDays.has(sDay)) for (const r of hr) if (r.date === sDay && +r.hour >= sHr) { const kk = String(r.shop) + '|' + r.matcode; after.set(kk, (after.get(kk) || 0) + (+r.units)); } }
+    // per shop and shop × matcode: selected day and the 7-day sum
+    const S = new Map(), SM = new Map();
+    for (const r of en) { if (r.date !== d && !W7.has(r.date)) continue; const s0 = String(r.shop); const s = sh.get(s0); if (!inScope(s)) continue; const v = N ? r.net : r.units, t = r.date === d;
+      const a = S.get(s0) || { shop: s0, name: s.name || s0, area: s.area, t: 0, s7: 0 }; if (t) a.t += v; else a.s7 += v; S.set(s0, a);
+      const km = s0 + '|' + r.matcode; const b = SM.get(km) || { shop: s0, mat: String(r.matcode), t: 0, s7: 0, tu: 0, s7u: 0 }; if (t) { b.t += v; b.tu += r.units; } else { b.s7 += v; b.s7u += r.units; } SM.set(km, b); }
+    for (const a of S.values()) { a.exp = (a.s7 / nd) * frac; a.dv = a.t - a.exp; a.pct = a.exp > 0 ? a.dv / a.exp : null; }
+    // stock issues per shop
+    const SI = new Map();
+    if (stockOk) for (const b of SM.values()) { if (!(b.s7u > 0) || !stShops.has(b.shop)) continue; const est = (stk.get(b.shop + '|' + b.mat) || 0) - (after.get(b.shop + '|' + b.mat) || 0); const perDay = b.s7u / nd;
+      const kind = est <= 0 && b.tu === 0 ? 'out' : est > 0 && est < perDay * 3 ? 'low' : null; if (!kind) continue;
+      const x = SI.get(b.shop) || { shop: b.shop, out: [], low: [], lost: 0 }; const m = mm.get(b.mat) || {}; const it = { mat: b.mat, name: m.name || b.mat, est: Math.max(0, est), perDay, lost: Math.max(0, (b.s7 / nd) * frac - b.t) };
+      x[kind].push(it); if (kind === 'out') x.lost += it.lost; SI.set(b.shop, x); }
+    for (const x of SI.values()) { x.out.sort((a, b) => b.lost - a.lost); x.low.sort((a, b) => a.est / a.perDay - b.est / b.perDay); const s = S.get(x.shop) || {}; Object.assign(x, { name: s.name || (sh.get(x.shop) || {}).name || x.shop, area: s.area || (sh.get(x.shop) || {}).area, t: s.t || 0, exp: s.exp || 0, dv: s.dv || 0, pct: s.pct ?? null }); }
+    // per Area
+    const A = new Map(); for (const a of S.values()) { const z = A.get(a.area) || { area: a.area, t: 0, exp: 0, shops: [] }; z.t += a.t; z.exp += a.exp; z.shops.push(a); A.set(a.area, z); }
+    const areas = [...A.values()].filter((z) => z.exp > 0).map((z) => ({ ...z, dv: z.t - z.exp, pct: (z.t - z.exp) / z.exp }));
+    const down = areas.slice().sort((a, b) => a.pct - b.pct), up = areas.slice().sort((a, b) => b.pct - a.pct);
+    const tot = areas.reduce((o, z) => ({ t: o.t + z.t, exp: o.exp + z.exp }), { t: 0, exp: 0 });
+    const stockList = [...SI.values()].filter((x) => x.out.length).sort((a, b) => b.lost - a.lost || b.out.length - a.out.length);
+    const lowList = [...SI.values()].filter((x) => !x.out.length && x.low.length).sort((a, b) => b.low.length - a.low.length);
+    val = { en, d, W, nd, frac, cut, sAsof, stockOk, down, up, tot, SI, stockList, lowList, SIG, N }; key = k; return val; };
+})();
+dash.draw('al_note', (el) => { const A = ALERT(); if (!A) { el.textContent = ''; return; } const r = [A.W[A.W.length - 1], A.W[0]];
+  el.textContent = 'วันที่ ' + PC.day(A.d) + (A.cut ? ' ถึง ' + A.cut + ' น.' : '') + ' เทียบค่าเฉลี่ย ' + A.nd + ' วันก่อนหน้า (' + PC.day(r[0]) + ' – ' + PC.day(r[1]) + ')' + (A.cut ? ' ช่วงเวลาเดียวกัน' : '') +
+    ' · ' + (A.N ? 'Net Amount' : 'QTY') + (A.stockOk ? ' · Stock ณ ' + PC.day(A.sAsof.slice(0, 10)) + (A.sAsof.length > 10 ? ' ' + A.sAsof.slice(11, 16) + ' น.' : '') + ' หักยอดขายหลังจากนั้นแล้ว' + ((Date.parse(A.d) - Date.parse(A.sAsof.slice(0, 10))) / 864e5 >= 2 ? ' (ไฟล์ Stock เก่ากว่า 2 วัน สาขาอาจได้รับของเพิ่มแล้ว ควรเช็กกับสาขา)' : '') : ''); });
+dash.draw('c_rank_alert', (el) => { el.replaceChildren(); const A = ALERT(); if (!A) return; const N = A.N;
+  const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10));
+  const SF = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + F(Math.abs(v)), SP = (p) => (p == null ? '' : (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%');
+  const sn = (s) => String(s || '').replace(/^True Shop\s*/i, '');
+  const avgL = 'เฉลี่ย 7 วัน' + (A.cut ? ' (ถึง ' + A.cut + ')' : '');
+  const mk = (tag, cls, no, title) => { const c = document.createElement('div'); c.className = 'pc-al ' + cls; const t = document.createElement('div'); t.className = 'at'; const n = document.createElement('span'); n.className = 'no'; n.textContent = no; t.append(n, title); c.append(t); el.append(c); return c; };
+  const line = (cls, parts) => { const p = document.createElement('div'); p.className = cls; for (const x of parts) { if (typeof x === 'string') p.append(x); else { const b = document.createElement(x[0]); if (x[2]) b.className = x[2]; b.textContent = x[1]; p.append(b); } } return p; };
+  const shopLi = (s, share) => { const li = document.createElement('li'); const n = document.createElement('span'); n.className = 'sn'; n.textContent = sn(s.name) + ' (' + s.shop + ')';
+    const x = A.SI.get(s.shop); if (x && x.out.length) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'Stock หมด ' + x.out.length + ' รายการ'; n.append(tg); }
+    else if (x && x.low.length) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'Stock ใกล้หมด'; n.append(tg); }
+    li.append(n, 'วันนี้ ', mkB(F(s.t)), ' · ' + avgL + ' ', mkB(F(s.exp)), ' → ', mkS(SF(s.dv) + (s.pct == null ? '' : ' (' + SP(s.pct) + ')'))); if (share != null && share > 0) li.append(' · คิดเป็น ' + Math.round(share * 100) + '% ของส่วนต่างทั้ง Area'); return li; };
+  const mkB = (s) => { const b = document.createElement('b'); b.textContent = s; return b; }, mkS = (s) => { const b = document.createElement('span'); b.className = 'dv'; b.textContent = s; return b; };
+  // 1) Need Improve
+  { const z = A.down[0]; const sig = z && z.pct <= -A.SIG; const c = mk('down', z && z.pct < 0 ? 'bad' : 'ok', '1', 'Need Improve · Area ที่ลดลงมากที่สุด');
+    if (!z || z.pct >= 0) c.append(line('ah', ['ทุก Area ทำได้ไม่ต่ำกว่าค่าเฉลี่ย 7 วัน']));
+    else { c.append(line('ah', [z.area.replace(/^UPC - /, '') + ' ', ['b', SP(z.pct)], sig ? ' ลดลงอย่างมีนัยสำคัญ' : ' ต่ำกว่าค่าเฉลี่ยเล็กน้อย']));
+      c.append(line('as', ['วันนี้ ', ['b', F(z.t)], ' · ' + avgL + ' ', ['b', F(z.exp)], ' · ส่วนต่าง ', ['b', SF(z.dv)]]));
+      const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2); if (dr.length) { c.append(line('as', ['สาขาที่ทำให้ลดลง'])); const ul = document.createElement('ul'); for (const s of dr) ul.append(shopLi(s, z.dv < 0 ? s.dv / z.dv : null)); c.append(ul); }
+      const oth = A.down.slice(1).filter((x) => x.pct <= -A.SIG).slice(0, 3); if (oth.length) c.append(line('more', ['Area อื่นที่ลดลงอย่างมีนัยสำคัญ: ' + oth.map((x) => x.area.replace(/^UPC - /, '') + ' ' + SP(x.pct)).join(' · ')])); } }
+  // 2) Stock Issue
+  { const c = mk('stock', 'warn', '2', 'Stock Issue · สาขาที่อาจขายไม่ได้เพราะของหมด');
+    if (!A.stockOk) c.append(line('ah', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนี้']));
+    else if (!A.stockList.length && !A.lowList.length) c.append(line('ah', ['ไม่พบสาขาที่ Matcode ขายประจำหมด Stock']));
+    else { const L = A.stockList, lostAll = L.reduce((a, x) => a + x.lost, 0);
+      if (L.length) { c.append(line('ah', [PC.nf(L.length) + ' สาขามี Matcode ขายประจำหมด Stock · ยอดที่อาจหายไป ', ['b', F(lostAll)]])); }
+      else c.append(line('ah', ['ยังไม่มีของหมด แต่ ' + PC.nf(A.lowList.length) + ' สาขามี Matcode เหลือไม่ถึง 3 วัน']));
+      const ul = document.createElement('ul');
+      for (const x of (L.length ? L : A.lowList).slice(0, 2)) { const li = document.createElement('li'); const n = document.createElement('span'); n.className = 'sn'; n.textContent = sn(x.name) + ' (' + x.shop + ') · ' + String(x.area || '').replace(/^UPC - /, ''); li.append(n);
+        if (x.out.length) { li.append('หมด: ', mkB(x.out.slice(0, 3).map((m) => m.name).join(', ') + (x.out.length > 3 ? ' +' + (x.out.length - 3) : '')), ' · ยอดที่อาจหายไป ', mkS(F(x.lost)));
+          li.append(' · ยอดสาขาวันนี้ ', mkB(F(x.t)), ' เทียบ' + avgL + ' ', mkB(F(x.exp)), x.pct == null ? '' : ' (' + SP(x.pct) + ')'); }
+        if (x.low.length) { li.append(document.createElement('br')); li.append('ใกล้หมด: ' + x.low.slice(0, 2).map((m) => m.name + ' เหลือ ~' + PC.nf(Math.round(m.est)) + ' (ขาย ~' + (Math.round(m.perDay * 10) / 10) + '/วัน)').join(', ')); }
+        ul.append(li); }
+      c.append(ul);
+      if (L.length > 2 || (L.length && A.lowList.length)) c.append(line('more', [(L.length > 2 ? 'หมด Stock อีก ' + PC.nf(L.length - 2) + ' สาขา' : '') + (L.length > 2 && A.lowList.length ? ' · ' : '') + (A.lowList.length ? 'ใกล้หมด (ไม่ถึง 3 วัน) อีก ' + PC.nf(A.lowList.length) + ' สาขา' : '') + ' · ดูรายละเอียดที่หน้า Stock'])); } }
+  // 3) Top Performance
+  { const z = A.up[0]; const sig = z && z.pct >= A.SIG; const c = mk('up', 'ok', '3', 'Top Performance · Area ที่เพิ่มขึ้นมากที่สุด');
+    if (!z || z.pct <= 0) c.append(line('ah', ['ยังไม่มี Area ที่สูงกว่าค่าเฉลี่ย 7 วัน']));
+    else { c.append(line('ah', [z.area.replace(/^UPC - /, '') + ' ', ['b', SP(z.pct)], sig ? ' เพิ่มขึ้นอย่างมีนัยสำคัญ' : ' สูงกว่าค่าเฉลี่ยเล็กน้อย']));
+      c.append(line('as', ['วันนี้ ', ['b', F(z.t)], ' · ' + avgL + ' ', ['b', F(z.exp)], ' · ส่วนต่าง ', ['b', SF(z.dv)]]));
+      const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2); if (dr.length) { c.append(line('as', ['สาขาที่ทำให้เพิ่มขึ้น'])); const ul = document.createElement('ul'); for (const s of dr) ul.append(shopLi(s, z.dv > 0 ? s.dv / z.dv : null)); c.append(ul); }
+      const oth = A.up.slice(1).filter((x) => x.pct >= A.SIG).slice(0, 3); if (oth.length) c.append(line('more', ['Area อื่นที่เพิ่มขึ้นอย่างมีนัยสำคัญ: ' + oth.map((x) => x.area.replace(/^UPC - /, '') + ' ' + SP(x.pct)).join(' · ')])); } }
+});
 if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
   const close = () => { document.querySelectorAll('.pc-full').forEach((c) => c.classList.remove('pc-full')); document.body.classList.remove('pc-noscroll'); };
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.pc-expand'); if (!b) return; const c = b.closest('.pc-canfull'); const on = !c.classList.contains('pc-full'); close();
