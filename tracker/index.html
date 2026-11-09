@@ -173,7 +173,7 @@ td.num{text-align:right;white-space:nowrap}
    - ใส่ ID ของ Google Sheet (แชร์แบบ "ทุกคนที่มีลิงก์ดูได้") = ดึงข้อมูลจริงจากแต่ละแท็บ
    ===================================================================== */
 const CONFIG = {
-  sheetId: '',
+  sheetId: '1309rgyaiWMWj-Xik2-4T3wWgizLMivLrwH2JTx08qCg',
   tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees' }
 };
 
@@ -488,7 +488,9 @@ function goBranch(code){ $('#br-select').value = code; showTab('branch'); }
 
 /* ---------- TAB 3: การสอบ ---------- */
 function renderExam(){
-  const e = MODEL.exams.find(x=>x.exam_id===$('#ex-select').value); if (!e) return;
+  const e = MODEL.exams.find(x=>x.exam_id===$('#ex-select').value);
+  if (!e){ $('#ex-kpis').replaceChildren(); $('#ex-open').style.display='none';
+    $('#ex-table').replaceChildren(h('tbody',null,h('tr',null,h('td',{class:'empty',text:'ยังไม่มีรายการสอบ – เพิ่มได้ในแท็บ Exams หรือเลือกประเภท "การสอบ" ในฟอร์มลงงาน'})))); return; }
   const fb = $('#ex-branch').value;
   const brs = MODEL.branches.filter(b=>!fb || b.code===fb);
   const rows = brs.map(b => {

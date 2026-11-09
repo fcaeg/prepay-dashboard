@@ -19,12 +19,12 @@ const TABS = {
 };
 
 const Q = {
-  msg:      'วางข้อความจากไลน์',
+  msg:      'รายละเอียดงาน (วางข้อความ + ลิงก์จากไลน์)',
   type:     'ประเภทงาน',
   due:      'Due (เว้นว่าง = อ่านจากข้อความ)',
   area:     'ส่งถึง',
   branches: 'รหัสสาขา (ถ้าเลือก "ระบุสาขาเอง")',
-  title:    'ชื่องาน (เว้นว่าง = ตั้งให้อัตโนมัติ)'
+  title:    'ชื่องาน'
 };
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
@@ -75,17 +75,25 @@ function setup() {
 /* เพิ่มคำถามที่ยังไม่มี โดยไม่แตะคำถาม/คำตอบเดิม */
 function ensureQuestions_(form) {
   const find = t => form.getItems().find(i => i.getTitle() === t);
-  const old = find('สาขาที่เกี่ยวข้อง');               // ชื่อคำถามเวอร์ชันแรก
-  if (old && !find(Q.branches)) old.setTitle(Q.branches);
+  const rename = (from, to) => { const it = find(from); if (it && !find(to)) it.setTitle(to); };
+  rename('สาขาที่เกี่ยวข้อง', Q.branches);                     // ชื่อคำถามเวอร์ชันก่อน
+  rename('วางข้อความจากไลน์', Q.msg);
+  rename('ชื่องาน (เว้นว่าง = ตั้งให้อัตโนมัติ)', Q.title);
   if (!find(Q.msg))   form.addParagraphTextItem().setTitle(Q.msg).setRequired(true);
   if (!find(Q.type))  form.addListItem().setTitle(Q.type).setChoiceValues(TYPES).setRequired(false);
   if (!find(Q.due))   form.addDateItem().setTitle(Q.due).setRequired(false);
   if (!find(Q.area))  form.addMultipleChoiceItem().setTitle(Q.area).setChoiceValues(AREAS).setRequired(false);
   if (!find(Q.branches)) form.addTextItem().setTitle(Q.branches);
   if (!find(Q.title)) form.addTextItem().setTitle(Q.title);
+  find(Q.title).asTextItem().setHelpText('พิมพ์สั้นๆ เช่น "สำรวจสต็อก Q4" (เว้นว่าง = ใช้บรรทัดแรกของรายละเอียด)');
+  find(Q.msg).asParagraphTextItem().setHelpText('วางข้อความจากไลน์ได้ทั้งก้อน มีหลายลิงก์ได้ ระบบแยกลิงก์ / Due / ประเภทงาน ให้เอง');
   find(Q.branches).asTextItem().setHelpText('เช่น UN01,UN05,LN03 (ใส่ชื่อ Area ปนได้ เช่น Lower North,UN01)');
-  // เรียงลำดับ: ข้อความ > ประเภท > Due > ส่งถึง > รหัสสาขา > ชื่องาน
-  [Q.msg, Q.type, Q.due, Q.area, Q.branches, Q.title].forEach((t, i) => {
+  // ส่วน "ไม่ต้องกรอกก็ได้"
+  const OPT = 'ตัวเลือกเพิ่มเติม (เว้นว่างได้ ระบบแยกให้เอง)';
+  if (!find(OPT)) form.addSectionHeaderItem().setTitle(OPT)
+    .setHelpText('ประเภทงาน, Due และลิงก์ ระบบอ่านจากรายละเอียดให้อัตโนมัติ กรอกเฉพาะเมื่ออยากกำหนดเอง');
+  // เรียงลำดับ: ชื่องาน > รายละเอียด | ส่งถึง > Due > ประเภท > รหัสสาขา
+  [Q.title, Q.msg, OPT, Q.area, Q.due, Q.type, Q.branches].forEach((t, i) => {
     const it = find(t); if (it && it.getIndex() !== i) form.moveItem(it.getIndex(), i);
   });
 }
@@ -93,7 +101,8 @@ function ensureQuestions_(form) {
 /* ===================== รับข้อมูลจากฟอร์ม ===================== */
 function onTaskForm(e) {
   const nv = e.namedValues || {};
-  const v = k => ((nv[Q[k]] || (k === 'branches' ? nv['สาขาที่เกี่ยวข้อง'] : null) || [''])[0] || '').toString().trim();
+  const OLD = { branches: 'สาขาที่เกี่ยวข้อง', msg: 'วางข้อความจากไลน์', title: 'ชื่องาน (เว้นว่าง = ตั้งให้อัตโนมัติ)' };
+  const v = k => ((nv[Q[k]] || nv[OLD[k]] || [''])[0] || '').toString().trim();
   const p = parseLineMessage(v('msg'), new Date());
   const type = (v('type') && v('type') !== TYPE_AUTO) ? v('type') : p.type;
   const title = v('title') || p.title;
