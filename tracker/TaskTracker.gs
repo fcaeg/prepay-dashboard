@@ -461,11 +461,19 @@ function checkSheet_(tabName, idCol) {
       const wanted = String(r[C('check_tab')] || '').split(',').map(x => x.trim()).filter(Boolean);
       const sheets = resolveTabs_(book, wanted);
       if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', ') + ' | แท็บที่มี: ' + book.getSheets().map(x => x.getName()).slice(0, 15).join(', '));
-      const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim() };
+      const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim(), areas: wanted };
+      const added = [];
       const res = {}; let headers = []; const usedList = [];
       sheets.forEach(sh => {
         const out = evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule);
         if (!headers.length) headers = out.headers;
+        Object.values(out.newBranches || {}).forEach(nb => {        // เพิ่มสาขาใหม่ที่พบในพื้นที่ลงแท็บ Branches
+          if (branches.some(b => b.code === nb.code)) return;
+          const area = /upper\s*north/i.test(nb.region) ? 'Upper North' : /lower\s*north/i.test(nb.region) ? 'Lower North' : nb.region;
+          appendObj_(ss.getSheetByName(TABS.branches[0]), {code: nb.code, name: nb.name || nb.code, zone: area, area});
+          branches.push({code: nb.code, name: nb.name || nb.code});
+          added.push(nb.name || nb.code);
+        });
         usedList.push(sh.getName() + (sh._autoPicked ? ' [' + sh._autoPicked + ']' : '') + ': ' + (
           out.used.mode === 'auto'     ? `คอลัมน์ "${out.used.col}" = ${out.used.val}` :
           out.used.mode === 'presence' ? 'มีชื่อสาขา = ทำแล้ว' :
@@ -487,6 +495,7 @@ function checkSheet_(tabName, idCol) {
         appendObj_(dsh, {task_id: tid, branch_code: code, status: st, note: 'auto', updated: stamp});
       });
       log = `${stamp} ✓ พบ ${Object.keys(res).length} สาขา · เสร็จ ${nDone} · บางส่วน ${nPart}` +
+            (added.length ? ` | ➕ เพิ่มสาขาใหม่ ${added.length}: ${added.join(', ')}` : '') +
             ` | ใช้กฎ: ${usedList.join(' ; ')}` +
             (headers.length ? ` | หัวคอลัมน์: ${headers.slice(0, 25).join(' | ')}` : '');
     } catch (err) { log = `${stamp} ✗ ${err.message}`; }
@@ -571,7 +580,7 @@ function openLinkedBook_(links) {
 }
 
 /* ตรวจตาราง 1 แท็บ: คืนสถานะต่อสาขา {found, done} + หัวคอลัมน์ + กฎที่ใช้ */
-const DONE_RE = /^(?:(?:ส่งแล้ว|ส่ง|ครบ(?:แล้ว)?|เรียบร้อย(?:แล้ว)?|เสร็จ(?:แล้ว)?|ได้รับ(?:แล้ว)?|ดำเนินการแล้ว|ตอบแล้ว|ผ่าน|มี|คืนแล้ว|รับแล้ว)(?:\s.{0,20})?|done|completed?|ok|yes|y|true|✓|✔|☑|\/)$/i;
+const DONE_RE = /^(?:(?:ส่งแล้ว|ส่ง|ครบ(?:แล้ว)?|เรียบร้อย(?:แล้ว)?|เสร็จ(?:แล้ว)?|ได้รับ(?:แล้ว)?|ดำเนินการแล้ว|ตอบแล้ว|ผ่าน|มี|คืนแล้ว|รับแล้ว|ติดตั้งแล้ว|ติดตั้งสำเร็จ|ยกเลิก(?:แล้ว)?|ลูกค้ายืนยัน\s*ยกเลิก)(?:\s.{0,20})?|done|completed?|connected|installed|success(?:ful)?|closed|(?:order\s*)?cancel(?:led)?|ok|yes|y|true|✓|✔|☑|\/)$/i;
 const PEND_RE = /^(รอ|ยังไม่|ไม่|ค้าง|pending|false|no|n|-|x|✗|✘|$)/i;
 const STATUS_HEAD_RE = /สถานะ|status|ส่งแล้ว|การส่ง|ได้รับ|ตอบ|ดำเนินการ|เรียบร้อย|ผลการ|check|done|complete|รับเอกสาร|คืน|confirm|ยืนยัน/i;
 
@@ -579,7 +588,7 @@ function evaluateTable(values, branches, rule) {
   const N = s => String(s || '').toLowerCase().replace(/true\s*shop|ทรูช็อป|[\s'’\-_.,]/g, '');
   const byCode = {}, byName = {};
   branches.forEach(b => { byCode[String(b.code).trim()] = b.code; byName[N(b.name)] = b.code; });
-  const codeOf = row => {
+  const codeOf0 = row => {
     for (const c of row) {
       const t = String(c).trim().replace(/\.0$/, '');
       if (byCode[t]) return byCode[t];
@@ -587,15 +596,45 @@ function evaluateTable(values, branches, rule) {
     }
     return null;
   };
-  // แถวหัวตาราง = แถวแรกที่มีข้อความ ≥3 ช่อง และก่อนแถวแรกที่มีสาขา
-  const firstData = values.findIndex(r => codeOf(r));
-  let hRow = -1;
-  for (let i = 0; i < Math.min(15, firstData < 0 ? values.length : firstData); i++) {
+  // ----- แถวหัวตาราง: แถวที่มีคำแบบหัวคอลัมน์มากที่สุด (ภายใน 40 แถวแรก) -----
+  const HEADWORD = /status|สถานะ|shop|code|รหัส|สาขา|name|ชื่อ|region|area|zone|ภาค|เขต|พื้นที่|date|day|วันที่|remark|หมายเหตุ|^no\.?$|ลำดับ|source|partner|type/i;
+  let hRow = -1, hBest = 1;
+  const firstKnown = values.findIndex(r => codeOf0(r));
+  for (let i = 0; i < Math.min(40, firstKnown < 0 ? values.length : firstKnown + 1); i++) {
+    const sc = values[i].filter(c => { c = String(c).trim(); return c && c.length < 40 && HEADWORD.test(c) && !/^\d+([.,]\d+)?%?$/.test(c); }).length;
+    if (sc > hBest) { hBest = sc; hRow = i; }
+  }
+  if (hRow < 0) for (let i = 0; i < Math.min(15, firstKnown < 0 ? values.length : firstKnown); i++) {
     const row = values[i].map(c => String(c).trim());
-    if (row.filter(c => c && !/^\d+([.,]\d+)?$/.test(c)).length >= 3) hRow = i;     // เอาแถวที่ใกล้ข้อมูลที่สุด
+    if (row.filter(c => c && !/^\d+([.,]\d+)?$/.test(c)).length >= 3) hRow = i;
   }
   const headRow = hRow >= 0 ? values[hRow].map(c => String(c).trim()) : [];
   const headers = headRow.filter(Boolean);
+
+  // ----- กรองตามพื้นที่ (ชื่อใน check_tab ที่อยู่ในคอลัมน์ Region/Area) -----
+  const areas = (rule.areas || []).map(a => a.trim().toLowerCase()).filter(a => a && !a.includes('*'));
+  const regionCol = !areas.length ? -1 : (() => {
+    const byHead = headRow.findIndex(c => /region|area|zone|ภาค|เขต|พื้นที่/i.test(c));
+    const hits = j => values.slice(hRow + 1).filter(r => areas.includes(String(r[j] || '').trim().toLowerCase())).length;
+    if (byHead >= 0 && hits(byHead)) return byHead;
+    let best = -1, bh = 0; const nc = Math.max(0, ...values.map(r => r.length));
+    for (let j = 0; j < nc; j++) { const h = hits(j); if (h > bh) { bh = h; best = j; } }
+    return best;
+  })();
+  const codeCol = headRow.findIndex(c => /shop\s*code|branch\s*code|รหัสสาขา|รหัสร้าน|^code$|location\s*code/i.test(c));
+  const nameCol = headRow.findIndex(c => /partner|shop\s*name|branch\s*name|ชื่อสาขา|ชื่อร้าน|^name$/i.test(c));
+  const newBranches = {};
+  const inArea = row => regionCol >= 0 && areas.includes(String(row[regionCol] || '').trim().toLowerCase());
+  const codeOf = row => {
+    const k = codeOf0(row); if (k) return k;
+    if (!inArea(row)) return null;
+    // สาขาในพื้นที่ที่ยังไม่มีในแท็บ Branches
+    let code = codeCol >= 0 ? String(row[codeCol] || '').trim().replace(/\.0$/, '') : '';
+    if (!code) code = (row.map(c => String(c).trim()).find(c => /^\d{6,10}$/.test(c)) || '');
+    if (!code) return null;
+    if (!newBranches[code]) newBranches[code] = {code, name: nameCol >= 0 ? String(row[nameCol] || '').trim() : '', region: String(row[regionCol]).trim()};
+    return code;
+  };
   const dataRows = values.slice(hRow + 1).filter(r => codeOf(r));
 
   // ----- หาคอลัมน์สถานะ -----
@@ -626,7 +665,8 @@ function evaluateTable(values, branches, rule) {
       if (distinct.size && distinct.size <= 6 && (doneHits || pendHits)) score += 1;
       if (distinct.size > 12) score -= 3;                  // ข้อความอิสระ/ตัวเลข ไม่ใช่สถานะ
       if (cells.length && cells.every(c => /^\d{6,}$/.test(c))) score -= 5;   // คอลัมน์รหัส
-      if (dataRows.filter(r => codeOf([r[j]])).length > dataRows.length / 2) score -= 10; // คอลัมน์รหัส/ชื่อสาขา
+      if (dataRows.filter(r => codeOf0([r[j]])).length > dataRows.length / 2) score -= 10; // คอลัมน์รหัส/ชื่อสาขา
+      if (j === regionCol || j === codeCol || j === nameCol) score -= 10;
       if (score > best.score) best = {score, col: j};
     }
     const isFormSheet = /ประทับเวลา|timestamp/i.test(headRow[0] || '');
@@ -659,7 +699,7 @@ function evaluateTable(values, branches, rule) {
     a.found++; if (isDone(dCol >= 0 ? row[dCol] : '')) a.done++;
     status[code] = a;
   });
-  return {status, headers, used};
+  return {status, headers, used, newBranches};
 }
 
 function colLetter_(j) { let s = ''; j++; while (j > 0) { const m = (j - 1) % 26; s = String.fromCharCode(65 + m) + s; j = Math.floor((j - 1) / 26); } return s; }
