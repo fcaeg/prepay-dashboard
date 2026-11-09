@@ -1078,7 +1078,8 @@ function evaluateTable(values, branches, rule) {
     if (best.score >= 3 && !isFormSheet) {
       dCol = best.col;
       const cells = dataRows.map(r => String(r[dCol] || '').trim());
-      vals = [...new Set(cells.filter(c => DONE_RE.test(c)).map(c => c.toLowerCase()))];
+      vals = FILL_HEAD_RE.test(headRow[dCol] || '') ? []        // ช่องที่สาขากรอกเอง: กรอกอะไรก็ได้ = ทำแล้ว
+        : [...new Set(cells.filter(c => DONE_RE.test(c)).map(c => c.toLowerCase()))];
       neg = false;
       used = {mode: 'auto', col: headRow[dCol] || ('คอลัมน์ ' + colLetter_(dCol)), val: vals.join('/') || '(ไม่ว่าง)'};
     } else if (isFormSheet || dataRows.length < branches.length * 0.8) {
