@@ -15,7 +15,8 @@ const TABS = {
   staff:    ['Staff',    ['emp_id', 'name', 'branch_code', 'position']],
   results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
-  attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']]
+  attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
+  daily:    ['Daily', ['daily_id', 'title', 'link', 'detail', 'deadline', 'days', 'branches', 'active']]
 };
 
 const Q = {
@@ -28,7 +29,7 @@ const Q = {
 };
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
-const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'อบรม', 'การสอบ', 'อื่นๆ'];
+const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'งานประจำวัน', 'อบรม', 'การสอบ', 'อื่นๆ'];
 
 /* ===================== ตั้งค่าครั้งแรก ===================== */
 function setup() {
@@ -157,6 +158,12 @@ function onTaskForm(e) {
       const ex = ss.getSheetByName(TABS.exams[0]);
       appendObj_(ex, {exam_id: nextId(ex, 'E'), title: 'สอบ – ' + title, due: p.exam.due || '', raw_message: p.exam.text || p.raw});
     }
+  } else if (type === 'งานประจำวัน') {
+    const sh = ss.getSheetByName(TABS.daily[0]);
+    const tm = (p.raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || p.raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
+    const days = /จ\s*[-–]\s*ศ|วันทำการ|จันทร์\s*[-–]\s*ศุกร์/.test(p.raw) ? 'จ-ศ' : 'ทุกวัน';
+    appendObj_(sh, {daily_id: nextId(sh, 'D'), title, link: p.links.join(' '), detail: p.detail,
+      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days, branches, active: 'Y'});
   } else if (type === 'การสอบ') {
     const sh = ss.getSheetByName(TABS.exams[0]);
     appendObj_(sh, {exam_id: nextId(sh, 'E'), title, link: p.links.join(' '), due, raw_message: p.raw, attachments});
@@ -358,7 +365,7 @@ function parseLineMessage(raw, now) {
     title,
     detail: detail || titleLine,
     links,
-    type: training ? 'อบรม' : detectType(links, raw),
+    type: training ? 'อบรม' : /ทุกวัน|ประจำวัน|รายวัน|daily/i.test(noUrl) ? 'งานประจำวัน' : detectType(links, raw),
     training, exam,
     due: pickDue(noUrl, now),
     raw

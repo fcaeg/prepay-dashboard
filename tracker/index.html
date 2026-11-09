@@ -106,6 +106,7 @@ td.num{text-align:right;white-space:nowrap}
   <div class="areas" id="areas"></div>
   <nav class="tabs">
     <button class="tab active" data-tab="summary">สรุปทุกงาน</button>
+    <button class="tab" data-tab="daily">งานประจำวัน</button>
     <button class="tab" data-tab="branch">รายสาขา</button>
     <button class="tab" data-tab="exam">ติดตามการสอบ</button>
     <button class="tab" data-tab="training">แจ้งอบรม</button>
@@ -153,6 +154,17 @@ td.num{text-align:right;white-space:nowrap}
     <div class="kpis" id="ex-kpis"></div>
     <div class="table-wrap"><table id="ex-table"></table></div>
   </section>
+  <!-- ========== TAB: DAILY ========== -->
+  <section id="tab-daily" hidden>
+    <div class="toolbar">
+      <button class="chip-btn active" data-dy="today">เฉพาะวันนี้</button>
+      <button class="chip-btn" data-dy="all">ทั้งหมด</button>
+      <button class="btn" id="dy-copy">📋 คัดลอกงานประจำวันนี้ส่งไลน์</button>
+    </div>
+    <div class="kpis" id="dy-kpis"></div>
+    <div id="dy-list"></div>
+  </section>
+
   <!-- ========== TAB 4: TRAINING ========== -->
   <section id="tab-training" hidden>
     <div class="toolbar">
@@ -176,7 +188,7 @@ td.num{text-align:right;white-space:nowrap}
    ===================================================================== */
 const CONFIG = {
   sheetId: '1309rgyaiWMWj-Xik2-4T3wWgizLMivLrwH2JTx08qCg',
-  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees' }
+  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees', daily:'Daily' }
 };
 
 /* ---------- helpers ---------- */
@@ -293,7 +305,13 @@ function sampleData(){
   const plan = {TR01:[staff,10], TR02:[byArea('Upper North'),7], TR03:[staff,12], TR04:[byArea('Lower North').filter(s=>s.position==='ผู้จัดการสาขา'),5], TR05:[staff,8], TR06:[byArea('Upper North'),6]};
   const attendees = [];
   Object.entries(plan).forEach(([tid,[pool,n]]) => pick(pool,n).forEach(s => attendees.push({training_id:tid, name:s.name, branch_code:s.branch_code, emp_id:s.emp_id})));
-  return {branches, tasks, done, exams, staff, results, trainings, attendees};
+  const daily = [
+    {daily_id:'D01',title:'กรอกยอดขาย Prepay ประจำวัน',link:'https://docs.google.com/spreadsheets/',detail:'ลงยอดของเมื่อวาน',deadline:'11:00',days:'ทุกวัน',branches:'ALL',active:'Y'},
+    {daily_id:'D02',title:'Monitor ยอดติดตั้ง TOL (Link Pending)',link:'https://docs.google.com/spreadsheets/',detail:'เช็กรายการ Pending แล้วโทรตามลูกค้า',deadline:'15:00',days:'จ-ศ',branches:'ALL',active:'Y'},
+    {daily_id:'D03',title:'ส่งรูปเปิดร้าน',link:'https://forms.google.com/',detail:'ถ่ายหน้าร้านหลังเปิด 10 นาที',deadline:'10:30',days:'ทุกวัน',branches:'Lower North',active:'Y'},
+    {daily_id:'D04',title:'สรุปยอดสัปดาห์',link:'https://docs.google.com/spreadsheets/',detail:'',deadline:'17:00',days:'ศ',branches:'ALL',active:'Y'}
+  ];
+  return {branches, tasks, done, exams, staff, results, trainings, attendees, daily};
 }
 
 /* ---------- โหลดจาก Google Sheet ---------- */
@@ -314,9 +332,9 @@ function parseCSV(text){
 async function loadSheet(){
   const out = {};
   for (const [key, tab] of Object.entries(CONFIG.tabs)){
-    const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
-    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id'};
-    const OPTIONAL = ['trainings','attendees'];
+    const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
+    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id',daily:'title'};
+    const OPTIONAL = ['trainings','attendees','daily'];
     try {
       const res = await fetch(url); if (!res.ok) throw new Error(tab);
       const rows = parseCSV(await res.text());
@@ -380,7 +398,11 @@ function build(data){
     return {...t, date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
   }).filter(t => t.date && (AREA==='ALL' || t.att.length))
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
-  return {branches, bmap, tasks, exams, trainings, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
+  const daily = (data.daily||[]).filter(d => d.title && !/^(n|no|ไม่|0|false)$/i.test(String(d.active||'').trim())).map(d => {
+    const list = targetsOf(d, allBr, bmapAll).filter(b=>bmap[b.code]);
+    return {...d, list, deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY.getDay())};
+  }).filter(d => d.list.length).sort((a,b)=> (a.deadline||'99').localeCompare(b.deadline||'99'));
+  return {branches, bmap, tasks, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
 }
 function lineMsg(t){
   const dl = daysLeft(t.due);
@@ -486,7 +508,9 @@ function renderBranch(){
     x.t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:x.t.detail}) : null,
     attachBox(x.t),
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
+  const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b));
   $('#br-body').replaceChildren(
+    ...(myDaily.length ? [h('h2',{text:`📅 งานประจำวันนี้ (${myDaily.length})`}), h('div',null, myDaily.map(d=>dailyCard(d,true)))] : []),
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
     pend.length ? h('div',null, pend.map(x=>card(x,false))) : h('div',{class:'empty',text:'ไม่มีงานค้าง เยี่ยมมาก! 🎉'}),
     ...(() => {
@@ -538,6 +562,51 @@ function renderExam(){
     copy(`📝 ติดตามการสอบ: ${e.title}${AREA!=='ALL'?' ['+AREA+']':''}\nกำหนดส่ง ${thDate(e.due)} | สอบแล้ว ${all.t}/${all.n} คน\n\nรายชื่อที่ยังไม่สอบ:\n` +
       pend.map(r=>`▪️ ${r.b.name} (${r.notYet.length} คน): ${r.notYet.map(s=>s.name).join(', ')}`).join('\n') + (splitLinks(e.link)[0]?`\n\nลิงก์สอบ: ${splitLinks(e.link)[0]}`:''));
   };
+}
+
+/* ---------- TAB: งานประจำวัน ---------- */
+let dyFilter = 'today';
+const TH_DOW = [['อา','อาทิตย์','sun'],['จ','จันทร์','mon'],['อ','อังคาร','tue'],['พ','พุธ','wed'],['พฤ','พฤหัส','thu'],['ศ','ศุกร์','fri'],['ส','เสาร์','sat']];
+function dowOf(tok){ tok = tok.trim().toLowerCase().replace(/\.$/,''); return TH_DOW.findIndex(a => a.some(x => tok === x || (x.length > 2 && tok.startsWith(x)))); }
+function dayMatch(spec, dow){
+  spec = String(spec||'').trim();
+  if (!spec || /ทุกวัน|every|daily|all/i.test(spec)) return true;
+  if (/จ\s*[-–]\s*ศ|weekday|วันทำการ/i.test(spec)) return dow>=1 && dow<=5;
+  if (/เสาร์\s*[-–]?\s*อาทิตย์|ส\s*[-–]\s*อา|weekend/i.test(spec)) return dow===0 || dow===6;
+  return spec.split(/[,\s/]+/).some(part => {
+    const r = part.split(/[-–]/); if (r.length === 2){ const a = dowOf(r[0]), b = dowOf(r[1]); if (a<0||b<0) return false; return a<=b ? dow>=a && dow<=b : dow>=a || dow<=b; }
+    return dowOf(part) === dow;
+  });
+}
+function deadlineBadge(d){
+  if (!d.deadline) return null;
+  if (!d.today) return h('span',{class:'badge',text:'⏰ '+d.deadline});
+  const [H,M] = d.deadline.split(':').map(Number), now = new Date(), late = now.getHours()*60+now.getMinutes() > H*60+M;
+  return h('span',{class:'badge '+(late?'bad':'warn'),text:(late?'⏰ เลยเวลา ':'⏰ ภายใน ')+d.deadline+' น.'});
+}
+const scopeTxt = d => d.list.length === MODEL.branches.length ? (AREA==='ALL'?'ทุกสาขา':'ทุกสาขาใน '+AREA) : `${d.list.length} สาขา`;
+function dailyCard(d, compact){
+  return h('div',{class:'card '+(d.today?'':'complete'),style:d.today?'':'opacity:.6'},
+    h('div',{class:'t-title',text:d.title}),
+    h('div',{class:'meta'}, deadlineBadge(d), h('span',{class:'badge type',text:'📅 '+(d.days||'ทุกวัน')}), compact?null:h('span',{class:'badge',text:'🏪 '+scopeTxt(d)})),
+    d.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:d.detail}) : null,
+    splitLinks(d.link).length ? h('div',{class:'actions'}, linkBtns(d,true,'เปิดลิงก์')) : null);
+}
+function dailyMsg(){
+  const ds = MODEL.daily.filter(d=>d.today);
+  return `📌 งานประจำวัน ${thDay(TODAY)}${AREA!=='ALL'?' ['+AREA+']':''}\n` + ds.map(d =>
+    `━━━━━━━━━━\n${d.deadline?'⏰ ภายใน '+d.deadline+' น. ':''}${d.title}` + (d.detail?`\n📝 ${d.detail}`:'') +
+    (d.list.length < MODEL.branches.length ? `\n🏪 ${d.list.map(b=>b.name).join(', ')}` : '') +
+    splitLinks(d.link).map(u=>`\n🔗 ${u}`).join('')).join('\n');
+}
+function renderDaily(){
+  const all = MODEL.daily, today = all.filter(d=>d.today);
+  const list = dyFilter==='today' ? today : all;
+  const now = new Date(), late = today.filter(d => d.deadline && now.getHours()*60+now.getMinutes() > d.deadline.split(':').reduce((a,x,i)=>a+(i?+x:+x*60),0));
+  $('#dy-kpis').replaceChildren(
+    kpi('งานประจำวันนี้', today.length+' งาน', `จากทั้งหมด ${all.length} งาน`),
+    kpi('เลยเวลาที่กำหนดแล้ว', late.length+' งาน', 'ของวันนี้', late.length?'bad':'ok'));
+  $('#dy-list').replaceChildren(...(list.length ? list.map(d=>dailyCard(d)) : [h('div',{class:'empty',text:'ยังไม่มีงานประจำวัน – เพิ่มได้ในแท็บ Daily ของ Sheet หรือเลือกประเภท "งานประจำวัน" ในฟอร์ม'})]));
 }
 
 /* ---------- TAB 4: แจ้งอบรม ---------- */
@@ -628,14 +697,14 @@ function setArea(a){
   AREA = a; try { localStorage.setItem('tt-area', a); } catch(e){}
   MODEL = build(D); renderAreaBar(); fillSelects();
   renderSummary(); renderExam();
-  renderTraining();
+  renderTraining(); renderDaily();
   if (!$('#tab-branch').hidden) renderBranch();
 }
 
 /* ---------- tabs & init ---------- */
 function showTab(name){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  ['summary','branch','exam','training'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  ['summary','daily','branch','exam','training'].forEach(n=>$('#tab-'+n).hidden = n!==name);
   if (name==='branch'){ renderBranch(); try{ history.replaceState(null,'','#br-'+$('#br-select').value); }catch(e){} }
   else { try{ history.replaceState(null,'','#'+name); }catch(e){} }
   window.scrollTo(0,0);
@@ -658,8 +727,10 @@ async function init(){
   $('#ex-select').onchange = renderExam; $('#ex-branch').onchange = renderExam;
   document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{ trFilter=b.dataset.tr; document.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('active',x===b)); renderTraining(); });
   $('#tr-q').oninput = renderTraining;
+  document.querySelectorAll('[data-dy]').forEach(b=>b.onclick=()=>{ dyFilter=b.dataset.dy; document.querySelectorAll('[data-dy]').forEach(x=>x.classList.toggle('active',x===b)); renderDaily(); });
+  $('#dy-copy').onclick = () => copy(dailyMsg());
 
-  renderSummary(); renderExam(); renderTraining();
+  renderSummary(); renderExam(); renderTraining(); renderDaily();
   const hash = location.hash.slice(1);
   if (hash.startsWith('br-')){
     const c = hash.slice(3), b = D.branches.find(x=>x.code===c);
@@ -667,6 +738,7 @@ async function init(){
     if (MODEL.bmap[c]) $('#br-select').value = c; showTab('branch'); }
   else if (hash==='exam') showTab('exam');
   else if (hash==='training') showTab('training');
+  else if (hash==='daily') showTab('daily');
 }
 init();
 </script>
