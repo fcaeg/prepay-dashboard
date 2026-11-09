@@ -89,6 +89,8 @@ td.num{text-align:right;white-space:nowrap}
 .att-row b{font-weight:600}
 .person{display:inline-block;background:#eef0f4;border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:13px}
 .person.hit{background:var(--warn-soft);color:#6b4500;font-weight:600}
+.attach{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.attach img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eef0f4;display:block}
 .names{font-size:13px;color:#9b1c1c}
 </style>
 </head>
@@ -222,6 +224,17 @@ function dueBadge(d, finished){
 const pctTxt = p => Math.round(p*100) + '%';
 const splitLinks = s => String(s||'').split(/\s+/).filter(u=>/^https?:\/\//.test(u));
 function linkLabel(u){ return /forms\.gle|\/forms\//.test(u)?'ฟอร์ม':/spreadsheets/.test(u)?'ชีต':/document/.test(u)?'เอกสาร':/presentation/.test(u)?'สไลด์':/drive\.google/.test(u)?'โฟลเดอร์':/lookerstudio|datastudio/.test(u)?'Dashboard':'ลิงก์'; }
+function attachBox(t){
+  const items = String(t.attachments||'').split(/\n+/).map(l=>l.split('|')).filter(x=>x[1]);
+  if (!items.length) return null;
+  return h('div',{class:'attach'}, items.map(([name,url,mime]) => {
+    const id = (url.match(/\/d\/([\w-]+)/)||[])[1];
+    if (/^image\//.test(mime||'') && id)
+      return h('a',{href:url,target:'_blank',rel:'noopener',title:name}, h('img',{src:`https://drive.google.com/thumbnail?id=${id}&sz=w400`,alt:name,loading:'lazy'}));
+    const icon = /sheet|excel|csv/i.test(mime+name) ? '📊' : /pdf/i.test(mime) ? '📄' : '📎';
+    return h('a',{class:'btn',href:url,target:'_blank',rel:'noopener',text:`${icon} ${name}`});
+  }));
+}
 function linkBtns(t, primary, verb){ const L = splitLinks(t.link); return L.map((u,i)=>h('a',{class:'btn'+(primary&&i===0?' primary':''),href:u,target:'_blank',rel:'noopener',text:(L.length>1?`${verb} ${linkLabel(u)}`:verb)+' ↗'})); }
 const barCls = p => p >= 1 ? 'ok' : p >= .7 ? '' : p >= .4 ? 'warn' : 'bad';
 const bar = p => h('div',{class:'bar '+barCls(p)}, h('span',{style:`width:${Math.max(2,Math.round(p*100))}%`}));
@@ -412,7 +425,8 @@ function renderSummary(){
       h('div',null,
         h('div',{class:'t-title',text:t.title}),
         h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete)),
-        t.detail ? h('div',{class:'detail',text:t.detail}) : null),
+        t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
+        attachBox(t)),
       h('div',null,
         h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
         bar(t.pct),
@@ -467,7 +481,8 @@ function renderBranch(){
       h('span',{class:'badge',text:'Due '+thDate(x.t.due)}),
       isDone ? h('span',{class:'badge ok',text:'✓ ดำเนินการแล้ว'}) : x.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : null,
       isDone ? null : dueBadge(x.t.due,false)),
-    x.t.detail ? h('div',{class:'detail',text:x.t.detail}) : null,
+    x.t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:x.t.detail}) : null,
+    attachBox(x.t),
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
   $('#br-body').replaceChildren(
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
@@ -574,7 +589,8 @@ function renderTraining(){
           h('div',{class:'meta'},
             t.location ? h('span',{class:'badge type',text:'📍 '+t.location}) : null,
             t.trainer ? h('span',{class:'badge',text:'🎤 '+t.trainer}) : null),
-          t.detail ? h('div',{class:'detail',text:t.detail}) : null,
+          t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
+          attachBox(t),
           splitLinks(t.link).length ? h('div',{class:'actions'}, linkBtns(t,true,'เข้าร่วม / รายละเอียด')) : null,
           h('div',{class:'att'},
             h('div',{class:'small',text:`👥 ผู้เข้าอบรม ${t.att.length} คน`}),
