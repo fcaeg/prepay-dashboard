@@ -192,7 +192,13 @@ function onTaskForm(e) {
     }
   } else if (type === 'การสอบ') {
     const sh = ss.getSheetByName(TABS.exams[0]);
-    appendObj_(sh, {exam_id: nextId(sh, 'E'), title, link: p.links.join(' '), due, raw_message: p.raw, attachments});
+    // ไฟล์รายชื่อคนที่ยังไม่สอบ: Reminder ชื่อเดิม → อัปเดตรายชื่อในการสอบเดิม
+    const staffTabs = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
+    const same = findOpenTaskByTitle_(sh, title);
+    if (same && staffTabs.length && importStaff_(same, staffTabs, true)) return;
+    const eid = nextId(sh, 'E');
+    appendObj_(sh, {exam_id: eid, title, link: p.links.join(' '), due, raw_message: p.raw, attachments});
+    if (staffTabs.length) importStaff_(eid, staffTabs, false);
   } else {
     // Excel ที่มีแต่สาขา (ไม่มีชื่อคน) = รายชื่อสาขาที่ต้องทำงานนี้
     const codes = [...new Set(roster.filter(r => r.code && !r.name).map(r => r.code))];
@@ -389,11 +395,11 @@ function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).set
 /* เมนู: อ่านรายชื่อพนักงานจากไฟล์แนบของงานที่เลือก (สำหรับงานที่ลงไปแล้ว) */
 function importStaffSelected() {
   const ui = SpreadsheetApp.getUi(), ss = SpreadsheetApp.getActiveSpreadsheet(), sh = ss.getActiveSheet();
-  if (sh.getName() !== TABS.tasks[0]) { ui.alert('ไปที่แท็บ Tasks แล้วคลิกเลือกแถวงานที่มีไฟล์ Excel แนบก่อน'); return; }
+  if (![TABS.tasks[0], TABS.exams[0]].includes(sh.getName())) { ui.alert('ไปที่แท็บ Tasks หรือ Exams แล้วคลิกเลือกแถวที่มีไฟล์ Excel แนบก่อน'); return; }
   const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
   const r = sh.getActiveRange().getRow(); if (r < 2) return;
   const v = sh.getRange(r, 1, 1, head.length).getDisplayValues()[0];
-  const tid = v[head.indexOf('task_id')], att = v[head.indexOf('attachments')] || '';
+  const tid = v[0], att = v[head.indexOf('attachments')] || '';
   const ids = (att.match(/\/d\/([\w-]{20,})/g) || []).map(x => x.slice(3));
   const tables = ids.map(id => { try { return DriveApp.getFileById(id); } catch (e) { return null; } }).filter(Boolean)
     .filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);

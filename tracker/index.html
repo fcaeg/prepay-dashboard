@@ -394,6 +394,7 @@ function sampleData(){
   ];
   history.forEach(t => branches.filter(b => t.branches==='ALL' || b.area===t.branches).forEach(b => done.push({task_id:t.task_id,branch_code:b.code,status:'done'})));
   const taskstaff = [];
+  branches.slice(5,12).forEach((b,i) => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'E02', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k % 3 === 0 ? 'Y':''})));
   branches.slice(0,5).forEach((b,i) => staff.filter(s=>s.branch_code===b.code).forEach((s,k) => taskstaff.push({task_id:'T005', emp_id:s.emp_id, name:s.name, branch_code:b.code, branch_raw:b.name, done: k < i ? 'Y':'', checked_by: k < i ? 'หน้าเว็บ':''})));
   return {branches, tasks, done, exams, staff, results, trainings, attendees, daily, history, taskstaff};
 }
@@ -482,7 +483,9 @@ function build(data){
   const passOf = e => Number(e.pass_score) || 0;
   const exams = data.exams.filter(e=>e.exam_id).map(e => {
     const res = {}; data.results.filter(x=>x.exam_id===e.exam_id).forEach(x => { const s = Number(x.score); if (!(x.emp_id in res) || s > res[x.emp_id]) res[x.emp_id] = s; });
-    return {...e, due: parseDate(e.due), res, pass: passOf(e)};
+    let staff = null;
+    if (staffBy[e.exam_id]) { staff = {}; Object.entries(staffBy[e.exam_id]).forEach(([c, l]) => { if (bmap[c]) staff[c] = l; }); }
+    return {...e, task_id: e.exam_id, staff, due: parseDate(e.due), res, pass: passOf(e)};
   });
   const staffById = Object.fromEntries((data.staff||[]).map(s=>[s.emp_id,s]));
   const hhmm = t => { const m = String(t||'').match(/(\d{1,2})[:.](\d{2})/); return m ? m[1].padStart(2,'0')+':'+m[2] : ''; };
@@ -592,15 +595,17 @@ function renderSummary(){
   // ---- การสอบ ----
   if (want('exam')) {
     let ex = MODEL.exams.filter(e=>match(e.title)).map(e => {
-      const st = MODEL.staff, took = st.filter(s=>s.emp_id in e.res).length;
-      const complete = st.length>0 && took===st.length, late = !complete && e.due && daysLeft(e.due)<0;
-      return {e, took, n: st.length, complete, late};
+      let took, n;
+      if (e.staff) { const s2 = examStaffStats(e); took = s2.d; n = s2.n; }
+      else { const st = MODEL.staff; took = st.filter(s=>s.emp_id in e.res).length; n = st.length; }
+      const complete = n>0 && took===n, late = !complete && e.due && daysLeft(e.due)<0;
+      return {e, took, n, complete, late};
     });
     ex = ex.filter(x => sumFilter==='all' || (sumFilter==='open' && !x.complete) || (sumFilter==='overdue' && x.late) || (sumFilter==='done' && x.complete));
     sections.push(['📝 การสอบ', ex.map(x => { const p = x.n ? x.took/x.n : 0; return h('div',{class:'card '+(x.complete?'complete':x.late?'overdue':'')},
       h('div',{class:'t-title',text:x.e.title}),
       h('div',{class:'meta'}, h('span',{class:'badge',text:x.e.exam_id}), h('span',{class:'badge type',text:'การสอบ'}), h('span',{class:'badge',text:'Due '+thDate(x.e.due)}), dueBadge(x.e.due,x.complete)),
-      x.n ? h('div',{style:'margin-top:8px'}, h('span',{class:'pct',text:pctTxt(p)}), h('span',{class:'small',text:`  สอบแล้ว ${x.took}/${x.n} คน`}), bar(p))
+      x.n ? h('div',{style:'margin-top:8px'}, h('span',{class:'pct',text:pctTxt(p)}), h('span',{class:'small',text:`  ${x.e.staff?'ดำเนินการแล้ว':'สอบแล้ว'} ${x.took}/${x.n} คน`}), bar(p))
           : h('div',{class:'small',style:'margin-top:6px',text:'ยังไม่มีรายชื่อพนักงาน (แท็บ Staff) จึงยังคำนวณ % ไม่ได้'}),
       h('div',{class:'actions'}, splitLinks(x.e.link)[0] ? h('a',{class:'btn',href:splitLinks(x.e.link)[0],target:'_blank',rel:'noopener',text:'เปิดลิงก์สอบ ↗'}) : null,
         h('button',{class:'btn primary',onclick:()=>{ $('#ex-select').value=x.e.exam_id; renderExam(); showTab('exam'); },text:'ดูรายละเอียดรายสาขา →'})));
@@ -652,8 +657,10 @@ function renderBranch(){
     kpi('ค้างดำเนินการ', pend.length, 'งานที่ต้องทำ', pend.length?'warn':'ok'),
     kpi('เลยกำหนดแล้ว', over.length, over.length?'ทำด่วน!':'ไม่มี 👍', over.length?'bad':'ok'),
     ...MODEL.exams.filter(e=>!e.due || daysLeft(e.due)>=-7).map(e => {
-      const st = MODEL.staff.filter(s=>s.branch_code===code), took = st.filter(s=>s.emp_id in e.res).length;
-      return kpi('สอบ: '+e.title, `${took}/${st.length} คน`, 'Due '+thDate(e.due), took===st.length?'ok':'');
+      let took, n;
+      if (e.staff) { const l = e.staff[code] || []; n = l.length; took = l.filter(x=>x.done).length; if (!n) return null; }
+      else { const st = MODEL.staff.filter(s=>s.branch_code===code); n = st.length; took = st.filter(s=>s.emp_id in e.res).length; }
+      return kpi('สอบ: '+e.title, `${took}/${n} คน`, 'Due '+thDate(e.due), took===n?'ok':'');
     })
   );
   const card = (x, isDone) => h('div',{class:'card '+(isDone?'complete':(x.t.due&&daysLeft(x.t.due)<0)?'overdue':(x.t.due&&daysLeft(x.t.due)<=1)?'soon':'')},
@@ -669,6 +676,11 @@ function renderBranch(){
   const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b)).map(d => ({...d, _me: d.per.find(x=>x.b===b)}));
   $('#br-body').replaceChildren(
     ...(myDaily.length ? [h('h2',{text:`📅 งานประจำที่ต้องทำวันนี้ (${myDaily.length})`}), h('div',null, myDaily.map(d=>dailyCard(d,true)))] : []),
+    ...(() => { const ex = MODEL.exams.filter(e => e.staff && e.staff[code] && e.staff[code].length);
+      return ex.length ? [h('h2',{text:`📝 การสอบ / รายชื่อพนักงาน (${ex.length})`}), ...ex.map(e => h('div',{class:'card'},
+        h('div',{class:'t-title',text:e.title}), h('div',{class:'meta'}, h('span',{class:'badge type',text:'การสอบ'}), h('span',{class:'badge',text:'Due '+thDate(e.due)}), dueBadge(e.due, e.staff[code].every(x=>x.done))),
+        splitLinks(e.link)[0] ? h('div',{class:'actions'}, h('a',{class:'btn primary',href:splitLinks(e.link)[0],target:'_blank',rel:'noopener',text:'เปิดลิงก์สอบ ↗'})) : null,
+        staffBox(e, code)))] : []; })(),
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
     pend.length ? h('div',null, pend.map(x=>card(x,false))) : h('div',{class:'empty',text:'ไม่มีงานค้าง เยี่ยมมาก! 🎉'}),
     ...(() => {
@@ -686,11 +698,36 @@ function renderBranch(){
 function goBranch(code){ $('#br-select').value = code; showTab('branch'); }
 
 /* ---------- TAB 3: การสอบ ---------- */
+function examStaffStats(e){
+  const codes = Object.keys(e.staff||{}); const all = codes.flatMap(c=>e.staff[c]);
+  return {codes, n: all.length, d: all.filter(x=>x.done).length};
+}
+function renderExamChecklist(e, fb){
+  const st = examStaffStats(e);
+  const el0 = splitLinks(e.link)[0]; $('#ex-open').href = el0 || '#'; $('#ex-open').style.display = el0 ? '' : 'none';
+  const pend = st.codes.filter(c => e.staff[c].some(x=>!x.done));
+  $('#ex-kpis').replaceChildren(
+    kpi('ดำเนินการแล้ว', pctTxt(st.n?st.d/st.n:1), `${st.d}/${st.n} คน`, st.d===st.n?'ok':''),
+    kpi('ยังไม่ดำเนินการ', (st.n-st.d)+' คน', `${pend.length} สาขายังไม่ครบ`, st.n-st.d?'warn':'ok'),
+    kpi('กำหนดส่ง', thDate(e.due), e.due ? (daysLeft(e.due)<0?`เลยกำหนด ${-daysLeft(e.due)} วัน`:`อีก ${daysLeft(e.due)} วัน`) : '', e.due&&daysLeft(e.due)<0?'bad':''));
+  const rows = st.codes.filter(c=>!fb || c===fb).map(c => { const l = e.staff[c], d = l.filter(x=>x.done).length; return {c, l, d, p: l.length?d/l.length:1}; }).sort((a,b)=>a.p-b.p);
+  $('#ex-table').replaceChildren(
+    h('thead',null,h('tr',null, h('th',{text:'สาขา'}), h('th',{class:'num',text:'รายชื่อ'}), h('th',{class:'num',text:'ทำแล้ว'}), h('th',{style:'min-width:150px',text:'Progress'}), h('th',{text:'ยังไม่ดำเนินการ'}))),
+    h('tbody',null, rows.map(r => h('tr',null,
+      h('td',null, h('b',{text:(MODEL.bmap[r.c]||{}).name||r.c}), h('div',{class:'small',text:r.c+' · '+areaOf(MODEL.bmap[r.c]||{})})),
+      h('td',{class:'num',text:r.l.length}), h('td',{class:'num',text:r.d}),
+      h('td',null, h('div',{class:'small',text:pctTxt(r.p)}), bar(r.p)),
+      h('td',null, r.d===r.l.length ? h('div',{class:'small',style:'color:var(--ok)',text:'✓ ครบทุกคน'}) : h('div',{class:'names',text:r.l.filter(x=>!x.done).map(x=>x.name).join(', ')}))))),
+    h('tbody',null, h('tr',null, h('td',{colspan:'5'}, staffBox(e, fb||null)))));
+  $('#ex-copy').onclick = () => copy(`📝 ติดตาม: ${e.title}${AREA!=='ALL'?' ['+AREA+']':''}\nกำหนดส่ง ${thDate(e.due)} | ดำเนินการแล้ว ${st.d}/${st.n} คน\n\nรายชื่อที่ยังไม่ดำเนินการ:\n` +
+    rows.filter(r=>r.d<r.l.length).map(r=>`▪️ ${(MODEL.bmap[r.c]||{}).name||r.c} (${r.l.length-r.d} คน): ${r.l.filter(x=>!x.done).map(x=>x.name).join(', ')}`).join('\n') + (el0?`\n\nลิงก์: ${el0}`:''));
+}
 function renderExam(){
   const e = MODEL.exams.find(x=>x.exam_id===$('#ex-select').value);
   if (!e){ $('#ex-kpis').replaceChildren(); $('#ex-open').style.display='none';
     $('#ex-table').replaceChildren(h('tbody',null,h('tr',null,h('td',{class:'empty',text:'ยังไม่มีรายการสอบ – เพิ่มได้ในแท็บ Exams หรือเลือกประเภท "การสอบ" ในฟอร์มลงงาน'})))); return; }
   const fb = $('#ex-branch').value;
+  if (e.staff) return renderExamChecklist(e, fb);
   const brs = MODEL.branches.filter(b=>!fb || b.code===fb);
   const rows = brs.map(b => {
     const st = MODEL.staff.filter(s=>s.branch_code===b.code);
