@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Task Tracker – ติดตามงานสาขา</title>
+<style>
+:root{
+  --bg:#f5f6f8;--panel:#fff;--fg:#1d2330;--muted:#6b7385;--line:#e3e6ec;
+  --accent:#2f5bea;--accent-soft:#e8eeff;
+  --ok:#1f9d55;--ok-soft:#e3f6ea;--warn:#d98a00;--warn-soft:#fff3d9;--bad:#d93636;--bad-soft:#fde6e6;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Noto Sans Thai","Sarabun","Leelawadee UI","Tahoma",system-ui,sans-serif;font-size:15px;line-height:1.5}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:16px 20px 0}
+.head-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px;max-width:1200px;margin:0 auto}
+h1{font-size:22px;margin:0}
+.sub{color:var(--muted);font-size:13px}
+.src{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--warn-soft);color:#8a5a00}
+.src.live{background:var(--ok-soft);color:var(--ok)}
+.areas{display:flex;flex-wrap:wrap;gap:6px;max-width:1200px;margin:10px auto 0}
+.area-btn{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 14px;font:inherit;font-size:13.5px;cursor:pointer;color:var(--fg)}
+.area-btn.active{background:#1d2330;border-color:#1d2330;color:#fff}
+.area-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:18px}
+.tabs{display:flex;gap:4px;max-width:1200px;margin:12px auto 0;overflow-x:auto}
+.tab{border:0;background:none;padding:10px 16px;font:inherit;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+main{max-width:1200px;margin:0 auto;padding:20px}
+section[hidden]{display:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.kpi .lbl{color:var(--muted);font-size:13px}
+.kpi .val{font-size:28px;font-weight:700;line-height:1.2;margin-top:4px}
+.kpi .note{font-size:12px;color:var(--muted)}
+.kpi.bad .val{color:var(--bad)} .kpi.ok .val{color:var(--ok)} .kpi.warn .val{color:var(--warn)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip-btn{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}
+.chip-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+select,input[type=search]{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+.grow{flex:1}
+h2{font-size:17px;margin:22px 0 10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card.overdue{border-left:4px solid var(--bad)}
+.card.soon{border-left:4px solid var(--warn)}
+.card.complete{border-left:4px solid var(--ok)}
+.task-grid{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(180px,1fr) minmax(220px,1.4fr);gap:16px;align-items:start}
+@media (max-width:820px){.task-grid{grid-template-columns:1fr;gap:10px}}
+.t-title{font-weight:700;font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.badge{font-size:12px;padding:2px 9px;border-radius:99px;background:#eef0f4;color:#3c4456;white-space:nowrap}
+.badge.type{background:var(--accent-soft);color:var(--accent)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.badge.warn{background:var(--warn-soft);color:#8a5a00}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.detail{color:var(--muted);font-size:13.5px;margin-top:6px}
+.bar{height:10px;background:#eceef3;border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.bar>span{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.ok>span{background:var(--ok)} .bar.warn>span{background:var(--warn)} .bar.bad>span{background:var(--bad)}
+.pct{font-size:22px;font-weight:700}
+.small{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{font-size:12.5px;padding:2px 9px;border-radius:6px;background:var(--bad-soft);color:#9b1c1c;cursor:pointer;border:0;font-family:inherit}
+.chip.partial{background:var(--warn-soft);color:#8a5a00}
+.chip.done{background:var(--ok-soft);color:var(--ok);cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{font:inherit;font-size:13.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--fg);text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{filter:brightness(.97)}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+th{background:#f0f2f6;font-size:13px;color:var(--muted);font-weight:600}
+tr.click{cursor:pointer} tr.click:hover td{background:#f8f9fc}
+td.num{text-align:right;white-space:nowrap}
+.table-wrap{overflow-x:auto}
+.empty{color:var(--muted);text-align:center;padding:24px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius)}
+.branch-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.branch-head select{font-size:16px;padding:9px 12px;min-width:260px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d2330;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.banner{background:var(--warn-soft);color:#6b4500;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:16px}
+.names{font-size:13px;color:#9b1c1c}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-row">
+    <div>
+      <h1>📋 Task Tracker – ติดตามงานสาขา</h1>
+      <div class="sub" id="today"></div>
+    </div>
+    <span class="src" id="src">ข้อมูลตัวอย่าง</span>
+  </div>
+  <div class="areas" id="areas"></div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="summary">สรุปทุกงาน</button>
+    <button class="tab" data-tab="branch">รายสาขา</button>
+    <button class="tab" data-tab="exam">ติดตามการสอบ</button>
+  </nav>
+</header>
+
+<main>
+  <div id="banner"></div>
+
+  <!-- ========== TAB 1: SUMMARY ========== -->
+  <section id="tab-summary">
+    <div class="kpis" id="sum-kpis"></div>
+    <div id="sum-areas"></div>
+    <div class="toolbar">
+      <button class="chip-btn active" data-f="open">ยังค้าง</button>
+      <button class="chip-btn" data-f="overdue">เลยกำหนด</button>
+      <button class="chip-btn" data-f="done">ครบทุกสาขา</button>
+      <button class="chip-btn" data-f="all">ทั้งหมด</button>
+      <select id="sum-type"></select>
+      <input type="search" id="sum-q" class="grow" placeholder="ค้นหาชื่องาน…">
+    </div>
+    <div id="sum-list"></div>
+    <h2>สาขาที่ค้างงานมากที่สุด</h2>
+    <div class="table-wrap"><table id="rank"></table></div>
+  </section>
+
+  <!-- ========== TAB 2: BRANCH ========== -->
+  <section id="tab-branch" hidden>
+    <div class="branch-head">
+      <select id="br-select"></select>
+      <button class="btn" id="br-link">🔗 คัดลอกลิงก์ของสาขานี้</button>
+    </div>
+    <div class="kpis" id="br-kpis"></div>
+    <div id="br-body"></div>
+  </section>
+
+  <!-- ========== TAB 3: EXAM ========== -->
+  <section id="tab-exam" hidden>
+    <div class="toolbar">
+      <select id="ex-select"></select>
+      <select id="ex-branch"></select>
+      <button class="btn" id="ex-copy">📋 คัดลอกข้อความตามคนที่ยังไม่สอบ</button>
+      <a class="btn primary" id="ex-open" target="_blank" rel="noopener">เปิดลิงก์สอบ ↗</a>
+    </div>
+    <div class="kpis" id="ex-kpis"></div>
+    <div class="table-wrap"><table id="ex-table"></table></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   ตั้งค่าแหล่งข้อมูล
+   - ปล่อย sheetId ว่าง = ใช้ข้อมูลตัวอย่าง
+   - ใส่ ID ของ Google Sheet (แชร์แบบ "ทุกคนที่มีลิงก์ดูได้") = ดึงข้อมูลจริงจากแต่ละแท็บ
+   ===================================================================== */
+const CONFIG = {
+  sheetId: '',
+  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults' }
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'style') el.setAttribute('style', v);
+    else el.setAttribute(k, v);
+  }
+  for (const c of kids.flat()){
+    if (c == null || c === false) continue;
+    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+const sod = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const TODAY = sod(new Date());
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const plus = n => { const d = new Date(TODAY); d.setDate(d.getDate()+n); return iso(d); };
+function parseDate(s){
+  if (!s) return null; s = String(s).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return new Date(+m[1], m[2]-1, +m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m){ let y = +m[3]; if (y > 2400) y -= 543; return new Date(y, m[2]-1, +m[1]); }
+  m = s.match(/^Date\((\d+),(\d+),(\d+)/); if (m) return new Date(+m[1], +m[2], +m[3]);
+  const d = new Date(s); return isNaN(d) ? null : sod(d);
+}
+const thDate = d => d ? d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '-';
+const daysLeft = d => d ? Math.round((d - TODAY)/86400000) : null;
+function dueBadge(d, finished){
+  if (finished) return h('span',{class:'badge ok',text:'✓ ครบแล้ว'});
+  const n = daysLeft(d);
+  if (n == null) return h('span',{class:'badge',text:'ไม่ระบุ Due'});
+  if (n < 0) return h('span',{class:'badge bad',text:`เลยกำหนด ${-n} วัน`});
+  if (n === 0) return h('span',{class:'badge warn',text:'ครบกำหนดวันนี้'});
+  if (n === 1) return h('span',{class:'badge warn',text:'ครบกำหนดพรุ่งนี้'});
+  return h('span',{class:'badge',text:`อีก ${n} วัน`});
+}
+const pctTxt = p => Math.round(p*100) + '%';
+const splitLinks = s => String(s||'').split(/\s+/).filter(u=>/^https?:\/\//.test(u));
+function linkLabel(u){ return /forms\.gle|\/forms\//.test(u)?'ฟอร์ม':/spreadsheets/.test(u)?'ชีต':/document/.test(u)?'เอกสาร':/presentation/.test(u)?'สไลด์':/drive\.google/.test(u)?'โฟลเดอร์':/lookerstudio|datastudio/.test(u)?'Dashboard':'ลิงก์'; }
+function linkBtns(t, primary, verb){ const L = splitLinks(t.link); return L.map((u,i)=>h('a',{class:'btn'+(primary&&i===0?' primary':''),href:u,target:'_blank',rel:'noopener',text:(L.length>1?`${verb} ${linkLabel(u)}`:verb)+' ↗'})); }
+const barCls = p => p >= 1 ? 'ok' : p >= .7 ? '' : p >= .4 ? 'warn' : 'bad';
+const bar = p => h('div',{class:'bar '+barCls(p)}, h('span',{style:`width:${Math.max(2,Math.round(p*100))}%`}));
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800); }
+async function copy(text){
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ const ta=h('textarea',{style:'position:fixed;opacity:0'}); ta.value=text; document.body.append(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); }
+  toast('คัดลอกแล้ว – วางในไลน์ได้เลย');
+}
+function kpi(label, val, note, cls){ return h('div',{class:'kpi '+(cls||'')}, h('div',{class:'lbl',text:label}), h('div',{class:'val',text:val}), note ? h('div',{class:'note',text:note}) : null); }
+
+/* ---------- ข้อมูลตัวอย่าง (แทนที่ด้วย Google Sheet ได้) ---------- */
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function sampleData(){
+  const r = rng(11);
+  const upper = ['เชียงใหม่ นิมมาน','เชียงใหม่ เซ็นทรัลแอร์พอร์ต','เชียงใหม่ สันทราย','เชียงใหม่ หางดง','เชียงใหม่ ฝาง','เชียงใหม่ จอมทอง','ลำพูน','ลำปาง เมือง','ลำปาง เกาะคา','เชียงราย เมือง','เชียงราย แม่สาย','เชียงราย เทิง','พะเยา','พะเยา เชียงคำ','แพร่','แพร่ ลอง','น่าน','น่าน ปัว','แม่ฮ่องสอน','แม่ฮ่องสอน ปาย'];
+  const lower = ['พิษณุโลก เมือง','พิษณุโลก วังทอง','สุโขทัย','สุโขทัย สวรรคโลก','ตาก แม่สอด','อุตรดิตถ์','กำแพงเพชร','พิจิตร','นครสวรรค์ เมือง','นครสวรรค์ ตาคลี','อุทัยธานี','เพชรบูรณ์'];
+  const branches = [
+    ...upper.map((n,i)=>({code:'UN'+String(i+1).padStart(2,'0'), name:n, area:'Upper North'})),
+    ...lower.map((n,i)=>({code:'LN'+String(i+1).padStart(2,'0'), name:n, area:'Lower North'}))];
+  const tasks = [
+    {task_id:'T001',title:'แบบสำรวจสต็อกสินค้าสิ้นเดือน',type:'Google Form',link:'https://forms.google.com/',detail:'นับสต็อกเครื่อง/ซิม/อุปกรณ์เสริม แล้วกรอกผ่านฟอร์ม 1 ครั้งต่อสาขา',assigned:plus(-2),due:plus(1),branches:'ALL',rate:.65},
+    {task_id:'T002',title:'กรอกยอดขาย Prepay ประจำวัน',type:'Dashboard',link:'https://docs.google.com/spreadsheets/',detail:'ลงยอดขายซิม Prepay ของเมื่อวานในชีตบันทึกข้อมูล ภายใน 11:00 น.',assigned:plus(0),due:plus(0),branches:'ALL',rate:.55},
+    {task_id:'T003',title:'อัปเดตแผนกิจกรรมหน้าร้าน พ.ย.',type:'Google Doc',link:'https://docs.google.com/document/',detail:'เติมแผนกิจกรรมของสาขาลงในเอกสารกลาง (ตารางของสาขาตัวเอง)',assigned:plus(-5),due:plus(-1),branches:'ALL',rate:.8,partial:true},
+    {task_id:'T004',title:'ส่งรูปการจัดหน้าร้าน Campaign 11.11',type:'Google Form',link:'https://forms.google.com/',detail:'ถ่ายรูปหน้าร้าน 3 มุม + จุดวางโปรโมชัน แนบผ่านฟอร์ม',assigned:plus(-1),due:plus(2),branches:'ALL',rate:.35},
+    {task_id:'T005',title:'ตอบแบบประเมินความพึงพอใจลูกค้า',type:'Google Form',link:'https://forms.google.com/',detail:'ผู้จัดการสาขาตอบแบบประเมินรอบไตรมาส',assigned:plus(-3),due:plus(4),branches:'ALL',rate:.4},
+    {task_id:'T006',title:'ลงข้อมูลลูกค้า Rescue',type:'Dashboard',link:'https://docs.google.com/spreadsheets/ https://docs.google.com/document/',detail:'เฉพาะสาขาที่มีรายชื่อลูกค้า Rescue ให้บันทึกผลการติดต่อ',assigned:plus(-2),due:plus(5),branches:'UN01,UN02,UN05,UN10,LN01,LN05,LN09',rate:.45,partial:true},
+    {task_id:'T008',title:'สำรวจราคาคู่แข่งโซนล่าง',type:'Google Form',link:'https://forms.google.com/',detail:'เฉพาะ Lower North: เก็บราคาโปรโมชันคู่แข่ง 3 ราย',assigned:plus(-1),due:plus(3),branches:'Lower North',rate:.5},
+    {task_id:'T009',title:'รายงานกิจกรรมงานกาชาด',type:'Google Doc',link:'https://docs.google.com/document/',detail:'เฉพาะ Upper North: สรุปยอดและรูปกิจกรรมออกบูธ',assigned:plus(-2),due:plus(2),branches:'Upper North',rate:.6},
+    {task_id:'T007',title:'ยืนยันรายชื่อพนักงานเข้าอบรม',type:'Google Sheet',link:'https://docs.google.com/spreadsheets/',detail:'ใส่ชื่อพนักงานที่จะเข้าอบรมประจำเดือน',assigned:plus(-7),due:plus(-3),branches:'ALL',rate:1}
+  ];
+  const done = [];
+  tasks.forEach(t => {
+    const target = t.branches === 'ALL' ? branches : branches.filter(b => t.branches.split(',').includes(b.code) || b.area === t.branches);
+    target.forEach(b => { const x = r(); if (x < t.rate) done.push({task_id:t.task_id,branch_code:b.code,status:'done'}); else if (t.partial && x < t.rate + .15) done.push({task_id:t.task_id,branch_code:b.code,status:'partial'}); });
+  });
+  const exams = [
+    {exam_id:'E01',title:'สอบ Product Knowledge – มือถือรุ่นใหม่',link:'https://forms.google.com/',due:plus(6),pass_score:'80'},
+    {exam_id:'E02',title:'สอบ Compliance & PDPA ประจำไตรมาส',link:'https://forms.google.com/',due:plus(11),pass_score:'70'}
+  ];
+  const first = ['สมชาย','สุดารัตน์','ณัฐพล','พิมพ์ชนก','กิตติพงษ์','วรรณา','อรุณี','ปิยะพงษ์','ธนากร','มาลัย','ศิริพร','ชัยวัฒน์','นภัสสร','วิทยา','จิราพร','อนุชา','กมลชนก','ภานุวัฒน์'];
+  const staff = []; let id = 1001;
+  branches.forEach(b => { const n = 4 + Math.floor(r()*5); for (let i=0;i<n;i++) staff.push({emp_id:String(id++), name:first[Math.floor(r()*first.length)]+' '+'กขคงจฉชซ'[Math.floor(r()*8)]+'.', branch_code:b.code, position:i===0?'ผู้จัดการสาขา':'พนักงานขาย'}); });
+  const results = [];
+  exams.forEach((e,ei) => { const p = ei===0 ? .7 : .35; staff.forEach(s => { if (r() < p) results.push({exam_id:e.exam_id, emp_id:s.emp_id, score:String(55+Math.floor(r()*46))}); }); });
+  return {branches, tasks, done, exams, staff, results};
+}
+
+/* ---------- โหลดจาก Google Sheet ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[], f='', q=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (q){ if (c=='"'){ if (text[i+1]=='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if (c=='"') q=true;
+    else if (c==','){ row.push(f); f=''; }
+    else if (c=='\n'){ row.push(f); rows.push(row); row=[]; f=''; }
+    else if (c!='\r') f+=c;
+  }
+  if (f!=='' || row.length){ row.push(f); rows.push(row); }
+  const head = (rows.shift()||[]).map(s=>s.trim());
+  return rows.filter(r=>r.some(v=>v.trim()!=='')).map(r=>Object.fromEntries(head.map((k,i)=>[k,(r[i]||'').trim()])));
+}
+async function loadSheet(){
+  const out = {};
+  for (const [key, tab] of Object.entries(CONFIG.tabs)){
+    const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+    const res = await fetch(url); if (!res.ok) throw new Error(tab);
+    out[key] = parseCSV(await res.text());
+  }
+  return out;
+}
+
+/* ---------- คำนวณ ---------- */
+let D, MODEL, AREA = 'ALL';
+const norm = s => String(s||'').toLowerCase().replace(/[\s_\-]+/g,'');
+const initials = s => String(s||'').split(/\s+/).map(w=>w[0]||'').join('').toLowerCase();
+const areaOf = b => (b.area || b.zone || '').trim() || 'ไม่ระบุ Area';
+function allAreas(){ return [...new Set(D.branches.filter(b=>b.code).map(areaOf))]; }
+function targetsOf(t, branches, bmapAll){
+  const raw = (t.branches||'').trim();
+  if (!raw || /^(all|ทุกสาขา)$/i.test(raw)) return branches;
+  const set = new Set();
+  raw.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean).forEach(tok => {
+    const n = norm(tok);
+    const byArea = branches.filter(b => norm(areaOf(b))===n || initials(areaOf(b))===n);
+    if (byArea.length) byArea.forEach(b=>set.add(b.code));
+    else tok.split(/\s+/).forEach(c => { if (bmapAll[c.toUpperCase()] || bmapAll[c]) set.add(bmapAll[c.toUpperCase()] ? c.toUpperCase() : c); });
+  });
+  return branches.filter(b=>set.has(b.code));
+}
+function build(data){
+  const allBr = data.branches.filter(b=>b.code);
+  const bmapAll = Object.fromEntries(allBr.map(b=>[b.code,b]));
+  const branches = AREA==='ALL' ? allBr : allBr.filter(b=>areaOf(b)===AREA);
+  const bmap = Object.fromEntries(branches.map(b=>[b.code,b]));
+  const doneMap = {};
+  data.done.forEach(d => { const st = (d.status||'done').toLowerCase().includes('partial') || d.status==='บางส่วน' ? 'partial' : 'done'; doneMap[d.task_id+'|'+d.branch_code] = st; });
+  const tasks = data.tasks.filter(t=>t.task_id).map(t => {
+    const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code]);
+    const due = parseDate(t.due);
+    const per = list.map(b => ({b, st: doneMap[t.task_id+'|'+b.code] || 'pending'}));
+    const doneN = per.filter(x=>x.st==='done').length;
+    const pending = per.filter(x=>x.st!=='done');
+    const pct = list.length ? doneN/list.length : 1;
+    const complete = pending.length === 0;
+    const dl = daysLeft(due);
+    return {...t, due, list, per, doneN, pending, pct, complete, overdue: !complete && dl!=null && dl<0, soon: !complete && dl!=null && dl>=0 && dl<=1};
+  }).filter(t => t.list.length);
+  const passOf = e => Number(e.pass_score) || 0;
+  const exams = data.exams.filter(e=>e.exam_id).map(e => {
+    const res = {}; data.results.filter(x=>x.exam_id===e.exam_id).forEach(x => { const s = Number(x.score); if (!(x.emp_id in res) || s > res[x.emp_id]) res[x.emp_id] = s; });
+    return {...e, due: parseDate(e.due), res, pass: passOf(e)};
+  });
+  return {branches, bmap, tasks, exams, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
+}
+function lineMsg(t){
+  const dl = daysLeft(t.due);
+  const when = t.due ? (dl<0 ? `เลยกำหนดมาแล้ว ${-dl} วัน (Due ${thDate(t.due)})` : dl===0 ? `ครบกำหนดวันนี้` : `ครบกำหนด ${thDate(t.due)}`) : '';
+  return `📌 ติดตามงาน: ${t.title}${AREA!=='ALL'?' ['+AREA+']':''}\n${when}\nยังไม่ดำเนินการ ${t.pending.length}/${t.list.length} สาขา:\n` +
+    t.pending.map(x=>`• ${x.b.name}${x.st==='partial'?' (ทำบางส่วน)':''}`).join('\n') +
+    (splitLinks(t.link).length ? `\n\nลิงก์:\n${splitLinks(t.link).join('\n')}` : '') + `\nรบกวนดำเนินการด้วยครับ/ค่ะ 🙏`;
+}
+
+/* ---------- TAB 1: สรุปทุกงาน ---------- */
+let sumFilter = 'open';
+function renderSummary(){
+  const T = MODEL.tasks;
+  const open = T.filter(t=>!t.complete);
+  const totalSlots = T.reduce((a,t)=>a+t.list.length,0), doneSlots = T.reduce((a,t)=>a+t.doneN,0);
+  const overall = totalSlots ? doneSlots/totalSlots : 0;
+  $('#sum-kpis').replaceChildren(
+    kpi('งานทั้งหมด', T.length, `ยังค้าง ${open.length} งาน`),
+    kpi('Progress รวม', pctTxt(overall), `${doneSlots}/${totalSlots} รายการ (งาน × สาขา)`, overall>=.8?'ok':''),
+    kpi('งานเลยกำหนดที่ยังค้าง', T.filter(t=>t.overdue).length, 'ต้องตามด่วน', 'bad'),
+    kpi('ครบกำหนดวันนี้–พรุ่งนี้', T.filter(t=>t.soon).length, 'ยังมีสาขาค้าง', 'warn')
+  );
+  const areas = [...new Set(MODEL.branches.map(areaOf))];
+  $('#sum-areas').replaceChildren(...(areas.length > 1 ? [h('div',{class:'area-cards'}, areas.map(a => {
+    let tot=0, dn=0, over=0, pendB=new Set();
+    T.forEach(t => t.per.forEach(x => { if (areaOf(x.b)!==a) return; tot++; if (x.st==='done') dn++; else { pendB.add(x.b.code); if (t.due && daysLeft(t.due)<0) over++; } }));
+    const p = tot ? dn/tot : 1;
+    return h('div',{class:'card',style:'cursor:pointer;margin:0',onclick:()=>setArea(a)},
+      h('div',{class:'t-title',text:'📍 '+a}),
+      h('div',null, h('span',{class:'pct',text:pctTxt(p)}), h('span',{class:'small',text:`  ${dn}/${tot} รายการ`})), bar(p),
+      h('div',{class:'small',text:`สาขาที่ยังค้างงาน ${pendB.size}/${MODEL.branches.filter(b=>areaOf(b)===a).length} สาขา · เลยกำหนด ${over} รายการ`}));
+  }))] : []));
+  const type = $('#sum-type').value, q = $('#sum-q').value.trim().toLowerCase();
+  let list = T.filter(t =>
+    (sumFilter==='all') || (sumFilter==='open' && !t.complete) || (sumFilter==='overdue' && t.overdue) || (sumFilter==='done' && t.complete));
+  if (type) list = list.filter(t=>t.type===type);
+  if (q) list = list.filter(t=>(t.title+' '+t.task_id).toLowerCase().includes(q));
+  list.sort((a,b)=> (a.complete-b.complete) || ((a.due||Infinity)-(b.due||Infinity)) || (a.pct-b.pct));
+  const box = $('#sum-list');
+  if (!list.length){ box.replaceChildren(h('div',{class:'empty',text:'ไม่มีงานในมุมมองนี้ 🎉'})); }
+  else box.replaceChildren(...list.map(t => h('div',{class:'card '+(t.complete?'complete':t.overdue?'overdue':t.soon?'soon':'')},
+    h('div',{class:'task-grid'},
+      h('div',null,
+        h('div',{class:'t-title',text:t.title}),
+        h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete)),
+        t.detail ? h('div',{class:'detail',text:t.detail}) : null),
+      h('div',null,
+        h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
+        bar(t.pct),
+        h('div',{class:'small',text: t.complete ? 'ครบทุกสาขาแล้ว' : `ค้าง ${t.pending.length} สาขา`})),
+      h('div',null,
+        t.complete ? h('div',{class:'small',text:'—'}) :
+        h('div',null, h('div',{class:'small',text:'สาขาที่ยังไม่ดำเนินการ (กดเพื่อดูรายสาขา)'}),
+          h('div',{class:'chips'}, t.pending.map(x => h('button',{class:'chip '+(x.st==='partial'?'partial':''), title:x.st==='partial'?'ทำบางส่วน':'ยังไม่ทำ', onclick:()=>goBranch(x.b.code), text:x.b.name+(x.st==='partial'?' ½':'')})))),
+        h('div',{class:'actions'},
+          ...linkBtns(t,false,'เปิด'),
+          t.complete ? null : h('button',{class:'btn primary',onclick:()=>copy(lineMsg(t)),text:'📋 คัดลอกข้อความตามงาน'}))))
+  )));
+  // ranking
+  const rows = MODEL.branches.map(b => {
+    const mine = T.filter(t=>t.list.includes(b));
+    const pend = mine.filter(t=>t.per.find(x=>x.b===b).st!=='done');
+    return {b, total:mine.length, pend:pend.length, over:pend.filter(t=>t.due && daysLeft(t.due)<0).length, pct: mine.length ? 1-pend.length/mine.length : 1};
+  }).sort((a,b)=> b.over-a.over || b.pend-a.pend || a.pct-b.pct);
+  $('#rank').replaceChildren(
+    h('thead',null,h('tr',null, h('th',{text:'สาขา'}), h('th',{text:'Area'}), h('th',{class:'num',text:'งานทั้งหมด'}), h('th',{class:'num',text:'ค้าง'}), h('th',{class:'num',text:'เลยกำหนด'}), h('th',{style:'min-width:160px',text:'Progress'}))),
+    h('tbody',null, rows.map(x => h('tr',{class:'click',onclick:()=>goBranch(x.b.code)},
+      h('td',null, h('b',{text:x.b.name}), h('span',{class:'small',text:'  '+x.b.code})),
+      h('td',{class:'small',text:areaOf(x.b)}),
+      h('td',{class:'num',text:x.total}),
+      h('td',{class:'num',text:x.pend}),
+      h('td',{class:'num',style:x.over?'color:var(--bad);font-weight:700':'',text:x.over}),
+      h('td',null, h('div',{class:'small',text:pctTxt(x.pct)}), bar(x.pct)))))
+  );
+}
+
+/* ---------- TAB 2: รายสาขา ---------- */
+function renderBranch(){
+  const code = $('#br-select').value, b = MODEL.bmap[code]; if (!b) return;
+  const mine = MODEL.tasks.filter(t=>t.list.includes(b)).map(t=>({t, st:t.per.find(x=>x.b===b).st}));
+  const pend = mine.filter(x=>x.st!=='done').sort((a,c)=>(a.t.due||Infinity)-(c.t.due||Infinity));
+  const done = mine.filter(x=>x.st==='done').sort((a,c)=>(c.t.due||0)-(a.t.due||0));
+  const over = pend.filter(x=>x.t.due && daysLeft(x.t.due)<0);
+  const p = mine.length ? done.length/mine.length : 1;
+  $('#br-kpis').replaceChildren(
+    kpi('Progress ของสาขา', pctTxt(p), `เสร็จ ${done.length} จาก ${mine.length} งาน`, p>=.8?'ok':''),
+    kpi('ค้างดำเนินการ', pend.length, 'งานที่ต้องทำ', pend.length?'warn':'ok'),
+    kpi('เลยกำหนดแล้ว', over.length, over.length?'ทำด่วน!':'ไม่มี 👍', over.length?'bad':'ok'),
+    ...MODEL.exams.filter(e=>!e.due || daysLeft(e.due)>=-7).map(e => {
+      const st = MODEL.staff.filter(s=>s.branch_code===code), took = st.filter(s=>s.emp_id in e.res).length;
+      return kpi('สอบ: '+e.title, `${took}/${st.length} คน`, 'Due '+thDate(e.due), took===st.length?'ok':'');
+    })
+  );
+  const card = (x, isDone) => h('div',{class:'card '+(isDone?'complete':(x.t.due&&daysLeft(x.t.due)<0)?'overdue':(x.t.due&&daysLeft(x.t.due)<=1)?'soon':'')},
+    h('div',{class:'t-title',text:x.t.title}),
+    h('div',{class:'meta'},
+      h('span',{class:'badge',text:x.t.task_id}), h('span',{class:'badge type',text:x.t.type||'-'}),
+      h('span',{class:'badge',text:'Due '+thDate(x.t.due)}),
+      isDone ? h('span',{class:'badge ok',text:'✓ ดำเนินการแล้ว'}) : x.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : null,
+      isDone ? null : dueBadge(x.t.due,false)),
+    x.t.detail ? h('div',{class:'detail',text:x.t.detail}) : null,
+    splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
+  $('#br-body').replaceChildren(
+    h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
+    pend.length ? h('div',null, pend.map(x=>card(x,false))) : h('div',{class:'empty',text:'ไม่มีงานค้าง เยี่ยมมาก! 🎉'}),
+    h('h2',{text:`✅ ดำเนินการแล้ว (${done.length})`}),
+    done.length ? h('div',null, done.map(x=>card(x,true))) : h('div',{class:'empty',text:'ยังไม่มีงานที่ดำเนินการแล้ว'})
+  );
+}
+function goBranch(code){ $('#br-select').value = code; showTab('branch'); }
+
+/* ---------- TAB 3: การสอบ ---------- */
+function renderExam(){
+  const e = MODEL.exams.find(x=>x.exam_id===$('#ex-select').value); if (!e) return;
+  const fb = $('#ex-branch').value;
+  const brs = MODEL.branches.filter(b=>!fb || b.code===fb);
+  const rows = brs.map(b => {
+    const st = MODEL.staff.filter(s=>s.branch_code===b.code);
+    const took = st.filter(s=>s.emp_id in e.res), passed = took.filter(s=>e.res[s.emp_id] >= e.pass), notYet = st.filter(s=>!(s.emp_id in e.res)), failed = took.filter(s=>e.res[s.emp_id] < e.pass);
+    return {b, st, took, passed, notYet, failed, pct: st.length ? took.length/st.length : 1};
+  }).sort((a,c)=>a.pct-c.pct);
+  const all = rows.reduce((a,r)=>({n:a.n+r.st.length, t:a.t+r.took.length, p:a.p+r.passed.length}),{n:0,t:0,p:0});
+  const el0 = splitLinks(e.link)[0]; $('#ex-open').href = el0 || '#'; $('#ex-open').style.display = el0 ? '' : 'none';
+  $('#ex-kpis').replaceChildren(
+    kpi('สอบแล้ว', pctTxt(all.n?all.t/all.n:0), `${all.t}/${all.n} คน`, all.t===all.n?'ok':''),
+    kpi('ผ่านเกณฑ์', all.p+' คน', `เกณฑ์ผ่าน ${e.pass} คะแนน`, 'ok'),
+    kpi('ยังไม่สอบ', (all.n-all.t)+' คน', `${rows.filter(r=>r.notYet.length).length} สาขายังสอบไม่ครบ`, all.n-all.t?'warn':'ok'),
+    kpi('กำหนดส่ง', thDate(e.due), daysLeft(e.due)<0?`เลยกำหนด ${-daysLeft(e.due)} วัน`:`อีก ${daysLeft(e.due)} วัน`, daysLeft(e.due)<0?'bad':'')
+  );
+  $('#ex-table').replaceChildren(
+    h('thead',null,h('tr',null, h('th',{text:'สาขา'}), h('th',{class:'num',text:'พนักงาน'}), h('th',{class:'num',text:'สอบแล้ว'}), h('th',{class:'num',text:'ผ่าน'}), h('th',{style:'min-width:150px',text:'Progress'}), h('th',{text:'ยังไม่สอบ / ไม่ผ่าน'}))),
+    h('tbody',null, rows.map(r => h('tr',null,
+      h('td',null, h('b',{text:r.b.name}), h('div',{class:'small',text:r.b.code+' · '+areaOf(r.b)})),
+      h('td',{class:'num',text:r.st.length}), h('td',{class:'num',text:r.took.length}), h('td',{class:'num',text:r.passed.length}),
+      h('td',null, h('div',{class:'small',text:pctTxt(r.pct)}), bar(r.pct)),
+      h('td',null,
+        r.notYet.length ? h('div',{class:'names',text:'ยังไม่สอบ: '+r.notYet.map(s=>s.name).join(', ')}) : h('div',{class:'small',style:'color:var(--ok)',text:'✓ สอบครบทุกคน'}),
+        r.failed.length ? h('div',{class:'small',style:'color:#8a5a00',text:'ไม่ผ่าน: '+r.failed.map(s=>`${s.name} (${e.res[s.emp_id]})`).join(', ')}) : null))))
+  );
+  $('#ex-copy').onclick = () => {
+    const pend = rows.filter(r=>r.notYet.length);
+    copy(`📝 ติดตามการสอบ: ${e.title}${AREA!=='ALL'?' ['+AREA+']':''}\nกำหนดส่ง ${thDate(e.due)} | สอบแล้ว ${all.t}/${all.n} คน\n\nรายชื่อที่ยังไม่สอบ:\n` +
+      pend.map(r=>`▪️ ${r.b.name} (${r.notYet.length} คน): ${r.notYet.map(s=>s.name).join(', ')}`).join('\n') + (splitLinks(e.link)[0]?`\n\nลิงก์สอบ: ${splitLinks(e.link)[0]}`:''));
+  };
+}
+
+/* ---------- Area ---------- */
+function renderAreaBar(){
+  const areas = allAreas();
+  if (areas.length < 2){ $('#areas').replaceChildren(); return; }
+  const btn = (val, label) => h('button',{class:'area-btn'+(AREA===val?' active':''),onclick:()=>setArea(val),text:label});
+  $('#areas').replaceChildren(btn('ALL','ทุก Area'), ...areas.map(a=>btn(a,'📍 '+a)));
+}
+function fillSelects(){
+  const keepBr = $('#br-select').value, keepEx = $('#ex-select').value, keepType = $('#sum-type').value;
+  const types = [...new Set(MODEL.tasks.map(t=>t.type).filter(Boolean))];
+  $('#sum-type').replaceChildren(h('option',{value:'',text:'ทุกประเภทงาน'}), ...types.map(t=>h('option',{value:t,text:t})));
+  if (types.includes(keepType)) $('#sum-type').value = keepType;
+  const groups = [...new Set(MODEL.branches.map(areaOf))];
+  const opts = (fmt) => groups.length > 1
+    ? groups.map(a => h('optgroup',{label:a}, MODEL.branches.filter(b=>areaOf(b)===a).map(fmt)))
+    : MODEL.branches.map(fmt);
+  $('#br-select').replaceChildren(...opts(b=>h('option',{value:b.code,text:`${b.code} – ${b.name}`})));
+  if (MODEL.bmap[keepBr]) $('#br-select').value = keepBr;
+  $('#ex-select').replaceChildren(...MODEL.exams.map(e=>h('option',{value:e.exam_id,text:e.title})));
+  if (keepEx) $('#ex-select').value = keepEx;
+  $('#ex-branch').replaceChildren(h('option',{value:'',text: AREA==='ALL' ? 'ทุกสาขา' : 'ทุกสาขาใน '+AREA}), ...opts(b=>h('option',{value:b.code,text:b.name})));
+}
+function setArea(a){
+  AREA = a; try { localStorage.setItem('tt-area', a); } catch(e){}
+  MODEL = build(D); renderAreaBar(); fillSelects();
+  renderSummary(); renderExam();
+  if (!$('#tab-branch').hidden) renderBranch();
+}
+
+/* ---------- tabs & init ---------- */
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  ['summary','branch','exam'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  if (name==='branch'){ renderBranch(); try{ history.replaceState(null,'','#br-'+$('#br-select').value); }catch(e){} }
+  else { try{ history.replaceState(null,'','#'+name); }catch(e){} }
+  window.scrollTo(0,0);
+}
+async function init(){
+  $('#today').textContent = 'ข้อมูล ณ ' + TODAY.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  if (CONFIG.sheetId){
+    try { D = await loadSheet(); $('#src').textContent='เชื่อม Google Sheet แล้ว'; $('#src').classList.add('live'); }
+    catch(e){ D = sampleData(); $('#banner').replaceChildren(h('div',{class:'banner',text:'โหลด Google Sheet ไม่สำเร็จ (ตรวจสอบการแชร์และชื่อแท็บ) – กำลังแสดงข้อมูลตัวอย่าง'})); }
+  } else D = sampleData();
+  try { const a = localStorage.getItem('tt-area'); if (a && (a==='ALL' || allAreas().includes(a))) AREA = a; } catch(e){}
+  MODEL = build(D);
+  renderAreaBar(); fillSelects();
+
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ sumFilter=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('active',x===b)); renderSummary(); });
+  $('#sum-type').onchange = renderSummary; $('#sum-q').oninput = renderSummary;
+  $('#br-select').onchange = () => showTab('branch');
+  $('#br-link').onclick = () => copy(location.href.split('#')[0] + '#br-' + $('#br-select').value);
+  $('#ex-select').onchange = renderExam; $('#ex-branch').onchange = renderExam;
+
+  renderSummary(); renderExam();
+  const hash = location.hash.slice(1);
+  if (hash.startsWith('br-')){
+    const c = hash.slice(3), b = D.branches.find(x=>x.code===c);
+    if (b && !MODEL.bmap[c]){ AREA = areaOf(b); MODEL = build(D); renderAreaBar(); fillSelects(); renderSummary(); renderExam(); }
+    if (MODEL.bmap[c]) $('#br-select').value = c; showTab('branch'); }
+  else if (hash==='exam') showTab('exam');
+}
+init();
+</script>
+</body>
+</html>
