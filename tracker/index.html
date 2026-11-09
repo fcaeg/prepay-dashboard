@@ -403,9 +403,19 @@ function build(data){
     return {...t, date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
   }).filter(t => t.date && (AREA==='ALL' || t.att.length))
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
+  const todayIso = iso(TODAY);
   const daily = (data.daily||[]).filter(d => d.title && !/^(n|no|ไม่|0|false)$/i.test(String(d.active||'').trim())).map(d => {
-    const list = targetsOf(d, allBr, bmapAll).filter(b=>bmap[b.code]);
-    return {...d, list, deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY), frequency: d.frequency || 'Daily'};
+    const tracked = String(d.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
+    const list = targetsOf(d, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
+    const flag = String(d.auto_check||'').trim();
+    const auto = /^(y|yes|✓|true|1|ใช่)$/i.test(flag) || (!flag && String(d.check_tab||'').trim() !== '');
+    // สถานะของวันนี้เท่านั้น (ผลตรวจของวันก่อนไม่นับ)
+    const st = {}; (data.done||[]).forEach(x => { if (x.task_id===d.daily_id && String(x.updated||'').slice(0,10)===todayIso) st[x.branch_code] = String(x.status||'done').includes('partial') ? 'partial' : 'done'; });
+    const checkedToday = String(d.check_log||'').slice(0,10)===todayIso;
+    const per = list.map(b => ({b, st: st[b.code] || 'pending'}));
+    const doneN = per.filter(x=>x.st==='done').length;
+    return {...d, list, per, doneN, pending: per.filter(x=>x.st!=='done'), auto, checkedToday,
+      deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY), frequency: d.frequency || 'Daily'};
   }).filter(d => d.list.length).sort((a,b)=> (a.deadline||'99').localeCompare(b.deadline||'99'));
   return {branches, bmap, tasks, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
 }
@@ -513,7 +523,7 @@ function renderBranch(){
     x.t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:x.t.detail}) : null,
     attachBox(x.t),
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
-  const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b));
+  const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b)).map(d => ({...d, _me: d.per.find(x=>x.b===b)}));
   $('#br-body').replaceChildren(
     ...(myDaily.length ? [h('h2',{text:`📅 งานประจำที่ต้องทำวันนี้ (${myDaily.length})`}), h('div',null, myDaily.map(d=>dailyCard(d,true)))] : []),
     h('h2',{text:`⏳ ค้างดำเนินการ (${pend.length})`}),
@@ -603,7 +613,14 @@ function dailyCard(d, compact){
     h('div',{class:'t-title',text:d.title}),
     h('div',{class:'meta'}, deadlineBadge(d), h('span',{class:'badge type',text:'🔁 '+d.frequency}), h('span',{class:'badge',text:'📅 '+(d.days||'ทุกวัน')}), compact?null:h('span',{class:'badge',text:'🏪 '+scopeTxt(d)})),
     d.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:d.detail}) : null,
-    splitLinks(d.link).length ? h('div',{class:'actions'}, linkBtns(d,true,'เปิดลิงก์')) : null);
+    (d.auto && d.today && !compact) ? (d.checkedToday ? h('div',{style:'margin-top:8px'},
+        h('div',null, h('span',{class:'pct',text:pctTxt(d.list.length?d.doneN/d.list.length:1)}), h('span',{class:'small',text:`  ทำแล้ววันนี้ ${d.doneN}/${d.list.length} สาขา · 🔄 ตรวจล่าสุด ${String(d.check_log).slice(11,16)}`})),
+        bar(d.list.length?d.doneN/d.list.length:1),
+        d.pending.length ? h('div',{class:'chips'}, d.pending.map(x => h('button',{class:'chip '+(x.st==='partial'?'partial':''),onclick:()=>goBranch(x.b.code),text:x.b.name+(x.st==='partial'?' ½':'')}))) : h('div',{class:'small',style:'color:var(--ok)',text:'✓ ครบทุกสาขาแล้ววันนี้'}))
+      : h('div',{class:'small',style:'margin-top:6px',text:'🔄 ตรวจอัตโนมัติ – ยังไม่มีผลตรวจของวันนี้'})) : null,
+    (d.auto && d.today && compact && d.checkedToday && d._me) ? h('div',{style:'margin-top:6px'}, d._me.st==='done' ? h('span',{class:'badge ok',text:'✓ ทำแล้ววันนี้'}) : d._me.st==='partial' ? h('span',{class:'badge warn',text:'½ ทำบางส่วน'}) : h('span',{class:'badge bad',text:'ยังไม่ทำวันนี้'})) : null,
+    h('div',{class:'actions'}, splitLinks(d.link).length ? linkBtns(d,true,'เปิดลิงก์') : null,
+      (!compact && d.auto && d.today && d.checkedToday && d.pending.length) ? h('button',{class:'btn',onclick:()=>copy(`📌 ${d.title} (${thDay(TODAY)})\nยังไม่ดำเนินการ ${d.pending.length}/${d.list.length} สาขา:\n`+d.pending.map(x=>'• '+x.b.name+(x.st==='partial'?' (บางส่วน)':'')).join('\n')+(splitLinks(d.link)[0]?'\n\nลิงก์: '+splitLinks(d.link)[0]:'')+'\nรบกวนดำเนินการด้วยครับ/ค่ะ 🙏'),text:'📋 คัดลอกข้อความตามสาขาที่ค้าง'}) : null));
 }
 function dailyMsg(){
   const ds = MODEL.daily.filter(d=>d.today);

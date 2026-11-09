@@ -16,7 +16,7 @@ const TABS = {
   results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
   attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
-  daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active']]
+  daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']]
 };
 
 const Q = {
@@ -407,11 +407,16 @@ function parseLineMessage(raw, now) {
  * ผลตรวจเขียนลงแท็บ Done (note = auto) และสรุปไว้ใน check_log
  * แถวใน Done ที่คุณใส่เอง (note ไม่ใช่ auto) จะไม่ถูกแตะ */
 function autoCheck() {
+  checkSheet_(TABS.tasks[0], 'task_id');
+  checkSheet_(TABS.daily[0], 'daily_id');
+}
+
+function checkSheet_(tabName, idCol) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const tsh = ss.getSheetByName(TABS.tasks[0]);
+  const tsh = ss.getSheetByName(tabName);
   if (!tsh || tsh.getLastRow() < 2) return;
   let head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
-  ['check_log', 'tracked_branches'].forEach(h => {          // เติมคอลัมน์ที่ยังไม่มีเอง ไม่ต้อง Run setup
+  ['auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches'].forEach(h => {   // เติมคอลัมน์ที่ยังไม่มีเอง
     if (!head.includes(h)) { tsh.getRange(1, head.length + 1).setValue(h).setFontWeight('bold').setBackground('#e8eeff'); head.push(h); }
   });
   const C = n => head.indexOf(n);
@@ -421,16 +426,19 @@ function autoCheck() {
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
 
   rows.forEach((r, i) => {
-    if (!/^(y|yes|✓|true|1|ใช่)$/i.test(String(r[C('auto_check')] || '').trim())) return;
-    const tid = r[C('task_id')];
+    const flag = String(r[C('auto_check')] || '').trim();
+    const on = /^(y|yes|✓|true|1|ใช่)$/i.test(flag) || (!flag && String(r[C('check_tab')] || '').trim() !== '');  // กรอก check_tab = เปิดตรวจ
+    if (!on) return;
+    if (C('active') >= 0 && /^(n|no|ไม่|0|false)$/i.test(String(r[C('active')] || '').trim())) return;
+    const tid = r[C(idCol)];
     const links = String(r[C('link')] || '').split(/\s+/).filter(Boolean);
     let log, tracked = null;
     try {
       const book = openLinkedBook_(links);
       if (!book) throw new Error('เปิดลิงก์งานไม่ได้ (ต้องเป็น Google Sheet/Form ที่บัญชีนี้มีสิทธิ์)');
       const wanted = String(r[C('check_tab')] || '').split(',').map(x => x.trim()).filter(Boolean);
-      const sheets = wanted.length ? wanted.map(n => book.getSheetByName(n)).filter(Boolean) : book.getSheets();
-      if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', '));
+      const sheets = resolveTabs_(book, wanted);
+      if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', ') + ' | แท็บที่มี: ' + book.getSheets().map(x => x.getName()).slice(0, 15).join(', '));
       const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim() };
       const res = {}; let headers = []; const usedList = [];
       sheets.forEach(sh => {
@@ -446,10 +454,9 @@ function autoCheck() {
           const a = res[code] || {found: 0, done: 0}; a.found += st.found; a.done += st.done; res[code] = a;
         });
       });
-      // เขียน Done: ลบผล auto เดิมของงานนี้ แล้วเขียนใหม่
-      const dv = dsh.getLastRow() > 1 ? dsh.getRange(2, 1, dsh.getLastRow() - 1, 5).getValues() : [];
-      for (let k = dv.length - 1; k >= 0; k--) if (dv[k][0] === tid && dv[k][3] === 'auto') dsh.deleteRow(k + 2);
       tracked = Object.keys(res).join(',');      // สาขาที่มีอยู่ในลิงก์งาน = สาขาที่ต้องติดตาม
+      const dv = dsh.getLastRow() > 1 ? dsh.getRange(2, 1, dsh.getLastRow() - 1, 5).getValues() : [];
+      for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid && dv[k][3] === 'auto') dsh.deleteRow(k + 2);
       let nDone = 0, nPart = 0;
       Object.entries(res).forEach(([code, a]) => {
         if (!a.done) return;
@@ -464,6 +471,28 @@ function autoCheck() {
     tsh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
     if (tracked !== null) tsh.getRange(i + 2, C('tracked_branches') + 1).setValue(tracked);
   });
+}
+
+/* เลือกแท็บ: ชื่อตรงตัว หรือใช้ * แทนส่วนที่เปลี่ยน เช่น "Pending WW *"
+   ถ้ามีหลายแท็บตรงแบบ จะเลือกแท็บของวันนี้ (มีวันที่+เดือนของวันนี้ในชื่อ) ถ้าไม่มีใช้แท็บล่าสุด (ขวาสุด) */
+function resolveTabs_(book, wanted) {
+  const all = book.getSheets();
+  if (!wanted.length) return all;
+  const now = new Date(), d = now.getDate();
+  const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const THM = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const THS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const m = now.getMonth();
+  const todayRe = new RegExp('(^|\\D)0?' + d + '(?!\\d)\\s*[-/ ]?\\s*(' + [MON[m], MON[m].slice(0, 3), THM[m], THS[m].replace(/\./g, '\\.'), String(m + 1)].join('|') + ')(?![a-z])', 'i');
+  const out = [];
+  wanted.forEach(w => {
+    if (!w.includes('*')) { const sh = book.getSheetByName(w); if (sh) out.push(sh); return; }
+    const re = new RegExp('^' + w.split('*').map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$', 'i');
+    const hits = all.filter(sh => re.test(sh.getName()));
+    if (!hits.length) return;
+    out.push(hits.find(sh => todayRe.test(sh.getName())) || hits[hits.length - 1]);
+  });
+  return out;
 }
 
 function openLinkedBook_(links) {
@@ -638,7 +667,8 @@ function moveSelectedToDaily() {
     const raw = g('raw_message') || g('detail');
     const tm = (raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
     appendObj_(dsh, {daily_id: nextId(dsh, 'D'), title: g('title'), frequency: f, link: g('link'), detail: g('detail'),
-      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, raw, new Date()), branches: g('branches') || 'ALL', active: 'Y'});
+      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, raw, new Date()), branches: g('branches') || 'ALL', active: 'Y',
+      auto_check: g('auto_check'), check_tab: g('check_tab'), check_done_col: g('check_done_col'), check_done_value: g('check_done_value')});
     // ลบสถานะเดิมของงานนี้ในแท็บ Done แล้วลบแถวงาน
     const tid = g('task_id');
     if (done && done.getLastRow() > 1) {
