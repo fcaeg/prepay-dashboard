@@ -9,7 +9,7 @@
 
 const TABS = {
   branches: ['Branches', ['code', 'name', 'area']],
-  tasks:    ['Tasks',    ['task_id', 'title', 'type', 'link', 'detail', 'assigned', 'due', 'branches', 'raw_message', 'attachments']],
+  tasks:    ['Tasks',    ['task_id', 'title', 'type', 'link', 'detail', 'assigned', 'due', 'branches', 'raw_message', 'attachments', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log']],
   done:     ['Done',     ['task_id', 'branch_code', 'status', 'note', 'updated']],
   exams:    ['Exams',    ['exam_id', 'title', 'link', 'due', 'pass_score', 'raw_message', 'attachments']],
   staff:    ['Staff',    ['emp_id', 'name', 'branch_code', 'position']],
@@ -62,6 +62,8 @@ function setup() {
 
   ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'onTaskForm') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('onTaskForm').forSpreadsheet(ss).onFormSubmit().create();
+  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'autoCheck') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('autoCheck').timeBased().everyMinutes(30).create();
 
   SpreadsheetApp.flush();
   if (isNew) ss.getSheets().forEach(sh => { if (sh.getFormUrl && sh.getFormUrl()) sh.setName('_FormInput'); });
@@ -363,6 +365,123 @@ function parseLineMessage(raw, now) {
   };
 }
 
+/* ===================== ตรวจสถานะสาขาจากลิงก์งานอัตโนมัติ =====================
+ * เปิดใช้ต่องานในแท็บ Tasks:
+ *   auto_check       = Y
+ *   check_tab        = ชื่อแท็บในลิงก์งาน (หลายแท็บคั่นด้วย ,) เว้นว่าง = ทุกแท็บ
+ *   check_done_col   = หัวคอลัมน์ (หรือตัวอักษรคอลัมน์ เช่น K) ที่บอกว่าสาขาทำแล้ว
+ *                      เว้นว่าง = แค่มีชื่อ/รหัสสาขาในชีตก็ถือว่าทำแล้ว (เหมาะกับชีตคำตอบฟอร์ม)
+ *   check_done_value = ค่าที่ถือว่าเสร็จ คั่นด้วย / เช่น ส่งแล้ว/ครบ  | เว้นว่าง = ช่องไม่ว่าง
+ *                      ขึ้นต้นด้วย ! = เสร็จเมื่อไม่ใช่ค่านั้น เช่น !รอส่ง
+ * ผลตรวจเขียนลงแท็บ Done (note = auto) และสรุปไว้ใน check_log
+ * แถวใน Done ที่คุณใส่เอง (note ไม่ใช่ auto) จะไม่ถูกแตะ */
+function autoCheck() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const tsh = ss.getSheetByName(TABS.tasks[0]);
+  if (!tsh || tsh.getLastRow() < 2) return;
+  const head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  const C = n => head.indexOf(n);
+  const rows = tsh.getRange(2, 1, tsh.getLastRow() - 1, head.length).getDisplayValues();
+  const branches = branchList_();
+  const dsh = ss.getSheetByName(TABS.done[0]);
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+
+  rows.forEach((r, i) => {
+    if (!/^(y|yes|✓|true|1|ใช่)$/i.test(String(r[C('auto_check')] || '').trim())) return;
+    const tid = r[C('task_id')];
+    const links = String(r[C('link')] || '').split(/\s+/).filter(Boolean);
+    let log;
+    try {
+      const book = openLinkedBook_(links);
+      if (!book) throw new Error('เปิดลิงก์งานไม่ได้ (ต้องเป็น Google Sheet/Form ที่บัญชีนี้มีสิทธิ์)');
+      const wanted = String(r[C('check_tab')] || '').split(',').map(x => x.trim()).filter(Boolean);
+      const sheets = wanted.length ? wanted.map(n => book.getSheetByName(n)).filter(Boolean) : book.getSheets();
+      if (!sheets.length) throw new Error('ไม่พบแท็บ: ' + wanted.join(', '));
+      const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim() };
+      const res = {}; let headers = [];
+      sheets.forEach(sh => {
+        const out = evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule);
+        if (!headers.length) headers = out.headers;
+        Object.entries(out.status).forEach(([code, st]) => {
+          const a = res[code] || {found: 0, done: 0}; a.found += st.found; a.done += st.done; res[code] = a;
+        });
+      });
+      // เขียน Done: ลบผล auto เดิมของงานนี้ แล้วเขียนใหม่
+      const dv = dsh.getLastRow() > 1 ? dsh.getRange(2, 1, dsh.getLastRow() - 1, 5).getValues() : [];
+      for (let k = dv.length - 1; k >= 0; k--) if (dv[k][0] === tid && dv[k][3] === 'auto') dsh.deleteRow(k + 2);
+      let nDone = 0, nPart = 0;
+      Object.entries(res).forEach(([code, a]) => {
+        if (!a.done) return;
+        const st = a.done >= a.found ? 'done' : 'partial';
+        st === 'done' ? nDone++ : nPart++;
+        appendObj_(dsh, {task_id: tid, branch_code: code, status: st, note: 'auto', updated: stamp});
+      });
+      log = `${stamp} ✓ พบ ${Object.keys(res).length} สาขา · เสร็จ ${nDone} · บางส่วน ${nPart}` +
+            (rule.col ? '' : ' (โหมด: มีชื่อสาขา = ทำแล้ว)') +
+            (headers.length ? ` | หัวคอลัมน์: ${headers.slice(0, 25).join(' | ')}` : '');
+    } catch (err) { log = `${stamp} ✗ ${err.message}`; }
+    tsh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
+  });
+}
+
+function openLinkedBook_(links) {
+  for (const u of links) {
+    try {
+      if (/docs\.google\.com\/spreadsheets/.test(u)) return SpreadsheetApp.openByUrl(u);
+      let url = u;
+      if (/forms\.gle/.test(u)) url = UrlFetchApp.fetch(u, {followRedirects: false, muteHttpExceptions: true}).getHeaders()['Location'] || u;
+      if (/docs\.google\.com\/forms/.test(url)) {
+        const id = FormApp.openByUrl(url.replace(/\/viewform.*$/, '/edit')).getDestinationId();
+        if (id) return SpreadsheetApp.openById(id);
+      }
+    } catch (err) { Logger.log(u + ': ' + err); }
+  }
+  return null;
+}
+
+/* ตรวจตาราง 1 แท็บ: คืนสถานะต่อสาขา {found: จำนวนแถวที่พบ, done: จำนวนแถวที่เสร็จ} */
+function evaluateTable(values, branches, rule) {
+  const N = s => String(s || '').toLowerCase().replace(/true\s*shop|ทรูช็อป|[\s'’\-_.,]/g, '');
+  const byCode = {}, byName = {};
+  branches.forEach(b => { byCode[String(b.code).trim()] = b.code; byName[N(b.name)] = b.code; });
+  // หาแถวหัวตาราง + คอลัมน์สถานะ
+  let hRow = -1, dCol = -1;
+  const letter = /^[A-Z]{1,2}$/i.test(rule.col) ? rule.col.toUpperCase() : '';
+  if (letter) dCol = letter.split('').reduce((a, c) => a * 26 + c.charCodeAt(0) - 64, 0) - 1;
+  for (let i = 0; i < Math.min(15, values.length); i++) {
+    const row = values[i].map(c => String(c).trim());
+    if (rule.col && !letter) {
+      const j = row.findIndex(c => c && c.toLowerCase().includes(rule.col.toLowerCase()));
+      if (j >= 0) { hRow = i; dCol = j; break; }
+    } else if (row.filter(Boolean).length >= 3 && row.every(c => !/^\d{6,}$/.test(c))) { hRow = i; break; }
+  }
+  const headers = hRow >= 0 ? values[hRow].map(c => String(c).trim()).filter(Boolean) : [];
+  if (rule.col && dCol < 0) return {status: {}, headers};
+  const vals = rule.val ? rule.val.replace(/^!/, '').split('/').map(x => x.trim().toLowerCase()).filter(Boolean) : [];
+  const neg = rule.val.startsWith('!');
+  const isDone = cell => {
+    const c = String(cell || '').trim().toLowerCase();
+    if (!rule.col) return true;
+    if (!vals.length) return c !== '' && !/^(false|0|-|รอ|ยังไม่|ไม่|pending|no)/.test(c);
+    const hit = vals.some(v => c === v || c.includes(v));
+    return neg ? (c !== '' && !hit) : hit;
+  };
+  const status = {};
+  values.slice(hRow + 1).forEach(row => {
+    let code = null;
+    for (const c of row) {
+      const t = String(c).trim().replace(/\.0$/, '');
+      if (byCode[t]) { code = byCode[t]; break; }
+      const n = N(t); if (n.length > 5 && byName[n]) { code = byName[n]; break; }
+    }
+    if (!code) return;
+    const a = status[code] || {found: 0, done: 0};
+    a.found++; if (isDone(dCol >= 0 ? row[dCol] : 'x')) a.done++;
+    status[code] = a;
+  });
+  return {status, headers};
+}
+
 /* ===================== อ่านรายชื่อจากตาราง ===================== */
 function parseRoster(rows, branches) {
   rows = (rows || []).filter(r => r && r.some(c => String(c).trim() !== ''));
@@ -407,9 +526,10 @@ function parseRoster(rows, branches) {
 /* ===================== เมนูใน Sheet ===================== */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Task Tracker')
-    .addItem('ตั้งค่า / สร้างฟอร์มใหม่', 'setup')
+    .addItem('🔄 ตรวจสถานะสาขาจากลิงก์งานตอนนี้', 'autoCheck')
+    .addItem('ตั้งค่า / อัปเดตฟอร์ม', 'setup')
     .addToUi();
 }
 
 // ให้ทดสอบใน Node ได้ (Apps Script จะไม่สนใจบรรทัดนี้)
-if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster };
+if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable };
