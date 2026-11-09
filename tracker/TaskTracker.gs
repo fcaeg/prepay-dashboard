@@ -367,6 +367,19 @@ function importStaff_(tid, tables, update) {
   return list;
 }
 
+/* แทนที่แถวสถานะของงานหนึ่งในแท็บ Done แบบเขียนครั้งเดียว (ไม่มีช่วงที่ข้อมูลหายระหว่างลบ/เขียน) */
+function replaceDoneRows_(tid, note, rows) {
+  const dsh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.done[0]);
+  const head = dsh.getRange(1, 1, 1, Math.max(5, dsh.getLastColumn())).getValues()[0].map(String);
+  const n = head.length, last = dsh.getLastRow();
+  const old = last > 1 ? dsh.getRange(2, 1, last - 1, n).getValues() : [];
+  const keep = old.filter(r => !(String(r[0]) === tid && String(r[3]) === note));
+  const add = rows.map(o => head.map(h => o[h] == null ? '' : o[h]));
+  const all = keep.concat(add);
+  if (all.length) dsh.getRange(2, 1, all.length, n).setNumberFormat('@').setValues(all);
+  if (old.length > all.length) dsh.getRange(2 + all.length, 1, old.length - all.length, n).clearContent();
+}
+
 const EXCL_FB = /ลาออก|ลาคลอด|ลายาว|พักงาน|ไม่ใช่พนักงาน|resign/i;   // ไม่นับใน % ของสาขา
 function ensureCols_(sh, cols) {
   const head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0].map(String).filter(Boolean);
@@ -413,11 +426,9 @@ function syncStaffDone_(tid) {
     if (C('feedback') >= 0 && EXCL_FB.test(r[C('feedback')] || '')) return;     // ลาออก/ลายาว ไม่นับ
     const a = per[r[C('branch_code')]] || {n: 0, d: 0}; a.n++; if (/^y/i.test(r[C('done')])) a.d++; per[r[C('branch_code')]] = a;
   });
-  const dsh = ss.getSheetByName(TABS.done[0]);
-  if (dsh.getLastRow() > 1) { const dv = dsh.getRange(2, 1, dsh.getLastRow() - 1, 4).getValues();
-    for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid && dv[k][3] === 'staff') dsh.deleteRow(k + 2); }
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
-  Object.entries(per).forEach(([code, a]) => { if (a.d) appendObj_(dsh, {task_id: tid, branch_code: code, status: a.d >= a.n ? 'done' : 'partial', note: 'staff', updated: stamp}); });
+  replaceDoneRows_(tid, 'staff', Object.entries(per).filter(([, a]) => a.d)
+    .map(([code, a]) => ({task_id: tid, branch_code: code, status: a.d >= a.n ? 'done' : 'partial', note: 'staff', updated: stamp})));
   [TABS.tasks[0], TABS.daily[0]].forEach(name => {
     const tsh = ss.getSheetByName(name); if (!tsh || tsh.getLastRow() < 2) return;
     const ids = tsh.getRange(2, 1, tsh.getLastRow() - 1, 1).getDisplayValues().flat();
@@ -864,15 +875,15 @@ function checkSheet_(tabName, idCol, quick) {
         });
       });
       tracked = Object.keys(res).join(',');      // สาขาที่มีอยู่ในลิงก์งาน = สาขาที่ต้องติดตาม
-      const dv = dsh.getLastRow() > 1 ? dsh.getRange(2, 1, dsh.getLastRow() - 1, 5).getValues() : [];
-      for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === tid && dv[k][3] === 'auto') dsh.deleteRow(k + 2);
       let nDone = 0, nPart = 0;
+      const outRows = [];
       Object.entries(res).forEach(([code, a]) => {
         if (!a.done) return;
         const st = a.done >= a.found ? 'done' : 'partial';
         st === 'done' ? nDone++ : nPart++;
-        appendObj_(dsh, {task_id: tid, branch_code: code, status: st, note: 'auto', updated: stamp});
+        outRows.push({task_id: tid, branch_code: code, status: st, note: 'auto', updated: stamp});
       });
+      replaceDoneRows_(tid, 'auto', outRows);
       log = `${stamp} ✓ พบ ${Object.keys(res).length} สาขา · เสร็จ ${nDone} · บางส่วน ${nPart}` +
             (added.length ? ` | ➕ เพิ่มสาขาใหม่ ${added.length}: ${added.join(', ')}` : '') +
             ` | ใช้กฎ: ${usedList.join(' ; ')}` +
