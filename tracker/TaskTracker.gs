@@ -464,8 +464,10 @@ function checkSheet_(tabName, idCol) {
       const rule = { col: String(r[C('check_done_col')] || '').trim(), val: String(r[C('check_done_value')] || '').trim(), areas: wanted };
       const added = [];
       const res = {}; let headers = []; const usedList = [];
-      sheets.forEach(sh => {
-        const out = evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule);
+      const outs = sheets.map(sh => ({sh, out: evaluateTable(sh.getDataRange().getDisplayValues(), branches, rule)}));
+      const hasStatus = outs.some(x => ['auto', 'manual'].includes(x.out.used.mode) && Object.keys(x.out.status).length);
+      outs.forEach(({sh, out}) => {
+        if (hasStatus && out.used.mode === 'presence') { usedList.push(sh.getName() + ': ข้าม (ข้อมูลอ้างอิง)'); return; }
         if (!headers.length) headers = out.headers;
         Object.values(out.newBranches || {}).forEach(nb => {        // เพิ่มสาขาใหม่ที่พบในพื้นที่ลงแท็บ Branches
           if (branches.some(b => b.code === nb.code)) return;
@@ -534,8 +536,12 @@ function resolveTabs_(book, wanted) {
     pick.sh._autoPicked = 'แท็บวันที่ (อัตโนมัติ)';
     return [pick.sh];
   }
-  all.forEach(sh => sh._autoPicked = 'ทุกแท็บ');      // ไม่มีแท็บตรงชื่อ/วันที่ → ตรวจทุกแท็บ (นับเฉพาะแถวที่มีสาขาเรา)
-  return all;
+  // ไม่มีแท็บตรงชื่อ/วันที่ → ตรวจทุกแท็บ ยกเว้นแท็บสรุป/ข้อมูลอ้างอิง
+  const REF = /summary|สรุป|^data|_data|raw|master|pivot|dashboard|ref|lookup|setting|config|instruction|คำอธิบาย|readme/i;
+  const work = all.filter(sh => !REF.test(sh.getName()));
+  const use = work.length ? work : all;
+  use.forEach(sh => sh._autoPicked = 'ทุกแท็บ');
+  return use;
 }
 
 /* อ่านวันที่จากชื่อแท็บ เช่น "Pending WW 9 November", "9 Nov", "09/11", "9 พ.ย." */
@@ -581,7 +587,8 @@ function openLinkedBook_(links) {
 
 /* ตรวจตาราง 1 แท็บ: คืนสถานะต่อสาขา {found, done} + หัวคอลัมน์ + กฎที่ใช้ */
 const DONE_RE = /^(?:(?:ส่งแล้ว|ส่ง|ครบ(?:แล้ว)?|เรียบร้อย(?:แล้ว)?|เสร็จ(?:แล้ว)?|ได้รับ(?:แล้ว)?|ดำเนินการแล้ว|ตอบแล้ว|ผ่าน|มี|คืนแล้ว|รับแล้ว|ติดตั้งแล้ว|ติดตั้งสำเร็จ|ยกเลิก(?:แล้ว)?|ลูกค้ายืนยัน\s*ยกเลิก)(?:\s.{0,20})?|done|completed?|connected|installed|success(?:ful)?|closed|(?:order\s*)?cancel(?:led)?|ok|yes|y|true|✓|✔|☑|\/)$/i;
-const PEND_RE = /^(รอ|ยังไม่|ไม่|ค้าง|pending|false|no|n|-|x|✗|✘|$)/i;
+const PEND_RE = /^(รอ|ยังไม่|ไม่|ค้าง|pending|open|new|todo|to do|in progress|false|no|n|-|x|✗|✘|$)/i;
+const FILL_HEAD_RE = /กรอก|สาเหตุ|feedback|คำตอบ|ผลการติดตาม|ผลการดำเนิน|ชี้แจง|action/i;   // คอลัมน์ที่สาขาต้องกรอกเอง
 const STATUS_HEAD_RE = /สถานะ|status|ส่งแล้ว|การส่ง|ได้รับ|ตอบ|ดำเนินการ|เรียบร้อย|ผลการ|check|done|complete|รับเอกสาร|คืน|confirm|ยืนยัน/i;
 
 function evaluateTable(values, branches, rule) {
@@ -659,11 +666,15 @@ function evaluateTable(values, branches, rule) {
       const pendHits = cells.filter(c => PEND_RE.test(c)).length;
       const isBool = filled.length && filled.every(c => /^(true|false)$/i.test(c));
       let score = 0;
+      const fillCol = FILL_HEAD_RE.test(headRow[j] || '');
+      if (fillCol) score += 5;
       if (STATUS_HEAD_RE.test(headRow[j] || '')) score += 3;
+      // ข้อความเดียวกันทุกแถว (เช่น คำถาม/คำอธิบาย) ไม่ใช่สถานะ
+      if (cells.length > 1 && filled.length === cells.length && distinct.size === 1 && !DONE_RE.test(filled[0]) && !PEND_RE.test(filled[0])) score -= 6;
       if (isBool) score += 3;
       if (doneHits) score += 2 + Math.min(2, doneHits / Math.max(1, cells.length) * 4);
       if (distinct.size && distinct.size <= 6 && (doneHits || pendHits)) score += 1;
-      if (distinct.size > 12) score -= 3;                  // ข้อความอิสระ/ตัวเลข ไม่ใช่สถานะ
+      if (distinct.size > 12 && !fillCol) score -= 3;      // ข้อความอิสระ/ตัวเลข ไม่ใช่สถานะ
       if (cells.length && cells.every(c => /^\d{6,}$/.test(c))) score -= 5;   // คอลัมน์รหัส
       if (dataRows.filter(r => codeOf0([r[j]])).length > dataRows.length / 2) score -= 10; // คอลัมน์รหัส/ชื่อสาขา
       if (j === regionCol || j === codeCol || j === nameCol) score -= 10;
