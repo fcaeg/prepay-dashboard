@@ -67,8 +67,8 @@ function setup() {
 
   ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'onTaskForm') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('onTaskForm').forSpreadsheet(ss).onFormSubmit().create();
-  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'autoCheck') ScriptApp.deleteTrigger(t); });
-  ScriptApp.newTrigger('autoCheck').timeBased().everyMinutes(30).create();
+  ScriptApp.getProjectTriggers().forEach(t => { if (['autoCheck', 'autoCheckQuick'].includes(t.getHandlerFunction())) ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('autoCheckQuick').timeBased().everyMinutes(1).create();
 
   SpreadsheetApp.flush();
   if (isNew) ss.getSheets().forEach(sh => { if (sh.getFormUrl && sh.getFormUrl()) sh.setName('_FormInput'); });
@@ -422,12 +422,45 @@ function parseLineMessage(raw, now) {
  *                      ขึ้นต้นด้วย ! = เสร็จเมื่อไม่ใช่ค่านั้น เช่น !รอส่ง
  * ผลตรวจเขียนลงแท็บ Done (note = auto) และสรุปไว้ใน check_log
  * แถวใน Done ที่คุณใส่เอง (note ไม่ใช่ auto) จะไม่ถูกแตะ */
-function autoCheck() {
-  checkSheet_(TABS.tasks[0], 'task_id');
-  checkSheet_(TABS.daily[0], 'daily_id');
+function autoCheck() {                       // ตรวจทุกงานเต็มรูปแบบ (เมนู)
+  checkSheet_(TABS.tasks[0], 'task_id', false);
+  checkSheet_(TABS.daily[0], 'daily_id', false);
 }
 
-function checkSheet_(tabName, idCol) {
+/* รันทุก 1 นาที: ตรวจเฉพาะงานที่ไฟล์ปลายทางมีการแก้ไขใหม่ (ประหยัดโควตา)
+   ช่วงเวลาทำงาน 07:00–22:00 | งานที่ไม่มีการแก้ไขจะถูกตรวจซ้ำอย่างน้อยทุก 60 นาที */
+const QUICK_HOURS = [7, 22];
+function autoCheckQuick() {
+  const h = Number(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'H'));
+  if (h < QUICK_HOURS[0] || h >= QUICK_HOURS[1]) return;
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return;            // รอบก่อนยังไม่เสร็จ ข้ามรอบนี้
+  try {
+    checkSheet_(TABS.tasks[0], 'task_id', true);
+    checkSheet_(TABS.daily[0], 'daily_id', true);
+  } finally { lock.releaseLock(); }
+}
+
+/* ไฟล์ปลายทางเปลี่ยนตั้งแต่ตรวจครั้งก่อนไหม (ดูจากเวลาแก้ไขล่าสุดของไฟล์) */
+function needsCheck_(tid, links, logText) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'chk_' + tid;
+  const prev = JSON.parse(props.getProperty(key) || '{}');
+  const now = Date.now();
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  if (String(logText || '').slice(0, 10) !== today) return {go: true, key, now};   // ยังไม่เคยตรวจวันนี้
+  if (!prev.at || now - prev.at > 60 * 60 * 1000) return {go: true, key, now};      // ตรวจซ้ำทุก 60 นาทีอยู่ดี
+  let latest = 0;
+  for (const u of links) {
+    const m = String(u).match(/\/d\/([\w-]{20,})/);
+    if (!m || /\/forms\//.test(u)) return {go: true, key, now};                   // ฟอร์ม: เช็กเวลาไม่ได้ ตรวจเลย
+    try { latest = Math.max(latest, DriveApp.getFileById(m[1]).getLastUpdated().getTime()); }
+    catch (err) { return {go: true, key, now}; }
+  }
+  return {go: latest > (prev.mod || 0), key, now, mod: latest};
+}
+
+function checkSheet_(tabName, idCol, quick) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const tsh = ss.getSheetByName(tabName);
   if (!tsh || tsh.getLastRow() < 2) return;
@@ -454,6 +487,8 @@ function checkSheet_(tabName, idCol) {
     if (C('active') >= 0 && /^(n|no|ไม่|0|false)$/i.test(String(r[C('active')] || '').trim())) return;
     const tid = r[C(idCol)];
     const links = String(r[C('link')] || '').split(/\s+/).filter(Boolean);
+    let nc = null;
+    if (quick) { nc = needsCheck_(tid, links, r[C('check_log')]); if (!nc.go) return; }
     let log, tracked = null;
     try {
       const book = openLinkedBook_(links);
@@ -502,6 +537,12 @@ function checkSheet_(tabName, idCol) {
             (headers.length ? ` | หัวคอลัมน์: ${headers.slice(0, 25).join(' | ')}` : '');
     } catch (err) { log = `${stamp} ✗ ${err.message}`; }
     tsh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
+    // จำเวลาที่ตรวจ + เวลาแก้ไขไฟล์ล่าสุด สำหรับรอบถัดไป
+    try {
+      let mod = nc && nc.mod;
+      if (!mod) links.forEach(u => { const m = String(u).match(/\/d\/([\w-]{20,})/); if (m && !/\/forms\//.test(u)) { try { mod = Math.max(mod || 0, DriveApp.getFileById(m[1]).getLastUpdated().getTime()); } catch (e) {} } });
+      PropertiesService.getScriptProperties().setProperty('chk_' + tid, JSON.stringify({at: Date.now(), mod: mod || 0}));
+    } catch (e) {}
     if (tracked !== null) tsh.getRange(i + 2, C('tracked_branches') + 1).setValue(tracked);
   });
 }

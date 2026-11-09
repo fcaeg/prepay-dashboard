@@ -99,7 +99,7 @@ td.num{text-align:right;white-space:nowrap}
   <div class="head-row">
     <div>
       <h1>📋 Task Tracker – ติดตามงานสาขา</h1>
-      <div class="sub" id="today"></div>
+      <div class="sub"><span id="today"></span><span id="upd"></span></div>
     </div>
     <span class="src" id="src">ข้อมูลตัวอย่าง</span>
   </div>
@@ -792,6 +792,16 @@ function fillSelects(){
   if (keepEx) $('#ex-select').value = keepEx;
   $('#ex-branch').replaceChildren(h('option',{value:'',text: AREA==='ALL' ? 'ทุกสาขา' : 'ทุกสาขาใน '+AREA}), ...opts(b=>h('option',{value:b.code,text:b.name})));
 }
+function rerenderAll(){
+  renderAreaBar(); fillSelects(); renderSummary(); renderExam(); renderTraining(); renderDaily();
+  if (!$('#tab-branch').hidden) renderBranch();
+}
+let lastLoad = null;
+function stampLoad(){ lastLoad = new Date(); const el = $('#upd'); if (el) el.textContent = ' · อัปเดตล่าสุด ' + lastLoad.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.'; }
+async function refreshData(){
+  if (!CONFIG.sheetId || document.hidden) return;
+  try { D = await loadSheet(); MODEL = build(D); rerenderAll(); stampLoad(); } catch (e) { /* เก็บข้อมูลเดิมไว้ */ }
+}
 function setArea(a){
   AREA = a; try { localStorage.setItem('tt-area', a); } catch(e){}
   MODEL = build(D); renderAreaBar(); fillSelects();
@@ -831,6 +841,8 @@ async function init(){
   $('#dy-copy').onclick = () => copy(dailyMsg());
 
   renderSummary(); renderExam(); renderTraining(); renderDaily();
+  if (CONFIG.sheetId) { stampLoad(); setInterval(refreshData, 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && lastLoad && Date.now() - lastLoad > 60 * 1000) refreshData(); }); }
   const hash = location.hash.slice(1);
   if (hash.startsWith('br-')){
     const c = hash.slice(3), b = D.branches.find(x=>x.code===c);
