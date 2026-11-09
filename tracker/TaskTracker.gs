@@ -9,7 +9,7 @@
 
 const TABS = {
   branches: ['Branches', ['code', 'name', 'area']],
-  tasks:    ['Tasks',    ['task_id', 'title', 'type', 'link', 'detail', 'assigned', 'due', 'branches', 'raw_message', 'attachments', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log']],
+  tasks:    ['Tasks',    ['task_id', 'title', 'type', 'link', 'detail', 'assigned', 'due', 'branches', 'raw_message', 'attachments', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']],
   done:     ['Done',     ['task_id', 'branch_code', 'status', 'note', 'updated']],
   exams:    ['Exams',    ['exam_id', 'title', 'link', 'due', 'pass_score', 'raw_message', 'attachments']],
   staff:    ['Staff',    ['emp_id', 'name', 'branch_code', 'position']],
@@ -379,7 +379,10 @@ function autoCheck() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const tsh = ss.getSheetByName(TABS.tasks[0]);
   if (!tsh || tsh.getLastRow() < 2) return;
-  const head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  let head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  ['check_log', 'tracked_branches'].forEach(h => {          // เติมคอลัมน์ที่ยังไม่มีเอง ไม่ต้อง Run setup
+    if (!head.includes(h)) { tsh.getRange(1, head.length + 1).setValue(h).setFontWeight('bold').setBackground('#e8eeff'); head.push(h); }
+  });
   const C = n => head.indexOf(n);
   const rows = tsh.getRange(2, 1, tsh.getLastRow() - 1, head.length).getDisplayValues();
   const branches = branchList_();
@@ -390,7 +393,7 @@ function autoCheck() {
     if (!/^(y|yes|✓|true|1|ใช่)$/i.test(String(r[C('auto_check')] || '').trim())) return;
     const tid = r[C('task_id')];
     const links = String(r[C('link')] || '').split(/\s+/).filter(Boolean);
-    let log;
+    let log, tracked = null;
     try {
       const book = openLinkedBook_(links);
       if (!book) throw new Error('เปิดลิงก์งานไม่ได้ (ต้องเป็น Google Sheet/Form ที่บัญชีนี้มีสิทธิ์)');
@@ -415,6 +418,7 @@ function autoCheck() {
       // เขียน Done: ลบผล auto เดิมของงานนี้ แล้วเขียนใหม่
       const dv = dsh.getLastRow() > 1 ? dsh.getRange(2, 1, dsh.getLastRow() - 1, 5).getValues() : [];
       for (let k = dv.length - 1; k >= 0; k--) if (dv[k][0] === tid && dv[k][3] === 'auto') dsh.deleteRow(k + 2);
+      tracked = Object.keys(res).join(',');      // สาขาที่มีอยู่ในลิงก์งาน = สาขาที่ต้องติดตาม
       let nDone = 0, nPart = 0;
       Object.entries(res).forEach(([code, a]) => {
         if (!a.done) return;
@@ -427,6 +431,7 @@ function autoCheck() {
             (headers.length ? ` | หัวคอลัมน์: ${headers.slice(0, 25).join(' | ')}` : '');
     } catch (err) { log = `${stamp} ✗ ${err.message}`; }
     tsh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
+    if (tracked !== null) tsh.getRange(i + 2, C('tracked_branches') + 1).setValue(tracked);
   });
 }
 

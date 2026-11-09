@@ -353,7 +353,8 @@ function build(data){
   const doneMap = {};
   data.done.forEach(d => { const st = (d.status||'done').toLowerCase().includes('partial') || d.status==='บางส่วน' ? 'partial' : 'done'; doneMap[d.task_id+'|'+d.branch_code] = st; });
   const tasks = data.tasks.filter(t=>t.task_id).map(t => {
-    const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code]);
+    const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
+    const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
     const due = parseDate(t.due);
     const per = list.map(b => ({b, st: doneMap[t.task_id+'|'+b.code] || 'pending'}));
     const doneN = per.filter(x=>x.st==='done').length;
