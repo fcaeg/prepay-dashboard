@@ -427,12 +427,16 @@ function autoCheck() {                       // ตรวจทุกงาน�
   checkSheet_(TABS.daily[0], 'daily_id', false);
 }
 
-/* รันทุก 1 นาที: ตรวจเฉพาะงานที่ไฟล์ปลายทางมีการแก้ไขใหม่ (ประหยัดโควตา)
-   ช่วงเวลาทำงาน 07:00–22:00 | งานที่ไม่มีการแก้ไขจะถูกตรวจซ้ำอย่างน้อยทุก 60 นาที */
-const QUICK_HOURS = [7, 22];
+/* ตัวตั้งเวลารันทุก 1 นาที แต่ทำงานจริงทุก QUICK_EVERY นาที (Google ไม่มีตัวเลือก 2 นาที)
+   ตรวจเฉพาะงานที่ไฟล์ปลายทางมีการแก้ไขใหม่ (ประหยัดโควตา) | งานที่ไม่มีการแก้ไขจะถูกตรวจซ้ำอย่างน้อยทุก 60 นาที
+   ช่วงเวลาทำงาน QUICK_HOURS = [ชั่วโมงเริ่ม, ชั่วโมงสิ้นสุด) เช่น [8, 24] = 08:00–23:59 */
+const QUICK_EVERY = 2;
+const QUICK_HOURS = [8, 24];
 function autoCheckQuick() {
-  const h = Number(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'H'));
+  const now = new Date(), tz = Session.getScriptTimeZone();
+  const h = Number(Utilities.formatDate(now, tz, 'H')), mi = Number(Utilities.formatDate(now, tz, 'm'));
   if (h < QUICK_HOURS[0] || h >= QUICK_HOURS[1]) return;
+  if (mi % QUICK_EVERY !== 0) return;          // ข้ามนาทีคี่ → ทำงานทุก 2 นาที
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return;            // รอบก่อนยังไม่เสร็จ ข้ามรอบนี้
   try {

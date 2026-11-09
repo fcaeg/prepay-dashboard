@@ -841,8 +841,8 @@ async function init(){
   $('#dy-copy').onclick = () => copy(dailyMsg());
 
   renderSummary(); renderExam(); renderTraining(); renderDaily();
-  if (CONFIG.sheetId) { stampLoad(); setInterval(refreshData, 60 * 1000);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && lastLoad && Date.now() - lastLoad > 60 * 1000) refreshData(); }); }
+  if (CONFIG.sheetId) { stampLoad(); setInterval(refreshData, 2 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && lastLoad && Date.now() - lastLoad > 2 * 60 * 1000) refreshData(); }); }
   const hash = location.hash.slice(1);
   if (hash.startsWith('br-')){
     const c = hash.slice(3), b = D.branches.find(x=>x.code===c);
