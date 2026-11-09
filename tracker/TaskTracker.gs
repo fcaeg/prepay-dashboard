@@ -425,6 +425,59 @@ function parseLineMessage(raw, now) {
 function autoCheck() {                       // ตรวจทุกงานเต็มรูปแบบ (เมนู)
   checkSheet_(TABS.tasks[0], 'task_id', false);
   checkSheet_(TABS.daily[0], 'daily_id', false);
+  archiveCompleted_();
+}
+
+/* ย้ายงาน One Time ที่ครบทุกสาขาแล้ว จากแท็บ Tasks ไปแท็บ History (หยุดตรวจงานนั้น) */
+function archiveCompleted_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const tsh = ss.getSheetByName(TABS.tasks[0]);
+  if (!tsh || tsh.getLastRow() < 2) return 0;
+  const head = tsh.getRange(1, 1, 1, tsh.getLastColumn()).getValues()[0].map(String);
+  const C = n => head.indexOf(n);
+  let hsh = ss.getSheetByName('History');
+  if (!hsh) { hsh = ss.insertSheet('History'); hsh.getRange('A:Z').setNumberFormat('@'); }
+  const hHead = hsh.getLastRow() ? hsh.getRange(1, 1, 1, hsh.getLastColumn()).getValues()[0].map(String).filter(Boolean) : [];
+  [...head, 'completed_at'].forEach(h => { if (h && !hHead.includes(h)) { hsh.getRange(1, hHead.length + 1).setValue(h).setFontWeight('bold').setBackground('#e3f6ea'); hHead.push(h); } });
+  hsh.setFrozenRows(1);
+  const bv = ss.getSheetByName(TABS.branches[0]).getDataRange().getDisplayValues(), bh = bv[0].map(String);
+  const bi = n => bh.indexOf(n);
+  const branches = bv.slice(1).filter(r => r[bi('code')]).map(r => ({code: String(r[bi('code')]).trim(),
+    area: String((bi('area') >= 0 && r[bi('area')]) || (bi('zone') >= 0 && r[bi('zone')]) || '').trim()}));
+  const dsh = ss.getSheetByName(TABS.done[0]);
+  const st = {};
+  if (dsh.getLastRow() > 1) dsh.getRange(2, 1, dsh.getLastRow() - 1, 3).getDisplayValues()
+    .forEach(([t, c, x]) => { st[t + '|' + String(c).trim()] = /partial|บางส่วน/i.test(x) ? 'partial' : 'done'; });
+  const N = x => String(x || '').toLowerCase().replace(/[\s_\-]+/g, '');
+  const targets = (spec, tracked) => {
+    spec = String(spec || '').trim();
+    let list;
+    if (!spec || /^(all|ทุกสาขา)$/i.test(spec)) list = branches.slice();
+    else {
+      const set = new Set();
+      spec.split(/[,;\n]+/).map(x => x.trim()).filter(Boolean).forEach(tok => {
+        const byArea = branches.filter(b => N(b.area) === N(tok) || b.area.split(/\s+/).map(w => w[0] || '').join('').toLowerCase() === N(tok));
+        if (byArea.length) byArea.forEach(b => set.add(b.code)); else tok.split(/\s+/).forEach(c => set.add(c.toUpperCase()));
+      });
+      list = branches.filter(b => set.has(b.code));
+    }
+    const tr = String(tracked || '').split(/[,\s]+/).filter(Boolean);
+    return tr.length ? list.filter(b => tr.includes(b.code)) : list;
+  };
+  const rows = tsh.getRange(2, 1, tsh.getLastRow() - 1, head.length).getDisplayValues();
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  let moved = 0;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i], tid = r[C('task_id')];
+    if (!tid) continue;
+    const tg = targets(r[C('branches')], C('tracked_branches') >= 0 ? r[C('tracked_branches')] : '');
+    if (!tg.length || !tg.every(b => st[tid + '|' + b.code] === 'done')) continue;
+    const obj = {}; head.forEach((h, k) => obj[h] = r[k]); obj.completed_at = stamp;
+    hsh.appendRow(hHead.map(h => obj[h] == null ? '' : obj[h]));
+    tsh.deleteRow(i + 2);
+    moved++;
+  }
+  return moved;
 }
 
 /* ตัวตั้งเวลารันทุก 1 นาที แต่ทำงานจริงทุก QUICK_EVERY นาที (Google ไม่มีตัวเลือก 2 นาที)
@@ -442,6 +495,7 @@ function autoCheckQuick() {
   try {
     checkSheet_(TABS.tasks[0], 'task_id', true);
     checkSheet_(TABS.daily[0], 'daily_id', true);
+    archiveCompleted_();
   } finally { lock.releaseLock(); }
 }
 
@@ -836,11 +890,39 @@ function moveSelectedToDaily() {
   ui.alert('ย้ายแล้ว ✅ ' + ids.join(', ') + ' → แท็บ Daily (' + f + ')\nแก้ชื่องาน / เวลา / วัน ได้ในแท็บ Daily');
 }
 
+function archiveNow() {
+  const n = archiveCompleted_();
+  SpreadsheetApp.getUi().alert(n ? `ย้าย ${n} งานที่ครบทุกสาขาไปแท็บ History แล้ว ✅` : 'ยังไม่มีงานที่ครบทุกสาขา');
+}
+
+function restoreSelected() {
+  const ui = SpreadsheetApp.getUi(), ss = SpreadsheetApp.getActiveSpreadsheet(), sh = ss.getActiveSheet();
+  if (sh.getName() !== 'History') { ui.alert('ไปที่แท็บ History แล้วคลิกเลือกแถวงานที่ต้องการย้ายกลับก่อน'); return; }
+  const rows = [...new Set(sh.getActiveRangeList().getRanges().flatMap(r => Array.from({length: r.getNumRows()}, (_, k) => r.getRow() + k)))]
+    .filter(r => r > 1).sort((a, b) => b - a);
+  if (!rows.length) { ui.alert('ยังไม่ได้เลือกแถวงาน'); return; }
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+  const tsh = ss.getSheetByName(TABS.tasks[0]), dsh = ss.getSheetByName(TABS.done[0]);
+  rows.forEach(r => {
+    const v = sh.getRange(r, 1, 1, head.length).getDisplayValues()[0];
+    const obj = {}; head.forEach((h, k) => obj[h] = v[k]);
+    // เปิดงานใหม่: ล้างผลตรวจอัตโนมัติเดิม ไม่อย่างนั้นจะถูกย้ายกลับ History ทันที
+    obj.check_log = ''; obj.tracked_branches = '';
+    if (dsh.getLastRow() > 1) { const dv = dsh.getRange(2, 1, dsh.getLastRow() - 1, 4).getValues();
+      for (let k = dv.length - 1; k >= 0; k--) if (String(dv[k][0]) === obj.task_id && dv[k][3] === 'auto') dsh.deleteRow(k + 2); }
+    appendObj_(tsh, obj);
+    sh.deleteRow(r);
+  });
+  ui.alert('ย้ายกลับไป Tasks แล้ว ✅ ระบบจะตรวจสถานะใหม่ในรอบถัดไป');
+}
+
 /* ===================== เมนูใน Sheet ===================== */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Task Tracker')
     .addItem('🔄 ตรวจสถานะสาขาจากลิงก์งานตอนนี้', 'autoCheck')
     .addItem('🔁 ย้ายงานที่เลือก (แท็บ Tasks) ไปเป็นงานประจำ', 'moveSelectedToDaily')
+    .addItem('🏁 ย้ายงานที่ครบทุกสาขาไป History ตอนนี้', 'archiveNow')
+    .addItem('↩️ ย้ายงานที่เลือก (แท็บ History) กลับไป Tasks', 'restoreSelected')
     .addItem('ตั้งค่า / อัปเดตฟอร์ม', 'setup')
     .addToUi();
 }

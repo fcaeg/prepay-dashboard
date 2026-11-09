@@ -110,6 +110,7 @@ td.num{text-align:right;white-space:nowrap}
     <button class="tab" data-tab="branch">รายสาขา</button>
     <button class="tab" data-tab="exam">ติดตามการสอบ</button>
     <button class="tab" data-tab="training">แจ้งอบรม</button>
+    <button class="tab" data-tab="history">History</button>
   </nav>
 </header>
 
@@ -132,7 +133,7 @@ td.num{text-align:right;white-space:nowrap}
     <div class="toolbar">
       <button class="chip-btn active" data-f="open">ยังค้าง</button>
       <button class="chip-btn" data-f="overdue">เลยกำหนด</button>
-      <button class="chip-btn" data-f="done">ครบทุกสาขา</button>
+      <button class="chip-btn" data-f="done">ครบทุกสาขา (รอย้ายไป History)</button>
       <button class="chip-btn" data-f="all">ทั้งหมด</button>
       <select id="sum-type"></select>
       <input type="search" id="sum-q" class="grow" placeholder="ค้นหาชื่องาน…">
@@ -177,6 +178,16 @@ td.num{text-align:right;white-space:nowrap}
     <div id="dy-list"></div>
   </section>
 
+  <!-- ========== TAB: HISTORY ========== -->
+  <section id="tab-history" hidden>
+    <div class="toolbar">
+      <select id="hi-month"></select>
+      <input type="search" id="hi-q" class="grow" placeholder="ค้นหางานที่เสร็จแล้ว…">
+    </div>
+    <div class="kpis" id="hi-kpis"></div>
+    <div id="hi-list"></div>
+  </section>
+
   <!-- ========== TAB 4: TRAINING ========== -->
   <section id="tab-training" hidden>
     <div class="toolbar">
@@ -200,7 +211,7 @@ td.num{text-align:right;white-space:nowrap}
    ===================================================================== */
 const CONFIG = {
   sheetId: '1309rgyaiWMWj-Xik2-4T3wWgizLMivLrwH2JTx08qCg',
-  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees', daily:'Daily' }
+  tabs: { branches:'Branches', tasks:'Tasks', done:'Done', exams:'Exams', staff:'Staff', results:'ExamResults', trainings:'Trainings', attendees:'TrainingAttendees', daily:'Daily', history:'History' }
 };
 
 /* ---------- helpers ---------- */
@@ -335,7 +346,12 @@ function sampleData(){
     {daily_id:'D05',title:'ตรวจนับสต็อกประจำเดือน',frequency:'Monthly',link:'https://forms.google.com/',detail:'นับสต็อกเครื่องและซิมทั้งหมด',deadline:'18:00',days:'สิ้นเดือน',branches:'ALL',active:'Y'},
     {daily_id:'D06',title:'ส่งแผนกิจกรรมเดือนหน้า',frequency:'Monthly',link:'https://docs.google.com/document/',detail:'',deadline:'12:00',days:'วันที่ '+TODAY.getDate(),branches:'ALL',active:'Y'}
   ];
-  return {branches, tasks, done, exams, staff, results, trainings, attendees, daily};
+  const history = [
+    {task_id:'T000',title:'ยืนยันยอดสต็อกปลายเดือน ต.ค.',type:'Google Form',link:'https://forms.google.com/',detail:'ทุกสาขาส่งครบแล้ว',assigned:plus(-12),due:plus(-8),branches:'ALL',completed_at:plus(-9)+' 16:40'},
+    {task_id:'T00A',title:'ส่งรูปการจัดบูธ Lower North',type:'Google Form',link:'https://forms.google.com/',detail:'',assigned:plus(-6),due:plus(-4),branches:'Lower North',completed_at:plus(-3)+' 10:05'}
+  ];
+  history.forEach(t => branches.filter(b => t.branches==='ALL' || b.area===t.branches).forEach(b => done.push({task_id:t.task_id,branch_code:b.code,status:'done'})));
+  return {branches, tasks, done, exams, staff, results, trainings, attendees, daily, history};
 }
 
 /* ---------- โหลดจาก Google Sheet ---------- */
@@ -357,8 +373,8 @@ async function loadSheet(){
   const out = {};
   for (const [key, tab] of Object.entries(CONFIG.tabs)){
     const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}`;
-    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id',daily:'title'};
-    const OPTIONAL = ['trainings','attendees','daily'];
+    const KEYCOL = {branches:'code',tasks:'task_id',done:'task_id',exams:'exam_id',staff:'emp_id',results:'exam_id',trainings:'training_id',attendees:'training_id',daily:'title',history:'task_id'};
+    const OPTIONAL = ['trainings','attendees','daily','history'];
     try {
       const res = await fetch(url); if (!res.ok) throw new Error(tab);
       const rows = parseCSV(await res.text());
@@ -394,7 +410,7 @@ function build(data){
   const bmap = Object.fromEntries(branches.map(b=>[b.code,b]));
   const doneMap = {};
   data.done.forEach(d => { const st = (d.status||'done').toLowerCase().includes('partial') || d.status==='บางส่วน' ? 'partial' : 'done'; doneMap[d.task_id+'|'+d.branch_code] = st; });
-  const tasks = data.tasks.filter(t=>t.task_id).map(t => {
+  const mkTask = t => {
     const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
     const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
     const due = parseDate(t.due);
@@ -405,7 +421,11 @@ function build(data){
     const complete = pending.length === 0;
     const dl = daysLeft(due);
     return {...t, due, list, per, doneN, pending, pct, complete, overdue: !complete && dl!=null && dl<0, soon: !complete && dl!=null && dl>=0 && dl<=1};
-  }).filter(t => t.list.length);
+  };
+  const tasks = data.tasks.filter(t=>t.task_id).map(mkTask).filter(t => t.list.length);
+  const history = (data.history||[]).filter(t=>t.task_id).map(mkTask).filter(t => t.list.length)
+    .map(t => ({...t, completedAt: parseDate(String(t.completed_at||'').slice(0,10)), completedTxt: String(t.completed_at||'')}))
+    .sort((a,b) => String(b.completed_at||'').localeCompare(String(a.completed_at||'')));
   const passOf = e => Number(e.pass_score) || 0;
   const exams = data.exams.filter(e=>e.exam_id).map(e => {
     const res = {}; data.results.filter(x=>x.exam_id===e.exam_id).forEach(x => { const s = Number(x.score); if (!(x.emp_id in res) || s > res[x.emp_id]) res[x.emp_id] = s; });
@@ -436,7 +456,7 @@ function build(data){
     return {...d, list, per, doneN, pending: per.filter(x=>x.st!=='done'), auto, checkedToday,
       deadline: hhmm(d.deadline), today: dayMatch(d.days, TODAY), frequency: d.frequency || 'Daily'};
   }).filter(d => d.list.length).sort((a,b)=> (a.deadline||'99').localeCompare(b.deadline||'99'));
-  return {branches, bmap, tasks, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
+  return {branches, bmap, tasks, history, exams, trainings, daily, staff: data.staff.filter(s=>s.emp_id && bmap[s.branch_code])};
 }
 function lineMsg(t){
   const dl = daysLeft(t.due);
@@ -648,6 +668,27 @@ function renderExam(){
   };
 }
 
+/* ---------- TAB: History ---------- */
+function renderHistory(){
+  const H = MODEL.history;
+  const months = [...new Set(H.map(t=>String(t.completed_at||'').slice(0,7)).filter(Boolean))];
+  const keep = $('#hi-month').value;
+  $('#hi-month').replaceChildren(h('option',{value:'',text:'ทุกเดือน'}), ...months.map(m => { const [y,mo] = m.split('-').map(Number); return h('option',{value:m,text:new Date(y,mo-1,1).toLocaleDateString('th-TH',{month:'long',year:'numeric'})}); }));
+  if (months.includes(keep)) $('#hi-month').value = keep;
+  const m = $('#hi-month').value, q = $('#hi-q').value.trim().toLowerCase();
+  const list = H.filter(t => (!m || String(t.completed_at||'').startsWith(m)) && (!q || (t.title+' '+t.task_id).toLowerCase().includes(q)));
+  const late = list.filter(t => t.due && t.completedAt && t.completedAt > t.due).length;
+  $('#hi-kpis').replaceChildren(
+    kpi('งานที่เสร็จแล้ว', list.length+' งาน', m ? 'ในเดือนที่เลือก' : 'ทั้งหมดในประวัติ', 'ok'),
+    kpi('เสร็จทันกำหนด', (list.length-late)+' งาน', late ? `เกินกำหนด ${late} งาน` : 'ทุกงานทันกำหนด 👍', late?'warn':'ok'));
+  $('#hi-list').replaceChildren(...(list.length ? list.map(t => {
+    const onTime = !(t.due && t.completedAt && t.completedAt > t.due);
+    return h('div',null,
+      h('div',{class:'meta',style:'margin:0 0 4px 4px'}, h('span',{class:'badge '+(onTime?'ok':'warn'),text:`🏁 เสร็จครบทุกสาขา ${t.completedTxt ? thDate(t.completedAt)+' '+t.completedTxt.slice(11,16)+' น.' : ''}${t.due ? (onTime?' · ทันกำหนด':' · เกินกำหนด') : ''}`})),
+      taskCard(t));
+  }) : [h('div',{class:'empty',text:'ยังไม่มีงานที่เสร็จครบทุกสาขา'})]));
+}
+
 /* ---------- TAB: งานประจำวัน ---------- */
 let dyFilter = 'today';
 const TH_DOW = [['อา','อาทิตย์','sun'],['จ','จันทร์','mon'],['อ','อังคาร','tue'],['พ','พุธ','wed'],['พฤ','พฤหัส','thu'],['ศ','ศุกร์','fri'],['ส','เสาร์','sat']];
@@ -793,7 +834,7 @@ function fillSelects(){
   $('#ex-branch').replaceChildren(h('option',{value:'',text: AREA==='ALL' ? 'ทุกสาขา' : 'ทุกสาขาใน '+AREA}), ...opts(b=>h('option',{value:b.code,text:b.name})));
 }
 function rerenderAll(){
-  renderAreaBar(); fillSelects(); renderSummary(); renderExam(); renderTraining(); renderDaily();
+  renderAreaBar(); fillSelects(); renderSummary(); renderExam(); renderTraining(); renderDaily(); renderHistory();
   if (!$('#tab-branch').hidden) renderBranch();
 }
 let lastLoad = null;
@@ -806,14 +847,14 @@ function setArea(a){
   AREA = a; try { localStorage.setItem('tt-area', a); } catch(e){}
   MODEL = build(D); renderAreaBar(); fillSelects();
   renderSummary(); renderExam();
-  renderTraining(); renderDaily();
+  renderTraining(); renderDaily(); renderHistory();
   if (!$('#tab-branch').hidden) renderBranch();
 }
 
 /* ---------- tabs & init ---------- */
 function showTab(name){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  ['summary','daily','branch','exam','training'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  ['summary','daily','branch','exam','training','history'].forEach(n=>$('#tab-'+n).hidden = n!==name);
   if (name==='branch'){ renderBranch(); try{ history.replaceState(null,'','#br-'+$('#br-select').value); }catch(e){} }
   else { try{ history.replaceState(null,'','#'+name); }catch(e){} }
   window.scrollTo(0,0);
@@ -840,7 +881,8 @@ async function init(){
   document.querySelectorAll('[data-dy]').forEach(b=>b.onclick=()=>{ dyFilter=b.dataset.dy; document.querySelectorAll('[data-dy]').forEach(x=>x.classList.toggle('active',x===b)); renderDaily(); });
   $('#dy-copy').onclick = () => copy(dailyMsg());
 
-  renderSummary(); renderExam(); renderTraining(); renderDaily();
+  renderSummary(); renderExam(); renderTraining(); renderDaily(); renderHistory();
+  $('#hi-month').onchange = renderHistory; $('#hi-q').oninput = renderHistory;
   if (CONFIG.sheetId) { stampLoad(); setInterval(refreshData, 2 * 60 * 1000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && lastLoad && Date.now() - lastLoad > 2 * 60 * 1000) refreshData(); }); }
   const hash = location.hash.slice(1);
@@ -851,6 +893,7 @@ async function init(){
   else if (hash==='exam') showTab('exam');
   else if (hash==='training') showTab('training');
   else if (hash==='daily') showTab('daily');
+  else if (hash==='history') showTab('history');
 }
 init();
 </script>
