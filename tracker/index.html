@@ -133,7 +133,7 @@ td.num{text-align:right;white-space:nowrap}
     <div class="toolbar">
       <button class="chip-btn active" data-f="open">ยังค้าง</button>
       <button class="chip-btn" data-f="overdue">เลยกำหนด</button>
-      <button class="chip-btn" data-f="done">ครบทุกสาขา (รอย้ายไป History)</button>
+      <button class="chip-btn" data-f="done">Job Done (History)</button>
       <button class="chip-btn" data-f="all">ทั้งหมด</button>
       <select id="sum-type"></select>
       <input type="search" id="sum-q" class="grow" placeholder="ค้นหาชื่องาน…">
@@ -517,6 +517,7 @@ function renderSummary(){
   if (want('onetime')) {
     let list = T.filter(t =>
       (sumFilter==='all') || (sumFilter==='open' && !t.complete) || (sumFilter==='overdue' && t.overdue) || (sumFilter==='done' && t.complete));
+    if (sumFilter==='done' || sumFilter==='all') list = list.concat(MODEL.history.filter(t=>!list.some(x=>x.task_id===t.task_id)));
     if (type) list = list.filter(t=>t.type===type);
     list = list.filter(t=>match(t.title+' '+t.task_id));
     list.sort((a,b)=> (a.complete-b.complete) || ((a.due||Infinity)-(b.due||Infinity)) || (a.pct-b.pct));
