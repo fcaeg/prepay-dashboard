@@ -120,6 +120,15 @@ td.num{text-align:right;white-space:nowrap}
   <section id="tab-summary">
     <div class="kpis" id="sum-kpis"></div>
     <div id="sum-areas"></div>
+    <div class="toolbar" id="sum-cats">
+      <button class="chip-btn active" data-cat="all">📋 ทุกประเภท</button>
+      <button class="chip-btn" data-cat="onetime">📌 One Time</button>
+      <button class="chip-btn" data-cat="Daily">🔁 Daily</button>
+      <button class="chip-btn" data-cat="Weekly">🗓️ Weekly</button>
+      <button class="chip-btn" data-cat="Monthly">📆 Monthly</button>
+      <button class="chip-btn" data-cat="exam">📝 การสอบ</button>
+      <button class="chip-btn" data-cat="training">📚 อบรม</button>
+    </div>
     <div class="toolbar">
       <button class="chip-btn active" data-f="open">ยังค้าง</button>
       <button class="chip-btn" data-f="overdue">เลยกำหนด</button>
@@ -438,6 +447,25 @@ function lineMsg(t){
 }
 
 /* ---------- TAB 1: สรุปทุกงาน ---------- */
+function taskCard(t){ return h('div',{class:'card '+(t.complete?'complete':t.overdue?'overdue':t.soon?'soon':'')},
+    h('div',{class:'task-grid'},
+      h('div',null,
+        h('div',{class:'t-title',text:t.title}),
+        h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete),
+          /^(y|yes|✓|true|1|ใช่)$/i.test(String(t.auto_check||'').trim()) ? h('span',{class:'badge ok',title:t.check_log||'',text:'🔄 ตรวจอัตโนมัติ'+((t.check_log||'').match(/^\S+ (\d{2}:\d{2})/)?' · '+t.check_log.match(/^\S+ (\d{2}:\d{2})/)[1]:'')}) : null),
+        t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
+        attachBox(t)),
+      h('div',null,
+        h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
+        bar(t.pct),
+        h('div',{class:'small',text: t.complete ? 'ครบทุกสาขาแล้ว' : `ค้าง ${t.pending.length} สาขา`})),
+      h('div',null,
+        branchGroups(t.per),
+        h('div',{class:'actions'},
+          ...linkBtns(t,false,'เปิด'),
+          t.complete ? null : h('button',{class:'btn primary',onclick:()=>copy(lineMsg(t)),text:'📋 คัดลอกข้อความตามงาน'}))))
+  ); }
+let sumCat = 'all';
 let sumFilter = 'open';
 function renderSummary(){
   const T = MODEL.tasks;
@@ -461,31 +489,64 @@ function renderSummary(){
       h('div',{class:'small',text:`สาขาที่ยังค้างงาน ${pendB.size}/${MODEL.branches.filter(b=>areaOf(b)===a).length} สาขา · เลยกำหนด ${over} รายการ`}));
   }))] : []));
   const type = $('#sum-type').value, q = $('#sum-q').value.trim().toLowerCase();
-  let list = T.filter(t =>
-    (sumFilter==='all') || (sumFilter==='open' && !t.complete) || (sumFilter==='overdue' && t.overdue) || (sumFilter==='done' && t.complete));
-  if (type) list = list.filter(t=>t.type===type);
-  if (q) list = list.filter(t=>(t.title+' '+t.task_id).toLowerCase().includes(q));
-  list.sort((a,b)=> (a.complete-b.complete) || ((a.due||Infinity)-(b.due||Infinity)) || (a.pct-b.pct));
+  const match = txt => !q || String(txt||'').toLowerCase().includes(q);
+  const want = c => sumCat==='all' || sumCat===c;
+  const sections = [];
+
+  // ---- One Time ----
+  if (want('onetime')) {
+    let list = T.filter(t =>
+      (sumFilter==='all') || (sumFilter==='open' && !t.complete) || (sumFilter==='overdue' && t.overdue) || (sumFilter==='done' && t.complete));
+    if (type) list = list.filter(t=>t.type===type);
+    list = list.filter(t=>match(t.title+' '+t.task_id));
+    list.sort((a,b)=> (a.complete-b.complete) || ((a.due||Infinity)-(b.due||Infinity)) || (a.pct-b.pct));
+    sections.push(['📌 งาน One Time', list.map(taskCard)]);
+  }
+  // ---- งานประจำ (เฉพาะที่ต้องทำวันนี้) ----
+  ['Daily','Weekly','Monthly'].forEach(f => {
+    if (!want(f)) return;
+    const now = new Date(), mins = now.getHours()*60+now.getMinutes();
+    let ds = MODEL.daily.filter(d => d.frequency===f && d.today && match(d.title)).map(d => {
+      const complete = d.auto && d.checkedToday && !d.pending.length;
+      const late = !complete && d.deadline && mins > (+d.deadline.slice(0,2))*60 + (+d.deadline.slice(3,5));
+      return {d, complete, late};
+    });
+    ds = ds.filter(x => sumFilter==='all' || (sumFilter==='open' && !x.complete) || (sumFilter==='overdue' && x.late) || (sumFilter==='done' && x.complete));
+    const label = {Daily:'🔁 Daily – ต้องทำวันนี้', Weekly:'🗓️ Weekly – ต้องทำวันนี้', Monthly:'📆 Monthly – ต้องทำวันนี้'}[f];
+    sections.push([label, ds.map(x=>dailyCard(x.d))]);
+  });
+  // ---- การสอบ ----
+  if (want('exam')) {
+    let ex = MODEL.exams.filter(e=>match(e.title)).map(e => {
+      const st = MODEL.staff, took = st.filter(s=>s.emp_id in e.res).length;
+      const complete = st.length>0 && took===st.length, late = !complete && e.due && daysLeft(e.due)<0;
+      return {e, took, n: st.length, complete, late};
+    });
+    ex = ex.filter(x => sumFilter==='all' || (sumFilter==='open' && !x.complete) || (sumFilter==='overdue' && x.late) || (sumFilter==='done' && x.complete));
+    sections.push(['📝 การสอบ', ex.map(x => { const p = x.n ? x.took/x.n : 0; return h('div',{class:'card '+(x.complete?'complete':x.late?'overdue':'')},
+      h('div',{class:'t-title',text:x.e.title}),
+      h('div',{class:'meta'}, h('span',{class:'badge',text:x.e.exam_id}), h('span',{class:'badge type',text:'การสอบ'}), h('span',{class:'badge',text:'Due '+thDate(x.e.due)}), dueBadge(x.e.due,x.complete)),
+      x.n ? h('div',{style:'margin-top:8px'}, h('span',{class:'pct',text:pctTxt(p)}), h('span',{class:'small',text:`  สอบแล้ว ${x.took}/${x.n} คน`}), bar(p))
+          : h('div',{class:'small',style:'margin-top:6px',text:'ยังไม่มีรายชื่อพนักงาน (แท็บ Staff) จึงยังคำนวณ % ไม่ได้'}),
+      h('div',{class:'actions'}, splitLinks(x.e.link)[0] ? h('a',{class:'btn',href:splitLinks(x.e.link)[0],target:'_blank',rel:'noopener',text:'เปิดลิงก์สอบ ↗'}) : null,
+        h('button',{class:'btn primary',onclick:()=>{ $('#ex-select').value=x.e.exam_id; renderExam(); showTab('exam'); },text:'ดูรายละเอียดรายสาขา →'})));
+    })]);
+  }
+  // ---- อบรมที่จะถึง ----
+  if (want('training') && sumFilter!=='done' && sumFilter!=='overdue') {
+    const tr = MODEL.trainings.filter(t=>daysLeft(t.date)>=0 && (match(t.title) || t.att.some(a=>match(a.name))));
+    sections.push(['📚 อบรมที่จะถึง', tr.map(t => h('div',{class:'card '+(daysLeft(t.date)<=1?'soon':'')},
+      h('div',{class:'t-title',text:t.title}),
+      h('div',{class:'meta'}, h('span',{class:'badge warn',text:`📅 ${thDay(t.date)}${t.start?' · '+t.start+(t.end?'–'+t.end:''):''}`}), h('span',{class:'badge',text:dayRel(t.date)}),
+        t.location?h('span',{class:'badge type',text:'📍 '+t.location}):null, h('span',{class:'badge',text:`👥 ${t.att.length} คน`})),
+      h('div',{class:'actions'}, splitLinks(t.link)[0] ? h('a',{class:'btn',href:splitLinks(t.link)[0],target:'_blank',rel:'noopener',text:'เข้าร่วม / รายละเอียด ↗'}) : null,
+        h('button',{class:'btn primary',onclick:()=>showTab('training'),text:'ดู Agenda และรายชื่อ →'})))) ]);
+  }
   const box = $('#sum-list');
-  if (!list.length){ box.replaceChildren(h('div',{class:'empty',text:'ไม่มีงานในมุมมองนี้ 🎉'})); }
-  else box.replaceChildren(...list.map(t => h('div',{class:'card '+(t.complete?'complete':t.overdue?'overdue':t.soon?'soon':'')},
-    h('div',{class:'task-grid'},
-      h('div',null,
-        h('div',{class:'t-title',text:t.title}),
-        h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete),
-          /^(y|yes|✓|true|1|ใช่)$/i.test(String(t.auto_check||'').trim()) ? h('span',{class:'badge ok',title:t.check_log||'',text:'🔄 ตรวจอัตโนมัติ'+((t.check_log||'').match(/^\S+ (\d{2}:\d{2})/)?' · '+t.check_log.match(/^\S+ (\d{2}:\d{2})/)[1]:'')}) : null),
-        t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
-        attachBox(t)),
-      h('div',null,
-        h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
-        bar(t.pct),
-        h('div',{class:'small',text: t.complete ? 'ครบทุกสาขาแล้ว' : `ค้าง ${t.pending.length} สาขา`})),
-      h('div',null,
-        branchGroups(t.per),
-        h('div',{class:'actions'},
-          ...linkBtns(t,false,'เปิด'),
-          t.complete ? null : h('button',{class:'btn primary',onclick:()=>copy(lineMsg(t)),text:'📋 คัดลอกข้อความตามงาน'}))))
-  )));
+  const filled = sections.filter(([,items]) => items.length);
+  if (!filled.length) box.replaceChildren(h('div',{class:'empty',text:'ไม่มีงานในมุมมองนี้ 🎉'}));
+  else box.replaceChildren(...filled.flatMap(([title, items]) => sumCat==='all' ? [h('h2',{text:`${title} (${items.length})`}), ...items] : items));
+  $('#sum-type').style.display = (sumCat==='all' || sumCat==='onetime') ? '' : 'none';
   // ranking
   const rows = MODEL.branches.map(b => {
     const mine = T.filter(t=>t.list.includes(b));
@@ -759,6 +820,7 @@ async function init(){
 
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ sumFilter=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('active',x===b)); renderSummary(); });
+  document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ sumCat=b.dataset.cat; document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('active',x===b)); renderSummary(); });
   $('#sum-type').onchange = renderSummary; $('#sum-q').oninput = renderSummary;
   $('#br-select').onchange = () => showTab('branch');
   $('#br-link').onclick = () => copy(location.href.split('#')[0] + '#br-' + $('#br-select').value);
