@@ -99,6 +99,11 @@ td.num{text-align:right;white-space:nowrap}
 .staffbox .who input{width:18px;height:18px;accent-color:var(--ok)}
 .staffbox .who.done span{color:var(--muted);text-decoration:line-through}
 .staffbox .who small{color:var(--muted);margin-left:auto;font-size:12px}
+.staffbox .who select{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--muted)}
+.staffbox .who.excl span{color:#9aa1ad;text-decoration:line-through}
+.staffbox .who .fbtag{font-size:11.5px;padding:1px 7px;border-radius:99px;background:var(--warn-soft);color:#8a5a00;white-space:nowrap}
+.staffbox .mv{display:flex;gap:6px;align-items:center;padding:4px 12px 8px 38px}
+.staffbox .mv input{font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;width:220px}
 .names{font-size:13px;color:#9b1c1c}
 </style>
 </head>
@@ -267,7 +272,51 @@ function dueBadge(d, finished){
 const pctTxt = p => Math.round(p*100) + '%';
 const splitLinks = s => String(s||'').split(/\s+/).filter(u=>/^https?:\/\//.test(u));
 function linkLabel(u){ return /forms\.gle|\/forms\//.test(u)?'ฟอร์ม':/spreadsheets/.test(u)?'ชีต':/document/.test(u)?'เอกสาร':/presentation/.test(u)?'สไลด์':/drive\.google/.test(u)?'โฟลเดอร์':/lookerstudio|datastudio/.test(u)?'Dashboard':'ลิงก์'; }
+const EXCL_FB = /ลาออก|ลาคลอด|ลายาว|พักงาน|ไม่ใช่พนักงาน|resign/i;
+const FB_OPTS = ['ลาออก', 'ย้ายสาขา', 'ลาคลอด / ลายาว', 'ไม่ใช่พนักงานสาขานี้'];
 const openDet = new Set();
+const moveOpen = new Set();
+async function postFeedback(t, x, fb, newCode){
+  const row = (D.taskstaff||[]).find(r => r.task_id===t.task_id && (r.emp_id||r.name)===x.key);
+  if (row) {
+    const orig = row.orig_branch || row.branch_code;
+    const moved = /ย้าย/.test(fb) && newCode;
+    row.feedback = fb; row.orig_branch = moved ? orig : ''; row.branch_code = moved ? newCode : orig;
+  }
+  MODEL = build(D); rerenderAll();
+  if (!D.webAppUrl) { toast('⚠️ ยังไม่ได้ตั้งค่า Web App URL – Feedback จะไม่ถูกบันทึก'); return; }
+  pendingPosts++;
+  try {
+    await fetch(D.webAppUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'staffFeedback', task_id:t.task_id, key:x.key, feedback:fb, new_branch:newCode||'', by:'หน้าเว็บ'})});
+    toast(fb ? `บันทึก Feedback: ${x.name} – ${fb}${newCode?' → '+((MODEL.bmap[newCode]||{}).name||newCode):''}` : 'ยกเลิก Feedback: '+x.name);
+  } catch (e) { toast('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+  finally { pendingPosts--; }
+}
+function staffRow(t, x){
+  const mk = t.task_id+'|'+x.key;
+  const sel = h('select',{title:'Feedback', onchange: ev => {
+      const v = ev.target.value;
+      if (v === 'ย้ายสาขา') { moveOpen.add(mk); rerenderAll(); return; }
+      moveOpen.delete(mk); postFeedback(t, x, v, ''); }},
+    h('option',{value:'',text: x.feedback ? '↺ ยกเลิก Feedback' : '⋯ Feedback'}),
+    FB_OPTS.map(o => h('option',{value:o, text:o, selected: (x.feedback||'').startsWith(o.slice(0,4)) ? true : null})));
+  if (!x.feedback) sel.value = '';
+  const row = h('div',null,
+    h('label',{class:'who'+(x.done?' done':'')+(x.excl?' excl':'')},
+      h('input',{type:'checkbox', checked: x.done ? true : null, disabled: x.excl ? true : null, onchange: ev => postCheck(t, x, ev.target.checked)}),
+      h('span',{text:x.name}),
+      x.feedback ? h('span',{class:'fbtag',text: x.feedback + (x.orig_branch ? ` (จาก ${(MODEL.bmap[x.orig_branch]||{}).name||x.orig_branch})` : '')}) : null,
+      h('small',{text:[x.emp_id, x.done && x.checked_by ? '✓ '+x.checked_by : ''].filter(Boolean).join(' · ')}),
+      sel));
+  if (moveOpen.has(mk)) {
+    const inp = h('input',{type:'text', placeholder:'Codeshop สาขาใหม่ เช่น 80101067', list:'dl-branches'});
+    row.append(h('div',{class:'mv'}, inp,
+      h('button',{class:'btn primary', onclick: () => { const c = inp.value.trim().split(/\s|–/)[0]; if (!/^\w{5,}$/.test(c)) { toast('ใส่ Codeshop สาขาใหม่ก่อน'); return; } moveOpen.delete(mk); postFeedback(t, x, 'ย้ายสาขา', c); }, text:'บันทึกย้ายสาขา'}),
+      h('button',{class:'btn', onclick: () => { moveOpen.delete(mk); rerenderAll(); }, text:'ยกเลิก'})));
+  }
+  return row;
+}
 let pendingPosts = 0;
 async function postCheck(t, x, done){
   x.done = done;
@@ -283,27 +332,32 @@ async function postCheck(t, x, done){
   } catch (e) { toast('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'); }
   finally { pendingPosts--; }
 }
+function ensureDatalist(){
+  let dl = document.getElementById ? document.getElementById('dl-branches') : null;
+  if (dl || !document.body || !MODEL) return;
+  dl = h('datalist',{id:'dl-branches'}, (D.branches||[]).filter(b=>b.code).map(b => h('option',{value:b.code+' – '+b.name})));
+  document.body.append(dl);
+}
 function staffBox(t, onlyCode){
   if (!t.staff) return null;
+  ensureDatalist();
   const codes = Object.keys(t.staff).filter(c => !onlyCode || c===onlyCode);
   if (!codes.length) return null;
-  const all = codes.flatMap(c => t.staff[c]), dn = all.filter(x=>x.done).length;
+  const all = codes.flatMap(c => t.staff[c]).filter(x=>!x.excl), dn = all.filter(x=>x.done).length;
   const bname = c => (MODEL.bmap[c] && MODEL.bmap[c].name) || (t.staff[c][0] && t.staff[c][0].branch_raw) || c || 'ไม่ระบุสาขา';
-  codes.sort((a,b) => { const pa = t.staff[a].filter(x=>!x.done).length, pb = t.staff[b].filter(x=>!x.done).length; return (pb>0)-(pa>0) || pb-pa || bname(a).localeCompare(bname(b)); });
+  codes.sort((a,b) => { const pa = t.staff[a].filter(x=>!x.done&&!x.excl).length, pb = t.staff[b].filter(x=>!x.done&&!x.excl).length; return (pb>0)-(pa>0) || pb-pa || bname(a).localeCompare(bname(b)); });
   return h('div',{class:'staffbox'},
     h('div',{class:'small',text:`👥 รายชื่อพนักงาน: ดำเนินการแล้ว ${dn}/${all.length} คน`+(D.webAppUrl?' · ติ๊กชื่อคนที่ทำแล้วได้เลย':' · (ตั้งค่า Web App URL เพื่อให้ติ๊กแล้วบันทึกได้)')}),
-    codes.map(c => { const ps = t.staff[c], d = ps.filter(x=>x.done).length, id = t.task_id+'|'+c;
+    codes.map(c => { const all0 = t.staff[c], ps = all0.filter(x=>!x.excl), d = ps.filter(x=>x.done).length, id = t.task_id+'|'+c, ex = all0.length - ps.length;
       const det = h('details',{open: onlyCode || openDet.has(id) ? true : null},
-        h('summary',null, (d===ps.length?'✅ ':'⏳ ') + `${bname(c)} — ${d}/${ps.length} คน`),
-        ps.slice().sort((a,b)=>a.done-b.done).map(x => h('label',{class:'who'+(x.done?' done':'')},
-          h('input',{type:'checkbox', checked: x.done ? true : null, onchange: ev => postCheck(t, x, ev.target.checked)}),
-          h('span',{text:x.name}), h('small',{text:[x.emp_id, x.done && x.checked_by ? '✓ '+x.checked_by : ''].filter(Boolean).join(' · ')}))));
+        h('summary',null, (d===ps.length?'✅ ':'⏳ ') + `${bname(c)} — ${d}/${ps.length} คน` + (ex ? ` · ไม่นับ ${ex} คน (ลาออก/ลายาว)` : '')),
+        all0.slice().sort((a,b)=>(a.excl-b.excl)||(a.done-b.done)).map(x => staffRow(t, x)));
       det.addEventListener('toggle', () => det.open ? openDet.add(id) : openDet.delete(id));
       return det; }));
 }
 function staffToggle(t){
   const box = staffBox(t); if (!box) return null;
-  const all = Object.values(t.staff).flat(), dn = all.filter(x=>x.done).length, id = 'all|'+t.task_id;
+  const all = Object.values(t.staff).flat().filter(x=>!x.excl), dn = all.filter(x=>x.done).length, id = 'all|'+t.task_id;
   const det = h('details',{class:'staffbox', style:'border:0;padding-top:0', open: openDet.has(id) ? true : null},
     h('summary',{class:'btn', style:'display:inline-flex;margin-top:8px', text:`👥 ดูสถานะรายพนักงาน — ทำแล้ว ${dn}/${all.length} คน`}), box);
   det.addEventListener('toggle', () => det.open ? openDet.add(id) : openDet.delete(id));
@@ -471,9 +525,9 @@ function build(data){
   data.done.forEach(d => { const st = (d.status||'done').toLowerCase().includes('partial') || d.status==='บางส่วน' ? 'partial' : 'done'; doneMap[d.task_id+'|'+d.branch_code] = st; });
   const staffBy = {};
   (data.taskstaff||[]).forEach(x => { if (!x.task_id || !x.name) return; const k = x.emp_id || x.name;
-    ((staffBy[x.task_id] = staffBy[x.task_id] || {})[x.branch_code] = staffBy[x.task_id][x.branch_code] || []).push({...x, key: k, done: /^y/i.test(x.done||'')}); });
+    ((staffBy[x.task_id] = staffBy[x.task_id] || {})[x.branch_code] = staffBy[x.task_id][x.branch_code] || []).push({...x, key: k, done: /^y/i.test(x.done||''), excl: EXCL_FB.test(x.feedback||'')}); });
   const staffOf = id => { const sb = staffBy[id]; if (!sb) return null; const o = {}; Object.entries(sb).forEach(([c,l]) => { if (bmap[c]) o[c] = l; }); return Object.keys(o).length ? o : null; };
-  const staffSt = (staff, code) => { const l = staff && staff[code]; if (!l) return null; const d = l.filter(x=>x.done).length; return d===l.length ? 'done' : d ? 'partial' : 'pending'; };
+  const staffSt = (staff, code) => { const l0 = staff && staff[code]; if (!l0) return null; const l = l0.filter(x=>!x.excl); const d = l.filter(x=>x.done).length; return d===l.length ? 'done' : d ? 'partial' : 'pending'; };
   const mkTask = t => {
     const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
     const list = targetsOf(t, allBr, bmapAll).filter(b=>bmap[b.code] && (!tracked.length || tracked.includes(b.code)));
@@ -673,7 +727,7 @@ function renderBranch(){
     kpi('เลยกำหนดแล้ว', over.length, over.length?'ทำด่วน!':'ไม่มี 👍', over.length?'bad':'ok'),
     ...MODEL.exams.filter(e=>!e.due || daysLeft(e.due)>=-7).map(e => {
       let took, n;
-      if (e.staff) { const l = e.staff[code] || []; n = l.length; took = l.filter(x=>x.done).length; if (!n) return null; }
+      if (e.staff) { const l = (e.staff[code] || []).filter(x=>!x.excl); n = l.length; took = l.filter(x=>x.done).length; if (!n) return null; }
       else { const st = MODEL.staff.filter(s=>s.branch_code===code); n = st.length; took = st.filter(s=>s.emp_id in e.res).length; }
       return kpi('สอบ: '+e.title, `${took}/${n} คน`, 'Due '+thDate(e.due), took===n?'ok':'');
     })
@@ -714,18 +768,18 @@ function goBranch(code){ $('#br-select').value = code; showTab('branch'); }
 
 /* ---------- TAB 3: การสอบ ---------- */
 function examStaffStats(e){
-  const codes = Object.keys(e.staff||{}); const all = codes.flatMap(c=>e.staff[c]);
+  const codes = Object.keys(e.staff||{}); const all = codes.flatMap(c=>e.staff[c]).filter(x=>!x.excl);
   return {codes, n: all.length, d: all.filter(x=>x.done).length};
 }
 function renderExamChecklist(e, fb){
   const st = examStaffStats(e);
   const el0 = splitLinks(e.link)[0]; $('#ex-open').href = el0 || '#'; $('#ex-open').style.display = el0 ? '' : 'none';
-  const pend = st.codes.filter(c => e.staff[c].some(x=>!x.done));
+  const pend = st.codes.filter(c => e.staff[c].some(x=>!x.done && !x.excl));
   $('#ex-kpis').replaceChildren(
     kpi('ดำเนินการแล้ว', pctTxt(st.n?st.d/st.n:1), `${st.d}/${st.n} คน`, st.d===st.n?'ok':''),
     kpi('ยังไม่ดำเนินการ', (st.n-st.d)+' คน', `${pend.length} สาขายังไม่ครบ`, st.n-st.d?'warn':'ok'),
     kpi('กำหนดส่ง', thDate(e.due), e.due ? (daysLeft(e.due)<0?`เลยกำหนด ${-daysLeft(e.due)} วัน`:`อีก ${daysLeft(e.due)} วัน`) : '', e.due&&daysLeft(e.due)<0?'bad':''));
-  const rows = st.codes.filter(c=>!fb || c===fb).map(c => { const l = e.staff[c], d = l.filter(x=>x.done).length; return {c, l, d, p: l.length?d/l.length:1}; }).sort((a,b)=>a.p-b.p);
+  const rows = st.codes.filter(c=>!fb || c===fb).map(c => { const l = e.staff[c].filter(x=>!x.excl), d = l.filter(x=>x.done).length; return {c, l, d, p: l.length?d/l.length:1}; }).sort((a,b)=>a.p-b.p);
   $('#ex-table').replaceChildren(
     h('thead',null,h('tr',null, h('th',{text:'สาขา'}), h('th',{class:'num',text:'รายชื่อ'}), h('th',{class:'num',text:'ทำแล้ว'}), h('th',{style:'min-width:150px',text:'Progress'}), h('th',{text:'ยังไม่ดำเนินการ'}))),
     h('tbody',null, rows.map(r => h('tr',null,

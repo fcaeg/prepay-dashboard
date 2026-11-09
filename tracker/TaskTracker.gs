@@ -16,7 +16,8 @@ const TABS = {
   results:  ['ExamResults', ['exam_id', 'emp_id', 'score']],
   trainings:['Trainings', ['training_id', 'date', 'start', 'end', 'title', 'location', 'link', 'trainer', 'detail', 'attachments']],
   attendees:['TrainingAttendees', ['training_id', 'name', 'branch_code', 'emp_id', 'note']],
-  taskstaff:['TaskStaff', ['task_id', 'emp_id', 'name', 'branch_code', 'branch_raw', 'region', 'status_src', 'done', 'checked_by', 'checked_at']],
+  taskstaff:['TaskStaff', ['task_id', 'emp_id', 'name', 'branch_code', 'branch_raw', 'region', 'status_src', 'done', 'checked_by', 'checked_at', 'feedback', 'orig_branch', 'feedback_by', 'feedback_at']],
+  staffupd: ['StaffUpdates', ['emp_id', 'name', 'feedback', 'new_branch', 'updated_by', 'updated_at']],
   daily:    ['Daily', ['daily_id', 'title', 'frequency', 'link', 'detail', 'deadline', 'days', 'branches', 'active', 'attachments', 'auto_check', 'check_tab', 'check_done_col', 'check_done_value', 'check_log', 'tracked_branches']]
 };
 
@@ -330,9 +331,8 @@ function importStaff_(tid, tables, update) {
   let list = [];
   for (const t of tables) { const l = parseStaffList(t, branches, areas); if (l.length) { list = l; break; } }
   if (!list.length) return false;
-  let sh = ss.getSheetByName(TABS.taskstaff[0]);
-  if (!sh) { sh = ss.insertSheet(TABS.taskstaff[0]); sh.getRange('A:Z').setNumberFormat('@');
-    sh.getRange(1, 1, 1, TABS.taskstaff[1].length).setValues([TABS.taskstaff[1]]).setFontWeight('bold').setBackground('#e8eeff'); sh.setFrozenRows(1); }
+  const sh = staffSheet_('taskstaff');
+  const upd = staffUpdates_();
   const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
   const key = x => (x.emp_id || x.name).toString().trim();
@@ -348,11 +348,49 @@ function importStaff_(tid, tables, update) {
   });
   list.forEach(x => {
     if (existing[key(x)]) return;
-    appendObj_(sh, {task_id: tid, emp_id: x.emp_id, name: x.name, branch_code: x.code, branch_raw: x.raw, region: x.region,
-      status_src: x.status_src, done: x.done ? 'Y' : '', checked_by: x.done ? 'จากไฟล์' : '', checked_at: x.done ? stamp : ''});
+    const u = upd[key(x)] || {};
+    const moved = /ย้าย/.test(u.feedback || '') && u.new_branch;
+    appendObj_(sh, {task_id: tid, emp_id: x.emp_id, name: x.name, branch_code: moved ? u.new_branch : x.code, branch_raw: x.raw, region: x.region,
+      status_src: x.status_src, done: x.done ? 'Y' : '', checked_by: x.done ? 'จากไฟล์' : '', checked_at: x.done ? stamp : '',
+      feedback: u.feedback || '', orig_branch: moved ? x.code : '', feedback_by: u.feedback ? 'จำจากงานก่อน' : ''});
   });
   syncStaffDone_(tid);
   return list;
+}
+
+const EXCL_FB = /ลาออก|ลาคลอด|ลายาว|พักงาน|ไม่ใช่พนักงาน|resign/i;   // ไม่นับใน % ของสาขา
+function ensureCols_(sh, cols) {
+  const head = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0].map(String).filter(Boolean);
+  cols.forEach(c => { if (!head.includes(c)) { sh.getRange(1, head.length + 1).setValue(c).setFontWeight('bold').setBackground('#e8eeff'); head.push(c); } });
+  return head;
+}
+function staffSheet_(key) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(TABS[key][0]);
+  if (!sh) { sh = ss.insertSheet(TABS[key][0]); sh.getRange('A:Z').setNumberFormat('@'); sh.setFrozenRows(1); }
+  ensureCols_(sh, TABS[key][1]);
+  return sh;
+}
+/* Feedback ถาวรของพนักงาน (ลาออก / ย้ายสาขา) → ใช้กับไฟล์รายชื่อของงานถัดไปด้วย */
+function staffUpdates_() {
+  const sh = staffSheet_('staffupd'); const m = {};
+  if (sh.getLastRow() < 2) return m;
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
+  sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues().forEach(r => {
+    const k = String(r[C('emp_id')] || r[C('name')]).trim(); if (k) m[k] = {feedback: r[C('feedback')], new_branch: r[C('new_branch')]};
+  });
+  return m;
+}
+function saveStaffUpdate_(emp, name, fb, newBr, by) {
+  const sh = staffSheet_('staffupd');
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
+  const k = String(emp || name).trim();
+  const v = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues() : [];
+  const i = v.findIndex(r => String(r[C('emp_id')] || r[C('name')]).trim() === k);
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  if (!fb) { if (i >= 0) sh.deleteRow(i + 2); return; }
+  const row = head.map(h => ({emp_id: emp, name, feedback: fb, new_branch: newBr || '', updated_by: by || '', updated_at: stamp})[h] ?? '');
+  if (i >= 0) sh.getRange(i + 2, 1, 1, head.length).setValues([row]); else sh.appendRow(row);
 }
 
 /* สรุปสถานะสาขาจากรายชื่อพนักงาน → แท็บ Done (note = staff) + tracked_branches */
@@ -363,6 +401,7 @@ function syncStaffDone_(tid) {
   const per = {};
   sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues().forEach(r => {
     if (r[C('task_id')] !== tid || !r[C('branch_code')]) return;
+    if (C('feedback') >= 0 && EXCL_FB.test(r[C('feedback')] || '')) return;     // ลาออก/ลายาว ไม่นับ
     const a = per[r[C('branch_code')]] || {n: 0, d: 0}; a.n++; if (/^y/i.test(r[C('done')])) a.d++; per[r[C('branch_code')]] = a;
   });
   const dsh = ss.getSheetByName(TABS.done[0]);
@@ -385,13 +424,26 @@ function doPost(e) {
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const q = JSON.parse(e.postData.contents || '{}');
-    if (q.action !== 'staffCheck') return out_({ok: false, error: 'unknown action'});
-    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.taskstaff[0]);
+    if (!['staffCheck', 'staffFeedback'].includes(q.action)) return out_({ok: false, error: 'unknown action'});
+    const sh = staffSheet_('taskstaff');
     const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), C = n => head.indexOf(n);
     const v = sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues();
     const i = v.findIndex(r => r[C('task_id')] === q.task_id && (r[C('emp_id')] || r[C('name')]) === q.key);
     if (i < 0) return out_({ok: false, error: 'not found'});
     const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+    if (q.action === 'staffFeedback') {
+      const r = v[i], fb = String(q.feedback || '').slice(0, 60), nb = String(q.new_branch || '').trim();
+      const orig = r[C('orig_branch')] || r[C('branch_code')];
+      const moved = /ย้าย/.test(fb) && nb;
+      sh.getRange(i + 2, C('feedback') + 1).setValue(fb);
+      sh.getRange(i + 2, C('orig_branch') + 1).setValue(moved ? orig : '');
+      sh.getRange(i + 2, C('branch_code') + 1).setValue(moved ? nb : orig);
+      sh.getRange(i + 2, C('feedback_by') + 1).setValue(fb ? String(q.by || 'หน้าเว็บ').slice(0, 60) : '');
+      sh.getRange(i + 2, C('feedback_at') + 1).setValue(fb ? stamp : '');
+      saveStaffUpdate_(r[C('emp_id')], r[C('name')], fb, moved ? nb : '', q.by || 'หน้าเว็บ');
+      syncStaffDone_(q.task_id); archiveCompleted_();
+      return out_({ok: true});
+    }
     sh.getRange(i + 2, C('done') + 1).setValue(q.done ? 'Y' : '');
     sh.getRange(i + 2, C('checked_by') + 1).setValue(q.done ? String(q.by || 'หน้าเว็บ').slice(0, 60) : '');
     sh.getRange(i + 2, C('checked_at') + 1).setValue(q.done ? stamp : '');
