@@ -85,15 +85,15 @@ function ensureQuestions_(form) {
   if (!find(Q.area))  form.addMultipleChoiceItem().setTitle(Q.area).setChoiceValues(AREAS).setRequired(false);
   if (!find(Q.branches)) form.addTextItem().setTitle(Q.branches);
   if (!find(Q.title)) form.addTextItem().setTitle(Q.title);
-  find(Q.title).asTextItem().setHelpText('พิมพ์สั้นๆ เช่น "สำรวจสต็อก Q4" (เว้นว่าง = ใช้บรรทัดแรกของรายละเอียด)');
+  find(Q.title).asTextItem().setHelpText('เว้นว่าง = ระบบตั้งชื่อจากบรรทัดหลักของข้อความ | พิมพ์เองเมื่ออยากได้ชื่อสั้นกว่า');
   find(Q.msg).asParagraphTextItem().setHelpText('วางข้อความจากไลน์ได้ทั้งก้อน มีหลายลิงก์ได้ ระบบแยกลิงก์ / Due / ประเภทงาน ให้เอง');
   find(Q.branches).asTextItem().setHelpText('เช่น UN01,UN05,LN03 (ใส่ชื่อ Area ปนได้ เช่น Lower North,UN01)');
   // ส่วน "ไม่ต้องกรอกก็ได้"
   const OPT = 'ตัวเลือกเพิ่มเติม (เว้นว่างได้ ระบบแยกให้เอง)';
   if (!find(OPT)) form.addSectionHeaderItem().setTitle(OPT)
-    .setHelpText('ประเภทงาน, Due และลิงก์ ระบบอ่านจากรายละเอียดให้อัตโนมัติ กรอกเฉพาะเมื่ออยากกำหนดเอง');
-  // เรียงลำดับ: ชื่องาน > รายละเอียด | ส่งถึง > Due > ประเภท > รหัสสาขา
-  [Q.title, Q.msg, OPT, Q.area, Q.due, Q.type, Q.branches].forEach((t, i) => {
+    .setHelpText('ชื่องาน, ประเภทงาน, Due และลิงก์ ระบบอ่านจากข้อความให้อัตโนมัติ กรอกเฉพาะเมื่ออยากกำหนดเอง');
+  // เรียงลำดับ: รายละเอียด | (เว้นว่างได้) ชื่องาน > ส่งถึง > Due > ประเภท > รหัสสาขา
+  [Q.msg, OPT, Q.title, Q.area, Q.due, Q.type, Q.branches].forEach((t, i) => {
     const it = find(t); if (it && it.getIndex() !== i) form.moveItem(it.getIndex(), i);
   });
 }
