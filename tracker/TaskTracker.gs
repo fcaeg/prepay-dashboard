@@ -29,6 +29,8 @@ const Q = {
   title:    'ชื่องาน'
 };
 const TYPE_AUTO = 'อัตโนมัติ (ดูจากลิงก์)';
+const DEFAULT_CHECK_TAB = 'UPC - Upper North, UPC - Lower North, Upper North, Lower North, UN, LN, North';
+const SET_CHECK_TAB = 'check_tab เริ่มต้น (ใช้กับทุกงานที่เป็น Google Sheet/Form)';
 const AREAS = ['ทุกสาขา', 'Upper North', 'Lower North', 'ระบุสาขาเอง'];
 const FREQS = ['One Time (ครั้งเดียว)', 'Daily (ทุกวัน)', 'Weekly (ทุกสัปดาห์)', 'Monthly (ทุกเดือน)'];
 const TYPES = [TYPE_AUTO, 'Google Form', 'Google Doc', 'Google Sheet', 'Dashboard', 'ส่งไฟล์ (Drive)', 'งานประจำวัน', 'อบรม', 'การสอบ', 'อื่นๆ'];
@@ -72,12 +74,15 @@ function setup() {
   if (isNew) ss.getSheets().forEach(sh => { if (sh.getFormUrl && sh.getFormUrl()) sh.setName('_FormInput'); });
 
   let st = ss.getSheetByName('Settings') || ss.insertSheet('Settings');
+  const keepTab = getSetting_(SET_CHECK_TAB) || DEFAULT_CHECK_TAB;
   st.clear();
-  st.getRange('A1:B3').setValues([
+  st.getRange('A1:B4').setValues([
     ['ลิงก์ฟอร์มลงงาน (เปิดบนมือถือ)', form.getPublishedUrl()],
     ['แก้ไขฟอร์ม', form.getEditUrl()],
-    ['Sheet ID (ใส่ในหน้าเว็บ)', ss.getId()]
+    ['Sheet ID (ใส่ในหน้าเว็บ)', ss.getId()],
+    [SET_CHECK_TAB, keepTab]
   ]);
+  st.getRange('A:B').setNumberFormat('@');
   st.autoResizeColumns(1, 2);
   const hasUpload = form.getItems().some(i => i.getType() === FormApp.ItemType.FILE_UPLOAD);
   const msg = 'ตั้งค่าเสร็จ ✅\nลิงก์ฟอร์มอยู่ในแท็บ Settings' + (hasUpload ? '' :
@@ -114,6 +119,15 @@ function ensureQuestions_(form) {
     const it = find(t); if (it && it.getIndex() !== i) form.moveItem(it.getIndex(), i);
   });
 }
+
+function getSetting_(label) {
+  const st = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+  if (!st || st.getLastRow() < 1) return '';
+  const row = st.getRange(1, 1, st.getLastRow(), 2).getDisplayValues().find(r => r[0] === label);
+  return row ? String(row[1]).trim() : '';
+}
+function defaultCheckTab_() { return getSetting_(SET_CHECK_TAB) || DEFAULT_CHECK_TAB; }
+const isCheckable_ = link => /docs\.google\.com\/(spreadsheets|forms)|forms\.gle/i.test(String(link || ''));
 
 /* ===================== รับข้อมูลจากฟอร์ม ===================== */
 function onTaskForm(e) {
@@ -156,7 +170,8 @@ function onTaskForm(e) {
     const f = /weekly/i.test(freq) ? 'Weekly' : /monthly/i.test(freq) ? 'Monthly' : 'Daily';
     const tm = (p.raw.match(/(?:ภายใน|ก่อน|ไม่เกิน)\s*(?:เวลา)?\s*(\d{1,2})[.:](\d{2})/) || p.raw.match(/(\d{1,2})[.:](\d{2})\s*น/) || []);
     appendObj_(sh, {daily_id: nextId(sh, 'D'), title, frequency: f, link: p.links.join(' '), detail: p.detail,
-      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, p.raw, new Date()), branches, active: 'Y'});
+      deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, p.raw, new Date()), branches, active: 'Y',
+      check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
   } else if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
     const tr = p.training || {};
     const sh = ss.getSheetByName(TABS.trainings[0]);
@@ -180,7 +195,8 @@ function onTaskForm(e) {
     if (branches === 'ALL' && codes.length) branches = codes.join(',');
     const sh = ss.getSheetByName(TABS.tasks[0]);
     appendObj_(sh, {task_id: nextId(sh, 'T'), title, type, link: p.links.join(' '), detail: p.detail,
-      assigned: today, due, branches, raw_message: p.raw, attachments});
+      assigned: today, due, branches, raw_message: p.raw, attachments,
+      check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
   }
 }
 
@@ -425,9 +441,15 @@ function checkSheet_(tabName, idCol) {
   const dsh = ss.getSheetByName(TABS.done[0]);
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
 
+  const defTab = defaultCheckTab_();
   rows.forEach((r, i) => {
     const flag = String(r[C('auto_check')] || '').trim();
-    const on = /^(y|yes|✓|true|1|ใช่)$/i.test(flag) || (!flag && String(r[C('check_tab')] || '').trim() !== '');  // กรอก check_tab = เปิดตรวจ
+    if (/^(n|no|ไม่|0|false)$/i.test(flag)) return;                       // N = ปิดตรวจ
+    if (!String(r[C('check_tab')] || '').trim() && isCheckable_(r[C('link')])) {   // งานเก่าที่ยังว่าง ใช้ค่าเริ่มต้น
+      r[C('check_tab')] = defTab;
+      tsh.getRange(i + 2, C('check_tab') + 1).setValue(defTab);
+    }
+    const on = /^(y|yes|✓|true|1|ใช่)$/i.test(flag) || String(r[C('check_tab')] || '').trim() !== '';
     if (!on) return;
     if (C('active') >= 0 && /^(n|no|ไม่|0|false)$/i.test(String(r[C('active')] || '').trim())) return;
     const tid = r[C(idCol)];
@@ -486,11 +508,12 @@ function resolveTabs_(book, wanted) {
   const todayRe = new RegExp('(^|\\D)0?' + d + '(?!\\d)\\s*[-/ ]?\\s*(' + [MON[m], MON[m].slice(0, 3), THM[m], THS[m].replace(/\./g, '\\.'), String(m + 1)].join('|') + ')(?![a-z])', 'i');
   const out = [];
   wanted.forEach(w => {
-    if (!w.includes('*')) { const sh = book.getSheetByName(w); if (sh) out.push(sh); return; }
+    if (!w.includes('*')) { const sh = book.getSheetByName(w) || all.find(x => x.getName().trim().toLowerCase() === w.toLowerCase()); if (sh && !out.includes(sh)) out.push(sh); return; }
     const re = new RegExp('^' + w.split('*').map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$', 'i');
     const hits = all.filter(sh => re.test(sh.getName()));
     if (!hits.length) return;
-    out.push(hits.find(sh => todayRe.test(sh.getName())) || hits[hits.length - 1]);
+    const pick = hits.find(sh => todayRe.test(sh.getName())) || hits[hits.length - 1];
+    if (!out.includes(pick)) out.push(pick);
   });
   return out;
 }
