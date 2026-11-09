@@ -301,6 +301,14 @@ function staffBox(t, onlyCode){
       det.addEventListener('toggle', () => det.open ? openDet.add(id) : openDet.delete(id));
       return det; }));
 }
+function staffToggle(t){
+  const box = staffBox(t); if (!box) return null;
+  const all = Object.values(t.staff).flat(), dn = all.filter(x=>x.done).length, id = 'all|'+t.task_id;
+  const det = h('details',{class:'staffbox', style:'border:0;padding-top:0', open: openDet.has(id) ? true : null},
+    h('summary',{class:'btn', style:'display:inline-flex;margin-top:8px', text:`👥 ดูสถานะรายพนักงาน — ทำแล้ว ${dn}/${all.length} คน`}), box);
+  det.addEventListener('toggle', () => det.open ? openDet.add(id) : openDet.delete(id));
+  return det;
+}
 function branchGroups(per){
   const pend = per.filter(x=>x.st!=='done'), done = per.filter(x=>x.st==='done');
   return h('div',null,
@@ -537,7 +545,7 @@ function taskCard(t){ return h('div',{class:'card '+(t.complete?'complete':t.ove
         h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete),
           /^(y|yes|✓|true|1|ใช่)$/i.test(String(t.auto_check||'').trim()) ? h('span',{class:'badge ok',title:t.check_log||'',text:'🔄 ตรวจอัตโนมัติ'+((t.check_log||'').match(/^\S+ (\d{2}:\d{2})/)?' · '+t.check_log.match(/^\S+ (\d{2}:\d{2})/)[1]:'')}) : null),
         t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
-        attachBox(t), staffBox(t)),
+        attachBox(t), staffToggle(t)),
       h('div',null,
         h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
         bar(t.pct),

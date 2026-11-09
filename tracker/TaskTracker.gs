@@ -415,22 +415,32 @@ function importStaffSelected() {
   const ids = (att.match(/\/d\/([\w-]{20,})/g) || []).map(x => x.slice(3));
   const tables = ids.map(id => { try { return DriveApp.getFileById(id); } catch (e) { return null; } }).filter(Boolean)
     .filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName())).flatMap(readTables_);
-  if (!tables.length) { ui.alert('งานนี้ไม่มีไฟล์ Excel/CSV แนบ'); return; }
+  if (!tables.length) { ui.alert(ids.length ? 'อ่านไฟล์แนบไม่ได้\n' + lastReadError_ : 'งานนี้ไม่มีไฟล์ Excel/CSV แนบ'); return; }
   const ok = importStaff_(tid, tables, true);
   ui.alert(ok ? `อ่านรายชื่อพนักงานของ ${tid} แล้ว ✅ ดูได้ในแท็บ TaskStaff และหน้าเว็บ` : 'ไม่พบตารางรายชื่อ (ต้องมีคอลัมน์ชื่อ + สาขา) หรือไม่มีพนักงานในพื้นที่');
 }
 
 /* อ่านตารางจากไฟล์: CSV อ่านตรง, Excel แปลงเป็น Google Sheet ชั่วคราว (ต้องเปิดบริการ Drive API) */
+let lastReadError_ = '';
+/* แปลง Excel เป็น Google Sheet ชั่วคราว (รองรับ Drive API v3 และ v2) */
+function convertToSheet_(file) {
+  const id = file.getId(), errs = [];
+  try { return Drive.Files.copy({name: '_tmp_tt', mimeType: MimeType.GOOGLE_SHEETS}, id).id; } catch (e) { errs.push('v3: ' + e); }
+  try { return Drive.Files.copy({title: '_tmp_tt', mimeType: MimeType.GOOGLE_SHEETS}, id, {convert: true}).id; } catch (e) { errs.push('v2copy: ' + e); }
+  try { return Drive.Files.insert({title: '_tmp_tt', mimeType: MimeType.GOOGLE_SHEETS}, file.getBlob(), {convert: true}).id; } catch (e) { errs.push('v2insert: ' + e); }
+  throw new Error('แปลงไฟล์ Excel ไม่ได้ – เปิดบริการ Drive API ใน Apps Script (Services +) แล้วลองใหม่ | ' + errs.join(' | '));
+}
+
 function readTables_(file) {                  // ทุกแท็บของไฟล์ → [values, values, ...]
   try {
     const mt = file.getMimeType();
     if (/csv/i.test(mt) || /\.csv$/i.test(file.getName())) return [Utilities.parseCsv(file.getBlob().getDataAsString('UTF-8'))];
     let id = file.getId(), tmp = null;
-    if (mt !== MimeType.GOOGLE_SHEETS) { tmp = Drive.Files.copy({name: '_tmp_staff', mimeType: MimeType.GOOGLE_SHEETS}, id); id = tmp.id; }
+    if (mt !== MimeType.GOOGLE_SHEETS) { tmp = convertToSheet_(file); id = tmp; }
     const out = SpreadsheetApp.openById(id).getSheets().map(sh => sh.getDataRange().getDisplayValues());
-    if (tmp) DriveApp.getFileById(tmp.id).setTrashed(true);
+    if (tmp) DriveApp.getFileById(tmp).setTrashed(true);
     return out;
-  } catch (err) { Logger.log('อ่านไฟล์ไม่ได้: ' + file.getName() + ' ' + err); return []; }
+  } catch (err) { Logger.log('อ่านไฟล์ไม่ได้: ' + file.getName() + ' ' + err); lastReadError_ = String(err); return []; }
 }
 
 function readTable_(file) {
