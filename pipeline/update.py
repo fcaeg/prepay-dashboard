@@ -115,6 +115,41 @@ def add_watch(path, label):
     if old is not None: out = pd.concat([old[~((old.list == label) & old.serial.isin(out.serial))], out])
     save(out[WATCH_COLS], 'watch_serials.csv'); print(f'watch list "{label}": {len(out[out.list == label])} serials')
 
+def load_snexpiry(path):
+    """SN expiry snapshot from HQ -> replaces the watch lists (one list per expiry month + "ซิม New Lot").
+    Two layouts: sheet "Detail" (header row 3: Serial number, Material, SLoc, อายุระบบ, Month/Year ที่หมดอายุ)
+    or one sheet with header row 1 (Serial number, Material, Plnt, SLoc, Status, Expire Date dd/mm/yyyy).
+    Kept: plant 0321, status Valid (not opened) or New Lot. Serials already sold stay (sold history)."""
+    import datetime
+    TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+    xl = pd.ExcelFile(path)
+    if 'Detail' in xl.sheet_names:
+        d = pd.read_excel(xl, 'Detail', header=2, dtype=str); d.columns = [str(c).strip() for c in d.columns]
+        mo = d['Month/Year ที่หมดอายุ'].astype(str).str.strip(); d['nl'] = ~mo.str.match(r'^\d{2}/\d{4}$')
+        def dt(v):
+            try: return (pd.Timestamp('1899-12-30') + pd.Timedelta(days=float(v))).strftime('%Y-%m-%d')
+            except Exception:
+                t = pd.to_datetime(v, errors='coerce'); return '' if pd.isna(t) else t.strftime('%Y-%m-%d')
+        d['exp'] = d['อายุระบบ'].map(dt)
+    else:
+        d = pd.read_excel(xl, 0, dtype=str); d.columns = [str(c).strip() for c in d.columns]
+        st = d['Status'].astype(str).str.split(':').str[0].str.strip()
+        keep = st.isin(['Valid', 'New Lot']) & (d['Plnt'].astype(str).str.strip() == '0321' if 'Plnt' in d else True)
+        print('sn expiry: status', st.value_counts().to_dict(), '-> kept', int(keep.sum()))
+        d = d[keep].copy(); d['nl'] = st[keep] == 'New Lot'
+        d['exp'] = pd.to_datetime(d['Expire Date'], format='%d/%m/%Y', errors='coerce').dt.strftime('%Y-%m-%d').fillna('')
+    d['serial'] = d['Serial number'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True); d = d[d.serial.str.match(r'^\d{10,}$')]
+    lab = lambda r: 'ซิม New Lot' if r.nl else (f"ซิมหมดอายุ {TH[int(r.exp[5:7]) - 1]} {int(r.exp[:4]) + 543 - 2500}" if r.exp else 'ซิมไม่ระบุวันหมดอายุ')
+    old = load('watch_serials.csv'); old = old.fillna('') if old is not None else pd.DataFrame(columns=WATCH_COLS)
+    o = old.set_index('serial'); today = datetime.date.today().isoformat()
+    new = pd.DataFrame({'serial': d.serial, 'list': [lab(r) for r in d.itertuples()], 'area': '', 'shop_name': 'SLoc ' + d['SLoc'].astype(str).str.strip(),
+                        'added': d.serial.map(o['added'] if 'added' in o else {}).fillna(today), 'expiry': d['exp'], 'matcode': d['Material'].astype(str).str.strip()})
+    sold = load('watch_sold.csv'); sold = set(sold.serial) if sold is not None else set()
+    rest = old[~old.serial.isin(set(new.serial)) & old.serial.isin(sold)]
+    out = pd.concat([new, rest]).drop_duplicates('serial')
+    save(out[WATCH_COLS], 'watch_serials.csv')
+    print(f'sn expiry: {len(new)} serials from file + {len(rest)} sold kept = {len(out)} ·', out.list.value_counts().sort_index().to_dict())
+
 def merge_sales(paths):
     """new rows are added to the state; rows already there (same bill/order/product/serial/status/amount/time) are not counted twice"""
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
@@ -353,11 +388,12 @@ def merge_indtarget(fp):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
-    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
+    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--snexpiry', help='SN expiry snapshot xlsx from HQ (replaces the expiring-SIM lists)'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
     ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)'); ap.add_argument('--vivo-hist', nargs='*', default=[], help='central-system VIVO sales xlsx')
     ap.add_argument('--gia-target', help="Nami's GIA report xlsx (GIA_North_<Mon>_<d>.xlsx: shops + month targets)")
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
+    if a.snexpiry: load_snexpiry(a.snexpiry)
     if a.manpower: merge_manpower(a.manpower)
     if a.indtarget: merge_indtarget(a.indtarget)
     if a.master:

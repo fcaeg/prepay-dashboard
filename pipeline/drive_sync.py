@@ -10,6 +10,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *Individual Target of <Mon> <yy>*    -> individual targets
   *Target of <Mon> <yy>*               -> shop targets
   Manpower*                            -> staff roster
+  *Serial*Expire* / SN sim* / แจ้งเตือนซิม*  -> expiring-SIM watch lists (SN expiry snapshot from HQ)
   Master Prepaid*                      -> matcode master
   *VIVO*Target*                        -> Vivo Dashboard targets
   *VIVO*Sale*                          -> Vivo Dashboard central-system sales (used up to its DATA_ASOF_DATE)
@@ -82,6 +83,7 @@ def kind(name):
     if re.search(r'individual[ _]target[ _]of', n): return 'indtarget'
     if re.search(r'target[ _]of[ _][a-z]{3}', n): return 'target'
     if n.startswith('manpower'): return 'manpower'
+    if re.search(r'serial.*expir|expir.*serial|^sn[ _]?sim|แจ้งเตือนซิม|ซิม.*หมดอายุ', n): return 'snexpiry'
     if n.startswith('master prepaid') or n.startswith('master_prepaid'): return 'master'
     return None
 
@@ -117,7 +119,7 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'giatarget': ['--gia-target', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'giatarget': ['--gia-target', fp]}[k]
     # update.py takes several --sales / --target values as one list each
     merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': []}
     for i in range(0, len(args), 2):
