@@ -1928,33 +1928,33 @@ dash.draw('al_note', (el) => { const A = ALERT(); if (!A) { el.textContent = '';
   el.textContent = 'วันที่ ' + PC.day(A.d) + (A.cut ? ' ถึง ' + A.cut + ' น.' : '') + ' เทียบค่าเฉลี่ย ' + A.nd + ' วันก่อนหน้า (' + PC.day(r[0]) + ' – ' + PC.day(r[1]) + ')' + (A.cut ? ' ช่วงเวลาเดียวกัน' : '') +
     ' · ' + (A.N ? 'Net Amount' : 'QTY') + (A.stockOk ? ' · Stock ณ ' + PC.day(A.sAsof.slice(0, 10)) + (A.sAsof.length > 10 ? ' ' + A.sAsof.slice(11, 16) + ' น.' : '') + ' หักยอดขายหลังจากนั้นแล้ว' + ((Date.parse(A.d) - Date.parse(A.sAsof.slice(0, 10))) / 864e5 >= 2 ? ' (ไฟล์ Stock เก่ากว่า 2 วัน สาขาอาจได้รับของเพิ่มแล้ว ควรเช็กกับสาขา)' : '') : ''); });
 dash.draw('c_rank_alert', (el) => { el.replaceChildren(); const A = ALERT(); if (!A) return; const N = A.N;
-  const F = (v) => (N ? '฿' + PC.nf(Math.round(v)) : PC.nf(Math.round(v * 10) / 10) + ' ชิ้น');
+  const K = (v) => (Math.abs(v) >= 1000 ? (Math.round(v / 100) / 10).toLocaleString('en-US') + 'K' : PC.nf(Math.round(v * 10) / 10)); const F = (v) => (N ? '฿' : '') + K(v) + (N ? '' : ' ชิ้น');
   const SF = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + F(Math.abs(v)), SP = (p) => (p == null ? '' : (p > 0 ? '+' : p < 0 ? '−' : '') + Math.round(Math.abs(p) * 100) + '%');
-  const sn = (s) => String(s || '').replace(/^True Shop\s*/i, ''), an = (a) => String(a || '').replace(/^UPC - /, '');
+  const mn = (s) => String(s || '').replace(/_VAS.*$/i, '').replace(/\s+MULTI$/i, ''); const sn = (s) => String(s || '').replace(/^True Shop\s*/i, ''), an = (a) => String(a || '').replace(/^UPC - /, '');
   const dl = A.d === rDates().slice(-1)[0] ? 'วันนี้' : 'วันที่ ' + PC.day(A.d);
   const ol = document.createElement('ol'); ol.className = 'pc-alist'; el.append(ol);
   // parts: string | [text, cls] -> 'b' bold, 'bad' / 'ok' / 'warn' coloured bold
   const item = (cls, label, parts) => { const li = document.createElement('li'); li.className = cls; const k = document.createElement('span'); k.className = 'k'; k.textContent = label + ':'; li.append(k, ' ');
     for (const x of parts) { if (typeof x === 'string') li.append(x); else { const b = document.createElement('b'); if (x[1] && x[1] !== 'b') b.className = x[1]; b.textContent = x[0]; li.append(b); } } ol.append(li); };
   const shops = (list, cls) => list.flatMap((s, i) => [(i ? (i === list.length - 1 ? ' และ ' : ', ') : ''), [sn(s.name), 'b'], ' (', [SF(s.dv), cls], ')']);
-  const area = (z, cls, word) => ['Area ', [an(z.area), 'b'], ' ยอด' + dl + word + 'ค่าเฉลี่ย 7 วัน ', [SP(z.pct), cls], ' (' + F(z.t) + ' เทียบ ' + F(z.exp) + ')'];
+  const area = (z, cls) => [[an(z.area), 'b'], ' ', [SP(z.pct), cls], ' เทียบเฉลี่ย 7 วัน (' + F(z.t) + ' / ' + F(z.exp) + ')'];
   // 1) Best Performance
   { const z = A.up[0];
     if (!z || z.pct <= 0) item('mute', 'Best Performance', ['ยังไม่มี Area ที่ทำได้สูงกว่าค่าเฉลี่ย 7 วัน']);
     else { const dr = z.shops.filter((s) => s.dv > 0).sort((a, b) => b.dv - a.dv).slice(0, 2);
-      item('ok', 'Best Performance', [...area(z, 'ok', 'สูงกว่า'), ...(dr.length ? [' โดยมีสาขา ', ...shops(dr, 'ok'), ' ทำยอดเพิ่มขึ้นมากที่สุด'] : [])]); } }
+      item('ok', 'Best Performance', [...area(z, 'ok'), ...(dr.length ? [' จาก ', ...shops(dr, 'ok')] : [])]); } }
   // 2) Need Improve
   { const z = A.down[0];
     if (!z || z.pct >= 0) item('ok', 'Need Improve', ['ทุก Area ทำยอดได้ไม่ต่ำกว่าค่าเฉลี่ย 7 วัน']);
     else { const dr = z.shops.filter((s) => s.dv < 0).sort((a, b) => a.dv - b.dv).slice(0, 2);
-      item('bad', 'Need Improve', [...area(z, 'bad', 'ต่ำกว่า'), ...(dr.length ? [' โดยมีสาเหตุหลักจากสาขา ', ...shops(dr, 'bad')] : [])]); } }
+      item('bad', 'Need Improve', [...area(z, 'bad'), ...(dr.length ? [' จาก ', ...shops(dr, 'bad')] : [])]); } }
   // 3) Stock Issue: 3 shops whose regular Matcode has no stock today and dropped the most vs its 7-day average
   { if (!A.stockOk) item('warn', 'Stock Issue', ['ไฟล์ Stock ล่าสุดเป็นข้อมูลหลังวันที่เลือก จึงไม่ประเมิน Stock Issue ของวันนั้น']);
     else { const L = A.stockList.map((x) => ({ ...x, m: x.out[0] })).filter((x) => x.m && x.m.lost > 0).sort((a, b) => b.m.lost - a.m.lost);
       if (!L.length) item('ok', 'Stock Issue', ['ไม่พบสาขาที่ยอดตกเพราะ Matcode ขายประจำหมด Stock']);
       else { const lostAll = L.reduce((a, x) => a + x.lost, 0);
-        item('warn', 'Stock Issue', [L.length >= 3 ? '3 สาขาที่ยอดตกมากที่สุดเพราะไม่มี Stock: ' : 'สาขาที่ยอดตกเพราะไม่มี Stock: ', ...L.slice(0, 3).flatMap((x, i, a) => [(i ? (i === a.length - 1 ? ' และ ' : ', ') : ''), [sn(x.name), 'b'], ' – ' + x.m.name + ' (', [SF(-x.m.lost), 'warn'], ')']),
-          ' · รวม ' + PC.nf(L.length) + ' สาขามีสินค้าขายประจำหมด ยอดที่อาจหายไป ', [F(lostAll), 'warn']]); } } }
+        item('warn', 'Stock Issue', ['ยอดตกเพราะไม่มี Stock: ', ...L.slice(0, 3).flatMap((x, i, a) => [(i ? (i === a.length - 1 ? ' และ ' : ', ') : ''), [sn(x.name), 'b'], ' – ' + mn(x.m.name) + ' (', [SF(-x.m.lost), 'warn'], ')']),
+          ' · รวม ' + PC.nf(L.length) + ' สาขา อาจหาย ', [F(lostAll), 'warn']]); } } }
 });
 if (!window.PC_FULL_BOUND) { window.PC_FULL_BOUND = true;
   const close = () => { document.querySelectorAll('.pc-full').forEach((c) => c.classList.remove('pc-full')); document.body.classList.remove('pc-noscroll'); };
