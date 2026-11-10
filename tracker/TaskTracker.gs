@@ -194,8 +194,9 @@ function onTaskForm(e) {
     appendObj_(sh, {training_id: id, date: v('due') ? due : (tr.date || due), start: tr.start || '', end: tr.end || '',
       title, location: tr.location || '', link: p.links.join(' '), detail: p.detail, attachments});
     const list = withStaff(id);
-    const people = roster.filter(r => r.name || r.emp_id).length ? roster
-      : (Array.isArray(list) ? list.map(x => ({name: x.name, code: x.code, emp_id: x.emp_id, note: ''})) : []);
+    const ours = new Set(branchList_().map(b => b.code));
+    const people = (Array.isArray(list) && list.length ? list.map(x => ({name: x.name, code: x.code, emp_id: x.emp_id, note: ''})) : roster)
+      .filter(r => ours.has(r.code));                      // เฉพาะสาขาในพื้นที่ของเรา
     const at = ss.getSheetByName(TABS.attendees[0]);
     people.filter(r => r.name || r.emp_id).forEach(r => appendObj_(at, {training_id: id, name: r.name, branch_code: r.code, emp_id: r.emp_id, note: r.note}));
     if (p.exam) {                              // มีสอบต่อท้ายการอบรม → รายชื่อชุดเดียวกัน
@@ -250,7 +251,26 @@ function appendObj_(sh, obj) {
 function branchList_() {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.branches[0]);
   if (!sh || sh.getLastRow() < 2) return [];
-  return sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues().map(([code, name]) => ({code: String(code).trim(), name: String(name).trim()}));
+  const v = sh.getDataRange().getDisplayValues(), h = v[0].map(x => String(x).trim().toLowerCase());
+  const ti = h.indexOf('tds_code');
+  return v.slice(1).filter(r => String(r[0]).trim()).map(r => ({code: String(r[0]).trim(), name: String(r[1]).trim(), tds: ti >= 0 ? String(r[ti]).trim() : ''}));
+}
+/* เรียนรู้ CODE TDS ของสาขาเรา จากตารางที่มีทั้ง SHOP CODE และ CODE TDS ในแถวเดียวกัน */
+function learnTds_(values) {
+  let hi = -1, cs = -1, ct = -1;
+  for (let i = 0; i < Math.min(30, values.length); i++) {
+    const r = values[i].map(x => String(x).trim());
+    cs = r.findIndex(x => /^shop\s*code$|^รหัสสาขา$/i.test(x)); ct = r.findIndex(x => /tds/i.test(x));
+    if (cs >= 0 && ct >= 0) { hi = i; break; }
+  }
+  if (hi < 0) return 0;
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.branches[0]);
+  const head = ensureCols_(sh, ['tds_code']), tc = head.indexOf('tds_code');
+  const v = sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues();
+  const map = {}; values.slice(hi + 1).forEach(r => { const a = String(r[cs]).trim(), b = String(r[ct]).trim(); if (a && b && a !== b) map[a] = b; });
+  let n = 0;
+  v.forEach((r, i) => { const code = String(r[0]).trim(); if (map[code] && !r[tc]) { sh.getRange(i + 2, tc + 1).setValue(map[code]); n++; } });
+  return n;
 }
 
 /* ===================== รายชื่อพนักงานรายงาน (Checklist) ===================== */
@@ -310,7 +330,8 @@ function parseStaffList(values, branches, areas) {
   values.slice(hRow + 1).forEach(r => {
     const name = String(r[cName] || '').trim(); if (!name) return;
     const raw = String(r[cBr] || '').trim(), region = cReg >= 0 ? String(r[cReg] || '').trim() : '';
-    const b = matchBranch_(raw, branches) || branches.find(x => x.code === raw);
+    const b = matchBranch_(raw, branches) || branches.find(x => x.code === raw || (x.tds && x.tds === raw)) ||
+      branches.find(x => r.some(c => { const t = String(c).trim(); return t && (t === x.code || (x.tds && t === x.tds)); }));
     const inArea = region && ar.includes(region.toLowerCase());
     if (!b && !inArea) return;                   // ไม่ใช่สาขาเรา และไม่ได้อยู่ในพื้นที่
     if (ar.length && region && !inArea && !b) return;
@@ -975,7 +996,7 @@ const ATTEND_COL_RE = /ชื่อพนักงาน|ผู้เข้า�
 const NO_NAME_RE = /^(-+|ไม่มี|ไม่ส่ง|n\/?a|none|null|0|x)$/i;
 /* คืน {req: [รหัสสาขาที่ต้องเข้า], names: {รหัส: [ชื่อ…]}} จากตาราง 1 แท็บ */
 function extractAttendees(values, branches) {
-  const byCode = {}; branches.forEach(b => byCode[String(b.code).trim()] = b.code);
+  const byCode = {}; branches.forEach(b => { byCode[String(b.code).trim()] = b.code; if (b.tds) byCode[b.tds] = b.code; });
   const fz = {};
   const codeOf = row => {
     for (const c of row) { const t = String(c).trim().replace(/\.0$/, ''); if (byCode[t]) return byCode[t]; }
@@ -1019,6 +1040,17 @@ function checkTrainings_(quick) {
   const sh = ss.getSheetByName(TABS.trainings[0]); if (!sh || sh.getLastRow() < 2) return;
   const head = ensureCols_(sh, ['auto_check', 'check_log', 'tracked_branches']), C = n => head.indexOf(n);
   const at = ss.getSheetByName(TABS.attendees[0]); ensureCols_(at, TABS.attendees[1]);
+  // ล้างรายชื่อผู้เข้าอบรมที่ไม่ใช่สาขาของเรา (เช่น รายชื่อทั้งประเทศจากไฟล์แนบ)
+  const ours0 = new Set(branchList_().map(b => b.code));
+  if (at.getLastRow() > 1) {
+    const ah = at.getRange(1, 1, 1, at.getLastColumn()).getValues()[0].map(String), n = ah.length, bc = ah.indexOf('branch_code');
+    const old = at.getRange(2, 1, at.getLastRow() - 1, n).getValues();
+    const keep = old.filter(r => ours0.has(String(r[bc]).trim()));
+    if (keep.length < old.length) {
+      if (keep.length) at.getRange(2, 1, keep.length, n).setValues(keep);
+      at.getRange(2 + keep.length, 1, old.length - keep.length, n).clearContent();
+    }
+  }
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues();
   const branches = branchList_();
   const tz = Session.getScriptTimeZone(), stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
@@ -1036,7 +1068,9 @@ function checkTrainings_(quick) {
       if (!book) throw new Error('เปิดลิงก์ไม่ได้ (ต้องเป็น Google Sheet/Excel ที่บัญชีนี้มีสิทธิ์)');
       const req = new Set(), names = {}; let nameTabs = [];
       book.getSheets().forEach(s2 => {
-        const o = extractAttendees(s2.getDataRange().getDisplayValues(), branches);
+        const vals = s2.getDataRange().getDisplayValues();
+        if (learnTds_(vals)) { branches.length = 0; branchList_().forEach(b => branches.push(b)); }
+        const o = extractAttendees(vals, branches);
         o.req.forEach(c => req.add(c));
         if (o.hasNameCols) nameTabs.push(s2.getName());
         Object.entries(o.names).forEach(([c, ns]) => { names[c] = (names[c] || []).concat(ns.filter(x => !(names[c] || []).includes(x))); });
@@ -1091,7 +1125,7 @@ const STATUS_HEAD_RE = /สถานะ|status|ส่งแล้ว|การ�
 function evaluateTable(values, branches, rule) {
   const N = s => String(s || '').toLowerCase().replace(/true\s*shop|ทรูช็อป|[\s'’\-_.,]/g, '');
   const byCode = {}, byName = {};
-  branches.forEach(b => { byCode[String(b.code).trim()] = b.code; byName[N(b.name)] = b.code; });
+  branches.forEach(b => { byCode[String(b.code).trim()] = b.code; if (b.tds) byCode[b.tds] = b.code; byName[N(b.name)] = b.code; });
   const fz = {};                                  // cache ชื่อสาขาแบบยืดหยุ่น (ไทย/อังกฤษ/(dtac)/1Fl.)
   const fuzzy = t => {
     if (t in fz) return fz[t];
@@ -1249,11 +1283,11 @@ function parseRoster(rows, branches) {
   const cName = cFirst >= 0 ? cFirst : col(H.name, /สาขา|shop|branch|ร้าน|store|ตำแหน่ง|position|^นามสกุล$|^last|^surname/i);
   const cBranch = col(H.branch, /รหัส|code/i);
   const cNote = col(H.note);
-  const byCode = {}; branches.forEach(b => byCode[b.code] = b.code);
+  const byCode = {}; branches.forEach(b => { byCode[b.code] = b.code; if (b.tds) byCode[b.tds] = b.code; });
   const findBranch = (code, name) => {
     code = String(code || '').trim(); name = String(name || '').trim();
-    if (code && byCode[code]) return code;
-    if (byCode[name]) return name;
+    if (code && byCode[code]) return byCode[code];
+    if (byCode[name]) return byCode[name];
     const n = N(name || code); if (n.length < 3) return code;
     const hit = branches.find(b => N(b.name) === n) || branches.find(b => N(b.name).includes(n) || n.includes(N(b.name)));
     return hit ? hit.code : code;

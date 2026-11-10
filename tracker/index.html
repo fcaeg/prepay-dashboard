@@ -568,12 +568,19 @@ function build(data){
       const st = staffById[a.emp_id] || {};
       const code = a.branch_code || st.branch_code || '';
       return {name: a.name || st.name || a.emp_id || '-', code, b: bmapAll[code] || null, note: a.note || ''};
-    }).filter(a => AREA==='ALL' || (a.b && bmap[a.code]));
-    const req = String(t.tracked_branches||'').split(/[,\s]+/).filter(c => c && bmap[c]);
-    const sent = new Set(att.map(a=>a.code));
+    }).filter(a => a.b && bmap[a.code]);                           // เฉพาะสาขาในพื้นที่ของเรา
+    const tracked = String(t.tracked_branches||'').split(/[,\s]+/).filter(Boolean);
+    const sentAll = new Set(att.map(a=>a.code));
+    let req = [...new Set(tracked.filter(c => bmap[c]).concat([...sentAll]))];
+    const staffT = staffOf(t.training_id); if (staffT) Object.keys(staffT).forEach(c => { if (!req.includes(c)) req.push(c); });
+    // ไม่ระบุสาขา/รายชื่อในพื้นที่เลย → ทุกสาขา (ผู้เข้าอบรม = Management)
+    const allMgmt = !req.length && !tracked.length && !(data.attendees||[]).some(a => a.training_id===t.training_id && bmapAll[a.branch_code]);
+    if (allMgmt) req = Object.keys(bmap);
+    const sent = new Set([...sentAll, ...(staffT ? Object.keys(staffT) : [])]);
     const missing = req.filter(c => !sent.has(c)).map(c => bmap[c]);
-    return {...t, task_id: t.training_id, staff: staffOf(t.training_id), date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att, req, missing};
-  }).filter(t => t.date && (AREA==='ALL' || t.att.length || t.req.length))
+    const byBr = req.map(c => ({b: bmap[c], ps: att.filter(a=>a.code===c)}));
+    return {...t, task_id: t.training_id, staff: staffT, date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att, req, missing, byBr, allMgmt, regLink: tracked.length > 0};
+  }).filter(t => t.date && t.req.length)
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
   const todayIso = iso(TODAY);
   const daily = (data.daily||[]).filter(d => d.title && !/^(n|no|ไม่|0|false)$/i.test(String(d.active||'').trim())).map(d => {
@@ -696,8 +703,8 @@ function renderSummary(){
     sections.push(['📚 อบรมที่จะถึง', tr.map(t => h('div',{class:'card '+(daysLeft(t.date)<=1?'soon':'')},
       h('div',{class:'t-title',text:t.title}),
       h('div',{class:'meta'}, h('span',{class:'badge warn',text:`📅 ${thDay(t.date)}${t.start?' · '+t.start+(t.end?'–'+t.end:''):''}`}), h('span',{class:'badge',text:dayRel(t.date)}),
-        t.location?h('span',{class:'badge type',text:'📍 '+t.location}):null, h('span',{class:'badge',text:`👥 ${t.att.length} คน`}),
-        t.req.length ? h('span',{class:'badge '+(t.missing.length?'warn':'ok'),text:`🏪 ส่งรายชื่อแล้ว ${t.req.length-t.missing.length}/${t.req.length} สาขา`}) : null),
+        t.location?h('span',{class:'badge type',text:'📍 '+t.location}):null,
+        h('span',{class:'badge',text: t.allMgmt ? `🏪 ทุกสาขา (${t.req.length}) · Management` : `🏪 ${t.req.length} สาขาต้องเข้า · ระบุชื่อแล้ว ${t.req.length-t.missing.length}`})),
       h('div',{class:'actions'}, splitLinks(t.link)[0] ? h('a',{class:'btn',href:splitLinks(t.link)[0],target:'_blank',rel:'noopener',text:'เข้าร่วม / รายละเอียด ↗'}) : null,
         h('button',{class:'btn primary',onclick:()=>showTab('training'),text:'ดู Agenda และรายชื่อ →'})))) ]);
   }
@@ -757,6 +764,7 @@ function renderBranch(){
   // ----- แถบด้านข้าง: อบรม + การสอบ ที่สาขานี้มีรายชื่อต้องเข้า -----
   const trs = MODEL.trainings.filter(t => daysLeft(t.date) >= 0)
     .map(t => ({t, ps: t.att.filter(a => a.code === code), st: t.staff && t.staff[code] ? t.staff[code] : null, need: t.req.includes(code)}))
+    .map(x => x)
     .filter(x => x.ps.length || x.st || x.need);
   const exs = MODEL.exams.map(e => {
     if (e.staff) { const l = e.staff[code]; return l && l.length ? {e, l} : null; }
@@ -773,9 +781,10 @@ function renderBranch(){
        x.t.location ? h('span',{class:'badge type',text:'📍 '+x.t.location}) : null],
       h('div',null,
         x.st ? staffBox(x.t, code)
-             : x.ps.length ? h('div',{class:'att-row',style:'margin-top:6px'}, h('b',{text:`✅ ผู้เข้าอบรม (${x.ps.length}): `}), x.ps.map(p=>h('span',{class:'person',text:p.name})))
-             : h('div',{class:'badge bad',style:'display:inline-block;margin-top:8px',text:'⚠️ สาขายังไม่ส่งรายชื่อผู้เข้าอบรม'}),
-        splitLinks(x.t.link)[0] ? h('div',{class:'actions'}, h('a',{class:'btn'+(x.need && !x.ps.length ? ' primary' : ''),href:splitLinks(x.t.link)[0],target:'_blank',rel:'noopener',text: x.need && !x.ps.length ? 'ส่งรายชื่อผู้เข้าอบรม ↗' : 'เปิดลิงก์ ↗'})) : null)))
+             : x.ps.length ? h('div',{class:'att-row',style:'margin-top:6px'}, h('b',{text:`👥 ผู้เข้าอบรม (${x.ps.length}): `}), x.ps.map(p=>h('span',{class:'person',text:p.name})))
+             : h('div',{style:'margin-top:6px'}, h('div',{class:'att-row'}, h('b',{text:'👥 ผู้เข้าอบรม: '}), h('span',{class:'person',text:'👔 Management'})),
+                 x.t.regLink ? h('div',{class:'small',style:'color:#8a5a00',text:'ยังไม่ได้ระบุชื่อพนักงานในลิงก์ – ถ้าจะส่งน้องเข้าอบรม ให้กรอกชื่อในลิงก์'}) : null),
+        splitLinks(x.t.link)[0] ? h('div',{class:'actions'}, h('a',{class:'btn'+(x.t.regLink && !x.ps.length ? ' primary' : ''),href:splitLinks(x.t.link)[0],target:'_blank',rel:'noopener',text: x.t.regLink && !x.ps.length ? 'ระบุรายชื่อผู้เข้าอบรม ↗' : 'เปิดลิงก์ ↗'})) : null)))
       : h('div',{class:'empty small',text:'ไม่มีอบรมที่สาขานี้ต้องเข้า'}),
     h('div',{class:'side-head',text:`📝 การสอบ (${exs.length})`}),
     exs.length ? exs.map(x => {
@@ -955,8 +964,8 @@ function agendaMsg(d, list){
   return `📅 Agenda อบรม ${thDay(d)}${AREA!=='ALL'?' ['+AREA+']':''}\n` + list.map(t =>
     `━━━━━━━━━━\n🕘 ${t.start}${t.end?'–'+t.end:''} ${t.title}` +
     (t.location?`\n📍 ${t.location}`:'') + (t.trainer?`\n🎤 ${t.trainer}`:'') +
-    `\n👥 ผู้เข้าอบรม ${t.att.length} คน` +
-    groupByBranch(t.att).map(([b,ps]) => `\n• ${b}: ${ps.map(p=>p.name).join(', ')}`).join('') +
+    `\n🏪 สาขาที่ต้องเข้าอบรม ${t.req.length} สาขา` +
+    t.byBr.map(x => `\n• ${x.b.name}: ${x.ps.length ? x.ps.map(p=>p.name).join(', ') : 'Management'}`).join('') +
     (splitLinks(t.link)[0]?`\n🔗 ${splitLinks(t.link)[0]}`:'') + (t.detail?`\n📝 ${t.detail}`:'')
   ).join('\n');
 }
@@ -973,7 +982,7 @@ function renderTraining(){
   const soon = MODEL.trainings.filter(t=>{const n=daysLeft(t.date); return n===0||n===1;});
   $('#tr-kpis').replaceChildren(
     kpi('หัวข้ออบรมที่จะถึง', up.length, 'ตั้งแต่วันนี้เป็นต้นไป'),
-    kpi('ผู้เข้าอบรมที่จะถึง', up.reduce((a,t)=>a+t.att.length,0)+' คน', `จาก ${new Set(up.flatMap(t=>t.att.map(a=>a.code))).size} สาขา`),
+    kpi('สาขาที่ต้องเข้าอบรม', new Set(up.flatMap(t=>t.req)).size+' สาขา', `ระบุชื่อแล้ว ${up.reduce((a,t)=>a+t.att.length,0)} คน`),
     kpi('วันนี้–พรุ่งนี้', soon.length+' รายการ', soon.reduce((a,t)=>a+t.att.length,0)+' คน', soon.length?'warn':'')
   );
   const box = $('#tr-list');
@@ -996,17 +1005,13 @@ function renderTraining(){
           t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
           attachBox(t),
           splitLinks(t.link).length ? h('div',{class:'actions'}, linkBtns(t,true,'เข้าร่วม / รายละเอียด')) : null,
-          t.req.length ? h('div',{style:'margin-top:8px'},
-            h('div',{class:'small',text:`🏪 สาขาส่งรายชื่อแล้ว ${t.req.length - t.missing.length}/${t.req.length} สาขา`}),
-            bar(t.req.length ? (t.req.length - t.missing.length)/t.req.length : 1),
-            t.missing.length ? h('div',null, h('div',{class:'small',text:`⏳ ยังไม่ส่งรายชื่อ (${t.missing.length})`}),
-              h('div',{class:'chips'}, t.missing.map(b => h('button',{class:'chip',onclick:()=>goBranch(b.code),text:b.name})))) : null) : null,
           h('div',{class:'att'},
-            h('div',{class:'small',text:`👥 ผู้เข้าอบรม ${t.att.length} คน`}),
-            t.att.length ? groupByBranch(t.att).map(([b,ps]) => h('div',{class:'att-row'},
-              h('b',{text:b+': '}), ps.map(p => h('span',{class:'person'+(hit(p)?' hit':''),text:p.name+(p.note?` (${p.note})`:'')}))))
-              : h('div',{class:'small',text:'ยังไม่มีรายชื่อ'})),
-          t.staff ? staffBox(t) : null)))));
+            h('div',{class:'small',text: t.allMgmt ? `🏪 สาขาที่ต้องเข้าอบรม: ทุกสาขา (${t.req.length}) · ผู้เข้าอบรม = Management`
+              : `🏪 สาขาที่ต้องเข้าอบรม ${t.req.length} สาขา · ระบุชื่อแล้ว ${t.req.length - t.missing.length} สาขา` + (t.att.length ? ` (${t.att.length} คน)` : '')}),
+            t.allMgmt ? null : bar(t.req.length ? (t.req.length - t.missing.length)/t.req.length : 1),
+            h('div',{class:'chips'}, t.byBr.map(x => h('button',{class:'chip '+(x.ps.length || (t.staff&&t.staff[x.b.code]) ? 'done' : t.allMgmt ? 'partial' : ''), style:'cursor:pointer', title:'กดเพื่อดูรายชื่อในหน้าสาขา', onclick:()=>goBranch(x.b.code),
+              text: x.b.name + (x.ps.length ? ` · ${x.ps.length} คน` : (t.staff&&t.staff[x.b.code]) ? ` · ${t.staff[x.b.code].length} คน` : ' · Management')}))),
+            h('div',{class:'small',style:'margin-top:4px',text:'กดชื่อสาขาเพื่อดูรายชื่อน้องที่เข้าอบรม · "Management" = ยังไม่ระบุชื่อ ให้ Management ของสาขาเข้าอบรม'})))))));
   }));
 }
 
