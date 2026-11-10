@@ -710,7 +710,9 @@ function parseLineMessage(raw, now) {
 function autoCheck() {                       // ตรวจทุกงานเต็มรูปแบบ (เมนู)
   checkSheet_(TABS.tasks[0], 'task_id', false);
   checkSheet_(TABS.daily[0], 'daily_id', false);
+  checkTrainings_(false);
   archiveCompleted_();
+  cleanupTmp_();
 }
 
 /* ย้ายงาน One Time ที่ครบทุกสาขาแล้ว จากแท็บ Tasks ไปแท็บ History (หยุดตรวจงานนั้น) */
@@ -780,7 +782,9 @@ function autoCheckQuick() {
   try {
     checkSheet_(TABS.tasks[0], 'task_id', true);
     checkSheet_(TABS.daily[0], 'daily_id', true);
+    checkTrainings_(true);
     archiveCompleted_();
+    cleanupTmp_();
   } finally { lock.releaseLock(); }
 }
 
@@ -964,9 +968,108 @@ function tabDate_(name, now) {
   return d;
 }
 
+let TMP_FILES_ = [];
+function cleanupTmp_() { TMP_FILES_.forEach(id => { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} }); TMP_FILES_ = []; }
+/* ===================== อบรม: อ่านลิงก์ที่ให้สาขาส่งรายชื่อผู้เข้าอบรม ===================== */
+const ATTEND_COL_RE = /ชื่อพนักงาน|ผู้เข้าอบรม|ชื่อผู้เข้า|ผู้เข้าร่วม|participant|attendee|trainee/i;
+const NO_NAME_RE = /^(-+|ไม่มี|ไม่ส่ง|n\/?a|none|null|0|x)$/i;
+/* คืน {req: [รหัสสาขาที่ต้องเข้า], names: {รหัส: [ชื่อ…]}} จากตาราง 1 แท็บ */
+function extractAttendees(values, branches) {
+  const byCode = {}; branches.forEach(b => byCode[String(b.code).trim()] = b.code);
+  const fz = {};
+  const codeOf = row => {
+    for (const c of row) { const t = String(c).trim().replace(/\.0$/, ''); if (byCode[t]) return byCode[t]; }
+    for (const c of row) {
+      const t = String(c).trim(); if (!t || t.length > 80 || !/true|shop|lotus|central|robinson|big ?c|mini|dtac|โลตัส|เซ็นทรัล|บิ๊กซี/i.test(t)) continue;
+      if (!(t in fz)) { const b = matchBranch_(t, branches); fz[t] = b ? b.code : null; }
+      if (fz[t]) return fz[t];
+    }
+    return null;
+  };
+  let hRow = -1, cols = [];
+  for (let i = 0; i < Math.min(30, values.length); i++) {
+    if (values[i].filter(x => String(x).trim()).length < 3) continue;          // แถวหัวเรื่อง ไม่ใช่หัวตาราง
+    const c = values[i].map((x, j) => String(x).length < 40 && ATTEND_COL_RE.test(String(x)) ? j : -1).filter(j => j >= 0);
+    if (c.length) { hRow = i; cols = c; break; }
+  }
+  const req = new Set(), names = {};
+  values.forEach((row, i) => {
+    if (i <= hRow && hRow >= 0) return;
+    const code = codeOf(row); if (!code) return;
+    req.add(code);
+    cols.forEach(j => { const n = String(row[j] || '').trim().replace(/\s+/g, ' ');
+      if (n.length >= 3 && !NO_NAME_RE.test(n)) { (names[code] = names[code] || []); if (!names[code].includes(n)) names[code].push(n); } });
+  });
+  return {req: [...req], names, hasNameCols: cols.length > 0};
+}
+
+/* เขียนแทนแถวของรายการหนึ่ง (key ในคอลัมน์แรก + note) แบบเขียนครั้งเดียว */
+function replaceKeyedRows_(sh, key, noteCol, note, objs) {
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String), n = head.length, last = sh.getLastRow();
+  const ni = head.indexOf(noteCol);
+  const old = last > 1 ? sh.getRange(2, 1, last - 1, n).getValues() : [];
+  const keep = old.filter(r => !(String(r[0]) === key && String(r[ni]) === note));
+  const all = keep.concat(objs.map(o => head.map(h => o[h] == null ? '' : o[h])));
+  if (all.length) sh.getRange(2, 1, all.length, n).setNumberFormat('@').setValues(all);
+  if (old.length > all.length) sh.getRange(2 + all.length, 1, old.length - all.length, n).clearContent();
+}
+
+function checkTrainings_(quick) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(TABS.trainings[0]); if (!sh || sh.getLastRow() < 2) return;
+  const head = ensureCols_(sh, ['auto_check', 'check_log', 'tracked_branches']), C = n => head.indexOf(n);
+  const at = ss.getSheetByName(TABS.attendees[0]); ensureCols_(at, TABS.attendees[1]);
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, head.length).getDisplayValues();
+  const branches = branchList_();
+  const tz = Session.getScriptTimeZone(), stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
+  const today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  rows.forEach((r, i) => {
+    const tid = r[0]; if (!tid) return;
+    if (/^(n|no|ไม่|0|false)$/i.test(String(r[C('auto_check')] || '').trim())) return;
+    const links = String(r[C('link')] || '').split(/\s+/).filter(u => /docs\.google\.com\/(spreadsheets|forms)|drive\.google\.com|forms\.gle/.test(u));
+    if (!links.length) return;
+    const d = String(r[C('date')] || '').slice(0, 10); if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d < today) return;   // อบรมที่ผ่านไปแล้ว
+    if (quick) { const nc = needsCheck_(tid, links, r[C('check_log')]); if (!nc.go) return; }
+    let log, tracked = null;
+    try {
+      const book = openLinkedBook_(links);
+      if (!book) throw new Error('เปิดลิงก์ไม่ได้ (ต้องเป็น Google Sheet/Excel ที่บัญชีนี้มีสิทธิ์)');
+      const req = new Set(), names = {}; let nameTabs = [];
+      book.getSheets().forEach(s2 => {
+        const o = extractAttendees(s2.getDataRange().getDisplayValues(), branches);
+        o.req.forEach(c => req.add(c));
+        if (o.hasNameCols) nameTabs.push(s2.getName());
+        Object.entries(o.names).forEach(([c, ns]) => { names[c] = (names[c] || []).concat(ns.filter(x => !(names[c] || []).includes(x))); });
+      });
+      tracked = [...req].join(',');
+      const people = Object.entries(names).flatMap(([c, ns]) => ns.map(n => ({training_id: tid, name: n, branch_code: c, emp_id: '', note: 'auto'})));
+      replaceKeyedRows_(at, tid, 'note', 'auto', people);
+      replaceDoneRows_(tid, 'auto', Object.keys(names).map(c => ({task_id: tid, branch_code: c, status: 'done', note: 'auto', updated: stamp})));
+      log = `${stamp} ✓ สาขาที่ต้องเข้า ${req.size} · ส่งรายชื่อแล้ว ${Object.keys(names).length} สาขา · ผู้เข้าอบรม ${people.length} คน` +
+            (nameTabs.length ? ` | แท็บรายชื่อ: ${nameTabs.join(', ')}` : ' | ⚠️ ไม่พบคอลัมน์ "ชื่อพนักงาน/ผู้เข้าอบรม"');
+    } catch (err) { log = `${stamp} ✗ ${err.message}`; }
+    sh.getRange(i + 2, C('check_log') + 1).setValue(log.slice(0, 1000));
+    if (tracked !== null) sh.getRange(i + 2, C('tracked_branches') + 1).setValue(tracked);
+    try {
+      let mod = 0; links.forEach(u => { const m = String(u).match(/\/d\/([\w-]{20,})/); if (m) { try { mod = Math.max(mod, DriveApp.getFileById(m[1]).getLastUpdated().getTime()); } catch (e) {} } });
+      PropertiesService.getScriptProperties().setProperty('chk_' + tid, JSON.stringify({at: Date.now(), mod}));
+    } catch (e) {}
+  });
+}
+
 function openLinkedBook_(links) {
   for (const u of links) {
     try {
+      // ไฟล์ Excel/Office บน Drive (ลิงก์ rtpof=true หรือ drive.google.com/file) → แปลงเป็น Google Sheet ชั่วคราว
+      const fid = (String(u).match(/\/d\/([\w-]{20,})/) || String(u).match(/[?&]id=([\w-]{20,})/) || [])[1];
+      if (fid && !/\/forms\//.test(u)) {
+        try {
+          const f = DriveApp.getFileById(fid);
+          if (f.getMimeType() !== MimeType.GOOGLE_SHEETS && /sheet|excel|csv|officedocument/i.test(f.getMimeType())) {
+            const tmp = convertToSheet_(f); TMP_FILES_.push(tmp); return SpreadsheetApp.openById(tmp);
+          }
+        } catch (e) { Logger.log('convert ' + u + ': ' + e); }
+      }
       if (/docs\.google\.com\/spreadsheets/.test(u)) return SpreadsheetApp.openByUrl(u);
       let url = u;
       if (/forms\.gle/.test(u)) url = UrlFetchApp.fetch(u, {followRedirects: false, muteHttpExceptions: true}).getHeaders()['Location'] || u;
@@ -1236,4 +1339,4 @@ function onOpen() {
 }
 
 // ให้ทดสอบใน Node ได้ (Apps Script จะไม่สนใจบรรทัดนี้)
-if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable, recurDays, parseStaffList, matchBranch_ };
+if (typeof module !== 'undefined') module.exports = { parseLineMessage, parseRoster, evaluateTable, recurDays, parseStaffList, matchBranch_, extractAttendees };

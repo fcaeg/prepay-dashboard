@@ -438,7 +438,7 @@ function sampleData(){
   exams.forEach((e,ei) => { const p = ei===0 ? .7 : .35; staff.forEach(s => { if (r() < p) results.push({exam_id:e.exam_id, emp_id:s.emp_id, score:String(55+Math.floor(r()*46))}); }); });
   const trainings = [
     {training_id:'TR01',date:plus(0),start:'13:30',end:'16:30',title:'อบรมเทคนิคการขาย Prepay & Retention',location:'Online (Microsoft Teams)',link:'https://teams.microsoft.com/',trainer:'ทีม Retention ภาคเหนือ',detail:'เปิดกล้องตลอดการอบรม เตรียมยอดขายเดือนล่าสุดของสาขา'},
-    {training_id:'TR02',date:plus(1),start:'09:00',end:'12:00',title:'อบรม Product Knowledge มือถือรุ่นใหม่',location:'ห้องประชุม สนง. เชียงใหม่ ชั้น 3',link:'',trainer:'ทีม Training',detail:'แต่งกายชุดยูนิฟอร์ม นำเครื่องเดโมมาด้วย'},
+    {training_id:'TR02',tracked_branches:'UN01,UN02,UN03,UN04,UN05,UN06,UN07,UN08,LN01',date:plus(1),start:'09:00',end:'12:00',title:'อบรม Product Knowledge มือถือรุ่นใหม่',location:'ห้องประชุม สนง. เชียงใหม่ ชั้น 3',link:'',trainer:'ทีม Training',detail:'แต่งกายชุดยูนิฟอร์ม นำเครื่องเดโมมาด้วย'},
     {training_id:'TR03',date:plus(1),start:'13:00',end:'15:00',title:'อบรม Compliance & PDPA',location:'Online (Zoom)',link:'https://zoom.us/',trainer:'ฝ่าย Compliance',detail:'มีแบบทดสอบหลังอบรม'},
     {training_id:'TR04',date:plus(3),start:'09:30',end:'16:00',title:'อบรมผู้จัดการสาขาใหม่ รุ่นที่ 2',location:'โรงแรมในเมืองพิษณุโลก',link:'',trainer:'HR ภาคเหนือ',detail:'อบรมเต็มวัน มีอาหารกลางวัน'},
     {training_id:'TR05',date:plus(8),start:'10:00',end:'12:00',title:'อบรมระบบ POS เวอร์ชันใหม่',location:'Online (Microsoft Teams)',link:'https://teams.microsoft.com/',trainer:'ทีม IT Support',detail:''},
@@ -569,8 +569,11 @@ function build(data){
       const code = a.branch_code || st.branch_code || '';
       return {name: a.name || st.name || a.emp_id || '-', code, b: bmapAll[code] || null, note: a.note || ''};
     }).filter(a => AREA==='ALL' || (a.b && bmap[a.code]));
-    return {...t, task_id: t.training_id, staff: staffOf(t.training_id), date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att};
-  }).filter(t => t.date && (AREA==='ALL' || t.att.length))
+    const req = String(t.tracked_branches||'').split(/[,\s]+/).filter(c => c && bmap[c]);
+    const sent = new Set(att.map(a=>a.code));
+    const missing = req.filter(c => !sent.has(c)).map(c => bmap[c]);
+    return {...t, task_id: t.training_id, staff: staffOf(t.training_id), date: parseDate(t.date), start: hhmm(t.start), end: hhmm(t.end), att, req, missing};
+  }).filter(t => t.date && (AREA==='ALL' || t.att.length || t.req.length))
     .sort((a,b)=> a.date-b.date || a.start.localeCompare(b.start));
   const todayIso = iso(TODAY);
   const daily = (data.daily||[]).filter(d => d.title && !/^(n|no|ไม่|0|false)$/i.test(String(d.active||'').trim())).map(d => {
@@ -693,7 +696,8 @@ function renderSummary(){
     sections.push(['📚 อบรมที่จะถึง', tr.map(t => h('div',{class:'card '+(daysLeft(t.date)<=1?'soon':'')},
       h('div',{class:'t-title',text:t.title}),
       h('div',{class:'meta'}, h('span',{class:'badge warn',text:`📅 ${thDay(t.date)}${t.start?' · '+t.start+(t.end?'–'+t.end:''):''}`}), h('span',{class:'badge',text:dayRel(t.date)}),
-        t.location?h('span',{class:'badge type',text:'📍 '+t.location}):null, h('span',{class:'badge',text:`👥 ${t.att.length} คน`})),
+        t.location?h('span',{class:'badge type',text:'📍 '+t.location}):null, h('span',{class:'badge',text:`👥 ${t.att.length} คน`}),
+        t.req.length ? h('span',{class:'badge '+(t.missing.length?'warn':'ok'),text:`🏪 ส่งรายชื่อแล้ว ${t.req.length-t.missing.length}/${t.req.length} สาขา`}) : null),
       h('div',{class:'actions'}, splitLinks(t.link)[0] ? h('a',{class:'btn',href:splitLinks(t.link)[0],target:'_blank',rel:'noopener',text:'เข้าร่วม / รายละเอียด ↗'}) : null,
         h('button',{class:'btn primary',onclick:()=>showTab('training'),text:'ดู Agenda และรายชื่อ →'})))) ]);
   }
@@ -752,8 +756,8 @@ function renderBranch(){
   const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b)).map(d => ({...d, _me: d.per.find(x=>x.b===b)}));
   // ----- แถบด้านข้าง: อบรม + การสอบ ที่สาขานี้มีรายชื่อต้องเข้า -----
   const trs = MODEL.trainings.filter(t => daysLeft(t.date) >= 0)
-    .map(t => ({t, ps: t.att.filter(a => a.code === code), st: t.staff && t.staff[code] ? t.staff[code] : null}))
-    .filter(x => x.ps.length || x.st);
+    .map(t => ({t, ps: t.att.filter(a => a.code === code), st: t.staff && t.staff[code] ? t.staff[code] : null, need: t.req.includes(code)}))
+    .filter(x => x.ps.length || x.st || x.need);
   const exs = MODEL.exams.map(e => {
     if (e.staff) { const l = e.staff[code]; return l && l.length ? {e, l} : null; }
     const st = MODEL.staff.filter(s => s.branch_code === code);
@@ -769,8 +773,9 @@ function renderBranch(){
        x.t.location ? h('span',{class:'badge type',text:'📍 '+x.t.location}) : null],
       h('div',null,
         x.st ? staffBox(x.t, code)
-             : h('div',{class:'att-row',style:'margin-top:6px'}, h('b',{text:`ผู้เข้าอบรม (${x.ps.length}): `}), x.ps.map(p=>h('span',{class:'person',text:p.name}))),
-        splitLinks(x.t.link)[0] ? h('div',{class:'actions'}, h('a',{class:'btn',href:splitLinks(x.t.link)[0],target:'_blank',rel:'noopener',text:'เข้าร่วม ↗'})) : null)))
+             : x.ps.length ? h('div',{class:'att-row',style:'margin-top:6px'}, h('b',{text:`✅ ผู้เข้าอบรม (${x.ps.length}): `}), x.ps.map(p=>h('span',{class:'person',text:p.name})))
+             : h('div',{class:'badge bad',style:'display:inline-block;margin-top:8px',text:'⚠️ สาขายังไม่ส่งรายชื่อผู้เข้าอบรม'}),
+        splitLinks(x.t.link)[0] ? h('div',{class:'actions'}, h('a',{class:'btn'+(x.need && !x.ps.length ? ' primary' : ''),href:splitLinks(x.t.link)[0],target:'_blank',rel:'noopener',text: x.need && !x.ps.length ? 'ส่งรายชื่อผู้เข้าอบรม ↗' : 'เปิดลิงก์ ↗'})) : null)))
       : h('div',{class:'empty small',text:'ไม่มีอบรมที่สาขานี้ต้องเข้า'}),
     h('div',{class:'side-head',text:`📝 การสอบ (${exs.length})`}),
     exs.length ? exs.map(x => {
@@ -991,6 +996,11 @@ function renderTraining(){
           t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
           attachBox(t),
           splitLinks(t.link).length ? h('div',{class:'actions'}, linkBtns(t,true,'เข้าร่วม / รายละเอียด')) : null,
+          t.req.length ? h('div',{style:'margin-top:8px'},
+            h('div',{class:'small',text:`🏪 สาขาส่งรายชื่อแล้ว ${t.req.length - t.missing.length}/${t.req.length} สาขา`}),
+            bar(t.req.length ? (t.req.length - t.missing.length)/t.req.length : 1),
+            t.missing.length ? h('div',null, h('div',{class:'small',text:`⏳ ยังไม่ส่งรายชื่อ (${t.missing.length})`}),
+              h('div',{class:'chips'}, t.missing.map(b => h('button',{class:'chip',onclick:()=>goBranch(b.code),text:b.name})))) : null) : null,
           h('div',{class:'att'},
             h('div',{class:'small',text:`👥 ผู้เข้าอบรม ${t.att.length} คน`}),
             t.att.length ? groupByBranch(t.att).map(([b,ps]) => h('div',{class:'att-row'},
