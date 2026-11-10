@@ -127,6 +127,7 @@ td.num{text-align:right;white-space:nowrap}
   <nav class="tabs">
     <button class="tab active" data-tab="summary">สรุปทุกงาน</button>
     <button class="tab" data-tab="daily">งานประจำ</button>
+    <button class="tab" data-tab="rank">ภาพรวมสาขา</button>
     <button class="tab" data-tab="branch">รายสาขา</button>
     <button class="tab" data-tab="exam">ติดตามการสอบ</button>
     <button class="tab" data-tab="training">แจ้งอบรม</button>
@@ -159,7 +160,20 @@ td.num{text-align:right;white-space:nowrap}
       <input type="search" id="sum-q" class="grow" placeholder="ค้นหาชื่องาน…">
     </div>
     <div id="sum-list"></div>
-    <h2>สาขาที่ค้างงานมากที่สุด</h2>
+    <div class="small" style="margin-top:14px">ดูอันดับสาขาที่ค้างงานได้ที่แท็บ <a href="#rank" onclick="showTab('rank');return false">ภาพรวมสาขา →</a></div>
+  </section>
+
+  <!-- ========== TAB: RANK ========== -->
+  <section id="tab-rank" hidden>
+    <div class="kpis" id="rk-kpis"></div>
+    <div class="toolbar">
+      <button class="chip-btn active" data-rk="all">ทุกสาขา</button>
+      <button class="chip-btn" data-rk="pend">มีงานค้าง</button>
+      <button class="chip-btn" data-rk="over">มีงานเลยกำหนด</button>
+      <button class="chip-btn" data-rk="done">ทำครบแล้ว</button>
+      <input type="search" id="rk-q" class="grow" placeholder="ค้นหาชื่อสาขา / Codeshop…">
+    </div>
+    <div class="small" style="margin:-4px 0 8px">เรียงจากสาขาที่เลยกำหนดและค้างมากที่สุด · กดที่แถวเพื่อเปิดหน้าสาขา</div>
     <div class="table-wrap"><table id="rank"></table></div>
   </section>
 
@@ -182,7 +196,12 @@ td.num{text-align:right;white-space:nowrap}
       <a class="btn primary" id="ex-open" target="_blank" rel="noopener">เปิดลิงก์สอบ ↗</a>
     </div>
     <div class="kpis" id="ex-kpis"></div>
-    <div class="table-wrap"><table id="ex-table"></table></div>
+    <div class="toolbar">
+      <button class="chip-btn active" data-exv="branch">🏪 สรุปรายสาขา</button>
+      <button class="chip-btn" data-exv="staff">👥 รายชื่อพนักงาน</button>
+    </div>
+    <div class="table-wrap" id="ex-wrap"><table id="ex-table"></table></div>
+    <div id="ex-staff" hidden></div>
   </section>
   <!-- ========== TAB: DAILY ========== -->
   <section id="tab-daily" hidden>
@@ -713,22 +732,37 @@ function renderSummary(){
   if (!filled.length) box.replaceChildren(h('div',{class:'empty',text:'ไม่มีงานในมุมมองนี้ 🎉'}));
   else box.replaceChildren(...filled.flatMap(([title, items]) => sumCat==='all' ? [h('h2',{text:`${title} (${items.length})`}), ...items] : items));
   $('#sum-type').style.display = (sumCat==='all' || sumCat==='onetime') ? '' : 'none';
-  // ranking
-  const rows = MODEL.branches.map(b => {
+  renderRank();
+}
+
+
+let rkFilter = 'all';
+function renderRank(){
+  const T = MODEL.tasks;
+  const all = MODEL.branches.map(b => {
     const mine = T.filter(t=>t.list.includes(b));
     const pend = mine.filter(t=>t.per.find(x=>x.b===b).st!=='done');
-    return {b, total:mine.length, pend:pend.length, over:pend.filter(t=>t.due && daysLeft(t.due)<0).length, pct: mine.length ? 1-pend.length/mine.length : 1};
+    return {b, total:mine.length, pend:pend.length, pendT:pend, over:pend.filter(t=>t.due && daysLeft(t.due)<0).length, pct: mine.length ? 1-pend.length/mine.length : 1};
   }).sort((a,b)=> b.over-a.over || b.pend-a.pend || a.pct-b.pct);
+  $('#rk-kpis').replaceChildren(
+    kpi('สาขาทั้งหมด', all.length, AREA==='ALL'?'ทุก Area':AREA),
+    kpi('สาขาที่มีงานค้าง', all.filter(x=>x.pend).length, `รวม ${all.reduce((a,x)=>a+x.pend,0)} รายการ`, 'warn'),
+    kpi('สาขาที่มีงานเลยกำหนด', all.filter(x=>x.over).length, 'ต้องตามด่วน', 'bad'),
+    kpi('ทำครบทุกงาน', all.filter(x=>!x.pend).length, 'สาขา', 'ok'));
+  const q = $('#rk-q').value.trim().toLowerCase();
+  const rows = all.filter(x => (rkFilter==='all' || (rkFilter==='pend' && x.pend) || (rkFilter==='over' && x.over) || (rkFilter==='done' && !x.pend))
+    && (!q || (x.b.name+' '+x.b.code).toLowerCase().includes(q)));
   $('#rank').replaceChildren(
     h('thead',null,h('tr',null, h('th',{text:'สาขา'}), h('th',{text:'Area'}), h('th',{class:'num',text:'งานทั้งหมด'}), h('th',{class:'num',text:'ค้าง'}), h('th',{class:'num',text:'เลยกำหนด'}), h('th',{style:'min-width:160px',text:'Progress'}))),
-    h('tbody',null, rows.map(x => h('tr',{class:'click',onclick:()=>goBranch(x.b.code)},
-      h('td',null, h('b',{text:x.b.name}), h('span',{class:'small',text:'  '+x.b.code})),
+    h('tbody',null, rows.length ? rows.map(x => h('tr',{class:'click',onclick:()=>goBranch(x.b.code)},
+      h('td',null, h('b',{text:x.b.name}), h('span',{class:'small',text:'  '+x.b.code}),
+        x.pend ? h('div',{class:'small',style:'color:#8a5a00',text:'ค้าง: '+x.pendT.map(t=>t.title).join(' · ')}) : null),
       h('td',{class:'small',text:areaOf(x.b)}),
       h('td',{class:'num',text:x.total}),
       h('td',{class:'num',text:x.pend}),
       h('td',{class:'num',style:x.over?'color:var(--bad);font-weight:700':'',text:x.over}),
-      h('td',null, h('div',{class:'small',text:pctTxt(x.pct)}), bar(x.pct)))))
-  );
+      h('td',null, h('div',{class:'small',text:pctTxt(x.pct)}), bar(x.pct))))
+      : h('tr',null,h('td',{colspan:'6',class:'empty',text:'ไม่มีสาขาในมุมมองนี้'}))));
 }
 
 /* ---------- TAB 2: รายสาขา ---------- */
@@ -828,11 +862,14 @@ function renderExamChecklist(e, fb){
       h('td',{class:'num',text:r.l.length}), h('td',{class:'num',text:r.d}),
       h('td',null, h('div',{class:'small',text:pctTxt(r.p)}), bar(r.p)),
       h('td',null, r.d===r.l.length ? h('div',{class:'small',style:'color:var(--ok)',text:'✓ ครบทุกคน'}) : h('div',{class:'names',text:r.l.filter(x=>!x.done).map(x=>x.name).join(', ')}))))),
-    h('tbody',null, h('tr',null, h('td',{colspan:'5'}, staffBox(e, fb||null)))));
+  );
+  $('#ex-staff').replaceChildren(h('div',{class:'card'}, staffBox(e, fb||null) || h('div',{class:'empty',text:'ไม่มีรายชื่อ'})));
   $('#ex-copy').onclick = () => copy(`📝 ติดตาม: ${e.title}${AREA!=='ALL'?' ['+AREA+']':''}\nกำหนดส่ง ${thDate(e.due)} | ดำเนินการแล้ว ${st.d}/${st.n} คน\n\nรายชื่อที่ยังไม่ดำเนินการ:\n` +
     rows.filter(r=>r.d<r.l.length).map(r=>`▪️ ${(MODEL.bmap[r.c]||{}).name||r.c} (${r.l.length-r.d} คน): ${r.l.filter(x=>!x.done).map(x=>x.name).join(', ')}`).join('\n') + (el0?`\n\nลิงก์: ${el0}`:''));
 }
+let exView = 'branch';
 function renderExam(){
+  $('#ex-wrap').hidden = exView!=='branch'; $('#ex-staff').hidden = exView!=='staff';
   const e = MODEL.exams.find(x=>x.exam_id===$('#ex-select').value);
   if (!e){ $('#ex-kpis').replaceChildren(); $('#ex-open').style.display='none';
     $('#ex-table').replaceChildren(h('tbody',null,h('tr',null,h('td',{class:'empty',text:'ยังไม่มีรายการสอบ – เพิ่มได้ในแท็บ Exams หรือเลือกประเภท "การสอบ" ในฟอร์มลงงาน'})))); return; }
@@ -862,6 +899,11 @@ function renderExam(){
         r.notYet.length ? h('div',{class:'names',text:'ยังไม่สอบ: '+r.notYet.map(s=>s.name).join(', ')}) : h('div',{class:'small',style:'color:var(--ok)',text:'✓ สอบครบทุกคน'}),
         r.failed.length ? h('div',{class:'small',style:'color:#8a5a00',text:'ไม่ผ่าน: '+r.failed.map(s=>`${s.name} (${e.res[s.emp_id]})`).join(', ')}) : null))))
   );
+  $('#ex-staff').replaceChildren(h('div',{class:'table-wrap'}, h('table',null,
+    h('thead',null,h('tr',null, h('th',{text:'ชื่อพนักงาน'}), h('th',{text:'สาขา'}), h('th',{class:'num',text:'คะแนน'}), h('th',{text:'สถานะ'}))),
+    h('tbody',null, rows.flatMap(r => r.st.map(s => { const sc = e.res[s.emp_id], took = s.emp_id in e.res;
+      return h('tr',null, h('td',{text:s.name}), h('td',{class:'small',text:r.b.name}), h('td',{class:'num',text:took?sc:'–'}),
+        h('td',null, h('span',{class:'badge '+(!took?'warn':sc>=e.pass?'ok':'bad'),text:!took?'ยังไม่สอบ':sc>=e.pass?'ผ่าน':'ไม่ผ่าน'}))); }))))));
   $('#ex-copy').onclick = () => {
     const pend = rows.filter(r=>r.notYet.length);
     copy(`📝 ติดตามการสอบ: ${e.title}${AREA!=='ALL'?' ['+AREA+']':''}\nกำหนดส่ง ${thDate(e.due)} | สอบแล้ว ${all.t}/${all.n} คน\n\nรายชื่อที่ยังไม่สอบ:\n` +
@@ -1058,7 +1100,8 @@ function setArea(a){
 /* ---------- tabs & init ---------- */
 function showTab(name){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  ['summary','daily','branch','exam','training','history'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  ['summary','daily','rank','branch','exam','training','history'].forEach(n=>$('#tab-'+n).hidden = n!==name);
+  if (name==='rank') renderRank();
   if (name==='branch'){ renderBranch(); try{ history.replaceState(null,'','#br-'+$('#br-select').value); }catch(e){} }
   else { try{ history.replaceState(null,'','#'+name); }catch(e){} }
   window.scrollTo(0,0);
@@ -1077,6 +1120,9 @@ async function init(){
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ sumFilter=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('active',x===b)); renderSummary(); });
   document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ sumCat=b.dataset.cat; document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('active',x===b)); renderSummary(); });
   $('#sum-type').onchange = renderSummary; $('#sum-q').oninput = renderSummary;
+  document.querySelectorAll('[data-rk]').forEach(b=>b.onclick=()=>{ rkFilter=b.dataset.rk; document.querySelectorAll('[data-rk]').forEach(x=>x.classList.toggle('active',x===b)); renderRank(); });
+  $('#rk-q').oninput = renderRank;
+  document.querySelectorAll('[data-exv]').forEach(b=>b.onclick=()=>{ exView=b.dataset.exv; document.querySelectorAll('[data-exv]').forEach(x=>x.classList.toggle('active',x===b)); renderExam(); });
   $('#br-select').onchange = () => showTab('branch');
   $('#br-link').onclick = () => copy(location.href.split('#')[0] + '#br-' + $('#br-select').value);
   $('#ex-select').onchange = renderExam; $('#ex-branch').onchange = renderExam;
@@ -1098,6 +1144,7 @@ async function init(){
   else if (hash==='training') showTab('training');
   else if (hash==='daily') showTab('daily');
   else if (hash==='history') showTab('history');
+  else if (hash==='rank') showTab('rank');
 }
 init();
 </script>
