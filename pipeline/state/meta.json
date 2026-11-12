@@ -1,10 +1,10 @@
 {
- "sales_asof": "2026-11-12 15:04",
+ "sales_asof": "2026-11-12 20:13",
  "stock_asof": "2026-11-12 14:09",
  "stock_file": "stock_balance_report Update 12 Nov 26 Time 14.05.csv",
  "manpower_asof": "2026-10-26",
  "vivo_pc_sheet": "Update_PC_vivo_as._7.11.26.xlsx \u00b7 PC Active",
- "vivo_sales_asof": "2026-11-12 14:59",
+ "vivo_sales_asof": "2026-11-12 20:00",
  "vivo_hist_asof": "2026-11-03",
  "vivo_hist_from": "2026-01-01",
  "vivo_stock_asof": "2026-11-12 14:09",
@@ -20,7 +20,7 @@
   "2026-11-09": "2026-11-09 20:10:41",
   "2026-11-10": "2026-11-10 20:18:54",
   "2026-11-11": "2026-11-11 20:07:17",
-  "2026-11-12": "2026-11-12 15:05:07"
+  "2026-11-12": "2026-11-12 20:13:53"
  },
- "gia_sales_asof": "2026-11-12 15:05"
+ "gia_sales_asof": "2026-11-12 20:13"
 }
