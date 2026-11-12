@@ -93,6 +93,12 @@ td.num{text-align:right;white-space:nowrap}
 .attach .thumb{position:relative;display:block;width:120px;cursor:zoom-in;border:0;padding:0;background:none}
 .attach img{width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eef0f4;display:block}
 .attach .thumb .dl{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;text-decoration:none}
+.dtext{overflow-wrap:anywhere;word-break:break-word;line-height:1.55}
+.dl-row{margin:1px 0}
+.dl-row b{color:var(--ink,#1f2937);font-weight:600}
+.dl-chip{color:#6b7280;font-size:12.5px}
+.dbox{background:#f7f8fa;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:6px;font-size:13px;max-height:320px;overflow:auto}
+.detail-more[open] summary{margin-bottom:2px}
 .detail-more summary{cursor:pointer;color:var(--accent,#2563eb);font-size:13px;margin-top:4px;list-style:none}
 .detail-more summary::-webkit-details-marker{display:none}
 .lb{position:fixed;inset:0;background:rgba(15,18,25,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:16px}
@@ -433,16 +439,33 @@ function openLb(id,url,name){
 }
 function closeLb(){ $('#lb').classList.remove('show'); $('#lbImg').src=''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
-/* รายละเอียด: ตัดข้อความที่ถอดจากรูป (ของเก่า) และพับถ้ายาว */
+/* รายละเอียด: จัดรูปแบบให้อ่านง่าย (รวมบรรทัดสั้นๆ ที่ถูกตัด, ตัวหนาหัวข้อ "xxx :") และพับถ้ายาว */
+function tidyLines(d){
+  const raw = d.split('\n').map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  const out = [], seen = new Set();
+  for (const l of raw){
+    if (seen.has(l) && l.length > 3) continue; seen.add(l);
+    const kv = l.match(/^([^:：]{1,40}?)\s*[:：]\s*(.*)$/);
+    const short = !kv && l.length <= 14;
+    const prev = out[out.length-1];
+    if (short && prev && prev.short) { prev.text += ' · ' + l; continue; }
+    out.push(kv ? {k:kv[1], v:kv[2]} : {text:l, short});
+  }
+  return out;
+}
+function renderLines(items){
+  return h('div',{class:'dtext'}, items.map(x => x.k != null
+    ? h('div',{class:'dl-row'}, h('b',{text:x.k+' : '}), x.v || '—')
+    : h('div',{class:'dl-row'+(x.short?' dl-chip':''), text:x.text})));
+}
 function detailBox(t){
   let d = String(t.detail||'').split('— ข้อความจากรูป —')[0].trim();
   if (!d) return null;
-  const lines = d.split('\n'), max = String(t.attachments||'').trim() ? 3 : 6;
-  if (lines.length <= max) return h('div',{class:'detail',style:'white-space:pre-line',text:d});
-  return h('div',{class:'detail'},
-    h('div',{style:'white-space:pre-line',text:lines.slice(0,max).join('\n')}),
-    h('details',{class:'detail-more'}, h('summary',{text:`▸ ดูรายละเอียดเพิ่ม (${lines.length-max} บรรทัด)`}),
-      h('div',{style:'white-space:pre-line',text:lines.slice(max).join('\n')})));
+  const items = tidyLines(d), max = String(t.attachments||'').trim() ? 3 : 6;
+  if (items.length <= max) return h('div',{class:'detail'}, renderLines(items));
+  return h('div',{class:'detail'}, renderLines(items.slice(0,max)),
+    h('details',{class:'detail-more'}, h('summary',{text:`▸ ดูรายละเอียดเพิ่ม (${items.length-max} บรรทัด)`}),
+      h('div',{class:'dbox'}, renderLines(items.slice(max)))));
 }
 function linkBtns(t, primary, verb){ const L = splitLinks(t.link); return L.map((u,i)=>h('a',{class:'btn'+(primary&&i===0?' primary':''),href:u,target:'_blank',rel:'noopener',text:(L.length>1?`${verb} ${linkLabel(u)}`:verb)+' ↗'})); }
 const barCls = p => p >= 1 ? 'ok' : p >= .7 ? '' : p >= .4 ? 'warn' : 'bad';
