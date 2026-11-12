@@ -89,8 +89,18 @@ td.num{text-align:right;white-space:nowrap}
 .att-row b{font-weight:600}
 .person{display:inline-block;background:#eef0f4;border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:13px}
 .person.hit{background:var(--warn-soft);color:#6b4500;font-weight:600}
-.attach{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.attach img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eef0f4;display:block}
+.attach{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin-top:8px}
+.attach .thumb{position:relative;display:block;width:120px;cursor:zoom-in;border:0;padding:0;background:none}
+.attach img{width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eef0f4;display:block}
+.attach .thumb .dl{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;text-decoration:none}
+.detail-more summary{cursor:pointer;color:var(--accent,#2563eb);font-size:13px;margin-top:4px;list-style:none}
+.detail-more summary::-webkit-details-marker{display:none}
+.lb{position:fixed;inset:0;background:rgba(15,18,25,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:16px}
+.lb.show{display:flex}
+.lb img{max-width:96vw;max-height:80vh;border-radius:8px;background:#fff}
+.lb .bar2{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.lb .bar2 a,.lb .bar2 button{background:#fff;color:#111;border:0;border-radius:8px;padding:8px 14px;font-size:14px;text-decoration:none;cursor:pointer}
+.lb .bar2 .primary{background:#2563eb;color:#fff}
 .staffbox{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
 .staffbox details{border:1px solid var(--line);border-radius:8px;margin:6px 0;background:#fafbfc}
 .staffbox summary{cursor:pointer;padding:6px 10px;font-size:13.5px;font-weight:600;list-style:none}
@@ -241,6 +251,7 @@ td.num{text-align:right;white-space:nowrap}
   </section>
 </main>
 <div class="toast" id="toast"></div>
+<div class="lb" id="lb" onclick="if(event.target===this)closeLb()"><img id="lbImg" alt=""><div class="bar2"><a id="lbDl" class="primary" target="_blank" rel="noopener">⬇ ดาวน์โหลด</a><a id="lbOpen" target="_blank" rel="noopener">เปิดใน Drive ↗</a><button onclick="closeLb()">ปิด ✕</button></div></div>
 
 <script>
 /* =====================================================================
@@ -404,11 +415,34 @@ function attachBox(t){
   if (!items.length) return null;
   return h('div',{class:'attach'}, items.map(([name,url,mime]) => {
     const id = (url.match(/\/d\/([\w-]+)/)||[])[1];
+    const dl = id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
     if (/^image\//.test(mime||'') && id)
-      return h('a',{href:url,target:'_blank',rel:'noopener',title:name}, h('img',{src:`https://drive.google.com/thumbnail?id=${id}&sz=w400`,alt:name,loading:'lazy'}));
+      return h('div',{class:'thumb',title:'แตะเพื่อดูรูปเต็ม',onclick:()=>openLb(id,url,name)},
+        h('img',{src:`https://drive.google.com/thumbnail?id=${id}&sz=w400`,alt:name,loading:'lazy'}),
+        h('a',{class:'dl',href:dl,target:'_blank',rel:'noopener',title:'ดาวน์โหลด',text:'⬇',onclick:e=>e.stopPropagation()}));
     const icon = /sheet|excel|csv/i.test(mime+name) ? '📊' : /pdf/i.test(mime) ? '📄' : '📎';
-    return h('a',{class:'btn',href:url,target:'_blank',rel:'noopener',text:`${icon} ${name}`});
+    return h('span',{style:'display:inline-flex;gap:4px'},
+      h('a',{class:'btn',href:url,target:'_blank',rel:'noopener',text:`${icon} ${name}`}),
+      id ? h('a',{class:'btn',href:dl,target:'_blank',rel:'noopener',title:'ดาวน์โหลด',text:'⬇'}) : null);
   }));
+}
+function openLb(id,url,name){
+  $('#lbImg').src = `https://drive.google.com/thumbnail?id=${id}&sz=w2000`; $('#lbImg').alt = name||'';
+  $('#lbDl').href = `https://drive.google.com/uc?export=download&id=${id}`; $('#lbOpen').href = url;
+  $('#lb').classList.add('show');
+}
+function closeLb(){ $('#lb').classList.remove('show'); $('#lbImg').src=''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+/* รายละเอียด: ตัดข้อความที่ถอดจากรูป (ของเก่า) และพับถ้ายาว */
+function detailBox(t){
+  let d = String(t.detail||'').split('— ข้อความจากรูป —')[0].trim();
+  if (!d) return null;
+  const lines = d.split('\n'), max = String(t.attachments||'').trim() ? 3 : 6;
+  if (lines.length <= max) return h('div',{class:'detail',style:'white-space:pre-line',text:d});
+  return h('div',{class:'detail'},
+    h('div',{style:'white-space:pre-line',text:lines.slice(0,max).join('\n')}),
+    h('details',{class:'detail-more'}, h('summary',{text:`▸ ดูรายละเอียดเพิ่ม (${lines.length-max} บรรทัด)`}),
+      h('div',{style:'white-space:pre-line',text:lines.slice(max).join('\n')})));
 }
 function linkBtns(t, primary, verb){ const L = splitLinks(t.link); return L.map((u,i)=>h('a',{class:'btn'+(primary&&i===0?' primary':''),href:u,target:'_blank',rel:'noopener',text:(L.length>1?`${verb} ${linkLabel(u)}`:verb)+' ↗'})); }
 const barCls = p => p >= 1 ? 'ok' : p >= .7 ? '' : p >= .4 ? 'warn' : 'bad';
@@ -634,7 +668,7 @@ function taskCard(t){ return h('div',{class:'card '+(t.complete?'complete':t.ove
         h('div',{class:'t-title',text:t.title}),
         h('div',{class:'meta'}, h('span',{class:'badge',text:t.task_id}), h('span',{class:'badge type',text:t.type||'-'}), h('span',{class:'badge',text:'Due '+thDate(t.due)}), dueBadge(t.due,t.complete),
           /^(y|yes|✓|true|1|ใช่)$/i.test(String(t.auto_check||'').trim()) ? h('span',{class:'badge ok',title:t.check_log||'',text:'🔄 ตรวจอัตโนมัติ'+((t.check_log||'').match(/^\S+ (\d{2}:\d{2})/)?' · '+t.check_log.match(/^\S+ (\d{2}:\d{2})/)[1]:'')}) : null),
-        t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
+        detailBox(t),
         attachBox(t), staffToggle(t)),
       h('div',null,
         h('div',null, h('span',{class:'pct',text:pctTxt(t.pct)}), h('span',{class:'small',text:`  ส่งแล้ว ${t.doneN}/${t.list.length} สาขา`})),
@@ -791,7 +825,7 @@ function renderBranch(){
       h('span',{class:'badge',text:'Due '+thDate(x.t.due)}),
       isDone ? h('span',{class:'badge ok',text:'✓ ดำเนินการแล้ว'}) : x.st==='partial' ? h('span',{class:'badge warn',text:'ทำบางส่วน'}) : null,
       isDone ? null : dueBadge(x.t.due,false)),
-    x.t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:x.t.detail}) : null,
+    detailBox(x.t),
     attachBox(x.t), staffBox(x.t, b.code),
     splitLinks(x.t.link).length && !isDone ? h('div',{class:'actions'}, linkBtns(x.t,true,'ทำงานนี้')) : null);
   const myDaily = MODEL.daily.filter(d => d.today && d.list.includes(b)).map(d => ({...d, _me: d.per.find(x=>x.b===b)}));
@@ -965,7 +999,7 @@ function dailyCard(d, compact){
   return h('div',{class:'card '+(d.today?'':'complete'),style:d.today?'':'opacity:.6'},
     h('div',{class:'t-title',text:d.title}),
     h('div',{class:'meta'}, deadlineBadge(d), h('span',{class:'badge type',text:'🔁 '+d.frequency}), h('span',{class:'badge',text:'📅 '+(d.days||'ทุกวัน')}), compact?null:h('span',{class:'badge',text:'🏪 '+scopeTxt(d)})),
-    d.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:d.detail}) : null,
+    detailBox(d), attachBox(d),
     (d.auto && d.today && !compact) ? (d.checkedToday ? h('div',{style:'margin-top:8px'},
         h('div',null, h('span',{class:'pct',text:pctTxt(d.list.length?d.doneN/d.list.length:1)}), h('span',{class:'small',text:`  ทำแล้ววันนี้ ${d.doneN}/${d.list.length} สาขา · 🔄 ตรวจล่าสุด ${String(d.check_log).slice(11,16)}`})),
         bar(d.list.length?d.doneN/d.list.length:1),
@@ -1044,7 +1078,7 @@ function renderTraining(){
           h('div',{class:'meta'},
             t.location ? h('span',{class:'badge type',text:'📍 '+t.location}) : null,
             t.trainer ? h('span',{class:'badge',text:'🎤 '+t.trainer}) : null),
-          t.detail ? h('div',{class:'detail',style:'white-space:pre-line',text:t.detail}) : null,
+          detailBox(t),
           attachBox(t),
           splitLinks(t.link).length ? h('div',{class:'actions'}, linkBtns(t,true,'เข้าร่วม / รายละเอียด')) : null,
           h('div',{class:'att'},

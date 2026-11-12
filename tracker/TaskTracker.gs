@@ -153,7 +153,8 @@ function onTaskForm(e) {
   const ocr = files.filter(f => /^image\/|pdf/.test(f.getMimeType())).map(ocrText_).filter(Boolean).join('\n');
   const p = parseLineMessage(v('msg') + (ocr ? '\n' + ocr : ''), new Date());
   p.raw = v('msg');
-  if (ocr) p.detail = (p.detail ? p.detail + '\n' : '') + '— ข้อความจากรูป —\n' + ocr.slice(0, 1500);
+  // รายละเอียดใช้เฉพาะข้อความที่วาง – ข้อความจากรูปใช้แค่ช่วยแยกวันที่/เวลา ไม่เอามาแสดง (ดูรูปจาก Preview แทน)
+  p.detail = p.raw ? parseLineMessage(p.raw, new Date()).detail : '';
 
   // รายชื่อจาก Excel / CSV / Google Sheet
   const roster = files.filter(f => /sheet|excel|csv/i.test(f.getMimeType()) || /\.(xlsx?|csv)$/i.test(f.getName()))
@@ -184,7 +185,7 @@ function onTaskForm(e) {
     const id = nextId(sh, 'D');
     appendObj_(sh, {daily_id: id, title, frequency: f, link: p.links.join(' '), detail: p.detail,
       deadline: tm[1] ? tm[1].padStart(2, '0') + ':' + tm[2] : '', days: recurDays(f, p.raw, new Date()), branches, active: 'Y',
-      check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
+      attachments, check_tab: isCheckable_(p.links.join(' ')) ? defaultCheckTab_() : ''});
     withStaff(id);
   } else if (type === 'อบรม' || (p.training && (!v('type') || v('type') === TYPE_AUTO))) {
     const tr = p.training || {};
