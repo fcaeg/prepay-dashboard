@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>คลัง KM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6F5; --card:#FFFFFF; --ink:#1B1F1D; --muted:#6B7470; --line:#E3E7E5;
+    --brand:#06C755; --brand-ink:#04913E; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Noto Sans Thai',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5}
+  button,input{font:inherit;color:inherit}
+  .hidden{display:none!important}
+
+  /* ---------- Login ---------- */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-box{background:var(--card);border-radius:20px;padding:32px 24px;width:100%;max-width:360px;
+    box-shadow:0 8px 30px rgba(0,0,0,.06);text-align:center}
+  .logo{width:56px;height:56px;border-radius:16px;background:var(--brand);color:#fff;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px}
+  .login-box h1{font-size:22px;margin:0 0 4px}
+  .login-box p{color:var(--muted);margin:0 0 20px;font-size:14px}
+  .login-box input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:16px;text-align:center;letter-spacing:2px;outline:none}
+  .login-box input:focus{border-color:var(--brand)}
+  .btn-primary{width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;background:var(--brand);
+    color:#fff;font-weight:600;cursor:pointer}
+  .btn-primary:disabled{opacity:.6}
+  .err{color:#D32F2F;font-size:13px;min-height:20px;margin-top:10px}
+
+  /* ---------- Header ---------- */
+  header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;
+    border-bottom:1px solid transparent}
+  header.scrolled{border-bottom-color:var(--line);box-shadow:0 2px 10px rgba(0,0,0,.03)}
+  .top{display:flex;align-items:center;gap:10px;max-width:1100px;margin:0 auto}
+  .top .logo{width:36px;height:36px;font-size:15px;border-radius:10px;margin:0}
+  .top h1{font-size:19px;margin:0;flex:1}
+  .top small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+  .icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+    display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .icon-btn svg{width:18px;height:18px}
+  .icon-btn.spin svg{animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .search{max-width:1100px;margin:10px auto 0;position:relative}
+  .search input{width:100%;padding:12px 48px 12px 42px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--card);font-size:16px;outline:none}
+  .search input:focus{border-color:var(--brand)}
+  .search .s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted)}
+  .mic{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;
+    border-radius:10px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .mic svg{width:20px;height:20px}
+  .mic.on{background:#FDECEA;color:#D32F2F;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(211,47,47,.12)}}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;max-width:1100px;margin:0 auto;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);
+    cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  .chip .n{font-size:12px;color:var(--muted)}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip.active .n{color:#cfd5d2}
+  .chips.small .chip{font-size:13px;padding:4px 10px}
+  .sep{flex:none;width:1px;background:var(--line);margin:4px 2px}
+
+  /* ---------- List ---------- */
+  main{max-width:1100px;margin:0 auto;padding:12px 16px 40px}
+  .meta{color:var(--muted);font-size:13px;margin:4px 2px 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .card{background:var(--card);border-radius:var(--radius);overflow:hidden;cursor:pointer;
+    border:1px solid var(--line);display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .cover{aspect-ratio:20/11;background:#EEF1EF center/cover no-repeat}
+  .c-body{padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;color:#fff}
+  .status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px}
+  .st-ok{background:#E6F8EE;color:#04913E}
+  .st-soon{background:#FFF3E0;color:#E65100}
+  .st-exp{background:#EEEEEE;color:#757575}
+  .st-wait{background:#E3F2FD;color:#1565C0}
+  .st-cancel{background:#FDECEA;color:#C62828}
+  .card h3{font-size:15.5px;margin:2px 0 0;line-height:1.4;font-weight:600;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .period{font-size:12.5px;color:var(--muted)}
+  .snip{font-size:13px;color:#4A524E;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .c-foot{display:flex;justify-content:space-between;align-items:center;padding:8px 14px 12px;font-size:12px;color:var(--muted)}
+  .files{display:flex;gap:4px;align-items:center}
+  .files svg{width:14px;height:14px}
+  mark{background:#FFF59D;color:inherit;border-radius:3px;padding:0 1px}
+
+  .empty{text-align:center;color:var(--muted);padding:60px 20px}
+  .empty b{display:block;font-size:17px;color:var(--ink);margin-bottom:4px}
+  .skeleton{height:220px;border-radius:var(--radius);background:linear-gradient(90deg,#eceeed 25%,#f6f7f6 50%,#eceeed 75%);
+    background-size:200% 100%;animation:sh 1.2s infinite}
+  @keyframes sh{to{background-position:-200% 0}}
+
+  /* ---------- Detail ---------- */
+  #detail{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:var(--card);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;
+    padding:0 0 24px;animation:up .2s ease-out}
+  @media(min-width:760px){#detail{align-items:center}.sheet{border-radius:20px}}
+  @keyframes up{from{transform:translateY(30px);opacity:0}}
+  .sheet .cover{aspect-ratio:auto;max-height:340px;min-height:180px;background-size:contain;background-color:#111}
+  .sheet-in{padding:16px 20px 0}
+  .sheet h2{font-size:19px;margin:8px 0 4px;line-height:1.4}
+  .close{position:sticky;top:10px;float:right;margin:10px 10px 0 0;width:36px;height:36px;border-radius:50%;
+    border:0;background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;font-size:20px;line-height:1}
+  .sec{margin-top:16px}
+  .sec h4{font-size:13px;color:var(--muted);margin:0 0 6px;font-weight:600}
+  .pre{white-space:pre-wrap;word-break:break-word;font-size:14.5px;background:#F7F9F8;border-radius:10px;padding:12px 14px}
+  .file-btns{display:flex;flex-wrap:wrap;gap:8px}
+  .file-btns a{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;
+    background:var(--brand);color:#fff;text-decoration:none;font-weight:600;font-size:14px}
+  .file-btns a svg{width:16px;height:16px}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px;color:#4A524E}
+  .kv span:nth-child(odd){color:var(--muted)}
+  .copy{border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 8px;font-size:12px;cursor:pointer;margin-left:6px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:8px 16px;border-radius:999px;font-size:13px;z-index:30}
+</style>
+</head>
+<body>
+
+<!-- ===================== Login ===================== -->
+<section id="login" class="hidden">
+  <form class="login-box" id="loginForm">
+    <div class="logo">KM</div>
+    <h1>คลัง KM</h1>
+    <p>ความรู้สำหรับพนักงานขาย</p>
+    <input id="pw" type="password" inputmode="text" autocomplete="current-password" placeholder="รหัสผ่าน" required>
+    <button class="btn-primary" id="loginBtn" type="submit">เข้าสู่ระบบ</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</section>
+
+<!-- ===================== App ===================== -->
+<section id="app" class="hidden">
+  <header id="hdr">
+    <div class="top">
+      <div class="logo">KM</div>
+      <h1>คลัง KM <small id="updated">กำลังโหลด…</small></h1>
+      <button class="icon-btn" id="refresh" title="รีเฟรช" aria-label="รีเฟรช">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+      <button class="icon-btn" id="logout" title="ออกจากระบบ" aria-label="ออกจากระบบ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+    <div class="search">
+      <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="ค้นหา เช่น iPhone ผ่อน 0%, เปิดเบอร์ใหม่" autocomplete="off">
+      <button class="mic hidden" id="mic" aria-label="ค้นหาด้วยเสียง">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+      </button>
+    </div>
+    <div class="chips" id="cats"></div>
+    <div class="chips small" id="stats"></div>
+  </header>
+
+  <main>
+    <div class="meta" id="meta"></div>
+    <div class="grid" id="grid"></div>
+  </main>
+</section>
+
+<!-- ===================== Detail ===================== -->
+<div id="detail" class="hidden"></div>
+
+<script>
+/* ============================================================
+ * ตั้งค่า: วาง Web app URL ของ Apps Script (ลงท้าย /exec)
+ * ถ้าเว้นว่าง หน้าเว็บจะแสดงข้อมูลตัวอย่าง (โหมดทดลอง)
+ * ============================================================ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbw49hGvPkDqvqIGikQXQw9JbSJ8NudD-AYMlbJgn5YLccptvwdZtVyBlJdUrghQxxN_EQ/exec';
+
+const STORE_PW = 'km_pw', STORE_DATA = 'km_cache';
+const STATUS_CLASS = { 'ใช้ได้อยู่':'st-ok', 'ใกล้หมด':'st-soon', 'หมดแล้ว':'st-exp', 'ยังไม่เริ่ม':'st-wait', 'ยกเลิก':'st-cancel' };
+const STATUS_FILTERS = ['ทั้งหมด', 'ใช้ได้อยู่', 'ใกล้หมด', 'หมดแล้ว'];
+
+let DB = { categories: [], colors: {}, items: [] };
+let state = { cat: 'ทั้งหมด', status: 'ทั้งหมด', q: '' };
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------------- วันที่ / สถานะ ---------------- */
+const ymd = d => new Date(d.getTime() + 7*3600e3).toISOString().slice(0,10);     // เวลาไทย
+function statusOf(r){
+  if (r.status && r.status !== 'ใช้งาน') return 'ยกเลิก';
+  const today = ymd(new Date()), in3 = ymd(new Date(Date.now() + 3*864e5));
+  if (r.to && r.to < today) return 'หมดแล้ว';
+  if (r.from && r.from > today) return 'ยังไม่เริ่ม';
+  if (r.to && r.to <= in3) return 'ใกล้หมด';
+  return 'ใช้ได้อยู่';
+}
+const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thDate(s){
+  if (!s) return '';
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${+m[3]} ${TH_M[+m[2]-1]} ${(+m[1]+543) % 100}` : s;
+}
+function periodText(r){
+  if (r.from || r.to) return `${r.from ? thDate(r.from) : '…'} – ${r.to ? thDate(r.to) : '…'}`;
+  return '';
+}
+
+/* ---------------- โหลดข้อมูล ---------------- */
+async function fetchData(pw){
+  if (!API_URL) return demoData(pw);
+  const res = await fetch(`${API_URL}?action=list&pw=${encodeURIComponent(pw)}&t=${Date.now()}`);
+  return res.json();
+}
+
+async function login(pw){
+  $('#loginBtn').disabled = true; $('#loginErr').textContent = '';
+  try {
+    const d = await fetchData(pw);
+    if (!d.ok) { $('#loginErr').textContent = d.error || 'รหัสผ่านไม่ถูกต้อง'; return; }
+    store.set(STORE_PW, pw); store.set(STORE_DATA, JSON.stringify(d));
+    load(d); showApp();
+  } catch(e) {
+    $('#loginErr').textContent = 'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง';
+  } finally { $('#loginBtn').disabled = false; }
+}
+
+async function refresh(){
+  const pw = store.get(STORE_PW); if (!pw) return showLogin();
+  $('#refresh').classList.add('spin');
+  try {
+    const d = await fetchData(pw);
+    if (!d.ok) { store.del(STORE_PW); return showLogin('รหัสผ่านถูกเปลี่ยน กรุณาเข้าสู่ระบบใหม่'); }
+    store.set(STORE_DATA, JSON.stringify(d)); load(d);
+  } catch(e) { toast('อัปเดตไม่สำเร็จ แสดงข้อมูลล่าสุดที่มี'); }
+  finally { $('#refresh').classList.remove('spin'); }
+}
+
+function load(d){
+  DB = d;
+  DB.items.forEach(r => {
+    r._st = statusOf(r);
+    r._hay = [r.id, r.title, r.category, r.text, r.ocr, r.from, r.to].join(' ').toLowerCase();
+  });
+  DB.items.sort((a,b) => String(b.date).localeCompare(String(a.date)));
+  $('#updated').textContent = `อัปเดต ${d.updated || ''} · ${DB.items.length} เรื่อง`;
+  render(); openFromHash();
+}
+
+/* ---------------- กรอง + แสดงผล ---------------- */
+function filtered(skip){
+  const terms = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return DB.items.filter(r =>
+    (skip === 'cat' || state.cat === 'ทั้งหมด' || r.category === state.cat) &&
+    (skip === 'status' || (state.status === 'ทั้งหมด' ? r._st !== 'ยกเลิก' : r._st === state.status)) &&
+    terms.every(t => r._hay.includes(t)));
+}
+
+function render(){
+  // แท็บหมวด
+  const base = filtered('cat');
+  const count = c => c === 'ทั้งหมด' ? base.length : base.filter(r => r.category === c).length;
+  $('#cats').innerHTML = ['ทั้งหมด', ...DB.categories].map((c,i) => {
+    const sep = (DB.monthly && i === DB.monthly.length + 1) ? '<span class="sep"></span>' : '';
+    const dot = c === 'ทั้งหมด' ? '' : `<span class="dot" style="background:${DB.colors[c] || '#999'}"></span>`;
+    return `${sep}<button class="chip ${state.cat===c?'active':''}" data-cat="${esc(c)}">${dot}${esc(c)} <span class="n">${count(c)}</span></button>`;
+  }).join('');
+
+  // ตัวกรองสถานะ
+  const sbase = filtered('status');
+  const scount = s => s === 'ทั้งหมด' ? sbase.filter(r => r._st !== 'ยกเลิก').length : sbase.filter(r => r._st === s).length;
+  $('#stats').innerHTML = STATUS_FILTERS.map(s =>
+    `<button class="chip ${state.status===s?'active':''}" data-status="${s}">${s} <span class="n">${scount(s)}</span></button>`).join('');
+
+  // การ์ด
+  const list = filtered();
+  $('#meta').textContent = state.q ? `พบ ${list.length} เรื่อง สำหรับ “${state.q}”` : `${list.length} เรื่อง`;
+  if (!list.length) {
+    $('#grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><b>ไม่พบข้อมูล</b>ลองคำค้นอื่น หรือเปลี่ยนหมวด / สถานะ</div>`;
+    return;
+  }
+  $('#grid').innerHTML = list.slice(0, 200).map(card).join('');
+}
+
+function hl(s){
+  s = esc(s);
+  state.q.split(/\s+/).filter(t => t.length > 1).forEach(t => {
+    const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    s = s.replace(re, m => `<mark>${m}</mark>`);
+  });
+  return s;
+}
+
+const fileIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>';
+
+function card(r){
+  const color = DB.colors[r.category] || '#999';
+  const snip = (r.text || r.ocr || '').replace(/\s+/g,' ').slice(0, 220);
+  const per = periodText(r);
+  return `<article class="card" data-id="${esc(r.id)}">
+    ${r.cover ? `<div class="cover" style="background-image:url('https://lh3.googleusercontent.com/d/${esc(r.cover)}=w600')"></div>` : ''}
+    <div class="c-body">
+      <div class="row"><span class="badge" style="background:${color}">${esc(r.category)}</span>
+        <span class="status ${STATUS_CLASS[r._st]}">${r._st}</span></div>
+      <h3>${hl(r.title)}</h3>
+      ${per ? `<div class="period">📅 ${per}</div>` : ''}
+      ${snip ? `<div class="snip">${hl(snip)}</div>` : ''}
+    </div>
+    <div class="c-foot"><span>${thDate(String(r.date).slice(0,10))}</span>
+      ${r.links && r.links.length ? `<span class="files">${fileIcon}${r.links.length} ไฟล์</span>` : ''}</div>
+  </article>`;
+}
+
+/* ---------------- รายละเอียด ---------------- */
+function openDetail(id){
+  const r = DB.items.find(x => x.id === id); if (!r) return;
+  const color = DB.colors[r.category] || '#999';
+  const per = periodText(r);
+  const files = (r.links || []).map((u,i) => `<a href="${esc(u)}" target="_blank" rel="noopener">${fileIcon}เปิดไฟล์ ${r.links.length > 1 ? i+1 : ''}</a>`).join('');
+  $('#detail').innerHTML = `<div class="sheet" role="dialog" aria-modal="true">
+    <button class="close" aria-label="ปิด">×</button>
+    ${r.cover ? `<div class="cover" style="background-image:url('https://lh3.googleusercontent.com/d/${esc(r.cover)}=w1200')"></div>` : ''}
+    <div class="sheet-in">
+      <div class="row"><span class="badge" style="background:${color}">${esc(r.category)}</span>
+        <span class="status ${STATUS_CLASS[r._st]}">${r._st}</span></div>
+      <h2>${esc(r.title)}</h2>
+      ${per ? `<div class="period">📅 ใช้ได้ ${per}</div>` : ''}
+      ${files ? `<div class="sec"><div class="file-btns">${files}</div></div>` : ''}
+      ${r.text ? `<div class="sec"><h4>ข้อความ</h4><div class="pre">${hl(r.text)}</div></div>` : ''}
+      ${r.ocr ? `<div class="sec"><h4>ข้อความจากไฟล์ (อ่านอัตโนมัติ อาจมีคำผิด)</h4><div class="pre">${hl(r.ocr)}</div></div>` : ''}
+      <div class="sec"><div class="kv">
+        <span>รหัส</span><span>${esc(r.id)} <button class="copy" data-copy="${esc(r.id)}">คัดลอก</button></span>
+        <span>บันทึกเมื่อ</span><span>${esc(r.date)}</span>
+        <span>ผู้บันทึก</span><span>${esc(r.by || '-')}</span>
+      </div></div>
+    </div></div>`;
+  $('#detail').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  history.replaceState(null, '', '#id=' + encodeURIComponent(id));
+}
+function closeDetail(){
+  $('#detail').classList.add('hidden'); $('#detail').innerHTML = '';
+  document.body.style.overflow = '';
+  history.replaceState(null, '', state.cat !== 'ทั้งหมด' ? '#cat=' + encodeURIComponent(state.cat) : location.pathname + location.search);
+}
+function openFromHash(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('cat') && DB.categories.includes(h.get('cat'))) { state.cat = h.get('cat'); render(); }
+  if (h.get('id')) openDetail(h.get('id'));
+}
+
+/* ---------------- ค้นหาด้วยเสียง ---------------- */
+function setupMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  const mic = $('#mic'); mic.classList.remove('hidden');
+  let rec = null;
+  mic.onclick = e => {
+    e.preventDefault();
+    if (rec) { rec.stop(); return; }
+    rec = new SR(); rec.lang = 'th-TH'; rec.interimResults = true; rec.maxAlternatives = 1;
+    mic.classList.add('on');
+    rec.onresult = ev => {
+      const t = Array.from(ev.results).map(r => r[0].transcript).join('');
+      $('#q').value = t; state.q = t.trim(); render();
+    };
+    rec.onerror = ev => { if (ev.error === 'not-allowed') toast('กรุณาอนุญาตการใช้ไมโครโฟน'); };
+    rec.onend = () => { mic.classList.remove('on'); rec = null; };
+    rec.start();
+  };
+}
+
+/* ---------------- UI ทั่วไป ---------------- */
+function showLogin(msg){
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+  $('#loginErr').textContent = msg || ''; $('#pw').value = ''; setTimeout(() => $('#pw').focus(), 50);
+}
+function showApp(){ $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); }
+function toast(s){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = s;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
+}
+
+$('#loginForm').onsubmit = e => { e.preventDefault(); login($('#pw').value.trim()); };
+$('#refresh').onclick = refresh;
+$('#logout').onclick = () => { store.del(STORE_PW); store.del(STORE_DATA); showLogin(); };
+let qTimer;
+$('#q').oninput = e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); render(); }, 120); };
+$('#cats').onclick = e => {
+  const b = e.target.closest('[data-cat]'); if (!b) return;
+  state.cat = b.dataset.cat; render();
+  history.replaceState(null, '', state.cat !== 'ทั้งหมด' ? '#cat=' + encodeURIComponent(state.cat) : location.pathname + location.search);
+};
+$('#stats').onclick = e => { const b = e.target.closest('[data-status]'); if (b) { state.status = b.dataset.status; render(); } };
+$('#grid').onclick = e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.id); };
+$('#detail').onclick = e => {
+  if (e.target.id === 'detail' || e.target.closest('.close')) return closeDetail();
+  const cp = e.target.closest('[data-copy]');
+  if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast('คัดลอกแล้ว')); }
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#detail').classList.contains('hidden')) closeDetail(); });
+window.addEventListener('scroll', () => $('#hdr').classList.toggle('scrolled', scrollY > 4), { passive: true });
+window.addEventListener('hashchange', openFromHash);
+
+/* ---------------- เริ่มต้น ---------------- */
+(function init(){
+  setupMic();
+  const pw = store.get(STORE_PW), cached = store.get(STORE_DATA);
+  if (pw && cached) {
+    try { showApp(); load(JSON.parse(cached)); refresh(); return; } catch(e) {}
+  }
+  if (pw) { showApp(); $('#grid').innerHTML = '<div class="skeleton"></div>'.repeat(6); refresh(); return; }
+  showLogin();
+})();
+
+/* ---------------- ข้อมูลตัวอย่าง (เมื่อยังไม่ใส่ API_URL) ---------------- */
+function demoData(pw){
+  if (pw !== 'km888') return { ok:false, error:'รหัสผ่านไม่ถูกต้อง (โหมดทดลอง: km888)' };
+  const d = n => ymd(new Date(Date.now() + n*864e5));
+  const now = new Date(Date.now() + 7*3600e3).toISOString().slice(0,16).replace('T',' ');
+  return { ok:true, updated: now + ' (ข้อมูลตัวอย่าง)',
+    categories:['Promotion','Game Plan','Target/Campaign','ประกาศทั่วไป','Process','Product/Device','Training'],
+    monthly:['Promotion','Game Plan','Target/Campaign','ประกาศทั่วไป'],
+    colors:{'Promotion':'#06C755','Game Plan':'#FB8C00','Target/Campaign':'#E53935','ประกาศทั่วไป':'#8D6E63','Process':'#1E88E5','Product/Device':'#8E24AA','Training':'#00897B'},
+    items:[
+      {id:'KM251110090000',date:now,category:'Promotion',title:'ตัวอย่าง: โปรสมาร์ทโฟน ผ่อน 0% 10 เดือน',from:d(-9),to:d(20),links:['#'],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'ข้อความตัวอย่างจาก LINE: ลูกค้าผ่อน 0% นาน 10 เดือน ผ่านบัตรเครดิตที่ร่วมรายการ',ocr:''},
+      {id:'KM251109100000',date:d(-1)+' 10:00',category:'Promotion',title:'ตัวอย่าง: ส่วนลดอุปกรณ์เสริม ซื้อคู่เครื่อง',from:d(-5),to:d(2),links:['#','#'],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'',ocr:'ข้อความที่อ่านจากรูปโปสเตอร์ (OCR)'},
+      {id:'KM251101080000',date:d(-9)+' 08:00',category:'Game Plan',title:'ตัวอย่าง: Game Plan ประจำเดือน',from:d(-9),to:d(20),links:[],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'1) เน้นลูกค้าเปลี่ยนเครื่อง\n2) เสนออุปกรณ์เสริมทุกบิล',ocr:''},
+      {id:'KM251020080000',date:d(-21)+' 08:00',category:'Promotion',title:'ตัวอย่าง: โปรเดือนก่อน (หมดแล้ว)',from:d(-40),to:d(-10),links:['#'],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'',ocr:''},
+      {id:'KM251015080000',date:d(-26)+' 08:00',category:'Process',title:'ตัวอย่าง: ขั้นตอนเปิดเบอร์ใหม่',from:'',to:'',links:['#'],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'ขั้นตอนตัวอย่าง: ตรวจบัตร → ยืนยันตัวตน → เลือกแพ็กเกจ',ocr:''},
+      {id:'KM251012080000',date:d(-29)+' 08:00',category:'Training',title:'ตัวอย่าง: คลิปอบรมการขายอุปกรณ์เสริม',from:'',to:'',links:['#'],by:'ตัวอย่าง',status:'ใช้งาน',cover:'',text:'',ocr:''}
+    ]};
+}
+</script>
+</body>
+</html>
