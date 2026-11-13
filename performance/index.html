@@ -68,6 +68,14 @@ th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position
 .pending{text-align:center;padding:40px 20px;color:var(--muted)}
 .pending h2{color:var(--ink)}
 .note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+
+.info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid #9ca3af;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;vertical-align:middle;background:#fff;font-family:Georgia,serif;font-style:italic}
+.info:hover{border-color:var(--cur);color:var(--cur)}
+.hint-bg{position:fixed;inset:0;background:rgba(17,24,39,.45);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;z-index:50;overflow:auto}
+.hint{background:#fff;border-radius:12px;max-width:860px;width:100%;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.hint h3{margin:0 0 4px;font-size:17px}.hint table{margin-top:10px}.hint td,.hint th{white-space:normal;text-align:left;vertical-align:top;line-height:1.5}
+.hint .x{float:right;border:0;background:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1}
+.hint .how{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.6;margin-top:10px}
 </style>
 </head>
 <body>
@@ -160,13 +168,47 @@ const plLbl = m => m?mLbl(m):'-';
 const seriesFor = (pid,br) => pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
 const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
 
+/* ---------- hints (ⓘ) ---------- */
+const HINT = {
+ sale:{title:'Sale · ยอดขายเทียบ Target สาขา', how:'% = ยอดจริง ÷ Target ถึงวันนี้ · Target ถึงวันนี้ = Target ทั้งเดือน × วันล่าสุดของข้อมูล ÷ จำนวนวันในเดือน (คิดแยกตามวันล่าสุดของแต่ละสินค้า) · เดือนก่อนเทียบ Target ทั้งเดือน · สลับ Net Amount / QTY ได้ที่ปุ่มด้านบน · 100 (เส้นประ) = ทำได้ตาม Target',
+  cols:['แกน','วัดอะไร (ยอดจริง)','เทียบกับ (ไฟล์ Retail WW Target)'], rows:[
+  ['Postpay','เปิดเบอร์ใหม่ / ย้ายค่าย / ย้ายจากเติมเงิน จาก Self Refresh Postpaid Rawdata · ไม่นับเบอร์ Suspend / Terminate','QTY: Target POST · Net: Target POST_NEW'],
+  ['TOL','ติดตั้งใหม่ จาก Self Refresh TrueOnline Rawdata','QTY: Target TOL · Net: Target TOL_NEW'],
+  ['Device','มือถือ (H/S รวม Tablet) + iPad จาก TSM daily_sales · ไม่นับรายการ FOC','QTY: Target DEVICE · Net: Target DEV'],
+  ['GIA','Accessory + Gadget + IOT จาก TSM (กติกาเดียวกับ GIA Dashboard)','Target ACC'],
+  ['TVS','TVS NOW (ไม่นับ Redeem จาก Postpaid / TOL) + Postpay แพ็กเกจ 5G DEVICE TVS + TOL แคมเปญ 3P / 4P OTT · Net ของรายการพ่วง = จำนวน × รายได้ต่อรายตาม Target TVS','QTY: Target TVS · Net: Target TVS_NEW']]},
+ staff:{title:'Staff Productivity · ยอดรายพนักงานเทียบ Indy Target', how:'% = ยอดของพนักงานที่มี Indy Target รวมกัน ÷ Indy Target ถึงวันนี้ · จับคู่ด้วยรหัสพนักงาน (SALE_CODE ใน TSM / SALE_ID ใน All Product Rawdata = emp_id ใน Indy Target) · ไม่นับแถว Dummy · คนที่มี Target แต่ไม่มียอดแยกไว้ท้ายหน้า Detail',
+  cols:['แกน','วัดอะไร (ยอดจริงรายคน)','เทียบกับ (ไฟล์ Individual Target)'], rows:[
+  ['Postpay','All Product Rawdata แผ่น POSTPAID ตาม SALE_ID · ไม่นับ Suspend / Terminate','QTY: POST · Net: POST_NEW'],
+  ['TOL','All Product Rawdata แผ่น TRUEONLINE ตาม SALE_ID','QTY: TOL · Net: TOL_NEW'],
+  ['Device','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น DEVICE)','QTY: DEVICE · Net: DEV'],
+  ['GIA','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น GIA)','ACC'],
+  ['TVS','สูตรเดียวกับ Sale (รวมแพ็กเกจพ่วง) ตาม SALE_ID','QTY: TVS · Net: TVS_NEW']]},
+ ebit:{title:'EBIT & Revenue · ต่อ ตร.ม. และต่อพนักงาน', how:'ดัชนี = ค่าของเรา ÷ ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน × 100 (แกนต้นทุนกลับด้าน: ยิ่งต่ำยิ่งดี) · ภาพรวม Upper North ถ่วงตามประเภทและขนาดของแต่ละสาขา · ข้อมูลจาก Performance Report (Model WW) ซึ่งช้ากว่าเดือนปัจจุบันราว 3 เดือน · พื้นที่ = SQM All · สาขา DTAC (D) ใช้ 10 ตร.ม. และเทียบ UPC Non Matching (GM/คน เทียบ DTAC COCO) · ค่าเกิน 150 ตัดที่ 150 ในกราฟ<br><b>สูตรในไฟล์:</b> Revenue = ขายบริการ + Non Sale (Retention, Upsell, Renew, SQT, Bill/Kiosk) + ขายสินค้า · GM = (ขายสินค้า − ต้นทุนสินค้า) + ขายบริการ + Non Sale · EBITDA = GM − Front Cost (พนักงาน, การตลาด, อาคาร/ค่าเช่า, บริหาร) − ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH) · EBIT = EBITDA − ค่าเช่า Asset − ค่าเสื่อม',
+  cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
+  ['Revenue / ตร.ม.','รายได้รวมต่อพื้นที่ — พื้นที่สร้างยอดได้แค่ไหน','ค่าเฉลี่ย UPC ประเภทเดียวกัน (BMA ดูในตาราง Detail)'],
+  ['GM / ตร.ม.','กำไรขั้นต้นต่อพื้นที่ — คุณภาพของรายได้','ค่าเฉลี่ย UPC ประเภทเดียวกัน'],
+  ['EBIT / ตร.ม.','กำไรสุทธิของสาขาต่อพื้นที่','ค่าเฉลี่ย UPC ประเภทเดียวกัน'],
+  ['Front Cost / ตร.ม.','ค่าใช้จ่ายหน้าร้านต่อพื้นที่ (ยิ่งต่ำยิ่งดี — ดัชนีกลับด้าน)','ค่าเฉลี่ย UPC ประเภทเดียวกัน'],
+  ['ค่าเช่า / ตร.ม.','ค่าเช่าพื้นที่ต่อ ตร.ม. (ยิ่งต่ำยิ่งดี — ดัชนีกลับด้าน)','ค่าเฉลี่ย UPC ประเภทเดียวกัน'],
+  ['GM / พนักงาน','GM ÷ จำนวนคนในสาขา (Sup + ITF + Sales + Service + Multi + Outsource)','ค่าเฉลี่ย UPC ประเภทเดียวกัน']]}
+};
+const infoBtn = id => HINT[id] ? `<span class="info" title="ดูวิธีวัด" onclick="event.stopPropagation();showHint('${id}')">i</span>` : '';
+function showHint(id){ const h=HINT[id]; const el=document.createElement('div'); el.className='hint-bg';
+  el.innerHTML=`<div class="hint" role="dialog"><button class="x" aria-label="ปิด">×</button><h3>${h.title}</h3>
+  <table><thead><tr>${h.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${h.rows.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>
+  <div class="how">${h.how}</div></div>`;
+  const close=()=>el.remove(); el.onclick=e=>{ if(e.target===el||e.target.classList.contains('x')) close(); };
+  document.addEventListener('keydown',function k(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',k);} });
+  document.body.appendChild(el); }
+
 /* ---------- views ---------- */
 function summary(){
   const br=state.branch;
   const cards=PILLARS.map(p=>{
     if(p.pending) return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}</h3><div class="sub">${p.th}</div><div class="pending" style="padding:80px 10px">รอข้อมูล</div><div class="go">กดเพื่อดู Detail →</div></div>`;
     const ex = p.id==='ebit' ? `<div class="sub" style="margin-top:-6px">ข้อมูล ${plLbl(PL.last)} · ข้อมูลช้ากว่าเดือนปัจจุบัน</div>` : '';
-    return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}</h3><div class="sub">${p.basis}</div>${ex}${radar(p.items.map(i=>SHORT[i]||(p.id==='ebit'?i.replace(' / ตร.ม.','').replace('GM / พนักงาน','GM/คน'):i)),seriesFor(p.id,br),{w:300,h:300,small:true,pad:64})}${legendFor(p.id,true)}<div class="go">กดเพื่อดู Detail →</div></div>`;
+    return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}${infoBtn(p.id)}</h3><div class="sub">${p.basis}</div>${ex}${radar(p.items.map(i=>SHORT[i]||(p.id==='ebit'?i.replace(' / ตร.ม.','').replace('GM / พนักงาน','GM/คน'):i)),seriesFor(p.id,br),{w:300,h:300,small:true,pad:64})}${legendFor(p.id,true)}<div class="go">กดเพื่อดู Detail →</div></div>`;
   }).join('');
   return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2><div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff:</span>${modeSeg()}</div>
   <div class="grid g5 radars">${cards}</div>
@@ -184,7 +226,7 @@ function detailSale(){
     return `<tr><td><b>${p}</b>${ld?`<div style="font-size:11px;color:var(--muted)">ถึง ${+ld.slice(8)} ${TH[+ld.slice(5,7)-1]}</div>`:''}</td><td>${has?fmtN(a):'รอข้อมูล'}</td><td>${fmtN(t*fr(C,p))}</td><td>${fmtN(t)}</td><td><span class="pill p-${cls(cur[k])}">${fmtP(cur[k])}</span></td><td>${fmtP(prv[k])}</td><td>${delta(cur[k],prv[k])}</td></tr>`;}).join('');
   const hm=D.shops.map(s=>{const v=items.map(p=>shopAch(C,[s.shop],p,mode)); return {s,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const hmRows=hm.map(r=>`<tr ${r.s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${r.s.shop}')">${r.s.name.replace('True Shop ','')}</td>${r.v.map(v=>`<td class="c" style="${hmColor(v)}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
-  return `<div class="row"><h2 style="margin:0">Sale</h2><span style="color:var(--muted)">ยอดขายเทียบ Target สาขา</span><div class="spacer"></div>${modeSeg()}</div>
+  return `<div class="row"><h2 style="margin:0">Sale${infoBtn('sale')}</h2><span style="color:var(--muted)">ยอดขายเทียบ Target สาขา</span><div class="spacer"></div>${modeSeg()}</div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">% Achievement เทียบ Target ถึงวันนี้</div>${radar(items,seriesFor('sale',br))}${legendFor('sale')}</div>
     <div class="card"><h3>ตัวเลขเทียบ Target</h3><div class="sub">${mode==='n'?'Net Amount (บาท)':'จำนวน (QTY)'} · ถึง ${C.last_day||'-'}</div>
@@ -204,7 +246,7 @@ function detailStaff(){
     return {id,e,v,avg:avg(v),sold};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const none=st.filter(r=>!r.sold); const act=st.filter(r=>r.sold);
   const rows=act.map(r=>`<tr><td>${r.e.name}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
-  return `<div class="row"><h2 style="margin:0">Staff Productivity</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
+  return `<div class="row"><h2 style="margin:0">Staff Productivity${infoBtn('staff')}</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legendFor('staff')}</div>
     <div class="card"><h3>สรุป</h3><div class="sub">มียอดขาย ${act.length} คน · ต่ำกว่า Target (เฉลี่ย) ${act.filter(r=>r.avg!=null&&r.avg<100).length} คน · ไม่พบยอดขาย ${none.length} คน</div>
@@ -229,7 +271,7 @@ function detailEbit(){
   const sh=D.shops.map(s=>({s,r:M.shops[s.shop]})).filter(x=>x.r).map(x=>({...x,av:avg(x.r.idx)})).sort((a,b)=>(a.av??999)-(b.av??999));
   const shRows=sh.map(({s,r,av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}<div style="font-size:11px;color:var(--muted)">${r.type}${r.bench_type&&r.bench_type!==r.type?' (ต่อ ตร.ม. เทียบ '+r.bench_type+')':''} · ${r.sqm?Math.round(r.sqm)+' ตร.ม.':'ไม่มีข้อมูลพื้นที่'} · ${Math.round(r.man)} คน</div></td><td>${fN(r.rev)}</td><td>${fN(r.gm)}</td><td style="${r.ebit<0?'color:var(--bad);font-weight:700':''}">${fN(r.ebit)}${r.ebit<0?' ⚠':''}</td><td>${r.rev?(r.ebit/r.rev*100).toFixed(1)+'%':'–'}</td>${r.idx.map(v=>`<td class="c" style="${hmColor(v)}">${v==null?'–':Math.round(v)}</td>`).join('')}<td class="c"><span class="pill p-${cls(av)}">${fmtP(av)}</span></td></tr>`).join('');
   const tr=PL.trend.map(t=>`<tr><td>${mLbl(t.month)}</td><td>${fN(t.rev)}</td><td>${fN(t.gm)}</td><td style="${t.ebit<0?'color:var(--bad)':''}">${fN(t.ebit)}</td><td>${t.rev?(t.ebit/t.rev*100).toFixed(1)+'%':'–'}</td></tr>`).join('');
-  return `<div class="row"><h2 style="margin:0">EBIT & Revenue</h2><span style="color:var(--muted)">ต่อ ตร.ม. และ GM ต่อพนักงาน · 100 = ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน · ข้อมูล ${plLbl(PL.last)}</span></div>
+  return `<div class="row"><h2 style="margin:0">EBIT & Revenue${infoBtn('ebit')}</h2><span style="color:var(--muted)">ต่อ ตร.ม. และ GM ต่อพนักงาน · 100 = ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน · ข้อมูล ${plLbl(PL.last)}</span></div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${plLbl(PL.last)}</h3><div class="sub">ดัชนีเทียบค่าเฉลี่ย UPC</div>${radar(PL.axes,seriesFor('ebit',br))}${legendFor('ebit')}</div>
     <div class="card"><h3>ค่าจริง (บาท / เดือน)</h3><div class="sub">${br==='ALL'?'Upper North · ค่าเฉลี่ย UPC ถ่วงตามประเภทและขนาดสาขาของเรา':'เทียบค่าเฉลี่ย UPC ประเภท '+((sh0||{}).bench_type||(sh0||{}).type||'')}</div>
@@ -255,7 +297,7 @@ function render(){
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}
 function setMode(m){state.mode=m;render();}
-document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 00:51 น.`;
+document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 00:54 น.`;
 const sel=document.getElementById('branch');
 sel.innerHTML='<option value="ALL">ทั้งหมด (Upper North)</option>'+D.shops.map(s=>`<option value="${s.shop}">${s.name.replace('True Shop ','')}</option>`).join('');
 sel.onchange=e=>{state.branch=e.target.value;render();};
