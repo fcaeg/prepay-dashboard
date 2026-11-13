@@ -358,5 +358,29 @@
   "kind": "retention",
   "at": "2026-11-14 01:28",
   "ok": true
+ },
+ "1LeySUbis3X5WUSHQqsNV6uBXWYJNUQjA": {
+  "name": "True_Mobile_Care_Shops_2026-11-13.zip",
+  "kind": "longevity",
+  "at": "2026-11-14 01:40",
+  "ok": true
+ },
+ "1eOw5YQ28CF6avyAh4LPw7XGFI4UvoWKW": {
+  "name": "Extended_W_Shops_2026-11-13.zip",
+  "kind": "longevity",
+  "at": "2026-11-14 01:40",
+  "ok": true
+ },
+ "1tvpnx7WUVl7-QlEwIUISK5RAEfm5r20H": {
+  "name": "Trade_In_Shops_2026-11-13.zip",
+  "kind": "longevity",
+  "at": "2026-11-14 01:40",
+  "ok": true
+ },
+ "1h2aScGJQNGaxflW8S0O9b9fb4f7X6Uea": {
+  "name": "Downsell_SharePlan_by_shop.zip",
+  "kind": "longevity",
+  "at": "2026-11-14 01:40",
+  "ok": true
  }
 }
