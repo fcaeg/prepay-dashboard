@@ -110,3 +110,11 @@ Gross = QTY x RRP per model. RRP file: an xlsx with columns Model | RRP and "viv
 rows are kept in state/vivo_rrp.csv and matched to models at build time (model + memory, optional 4G/5G, "Set" = PHOTOSET; a row
 without memory covers all sizes without their own row). Gross target = QTY target x RRP. Models without RRP: sales use the
 actual full price (PRICE x QTY / AMOUNT), targets use the Net target. The Amount column (7 Nov) is switched off (SHOWA = false).
+
+### Page size
+`pipeline/page.html` must stay under ~250 KB as a Claude files doc; the ranking/tables/stock/watch script now lives in `pipeline/pc_main.js`
+(loaded with <script src>, inlined for GitHub, published as files doc `pc_main.js`). Put new code in sa.js / pc_main.js, not page.html.
+### Stock history / out-of-stock card
+Each stock file appends shop x matcode counts to state/stock_hist.csv.gz (180 days); out/stock_lastpos.json = last stock file in which a
+shop still had a Matcode it has 0 of now. Card "สินค้าหมด ราย Matcode" (Stock tab): out since ≈ later of last sale / last stock seen,
+avg = units in the 28 days before that ÷ 28, lost = avg × days out × list price; Excel via SheetJS (cdnjs) on click.

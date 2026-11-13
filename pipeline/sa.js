@@ -1035,3 +1035,46 @@ if (!window.PC_MV_BOUND) { window.PC_MV_BOUND = true;
     const rows = r.slice().sort((a, b) => String(a.area).localeCompare(String(b.area)) || b.qty - a.qty);
     const lines = [head.join(',')].concat(rows.map((d) => { const m = mm.get(String(d.key)) || {}; return [esc(d.area), '="' + d.key + '"', esc(m.name || d.label), esc(m.group), esc(m.subgroup || m.group), '="' + d.from + '"', esc(d.from_name), d.from_stock, d.from_cover >= 999 ? 'ไม่มียอดขาย' : d.from_cover, '="' + d.to + '"', esc(d.to_name), esc(d.near), d.to_stock, d.to_week, d.qty].join(','); }));
     const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'Stock_Transfer_' + to + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }); }
+
+/* ---------- Stock: out-of-stock by Matcode - since when, average sales before, 28-day history, lost sales (+ Excel) ---------- */
+const OOS = () => { const r = PC.rows('enriched'), st = PC.rows('stock_by_shop'), shops = PC.rows('shops'), mt = PC.rows('matcodes'); if (!r || !st || !shops || !mt) return null;
+  const p = PC.P(); const today = r.reduce((a, x) => (x.date > a ? x.date : a), ''); if (!today) return null;
+  const add = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10); const f60 = add(today, -59), h0 = add(today, -27);
+  const SH = new Map(shops.filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).map((s) => [String(s.shop), s]));
+  const MM = new Map(mt.map((m) => [String(m.matcode), m])); const have = new Set(st.filter((x) => (+x.qty || 0) > 0).map((x) => x.shop + '|' + x.matcode));
+  const LP = new Map((PC.rows('stock_lastpos') || []).map((x) => [x.shop + '|' + x.matcode, String(x.last_pos).slice(0, 10)]));
+  const byP = new Map(); for (const x of r) { const k = String(x.shop) + '|' + x.matcode; if (!SH.has(String(x.shop)) || (p.group !== 'ALL' && x.group !== p.group)) continue; let a = byP.get(k); if (!a) byP.set(k, a = new Map()); a.set(x.date, (a.get(x.date) || 0) + x.units); }
+  const asof = String((st[0] || {}).asof || '').slice(0, 10); const out = [];
+  for (const [k, days] of byP) { if (have.has(k)) continue; const [shop, mat] = k.split('|'); let ls = '', s60 = 0; for (const [d, u] of days) if (u > 0) { if (d > ls) ls = d; if (d >= f60) s60 += u; }
+    if (!ls || s60 <= 0) continue; const lp = LP.get(k) || ''; const since = lp > ls ? lp : ls; const dOut = Math.max(0, SA.diff(since, today));
+    const b0 = add(since, -28); let s28 = 0; for (const [d, u] of days) if (d > b0 && d <= since) s28 += u; const avg = s28 / 28;
+    const hist = []; for (let i = 0; i < 28; i++) hist.push(days.get(add(h0, i)) || 0);
+    const m = MM.get(mat) || {}, S = SH.get(shop); const lu = avg * dOut;
+    out.push({ shop, name: S.name, area: S.area, stype: S.stype, matcode: mat, mname: m.name || mat, group: m.group || '-', price: m.price ?? null, last_sale: ls, last_pos: lp || null, since, days: dOut, avg, hist, h0,
+      lost_u: Math.round(lu * 10) / 10, lost_b: m.price != null ? Math.round(lu * m.price) : null, asof }); }
+  return out; };
+const oosSel = () => { const r = OOS(); if (!r) return null; const v = String(dash.params().oos || ''); if (v === 'ALL' || r.some((x) => x.matcode === v)) return v;
+  const by = d3.rollup(r, (a) => d3.sum(a, (x) => x.lost_b || 0), (x) => x.matcode); return [...by].sort((a, b) => b[1] - a[1])[0]?.[0] || 'ALL'; };
+const oosRows = () => { const r = OOS(), v = oosSel(); return r ? (v === 'ALL' ? r : r.filter((x) => x.matcode === v)) : null; };
+const SPK = '▁▂▃▄▅▆▇█'; const spark = (h) => { const mx = Math.max(1, ...h); return h.map((v) => (v ? SPK[Math.min(7, Math.ceil((v / mx) * 7))] : '·')).join(''); };
+dash.draw('f_oos', (sel) => { const r = OOS(); if (!r) return; const by = d3.rollups(r, (a) => ({ n: a.length, b: d3.sum(a, (x) => x.lost_b || 0), name: a[0].mname }), (x) => x.matcode).sort((a, b) => b[1].b - a[1].b);
+  sel.replaceChildren(new Option('ทุก Matcode (' + PC.nf(r.length) + ' สาขา×Matcode)', 'ALL'), ...by.map(([m, a]) => new Option(m + ' · ' + String(a.name).replace(/^TMH\d /, '') + ' — หมด ' + a.n + ' สาขา · เสียโอกาส ฿' + PC.nf(a.b), m)));
+  sel.value = oosSel(); sel.onchange = () => dash.setParams({ oos: sel.value }); });
+dash.draw('oos_sum', (el) => { const r = oosRows(); if (!r) { el.textContent = ''; return; } const lu = d3.sum(r, (x) => x.lost_u), lb = d3.sum(r, (x) => x.lost_b || 0), a = r[0] || {};
+  el.textContent = r.length ? 'หมด ' + PC.nf(new Set(r.map((x) => x.shop)).size) + ' สาขา · หมดมาเฉลี่ย ' + d3.format(',.1f')(d3.mean(r, (x) => x.days)) + ' วัน · ยอดที่อาจเสียโอกาส ' + PC.nf(Math.round(lu)) + ' ชิ้น ≈ ฿' + PC.nf(lb) + ' · Stock ณ ' + PC.day(a.asof || a.since) + ' · นับเฉพาะสาขาที่เคยขาย Matcode นั้นใน 60 วันล่าสุด'
+    : 'ไม่มีสาขาที่สินค้าหมด (เฉพาะสาขาที่เคยขายใน 60 วันล่าสุด) ตามตัวกรองนี้'; });
+dash.draw('tb_oos', (el) => { const all = oosSel() === 'ALL';
+  PC.table(el, 'tb_oos', oosRows(), { key: ['shop', 'matcode'], def: 'lost_b', limit: 2000, cols: [...(all ? [{ f: 'matcode', label: 'Matcode' }, { f: 'mname', label: 'ชื่อซิม', wrap: true }] : []),
+    { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'last_sale', label: 'ขายล่าสุด', fmt: PC.day }, { f: 'since', label: 'หมดตั้งแต่ (ประมาณ)', fmt: PC.day },
+    { f: 'days', label: 'หมดมาแล้ว (วัน)', num: true, pill: (d) => [d.days >= 14 ? 'bad' : d.days >= 7 ? 'warn' : 'mute', PC.nf(d.days)] }, { f: 'avg', label: 'เฉลี่ยขาย/วัน (28 วันก่อนหมด)', num: true, fmt: (v) => d3.format(',.2f')(v) },
+    { f: 'hist', label: 'ประวัติขาย 28 วัน', fmt: spark }, { f: 'lost_u', label: 'เสียโอกาส (ชิ้น)', num: true, fmt: (v) => d3.format(',.1f')(v) }, { f: 'lost_b', label: 'เสียโอกาส (บาท)', num: true, fmt: PC.nf, bar: true } ] }); });
+if (!window.PC_OOS_BOUND) { window.PC_OOS_BOUND = true;
+  const lib = () => (window.XLSX ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = ok; s.onerror = no; document.head.append(s); }));
+  document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#oos-xls'); if (!b) return; const r = oosRows(); if (!r || !r.length) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างไฟล์…';
+    try { await lib(); const h0 = r[0].h0; const dd = []; for (let i = 0; i < 28; i++) dd.push(new Date(Date.parse(h0 + 'T00:00:00Z') + i * 864e5).toISOString().slice(0, 10));
+      const head = ['Matcode', 'ชื่อซิม', 'Type Sim', 'ราคา', 'รหัสสาขา', 'สาขา', 'Area', 'ประเภทสาขา', 'ขายล่าสุด', 'เห็น Stock ล่าสุด', 'หมดตั้งแต่ (ประมาณ)', 'หมดมาแล้ว (วัน)', 'เฉลี่ยขาย/วัน (28 วันก่อนหมด)', 'เสียโอกาส (ชิ้น)', 'เสียโอกาส (บาท)', ...dd.map((d) => 'ขาย ' + d.slice(5))];
+      const rows = r.slice().sort((a, b) => (b.lost_b || 0) - (a.lost_b || 0)).map((x) => [x.matcode, x.mname, x.group, x.price, x.shop, x.name, x.area, x.stype, x.last_sale, x.last_pos || '', x.since, x.days, Math.round(x.avg * 100) / 100, x.lost_u, x.lost_b, ...x.hist]);
+      const by = d3.rollups(r, (a) => [a[0].mname, a[0].price, a.length, Math.round(d3.mean(a, (x) => x.days) * 10) / 10, Math.round(d3.sum(a, (x) => x.lost_u)), d3.sum(a, (x) => x.lost_b || 0)], (x) => x.matcode).sort((a, b) => b[1][5] - a[1][5]).map(([m, a]) => [m, ...a]);
+      const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws['!cols'] = head.map((h, i) => ({ wch: i < 2 || i === 5 ? 28 : i > 14 ? 7 : 12 })); ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: head.length - 1 } }) };
+      XLSX.utils.book_append_sheet(wb, ws, 'สาขาที่ของหมด'); const w2 = XLSX.utils.aoa_to_sheet([['Matcode', 'ชื่อซิม', 'ราคา', 'สาขาที่หมด', 'หมดมาเฉลี่ย (วัน)', 'เสียโอกาส (ชิ้น)', 'เสียโอกาส (บาท)'], ...by]); w2['!cols'] = [{ wch: 12 }, { wch: 36 }, { wch: 8 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 14 }]; XLSX.utils.book_append_sheet(wb, w2, 'สรุปราย Matcode');
+      XLSX.writeFile(wb, 'OutOfStock_' + (oosSel() === 'ALL' ? 'All' : oosSel()) + '_' + r[0].asof + '.xlsx'); } catch (err) { console.error(err); alert('สร้างไฟล์ Excel ไม่สำเร็จ'); } finally { b.disabled = false; b.textContent = t; } }); }

@@ -176,6 +176,12 @@ def merge_stock(path):
     meta = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}
     meta['stock_asof'] = f'{m.group(3)}-{MON[m.group(2)]:02d}-{int(m.group(1)):02d}' + (f' {int(m.group(4)):02d}:{m.group(5)}' if m and m.group(4) else '') if m else (os.environ.get('STOCK_ASOF') or meta.get('sales_asof', ''))
     meta['stock_file'] = label
+    # stock history (shop x matcode qty per stock file) - used to estimate since when a shop has been out of a Matcode
+    try:
+        snap = k.groupby(['SHOP_CODE', 'PRODUCT_CODE']).size().reset_index(name='qty').rename(columns={'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode'}); snap.insert(0, 'asof', meta['stock_asof'])
+        h = load('stock_hist.csv.gz'); h = pd.concat([h[h.asof != meta['stock_asof']], snap.astype(str)]) if h is not None else snap.astype(str)
+        cut = (pd.Timestamp(meta['stock_asof'][:10]) - pd.Timedelta(days=180)).strftime('%Y-%m-%d'); save(h[h.asof.str[:10] >= cut], 'stock_hist.csv.gz')
+    except Exception as e: print('stock history skipped:', e)
     _vivo(vivo.set_stock, st, meta['stock_asof'])
     _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
@@ -342,6 +348,13 @@ def build():
         d = d.astype(object).where(d.notna(), None)
         json.dump(d.to_dict('records'), open(os.path.join(OUT, nmx + '.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     json.dump(hourly.to_dict('records'), open(os.path.join(OUT, 'sales_hourly.json'), 'w'), separators=(',', ':'))
+    # last stock file in which each shop still had each Matcode, for pairs that are at 0 now (out-of-stock analysis)
+    sh_ = load('stock_hist.csv.gz'); lp = []
+    if sh_ is not None and len(sh_):
+        cur = set(zip(ss.shop.astype(str), ss.matcode.astype(str))) if len(ss) else set()
+        g = sh_[sh_.shop.isin(ww)].groupby(['shop', 'matcode']).asof.max().reset_index()
+        lp = [{'shop': r.shop, 'matcode': r.matcode, 'last_pos': r.asof} for r in g.itertuples() if (r.shop, r.matcode) not in cur]
+    json.dump(lp, open(os.path.join(OUT, 'stock_lastpos.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     it = load('ind_targets.csv')
     if it is not None:
         it = it.astype(object).where(it.notna(), None); json.dump(it.to_dict('records'), open(os.path.join(OUT, 'ind_targets.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
