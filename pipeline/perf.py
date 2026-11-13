@@ -492,6 +492,37 @@ def _lon_build():
         for _, r in y[y.shop.isin(sh)].iterrows(): out['shops'].setdefault(r.shop, {})[lbl] = {'num': float(r.num), 'den': float(r.den)}
     return out
 
+# ---------- Device by Brand / GIA by Category targets (Nami, 14 Nov 2026) ----------
+#   '<yyyymm>_Target by Brand <Mon>'<yy> ....xlsx'  sheet TARGET_FOR_OPERATION: shop x CUSTOM_CATEGORY x CUSTOM_BRAND x submodel -> OPERATION_TARGET_Q/A/N
+#   '<yyyymm>_Target GIA by CATEGORY ....xlsx'     sheet 'Target by Brand': shop x PRODUCT_ACC_GROUP x CUSTOM_CATEGORY x CUSTOM_SUB_CATEGORY x brand
+def _ym(name):
+    m = re.search(r'(20\d{2})(\d{2})_', os.path.basename(name)); return f'{m.group(1)}-{m.group(2)}' if m else None
+
+def merge_mix_target(fp):
+    import openpyxl
+    name = os.path.basename(fp); month = _ym(name); sh = shops()
+    if not month or not sh: print('perf: mix target skipped (no month in name / no shops)', name); return
+    wb = openpyxl.load_workbook(fp, read_only=True); gia = 'gia' in name.lower()
+    ws = wb['Target by Brand'] if gia else wb['TARGET_FOR_OPERATION']
+    it = ws.iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]; hx = {c: i for i, c in enumerate(h)}
+    pick = lambda pre: next(i for c, i in hx.items() if c.upper().startswith(pre))
+    if gia:
+        keys = {'grp': hx['PRODUCT_ACC_GROUP'], 'cat': hx['CUSTOM_CATEGORY'], 'sub': hx[next(c for c in hx if c.startswith('CUSTOM_SUB_CATEG'))], 'brand': hx['CUSTOM_BRAND']}
+        tq, ta, tn = pick('SUM OF TARGET QTY'), pick('SUM OF TARGET AMOU'), pick('SUM OF TARGET NET')
+    else:
+        keys = {'cat': hx['CUSTOM_CATEGORY'], 'brand': hx['CUSTOM_BRAND'], 'model': hx['CUSTOM_SUBMODEL']}
+        tq, ta, tn = pick('OPERATION_TARGET_Q'), pick('OPERATION_TARGET_A'), pick('OPERATION_TARGET_N')
+    rows = []
+    for r in it:
+        code = str(r[hx['SHOP_CODE']] or '').strip()
+        if code not in sh: continue
+        rows.append({'shop': code, **{k: str(r[i] or '').strip() for k, i in keys.items()}, 'tq': float(r[tq] or 0), 'ta': float(r[ta] or 0), 'tn': float(r[tn] or 0)})
+    d = pd.DataFrame(rows); d['month'] = month
+    fn = 'perf_gia_target.csv' if gia else 'perf_brand_target.csv'
+    old = _load(fn); out = pd.concat([old[old.month != month], d.astype(str)]) if old is not None else d
+    _save(out, fn)
+    print(f'perf: {"GIA" if gia else "Device brand"} target {month}: {d.shop.nunique()} shops · qty {d.tq.sum():,.0f} · net {d.tn.sum():,.0f} · by', d.groupby('cat').tn.sum().round().to_dict())
+
 RET_ITEMS = ['Postpay', 'True Online', 'True Visions']
 
 def _ret_build():
