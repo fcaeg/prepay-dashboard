@@ -158,4 +158,4 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 - Service & Retention (Nami, 14 Nov 2026): `Retention_Shops_<yyyy-mm-dd> <Postpay|True Online|True Visions>.csv` (all shops, month to date:
   Req / Save / Cancel / %Save / Rev Req / Rev Save) → `--retention <csv> ...` (Drive: names starting "Retention_Shops") → `state/perf_ret.csv`
   (month from the date in the name; a newer file of the same month + product replaces it). KPI = %Save (Save ÷ Req), pass mark 88%.
-  Radar plots %Save ÷ 88% but labels the real %Save. BMA = Region starting "BMA", the rest UPC. Service Level / iCsat / On Time: pending.
+  Radar plots %Save ÷ 88% but labels the real %Save; no previous-month line (Nami, 14 Nov 2026). BMA = Region starting "BMA", the rest UPC. Service Level / iCsat / On Time: pending.

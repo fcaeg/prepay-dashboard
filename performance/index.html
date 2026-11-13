@@ -161,7 +161,7 @@ const ico = (stroke,dash,w) => `<svg width="22" height="8" style="vertical-align
 const legendFor = (pid, small) => { const pl = pid==='ebit', rt = pid==='service';
   const c = rt ? `${mLbl(RT.cur)}${small?'':' (ถึง '+(+((Object.values(RT.months[RT.cur].asof).filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
   const p = rt ? (RT.prev?mLbl(RT.prev):'ยังไม่มีข้อมูล') : pl ? plLbl(PL.prev) : PREV;
-  return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span><span>${ico('#475569','2 3',2)}${p}</span><span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
+  return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span>${rt?'':`<span>${ico('#475569','2 3',2)}${p}</span>`}<span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
 const legend = () => `<div class="legend"><span><i style="background:var(--cur)"></i>${CUR} (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})</span><span><i style="background:var(--prev)"></i>${PREV} ${hasPrev('sale')?'':'(ยังไม่มีข้อมูล)'}</span><span><i style="background:none;border-top:2px dashed #1b1f24;height:0"></i>100% = Target</span></div>`;
 const PL = D.pl; const plVals = (m,br) => { const M=PL&&PL.months[m]; if(!M) return []; if(br==='ALL') return M.area_idx; const r=M.shops[br]; return (r&&r.idx)||PL.axes.map(()=>null); };
 const plLbl = m => m?mLbl(m):'-';
@@ -170,7 +170,7 @@ const retRec = (m,br,p) => { const M=RT&&RT.months[m]; if(!M) return null; const
 const retPct = (m,br,p) => { const r=retRec(m,br,p); return r? r.save/r.req*100 : null; };
 const retVals = (m,br) => [...RKEY.map(p=>{const v=retPct(m,br,p); return v==null?null:v/RT.pass*100;}), null, null, null];
 const retLabs = (m,br) => [...RKEY.map(p=>{const v=retPct(m,br,p); return v==null?null:v.toFixed(1)+'%';}), null, null, null];
-const seriesFor = (pid,br) => pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true},{values:RT.prev?retVals(RT.prev,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
+const seriesFor = (pid,br) => pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
 const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
 
 /* ---------- hints (ⓘ) ---------- */
@@ -273,7 +273,7 @@ function detailService(){
   const br=state.branch, m=RT.cur, Mm=RT.months[m], pv=RT.prev;
   const pct=r=>r&&r.req? r.save/r.req*100 : null, f1=v=>v==null?'–':v.toFixed(1)+'%', fN=v=>v==null?'–':Math.round(v).toLocaleString('th-TH');
   const pill=v=>v==null?'–':`<span class="pill p-${v>=RT.pass?'good':v>=RT.pass-3?'warn':'bad'}">${v.toFixed(1)}%</span>`;
-  const rows=RKEY.map(p=>{ const r=retRec(m,br,p), b=Mm.bench[p]||{}; const v=pct(r), pp=pv?retPct(pv,br,p):null;
+  const rows=RKEY.map(p=>{ const r=retRec(m,br,p), b=Mm.bench[p]||{}; const v=pct(r);
     return `<tr><td><b>${p}</b><div style="font-size:11px;color:var(--muted)">ถึง ${Mm.asof[p]||'-'}</div></td><td>${fN(r&&r.req)}</td><td>${fN(r&&r.save)}</td><td>${fN(r&&r.cancel)}</td><td>${pill(v)}</td><td>${v==null?'–':((v-RT.pass)>=0?'+':'')+(v-RT.pass).toFixed(1)+' pp'}</td><td>${r&&r.rev_req?f1(r.rev_save/r.rev_req*100):'–'}</td><td>${f1(pct(b.UPC))}</td><td>${f1(pct(b.BMA))}</td><td>${f1(pct(b.All))}</td></tr>`;}).join('');
   const sh=D.shops.map(s=>({s,v:RKEY.map(p=>{const r=(Mm.shops[s.shop]||{})[p]; return r&&r.req? {pct:r.save/r.req*100, req:r.req, cancel:r.cancel} : null;})}))
     .map(x=>({...x,avg:avg(x.v.map(z=>z&&z.pct/RT.pass*100))})).sort((a,b)=>(a.avg??999)-(b.avg??999));
@@ -327,7 +327,7 @@ function render(){
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}
 function setMode(m){state.mode=m;render();}
-document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 01:08 น.`;
+document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 01:12 น.`;
 const sel=document.getElementById('branch');
 sel.innerHTML='<option value="ALL">ทั้งหมด (Upper North)</option>'+D.shops.map(s=>`<option value="${s.shop}">${s.name.replace('True Shop ','')}</option>`).join('');
 sel.onchange=e=>{state.branch=e.target.value;render();};
