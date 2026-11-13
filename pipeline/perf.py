@@ -152,6 +152,44 @@ def _raw_actual(month, product):
     p['day'] = month + '-' + p.day.astype(int).map('{:02d}'.format); p['emp'] = ''
     return p.groupby(['day', 'shop', 'emp'], as_index=False)[['q', 'n']].sum()
 
+ALLPROD = {'DEVICE': 'Device', 'GIA': 'GIA', 'POSTPAID': 'Postpay', 'TRUEONLINE': 'True Online', 'TRUEVISION': 'True Visions'}
+
+def merge_allprod(fp):
+    """'Self Refresh All Product Rawdata Latest 2 Months For DB' - one sheet per product (PREPAID skipped), each line with SALE_ID.
+    -> state/perf_allprod.csv (product x month x day x shop x emp x SIM_STATUS: q, n); months in the file replace those months.
+    Used for staff-level Postpay / TOL / TVS, and for Device / GIA of a month with no TSM daily_sales (e.g. Oct 2026)."""
+    import openpyxl
+    sh = shops()
+    if not sh: print('perf: no shop list yet - all-product file skipped'); return
+    wb = openpyxl.load_workbook(fp, read_only=True); rows = []; months = set(); asof = {}
+    for sheet, product in ALLPROD.items():
+        if sheet not in wb.sheetnames: continue
+        it = wb[sheet].iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]
+        ix = {c: h.index(c) for c in ['SHOP_CODE', 'SALE_ID', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'DATA_ASOF_DATE']}
+        st = h.index('SIM_STATUS') if 'SIM_STATUS' in h else None
+        for r in it:
+            bm = str(r[ix['BM']] or '').strip()
+            if len(bm) == 6: months.add(f'{bm[:4]}-{bm[4:]}')
+            if str(r[ix['SHOP_CODE']] or '').strip() not in sh: continue
+            asof[product] = max(asof.get(product, ''), str(r[ix['DATA_ASOF_DATE']] or '')[:10])
+            rows.append((product, f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(), str(r[ix['SALE_ID']] or '').strip(),
+                         str(r[st] or '') if st is not None else '', float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
+    d = pd.DataFrame(rows, columns=['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'q', 'n'])
+    d = d.groupby(['product', 'month', 'day', 'shop', 'emp', 'sim_status'], as_index=False)[['q', 'n']].sum()
+    old = _load('perf_allprod.csv')
+    out = pd.concat([old[~old.month.isin(months)], d.astype(str)]) if old is not None else d
+    _save(out.sort_values(['product', 'month', 'day', 'shop']), 'perf_allprod.csv')
+    m_ = _meta(); m_['perf_allprod_asof'] = asof; json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
+    print(f'perf: all-product months {sorted(months)} · UN lines {len(rows)} · as of {asof} · qty by product', d.groupby('product').q.sum().round().to_dict())
+
+def _allprod_actual(month):
+    p = _load('perf_allprod.csv')
+    if p is None: return {}
+    p = p[(p.month == month) & ~p.sim_status.fillna('').str.upper().str.contains('SUSPEND|TERMINATE')].copy()
+    for c in ('q', 'n'): p[c] = pd.to_numeric(p[c])
+    p['day'] = month + '-' + p.day.astype(int).map('{:02d}'.format); p['emp'] = p.emp.fillna('')
+    return {k: g.groupby(['day', 'shop', 'emp'], as_index=False)[['q', 'n']].sum() for k, g in p.groupby('product')}
+
 def _gia_actual(month, sh):
     g = _load(f'gia_sales_{month}.csv.gz')
     if g is None: return pd.DataFrame(columns=['day', 'shop', 'emp', 'q', 'n'])
@@ -179,7 +217,12 @@ def build():
             for c in ('q', 'n'): dev[c] = pd.to_numeric(dev[c])
         gia = _gia_actual(m, sh)
         act = {'Device': dev, 'GIA': gia if len(gia) else None, **{p: _raw_actual(m, p) for p in RAW}}
-        by_staff = {'Device', 'GIA'}  # products whose actuals carry the salesperson
+        ap = _allprod_actual(m); src = {}
+        for p in ('Device', 'GIA'):  # TSM first; the all-product file fills a month with no TSM data (e.g. Oct 2026)
+            if (act.get(p) is None or not len(act[p])) and p in ap: act[p] = ap[p]; src[p] = 'allprod'
+        # salesperson-level actuals: TSM SALE_CODE for Device / GIA, the all-product file's SALE_ID for the rest
+        sact = {p: a for p, a in act.items() if p in ('Device', 'GIA') and a is not None and len(a)}
+        sact.update({p: ap[p] for p in ('Postpay', 'True Online', 'True Visions') if p in ap})
         days = sorted(set().union(*[set(a.day) for a in act.values() if a is not None])) if any(a is not None for a in act.values()) else []
         dim = calendar.monthrange(int(m[:4]), int(m[5:]))[1]
         last = days[-1] if days else None
@@ -202,15 +245,15 @@ def build():
                 r0 = g.iloc[0]; e = {'name': r0['name'], 'role': r0.role, 'shop': r0.shop, 'p': {}}
                 for p in PRODUCTS:
                     tr = g[g['product'] == p]; row = {'tq': float(tr.q.sum()), 'tn': float(tr.n.sum())}
-                    a = act.get(p) if p in by_staff else None
+                    a = sact.get(p)
                     if a is not None:
                         aa = a[a.emp == emp]; row.update({'aq': float(aa.q.sum()), 'an': float(aa.n.sum())})
                     e['p'][p] = row
                 E[emp] = e
         months[m] = {'has_target': bool(len(tm)), 'has_ind': it is not None and bool(len(it[it.month == m])), 'last_day': last, 'days_in_month': dim,
-                     'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p, a in act.items() if a is not None and len(a) and p in by_staff], 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
+                     'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
-            'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}),
+            'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
             'notes': {}}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

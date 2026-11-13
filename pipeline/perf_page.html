@@ -107,8 +107,9 @@ function shopAch(M, shopList, p, mode){
 function staffAch(M, shopList, p, mode){
   if(!M || !M.has_ind || !(M.staff_products||M.actual_products).includes(p)) return null;
   let a=0,t=0; Object.values(M.staff).forEach(e=>{ if(!shopList.includes(e.shop)) return; const r=e.p[p]; a+=r['a'+mode]||0; t+=r['t'+mode]||0; });
-  return t? a/(t*fr(M,p))*100 : null;
+  return t? a/(t*frs(M,p))*100 : null;
 }
+const frs = (M,p) => (M.frac_sp && M.frac_sp[p]) || fr(M,p);
 const fr = (M,p) => (M.frac_p && M.frac_p[p]) || M.frac;
 const shopsOf = br => br==='ALL' ? D.shops.map(s=>s.shop) : [br];
 function pillarVals(pid, M, br, mode){
@@ -189,14 +190,14 @@ function detailStaff(){
   const br=state.branch, items=D.products, mode=state.mode, list=shopsOf(br);
   if(!C.has_ind) return `<div class="card pending"><h2>Staff Productivity</h2><p>ยังไม่มี Indy Target ของ ${CUR}</p></div>`;
   const st=Object.entries(C.staff).filter(([,e])=>list.includes(e.shop)).map(([id,e])=>{
-    const v=items.map(p=>{ if(!(C.staff_products||C.actual_products).includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*fr(C,p); return t?(r['a'+mode]||0)/t*100:null; });
+    const v=items.map(p=>{ if(!(C.staff_products||C.actual_products).includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*frs(C,p); return t?(r['a'+mode]||0)/t*100:null; });
     return {id,e,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const rows=st.map(r=>`<tr><td>${r.e.name}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
   return `<div class="row"><h2 style="margin:0">Staff Productivity</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legend()}</div>
     <div class="card"><h3>สรุป</h3><div class="sub">${st.length} คน · ต่ำกว่า Target (เฉลี่ย) ${st.filter(r=>r.avg!=null&&r.avg<100).length} คน</div>
-      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay / TOL / TVS: ไฟล์ Rawdata ไม่มีรหัสพนักงาน จึงยังวัดรายคนไม่ได้<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
+      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay / TOL / TVS รายคน: จากไฟล์ All Product Rawdata (SALE_ID) · ไม่นับเบอร์ Suspend / Terminate<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
   </div>
   <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
   <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>

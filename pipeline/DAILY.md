@@ -138,3 +138,8 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   → `--tol-raw` / `--tvs-raw` (Drive: "trueonline"/"truevision" + "raw") → `state/perf_tol.csv` / `perf_tvs.csv`. Net Amount vs TOL_NEW / TVS_NEW
   (all three Rawdata files are new sales; Nami confirmed POST_NEW on 14 Nov). Postpay lines with SIM_STATUS Suspend / Terminate are not counted.
 - `Inspect Drive file` workflow (manual, `pipeline/inspect_drive.py`): prints a Drive file's column structure only — use it before wiring a new report.
+- All Product (14 Nov 2026): `Self Refresh All Product Rawdata Latest 2 Months For DB.zip` (sheets DEVICE, GIA, POSTPAID, PREPAID, TRUEONLINE,
+  TRUEVISION; every line has SALE_ID) → `--allprod` (Drive: "all product" + "raw") → `state/perf_allprod.csv` (PREPAID skipped).
+  Used for staff-level Postpay / TOL / TVS (SALE_ID = emp_id8), and for Device / GIA of a month with no TSM daily_sales (Oct 2026).
+  Shop-level Postpay / TOL / TVS still come from the yearly Rawdata files.
+- TVS open question (14 Nov): the TrueVision Rawdata / TRUEVISION sheet hold TVS NOW only (~220/month for the 17 shops vs target ~1,400).
