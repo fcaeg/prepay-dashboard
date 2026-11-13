@@ -179,8 +179,8 @@ def merge_stock(path):
     # stock history (shop x matcode qty per stock file) - used to estimate since when a shop has been out of a Matcode
     try:
         snap = k.groupby(['SHOP_CODE', 'PRODUCT_CODE']).size().reset_index(name='qty').rename(columns={'SHOP_CODE': 'shop', 'PRODUCT_CODE': 'matcode'}); snap.insert(0, 'asof', meta['stock_asof'])
-        h = load('stock_hist.csv.gz'); h = pd.concat([h[h.asof != meta['stock_asof']], snap.astype(str)]) if h is not None else snap.astype(str)
-        cut = (pd.Timestamp(meta['stock_asof'][:10]) - pd.Timedelta(days=180)).strftime('%Y-%m-%d'); save(h[h.asof.str[:10] >= cut], 'stock_hist.csv.gz')
+        h = load('stock_hist.csv.gz'); h = pd.concat([h[h['asof'] != meta['stock_asof']], snap.astype(str)]) if h is not None else snap.astype(str)
+        cut = (pd.Timestamp(meta['stock_asof'][:10]) - pd.Timedelta(days=180)).strftime('%Y-%m-%d'); save(h[h['asof'].str[:10] >= cut], 'stock_hist.csv.gz')
     except Exception as e: print('stock history skipped:', e)
     _vivo(vivo.set_stock, st, meta['stock_asof'])
     _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
@@ -352,8 +352,9 @@ def build():
     sh_ = load('stock_hist.csv.gz'); lp = []
     if sh_ is not None and len(sh_):
         cur = set(zip(ss.shop.astype(str), ss.matcode.astype(str))) if len(ss) else set()
-        g = sh_[sh_.shop.isin(ww)].groupby(['shop', 'matcode']).asof.max().reset_index()
-        lp = [{'shop': r.shop, 'matcode': r.matcode, 'last_pos': r.asof} for r in g.itertuples() if (r.shop, r.matcode) not in cur]
+        g = sh_[sh_.shop.isin(ww) & (sh_['qty'].astype(int) > 0)].groupby(['shop', 'matcode'])['asof'].max().reset_index()
+        snaps = sorted(sh_['asof'].unique()); nxt = {x: (snaps[i + 1] if i + 1 < len(snaps) else None) for i, x in enumerate(snaps)}
+        lp = [{'shop': '_first', 'matcode': '_', 'last_pos': snaps[0], 'zero_at': None, 'n': len(snaps)}] + [{'shop': a, 'matcode': b, 'last_pos': c, 'zero_at': nxt.get(c)} for a, b, c in zip(g.shop, g.matcode, g['asof']) if (a, b) not in cur]
     json.dump(lp, open(os.path.join(OUT, 'stock_lastpos.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     it = load('ind_targets.csv')
     if it is not None:
