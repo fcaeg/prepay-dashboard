@@ -160,7 +160,7 @@ function summary(){
   }).join('');
   return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2>${legend()}<div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff:</span>${modeSeg()}</div>
   <div class="grid g5 radars">${cards}</div>
-  <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · TOL / TVS รอไฟล์ยอดขาย · TSM ถึง ${D.sales_asof||'-'} · Postpay ถึง ${D.post_asof||'-'}</div>`;
+  <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · TSM (Device, GIA) ถึง ${D.sales_asof||'-'} · ${Object.entries(D.raw_asof||{}).map(([k,v])=>`${SHORT[k]} ถึง ${v}`).join(' · ')}</div>`;
 }
 const nameOf = s => (D.shops.find(x=>x.shop===s)||{name:s}).name.replace('True Shop ','');
 
@@ -179,7 +179,7 @@ function detailSale(){
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">% Achievement เทียบ Target ถึงวันนี้</div>${radar(items,seriesFor('sale',br))}${legend()}</div>
     <div class="card"><h3>ตัวเลขเทียบ Target</h3><div class="sub">${mode==='n'?'Net Amount (บาท)':'จำนวน (QTY)'} · ถึง ${C.last_day||'-'}</div>
       <table><thead><tr><th>สินค้า</th><th>Actual</th><th>Target ถึงวันนี้</th><th>Target เดือน</th><th>%Ach</th><th>${PREV}</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="note">Postpay = Self Refresh Postpaid Rawdata (QTY เทียบ Target POST · Net Amount เทียบ Target POST_NEW) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
+      <div class="note">Postpay / TOL / TVS = Self Refresh Rawdata (QTY เทียบ Target POST / TOL / TVS · Net Amount เทียบ Target POST_NEW / TOL_NEW / TVS_NEW · ไม่นับเบอร์ Suspend / Terminate) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
   </div>
   <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
   <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
@@ -196,7 +196,7 @@ function detailStaff(){
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legend()}</div>
     <div class="card"><h3>สรุป</h3><div class="sub">${st.length} คน · ต่ำกว่า Target (เฉลี่ย) ${st.filter(r=>r.avg!=null&&r.avg<100).length} คน</div>
-      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay: ไฟล์ Rawdata ไม่มีรหัสพนักงาน จึงยังวัดรายคนไม่ได้<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
+      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay / TOL / TVS: ไฟล์ Rawdata ไม่มีรหัสพนักงาน จึงยังวัดรายคนไม่ได้<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
   </div>
   <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
   <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>

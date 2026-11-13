@@ -13,7 +13,7 @@ GIA actuals come from gia.py's state/gia_sales_<YYYY-MM>.csv.gz (same GIA rule a
                          -> state/perf_post.csv (month x day x shop x activity x SIM_STATUS: q = QTY, n = NET_AMOUNT); months in the file replace.
                          Postpay Net Amount is compared with the target's POST_NEW revenue (acquisition), QTY with POST subscribers.
                          Lines with SIM_STATUS Suspend / Terminate are not counted (Nami, 14 Nov 2026). The file has no salesperson, so Staff Productivity shows Postpay as 'no data'.
-True Online / True Visions actuals: not wired yet (waiting for the report from Nami).
+True Online / True Visions: the same Self Refresh Rawdata format (merge_tol / merge_tvs); Net Amount vs TOL_NEW / TVS_NEW revenue (Nami, 14 Nov 2026).
 Shops (Nami, 13 Nov 2026): region UPC - Upper North in the target file, without the Lotus's-company shops (Nan, Hangdong, Chiang Khong) = 17 shops.
 GIA target = column ACC of the target file (Nami, 13 Nov 2026). Device = H/S incl. tablets + iPad (Nami, 13 Nov 2026).
 """
@@ -26,10 +26,10 @@ MON = {m: i + 1 for i, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 PRODUCTS = ['Postpay', 'True Online', 'Device', 'GIA', 'True Visions']
 # target file (sheet RETAIL, header row with CODE): Target Subscribers / Target Revenue columns by header name
 T_Q = {'Postpay': ('POST', 0), 'True Online': ('TOL', 0), 'Device': ('DEVICE', 0), 'GIA': ('ACC', 0), 'True Visions': ('TVS', 0)}
-T_N = {'Postpay': ('POST_NEW', 0), 'True Online': ('TOL', 2), 'Device': ('DEV', 1), 'GIA': ('ACC', 1), 'True Visions': ('TVS', 2)}
+T_N = {'Postpay': ('POST_NEW', 0), 'True Online': ('TOL_NEW', 0), 'Device': ('DEV', 1), 'GIA': ('ACC', 1), 'True Visions': ('TVS_NEW', 0)}
 # Indy Target sheet: column positions (header row 2)
 I_Q = {'Postpay': 16, 'True Online': 20, 'Device': 24, 'GIA': 25, 'True Visions': 18}
-I_N = {'Postpay': 31, 'True Online': 42, 'Device': 45, 'GIA': 46, 'True Visions': 38}
+I_N = {'Postpay': 31, 'True Online': 40, 'Device': 45, 'GIA': 46, 'True Visions': 36}
 REGION = 'Upper North'; EXCLUDE_TYPES = {"Lotus's"}
 
 def _p(n): return os.path.join(ST, n)
@@ -109,31 +109,42 @@ def add_sales(raw):
     json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
     print(f'perf: device days {sorted(replace) or "-"} · {int(v.q.sum())} units')
 
-def merge_postpay(fp):
+RAW = {'Postpay': 'perf_post.csv', 'True Online': 'perf_tol.csv', 'True Visions': 'perf_tvs.csv'}
+
+def merge_raw(fp, product):
+    """'3.Self Refresh <Postpaid|TrueOnline|TrueVision> Rawdata This year <yyyy> For DB' (sheet Rawdata, one row per sale, whole year)"""
     import openpyxl
     sh = shops()
-    if not sh: print('perf: no shop list yet - postpay skipped'); return
+    if not sh: print(f'perf: no shop list yet - {product} skipped'); return
     wb = openpyxl.load_workbook(fp, read_only=True); ws = wb['Rawdata'] if 'Rawdata' in wb.sheetnames else wb.worksheets[-1]
     it = ws.iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]
-    ix = {c: h.index(c) for c in ['SHOP_CODE', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'SIM_STATUS', 'ACTIVITY_GROUP', 'DATA_ASOF_DATE']}
+    ix = {c: h.index(c) for c in ['SHOP_CODE', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'DATA_ASOF_DATE']}
+    opt = {c: h.index(c) for c in ['SIM_STATUS', 'ACTIVITY_GROUP'] if c in h}
     rows = []; months = set(); asof = ''
     for r in it:
         bm = str(r[ix['BM']] or '').strip()
         if len(bm) == 6: months.add(f'{bm[:4]}-{bm[4:]}')
         if str(r[ix['SHOP_CODE']] or '').strip() not in sh: continue
         asof = max(asof, str(r[ix['DATA_ASOF_DATE']] or '')[:10])
-        rows.append((f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(), str(r[ix['ACTIVITY_GROUP']] or ''), str(r[ix['SIM_STATUS']] or ''),
+        rows.append((f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(),
+                     str(r[opt['ACTIVITY_GROUP']] or '') if 'ACTIVITY_GROUP' in opt else '', str(r[opt['SIM_STATUS']] or '') if 'SIM_STATUS' in opt else '',
                      float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
     d = pd.DataFrame(rows, columns=['month', 'day', 'shop', 'activity', 'sim_status', 'q', 'n'])
     d = d.groupby(['month', 'day', 'shop', 'activity', 'sim_status'], as_index=False)[['q', 'n']].sum()
-    old = _load('perf_post.csv')
+    old = _load(RAW[product])
     out = pd.concat([old[~old.month.isin(months)], d.astype(str)]) if old is not None else d
-    _save(out.sort_values(['month', 'day', 'shop']), 'perf_post.csv')
-    m_ = _meta(); m_['perf_post_asof'] = asof; json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
-    print(f'perf: postpay months {sorted(months)} · UN rows {len(rows)} · as of {asof} · by status', d.groupby('sim_status').q.sum().to_dict())
+    _save(out.sort_values(['month', 'day', 'shop']), RAW[product])
+    m_ = _meta(); m_.setdefault('perf_raw_asof', {})[product] = asof
+    if product == 'Postpay': m_['perf_post_asof'] = asof
+    json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
+    print(f'perf: {product} months {sorted(months)} · UN rows {len(rows)} · as of {asof} · qty', round(d.q.sum()))
 
-def _post_actual(month):
-    p = _load('perf_post.csv')
+def merge_postpay(fp): merge_raw(fp, 'Postpay')
+def merge_tol(fp): merge_raw(fp, 'True Online')
+def merge_tvs(fp): merge_raw(fp, 'True Visions')
+
+def _raw_actual(month, product):
+    p = _load(RAW[product])
     if p is None: return None
     p = p[(p.month == month) & ~p.sim_status.fillna('').str.upper().str.contains('SUSPEND|TERMINATE')].copy()  # Nami, 14 Nov 2026
     if not len(p): return None
@@ -167,7 +178,7 @@ def build():
         if dev is not None:
             for c in ('q', 'n'): dev[c] = pd.to_numeric(dev[c])
         gia = _gia_actual(m, sh)
-        act = {'Device': dev, 'GIA': gia if len(gia) else None, 'Postpay': _post_actual(m)}
+        act = {'Device': dev, 'GIA': gia if len(gia) else None, **{p: _raw_actual(m, p) for p in RAW}}
         by_staff = {'Device', 'GIA'}  # products whose actuals carry the salesperson
         days = sorted(set().union(*[set(a.day) for a in act.values() if a is not None])) if any(a is not None for a in act.values()) else []
         dim = calendar.monthrange(int(m[:4]), int(m[5:]))[1]
@@ -199,7 +210,7 @@ def build():
         months[m] = {'has_target': bool(len(tm)), 'has_ind': it is not None and bool(len(it[it.month == m])), 'last_day': last, 'days_in_month': dim,
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p, a in act.items() if a is not None and len(a) and p in by_staff], 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
-            'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''),
-            'notes': {'pending_actual': ['True Online', 'True Visions']}}
+            'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}),
+            'notes': {}}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

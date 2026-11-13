@@ -134,3 +134,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   → `update.py --postpay <xlsx>` (Drive: name contains "postpaid" + "raw") → `state/perf_post.csv` (17 shops, month x day x shop x activity x SIM_STATUS).
   QTY vs target POST subscribers, NET_AMOUNT vs target POST_NEW revenue (≈ 600-650 THB/sub, matches the file's net RC). No salesperson column,
   so Staff Productivity has no Postpay. Each product's "target to date" uses that product's latest data day (frac_p).
+- True Online / True Visions (14 Nov 2026): `3.Self Refresh TrueOnline Rawdata ...` / `3.Self Refresh TrueVision Rawdata ...` (same Rawdata layout)
+  → `--tol-raw` / `--tvs-raw` (Drive: "trueonline"/"truevision" + "raw") → `state/perf_tol.csv` / `perf_tvs.csv`. Net Amount vs TOL_NEW / TVS_NEW
+  (all three Rawdata files are new sales; Nami confirmed POST_NEW on 14 Nov). Postpay lines with SIM_STATUS Suspend / Terminate are not counted.
+- `Inspect Drive file` workflow (manual, `pipeline/inspect_drive.py`): prints a Drive file's column structure only — use it before wiring a new report.
