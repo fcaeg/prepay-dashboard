@@ -256,7 +256,7 @@ const DM = D.dims || {};
 const AP_ASOF = D.allprod_asof || {};
 const dimLbl = {ACTIVITY_GROUP:'ประเภทการขาย', GP_SKU:'กลุ่มสินค้า (SKU)', CAMPAIGN_GROUP_LV1:'แคมเปญ', NET_RC_TIER:'ช่วงค่าบริการ (RC)', BRAND:'แบรนด์เครื่อง',
   CAMPIGN_CODE:'แคมเปญ / แพ็กเกจ', RC_TIER:'ช่วงค่าบริการ (RC)', FLAG_BUNDLE:'ขายเดี่ยว / พ่วง', TECHNOLOGY:'เทคโนโลยี', SUB_PRODUCT:'ประเภท TVS NOW',
-  'ที่มา':'ที่มาของยอด TVS', CATEGORY:'หมวดสินค้า', SUB_CATEGORY:'หมวดย่อย', PRICE_TIER:'ช่วงราคา', CAPACITY:'ความจุ'};
+  'ที่มา':'ที่มาของยอด TVS', CATEGORY:'หมวดสินค้า', SUB_CATEGORY:'หมวดย่อย', PRICE_TIER:'ช่วงราคา', CAPACITY:'ความจุ', 'เบอร์มงคล':'เบอร์มงคล', SUB_PRODUCT:'ประเภท TVS NOW'};
 const setAxis = (pid,i) => { state.axis[pid]=i; render(); const el=document.getElementById('an-'+pid); if(el) el.scrollIntoView({block:'nearest'}); };
 const fK = v => v==null?'–':Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' ล้าน':Math.round(v).toLocaleString('th-TH');
 const li = (t) => `<li style="padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.5">${t}</li>`;
@@ -314,6 +314,8 @@ function saleAnalysis(staff){
   return analysisCard(staff?'staff':'sale', items, i=>{
     const p=items[i], a=dimAnalysis(p);
     let good=[...a.good], bad=[...a.bad];
+    if(p==='Postpay'){ const sc=state.branch==='ALL'?'UN':state.branch, N=(DM[D.cur]||{}).Postpay||{}, l=luckyOf(N[sc]), u=luckyOf(N.UPC), pl=luckyOf(((DM[D.prev]||{}).Postpay||{})[sc]);
+      if(l&&u&&l.t) (l.sh>=u.sh?good:bad).unshift(`เบอร์มงคล <b>${fmtN(l.q)} เบอร์</b> = ${l.sh.toFixed(1)}% ของยอด Postpay ${l.sh>=u.sh?'สูงกว่า':'ต่ำกว่า'} UPC (${u.sh.toFixed(1)}%)${pl&&pl.sh!=null?` · เดือนก่อน ${pl.sh.toFixed(1)}%`:''}`); }
     if(!staff){
       const rows=D.shops.map(s=>({name:s.name.replace('True Shop ',''), v:shopAch(C,[s.shop],p,state.mode)}));
       if(state.branch==='ALL'){ const r=shopRank(rows,110,80,x=>`ทำได้ ${x.v.toFixed(0)}% ของ Target ถึงวันนี้`); good=[...r.good,...good]; bad=[...r.bad,...bad]; }
@@ -323,7 +325,7 @@ function saleAnalysis(staff){
       const r=shopRank(st,120,50,x=>`${x.v.toFixed(0)}% (${x.shop})`); good=[...r.good,...good]; bad=[...r.bad,...bad];
       const zero=st.filter(x=>x.a===0).length; if(zero) bad.unshift(`มีพนักงาน <b>${zero} คน</b> ที่ยังไม่มียอด ${p} ในเดือนนี้`);
     }
-    return lists(good.slice(0,9), bad.slice(0,10)) + (staff?'<div class="note" style="margin-top:8px">ตารางแยกประเภทด้านล่างเป็นภาพรวมสาขา (ยังไม่แยกรายคน)</div>':'') + a.html;
+    return lists(good.slice(0,9), bad.slice(0,10)) + (staff?'<div class="note" style="margin-top:8px">ตารางแยกประเภทด้านล่างเป็นภาพรวม · ดูรายคนได้ที่ปุ่ม "ดูเพิ่มเติม" ท้ายชื่อในตารางรายพนักงาน</div>':'') + a.html;
   });
 }
 function ebitAnalysis(){
@@ -430,14 +432,16 @@ function detailSale(){
   <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>`;
 }
 function detailStaff(){
-  const br=state.branch, items=D.products, mode=state.mode, list=shopsOf(br);
+  const br=state.branch, items=D.products, mode=state.mode, list=shopsOf(br), sp=state.sp||'ALL';
   if(!C.has_ind) return `<div class="card pending"><h2>Staff Productivity</h2><p>ยังไม่มี Indy Target ของ ${CUR}</p></div>`;
   const st=Object.entries(C.staff).filter(([,e])=>list.includes(e.shop)).map(([id,e])=>{
     const v=items.map(p=>{ if(!(C.staff_products||C.actual_products).includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*frs(C,p); return t?(r['a'+mode]||0)/t*100:null; });
     const sold=items.some(p=>(r=>(r.aq||0)+(r.an||0))(e.p[p])>0);
     return {id,e,v,avg:avg(v),sold};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const none=st.filter(r=>!r.sold); const act=st.filter(r=>r.sold);
-  const rows=act.map(r=>`<tr><td>${r.e.name}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
+  const rows=act.map(r=>`<tr><td>${r.e.name}${moreBtn(r.id,'ALL')}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
+  const chips=['ALL',...items].map(p=>`<button onclick="state.sp='${p}';render()" style="font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid ${p===sp?'var(--ink)':'var(--line)'};background:${p===sp?'var(--ink)':'#fff'};color:${p===sp?'#fff':'var(--ink)'};cursor:pointer">${p==='ALL'?'ทุกสินค้า':SHORT[p]}</button>`).join(' ');
+  const table = sp==='ALL' ? `<div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div><div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว · กด "ดูเพิ่มเติม" ท้ายชื่อเพื่อเจาะการขายรายคน</div>` : staffProdTable(act.map(r=>r.id), sp);
   return `<div class="row"><h2 style="margin:0">Staff Productivity${infoBtn('staff')}</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legendFor('staff')}</div>
@@ -445,9 +449,8 @@ function detailStaff(){
       <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay / TOL / TVS รายคน: จากไฟล์ All Product Rawdata (SALE_ID) · ไม่นับเบอร์ Suspend / Terminate<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
   </div>
   ${saleAnalysis(true)}
-  <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
-  <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>
+  <div class="card"><h3>รายพนักงาน</h3><div class="sub">เลือกสินค้าเพื่อจัดอันดับรายสินค้า · ${sp==='ALL'?'% Achievement เรียงจากคนที่ต่ำสุด':'เรียงจากยอดสูงสุด'}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${chips}</div>${table}</div>
   ${none.length?`<div class="card" style="margin-top:16px"><h3>มี Indy Target แต่ไม่พบยอดขายใน ${CUR} (${none.length} คน)</h3><div class="sub">อาจลาออก / ย้ายสาขา / ลา หรือรหัสพนักงานขายในระบบไม่ตรงกับ Indy Target — ไม่นำมาจัดอันดับ</div>
   <ul class="fail-list">${none.map(r=>`<li><span>${r.e.name}</span><span style="color:var(--muted);font-size:12px">${r.e.role} · ${nameOf(r.e.shop)} · ${r.id}</span></li>`).join('')}</ul></div>`:''}`;
 }
@@ -571,7 +574,90 @@ function detailMix(pid){
   </div>
   ${mixAnalysis(pid)}
   <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · % เทียบ Target ถึงวันนี้ · ตัวเลขเล็ก = ยอดจริง / Target ถึงวันนี้</div>
-    <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${X.axes.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>`;
+    <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${X.axes.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>
+  ${mixStaffTable(pid)}`;
+}
+/* ---------- staff drill-down (ดูเพิ่มเติม) ---------- */
+const moreBtn = (id,p) => `<button onclick="event.stopPropagation();showStaff('${id}','${p}')" style="font:inherit;font-size:11px;margin-left:6px;padding:1px 8px;border-radius:999px;border:1px solid var(--cur);background:#fff;color:var(--cur);cursor:pointer;vertical-align:middle">ดูเพิ่มเติม</button>`;
+const empNode = (p,id,m) => (((DM[m||D.cur]||{})[p]||{})['E:'+id]) || null;
+const luckyOf = n => { const d=n&&n.dims['เบอร์มงคล']; if(!d) return null; let q=0,t=0; Object.entries(d).forEach(([k,v])=>{t+=v[0]; if(k.startsWith('มงคล')) q+=v[0];}); return {q,t,sh:t?q/t*100:null}; };
+const itemSplit = k => { const [m,b,c]=k.split('|'); return {m,b,c}; };
+function staffProdTable(ids, p){
+  const mode=state.mode, k_=mode==='q'?0:1, hasT=(C.staff_products||C.actual_products).includes(p);
+  const rows=ids.map(id=>{ const e=C.staff[id], r=e.p[p], t=(r['t'+mode]||0)*frs(C,p), a=r['a'+mode]||0, n=empNode(p,id);
+    let extra='–';
+    if(p==='Postpay'){ const l=luckyOf(n); extra=l&&l.t? `${fmtN(l.q)} เบอร์ (${l.sh.toFixed(0)}%)` : '–'; }
+    else if(n&&n.dims['สินค้า']){ const top=Object.entries(n.dims['สินค้า']).sort((x,y)=>y[1][k_]-x[1][k_])[0]; if(top){ const it=itemSplit(top[0]); extra=`${it.m} <span style="color:var(--muted)">(${it.b})</span>`; } }
+    else if(n&&n.dims.ACTIVITY_GROUP){ const top=Object.entries(n.dims.ACTIVITY_GROUP).sort((x,y)=>y[1][0]-x[1][0])[0]; if(top) extra=top[0]; }
+    else if(n&&n.dims.RC_TIER){ const top=Object.entries(n.dims.RC_TIER).sort((x,y)=>y[1][0]-x[1][0])[0]; if(top) extra='RC '+top[0]; }
+    return {id,e,a,t,v:t?a/t*100:null,extra}; }).sort((x,y)=>y.a-x.a);
+  const head = p==='Postpay'?'เบอร์มงคล':(p==='Device'||p==='GIA')?'ขายมากสุด (สินค้า · แบรนด์)':p==='True Visions'?'ประเภทหลัก':'ช่วง RC หลัก';
+  return `<div class="scroll"><table><thead><tr><th>#</th><th>พนักงาน</th><th>สาขา</th><th>ยอดจริง (${mode==='q'?'QTY':'Net'})</th><th>Indy Target ถึงวันนี้</th><th>%</th><th>${head}</th></tr></thead><tbody>
+  ${rows.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r.e.name}${moreBtn(r.id,p)}</td><td style="text-align:left">${nameOf(r.e.shop)}</td><td>${fmtN(r.a)}</td><td>${hasT?fmtN(r.t):'–'}</td><td><span class="pill p-${cls(r.v)}">${fmtP(r.v)}</span></td><td style="text-align:left">${r.extra}</td></tr>`).join('')}</tbody></table></div>
+  <div class="note">ยอดจริงและ % ตามสูตร Staff Productivity · คอลัมน์ขวาสุดมาจาก All Product Rawdata (ถึง ${AP_ASOF[p]||'-'}) · กด "ดูเพิ่มเติม" เพื่อเจาะการขายรายคน</div>`;
+}
+function staffSection(id, p){
+  const e=C.staff[id], r=e.p[p], mode=state.mode, k_=mode==='q'?0:1;
+  const t=(r['t'+mode]||0)*frs(C,p), a=r['a'+mode]||0, v=t?a/t*100:null;
+  const n=empNode(p,id), shop=((DM[D.cur]||{})[p]||{})[e.shop], un=((DM[D.cur]||{})[p]||{}).UN;
+  const good=[], bad=[];
+  if(v!=null) (v>=100?good:bad).push(`ทำได้ <b>${v.toFixed(0)}%</b> ของ Indy Target ถึงวันนี้ (${fmtN(a)} จาก ${fmtN(t)})`);
+  if(!n||!n.dims.ALL) return `<h4 style="margin:16px 0 4px">${p}</h4>${lists(good, [...bad, 'ไม่พบรายการขายในไฟล์ All Product Rawdata'])}`;
+  const tot=n.dims.ALL.ALL[0], ref=un;
+  const refT=ref&&ref.dims.ALL?ref.dims.ALL.ALL[0]:0;
+  if(p==='Postpay'){ const l=luckyOf(n), lu=luckyOf(un), ls=luckyOf(shop);
+    if(l){ const txt=`เบอร์มงคล <b>${fmtN(l.q)} เบอร์</b> = ${l.sh.toFixed(0)}% ของยอด (สาขา ${ls&&ls.sh!=null?ls.sh.toFixed(0):'–'}% · Upper North ${lu&&lu.sh!=null?lu.sh.toFixed(0):'–'}%)`;
+      (lu&&l.sh>=lu.sh?good:bad).push(txt); } }
+  if((p==='Postpay'||p==='Device'||p==='GIA')&&tot&&refT){ const ap=n.dims.ALL.ALL[1]/tot, au=ref.dims.ALL.ALL[1]/refT;
+    if(au) (ap>=au?good:bad).push(`${p==='Postpay'?'ค่าบริการเฉลี่ย':'ราคาเฉลี่ย'} ${fmtN(ap)} ฿/${p==='Postpay'?'เบอร์':'ชิ้น'} ${ap>=au?'สูงกว่า':'ต่ำกว่า'} Upper North (${fmtN(au)} ฿)`); }
+  const skip=['ALL','สินค้า'];
+  Object.keys(n.dims).filter(d=>!skip.includes(d)&&ref&&ref.dims[d]).forEach(d=>{
+    Object.entries(n.dims[d]).forEach(([val,x])=>{ if(/NOT_CLASSIFIED|ว่าง|^OTHER$|^None$/i.test(val)) return;
+      const so=x[0]/tot*100, u=ref.dims[d][val], su=u&&refT?u[0]/refT*100:0;
+      if(x[0]>=2 && so-su>=10) good.push(`<b>${val}</b> (${dimLbl[d]||d}) ${fmtN(x[0])} รายการ = ${so.toFixed(0)}% ของยอด (ทีม ${su.toFixed(0)}%)`);
+    });
+    Object.entries(ref.dims[d]).forEach(([val,u])=>{ if(/NOT_CLASSIFIED|ว่าง|^OTHER$|^None$/i.test(val)) return;
+      const su=refT?u[0]/refT*100:0, x=n.dims[d][val]||[0,0], so=x[0]/tot*100;
+      if(su>=8 && su-so>=10) bad.push(`<b>${val}</b> (${dimLbl[d]||d}) ${so.toFixed(0)}% ของยอด ต่ำกว่าทีม (${su.toFixed(0)}%)`);
+    });
+  });
+  let tbl='';
+  if(n.dims['สินค้า']){
+    const it=Object.entries(n.dims['สินค้า']).sort((x,y)=>y[1][1]-x[1][1]);
+    tbl=`<details open style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">สินค้าที่ขาย (${it.length} รายการ)</summary><div class="scroll" style="max-height:320px"><table style="margin-top:6px"><thead><tr><th>สินค้า</th><th>แบรนด์</th><th>ประเภท</th><th>จำนวน</th><th>Net ฿</th></tr></thead><tbody>
+      ${it.map(([k,x])=>{const z=itemSplit(k); return `<tr><td style="text-align:left">${z.m}</td><td style="text-align:left">${z.b}</td><td style="text-align:left">${z.c}</td><td>${fmtN(x[0])}</td><td>${fmtN(x[1])}</td></tr>`;}).join('')}</tbody></table></div></details>`;
+  }
+  const show = p==='Postpay'?['เบอร์มงคล','ACTIVITY_GROUP','CAMPAIGN_GROUP_LV1','NET_RC_TIER','GP_SKU']: p==='True Online'?['RC_TIER','FLAG_BUNDLE','TECHNOLOGY']: p==='True Visions'?['SUB_PRODUCT']: ['BRAND','SUB_CATEGORY','PRICE_TIER'];
+  show.filter(d=>n.dims[d]).forEach(d=>{
+    const rows=Object.entries(n.dims[d]).sort((x,y)=>y[1][0]-x[1][0]);
+    tbl+=`<details ${d==='เบอร์มงคล'?'open':''} style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">${dimLbl[d]||d}</summary><table style="margin-top:6px"><thead><tr><th>${dimLbl[d]||d}</th><th>จำนวน</th><th>Net ฿</th><th>สัดส่วน</th><th>ทีม Upper North</th></tr></thead><tbody>
+      ${rows.map(([val,x])=>{const u=ref&&ref.dims[d]&&ref.dims[d][val]; const su=u&&refT?u[0]/refT*100:null; const so=x[0]/tot*100; return `<tr><td style="text-align:left"><b>${val}</b></td><td>${fmtN(x[0])}</td><td>${fmtN(x[1])}</td><td>${so.toFixed(0)}%</td><td>${su==null?'–':su.toFixed(0)+'%'}</td></tr>`;}).join('')}</tbody></table></details>`;
+  });
+  return `<h4 style="margin:16px 0 4px">${p} <span style="font-weight:400;color:var(--muted);font-size:12px">· ${fmtN(tot)} รายการ · ${fK(n.dims.ALL.ALL[1])} ฿ (All Product ถึง ${AP_ASOF[p]||'-'})</span></h4>${lists(good.slice(0,7), bad.slice(0,7))}${tbl}`;
+}
+function showStaff(id, p){
+  const e=C.staff[id]; if(!e) return; const prods = p&&p!=='ALL' ? [p] : D.products;
+  const el=document.createElement('div'); el.className='hint-bg';
+  el.innerHTML=`<div class="hint" role="dialog" style="max-width:980px"><button class="x" aria-label="ปิด">×</button><h3>${e.name}</h3><div class="sub">${e.role} · ${nameOf(e.shop)} · ${CUR} · เทียบกับทีม Upper North</div>
+    ${p&&p!=='ALL'?`<div style="margin-top:6px"><button onclick="this.closest('.hint-bg').remove();showStaff('${id}','ALL')" style="font:inherit;font-size:12px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer">ดูทุกสินค้า</button></div>`:''}
+    ${prods.map(x=>staffSection(id,x)).join('')}
+    <div class="how">% เทียบ Indy Target ใช้ยอดเดียวกับหน้า Staff Productivity · รายละเอียดแยกประเภท / สินค้า / เบอร์มงคล มาจาก All Product Rawdata ตาม SALE_ID (ไม่นับ Suspend / Terminate) · "ทีม" = สัดส่วนของทั้ง Upper North</div></div>`;
+  const close=()=>el.remove(); el.onclick=ev=>{ if(ev.target===el||ev.target.classList.contains('x')) close(); };
+  document.addEventListener('keydown',function k(ev){ if(ev.key==='Escape'){close();document.removeEventListener('keydown',k);} });
+  document.body.appendChild(el);
+}
+function mixStaffTable(pid){
+  const prod=MIXP[pid], X=MX[prod], mode=state.mode, k_=mode==='q'?0:1, list=shopsOf(state.branch);
+  const ids=Object.keys(C.staff).filter(id=>list.includes(C.staff[id].shop));
+  const rows=ids.map(id=>{ const e=C.staff[id], n=empNode(prod,id), by={}; X.axes.forEach(a=>by[a]=0);
+    if(n&&n.dims.BRAND) Object.entries(n.dims.BRAND).forEach(([b,x])=>{ const ax=X.axes.includes(b)?b:'อื่นๆ'; if(ax in by) by[ax]+=x[k_]; });
+    const tot=Object.values(by).reduce((s,x)=>s+x,0), r=e.p[prod], t=(r['t'+mode]||0)*frs(C,prod), a=r['a'+mode]||0;
+    return {id,e,by,tot,v:t?a/t*100:null}; }).filter(x=>x.tot>0||x.v!=null).sort((x,y)=>y.tot-x.tot);
+  const mx=X.axes.map(a=>Math.max(...rows.map(r=>r.by[a]),1));
+  return `<div class="card" style="margin-top:16px"><h3>Staff Ranking · ${prod}</h3><div class="sub">เรียงจากยอดรวมสูงสุด · ${mode==='q'?'จำนวนชิ้น':'Net ฿'} รายแบรนด์ จาก All Product Rawdata (ถึง ${AP_ASOF[prod]||'-'}) · % Indy = ยอด ${prod} ทั้งหมด ÷ Indy Target ถึงวันนี้</div>
+  <div class="scroll"><table class="hm"><thead><tr><th>#</th><th>พนักงาน</th><th style="text-align:center">รวม</th><th style="text-align:center">% Indy</th>${X.axes.map(a=>`<th style="text-align:center">${a}</th>`).join('')}</tr></thead><tbody>
+  ${rows.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r.e.name}${moreBtn(r.id,prod)}<div style="font-size:11px;color:var(--muted)">${nameOf(r.e.shop)}</div></td><td class="c"><b>${fmtN(r.tot)}</b></td><td class="c"><span class="pill p-${cls(r.v)}">${fmtP(r.v)}</span></td>${X.axes.map((a,j)=>`<td class="c" style="${r.by[a]?`background:rgba(228,0,43,${(.08+.5*r.by[a]/mx[j]).toFixed(2)})`:'color:#9ca3af'}">${r.by[a]?fmtN(r.by[a]):'–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <div class="note">แสดงเฉพาะพนักงานที่มี Indy Target · สีเข้ม = ยอดสูงในแบรนด์นั้น</div></div>`;
 }
 function pendingView(id){ const p=PILLARS.find(x=>x.id===id); return `<div class="card pending"><h2>${p.name}</h2><p>รอข้อมูล${p.items.length?': '+p.items.join(' · '):''}</p></div>`; }
 

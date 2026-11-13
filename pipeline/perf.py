@@ -554,6 +554,7 @@ def _dims_build(cur, prev):
     d = _load('perf_dims.csv')
     if d is None: return None
     d = d[d.month.isin([cur, prev])]
+    d = d[(d.month == cur) | ((d.dim != 'สินค้า') & ~d.scope.str.startswith('E:'))]  # staff / item detail: current month only (page size)
     for c in ('q', 'n', 'shops'): d[c] = pd.to_numeric(d[c])
     out = {}
     for (m, p, sc), g in d.groupby(['month', 'product', 'scope']):

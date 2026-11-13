@@ -180,3 +180,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 - Targets: `<yyyymm>_Target by Brand ...xlsx` → perf_brand_target.csv · `<yyyymm>_Target GIA by CATEGORY ...xlsx` → perf_gia_target.csv (drop into the Drive inbox, as-is or zipped).
 - Actual: All Product Rawdata (perf_dims.csv) — Device by BRAND, GIA by BRAND (Apple, Samsung, Suplife PVL + top-3 other brands); Target to date = month target × All Product as-of day ÷ days in month.
 - Axes = top 8 by current-month Net target, rest grouped as "อื่นๆ". Built by perf._mix_build → `mix` in perf_data.json; page views detailMix / mixAnalysis.
+
+## Staff drill-down (14 Nov 2026)
+- All Product dims now also carry scope `E:<SALE_ID>` (our shops), dim `เบอร์มงคล` (Postpay: CAMPAIGN_GROUP_LV1 = เบอร์มงคล → "มงคล · <LV2>", else เบอร์ทั่วไป) and dim `สินค้า` = "SUB_MODEL|BRAND|CATEGORY / SUB_CATEGORY" (Device / GIA, local scopes). Staff / item detail is shipped for the current month only.
+- Page: Staff product chips + "ดูเพิ่มเติม" modal (showStaff); Staff Ranking table on Device by Brand / GIA pages (mixStaffTable).
