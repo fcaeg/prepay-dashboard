@@ -325,7 +325,7 @@ def merge_retention(fp):
     for enc in ('utf-8-sig', 'cp874'):
         try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
         except UnicodeDecodeError: continue
-    d.columns = [c.strip() for c in d.columns]
+    d.columns = [str(c).strip() for c in d.columns]
     prod = RET_PRODUCTS.get(str(d['Product'].dropna().iloc[0]).strip().lower()) if 'Product' in d and d['Product'].notna().any() else None
     if not prod:
         low = name.lower(); prod = next((v for k, v in RET_PRODUCTS.items() if k in low), None)
@@ -360,7 +360,7 @@ def merge_service(fp):
     for enc in ('utf-8-sig', 'cp874'):
         try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
         except UnicodeDecodeError: continue
-    d.columns = [c.strip() for c in d.columns]
+    d.columns = [str(c).strip() for c in d.columns]
     pct = lambda c: pd.to_numeric(d[c].astype(str).str.replace('%', '').str.replace(',', ''), errors='coerce')
     num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
     grp = lambda c: d[c].astype(str).map(lambda r: 'BMA' if r.strip().upper().startswith('BMA') else 'UPC')
