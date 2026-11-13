@@ -147,7 +147,7 @@ const MX = D.mix||{}, MIXP = {brand:'Device', giamix:'GIA'};
 const mixSum = (prod,m,br,ax) => { const M=MX[prod]&&MX[prod].months[m]; if(!M) return null; const o=[0,0,0,0]; shopsOf(br).forEach(s=>{const r=M.shops[s]&&M.shops[s][ax]; if(r) r.forEach((v,i)=>o[i]+=v);}); return o; };
 const mixAch = (prod,m,br,ax,mode) => { const o=mixSum(prod,m,br,ax), M=MX[prod]&&MX[prod].months[m]; if(!o) return null; const a=mode==='q'?o[0]:o[1], t=mode==='q'?o[2]:o[3]; return t? a/(t*M.frac)*100 : null; };
 const mixVals = (prod,m,br,mode) => (MX[prod]?MX[prod].axes:[]).map(ax=>mixAch(prod,m,br,ax,mode||state.mode));
-const SHORT = {'Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
+const SHORT = {'Prepay':'Prepay','Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
 let state = {branch:'ALL', mode:'n'};
 
 /* ---------- calc ---------- */
@@ -237,14 +237,16 @@ const HINT = {
   ['TOL','ติดตั้งใหม่ จาก Self Refresh TrueOnline Rawdata','QTY: Target TOL · Net: Target TOL_NEW'],
   ['Device','มือถือ (H/S รวม Tablet) + iPad จาก TSM daily_sales · ไม่นับรายการ FOC','QTY: Target DEVICE · Net: Target DEV'],
   ['GIA','Accessory + Gadget + IOT จาก TSM (กติกาเดียวกับ GIA Dashboard)','Target ACC'],
-  ['TVS','TVS NOW (ไม่นับ Redeem จาก Postpaid / TOL) + Postpay แพ็กเกจ 5G DEVICE TVS + TOL แคมเปญ 3P / 4P OTT · Net ของรายการพ่วง = จำนวน × รายได้ต่อรายตาม Target TVS','QTY: Target TVS · Net: Target TVS_NEW']]},
+  ['TVS','TVS NOW (ไม่นับ Redeem จาก Postpaid / TOL) + Postpay แพ็กเกจ 5G DEVICE TVS + TOL แคมเปญ 3P / 4P OTT · Net ของรายการพ่วง = จำนวน × รายได้ต่อรายตาม Target TVS','QTY: Target TVS · Net: Target TVS_NEW'],
+  ['Prepay','ซิมเติมเงิน (SIM,PRE) จาก TSM daily_sales ชุดเดียวกับ Prepay Dashboard · Payment +1 / CreditNote −1','Target_of_&lt;เดือน&gt; คอลัมน์ PRE (จำนวน / Net)']]},
  staff:{title:'Staff Productivity · ยอดรายพนักงานเทียบ Indy Target', how:'% = ยอดของพนักงานที่มี Indy Target รวมกัน ÷ Indy Target ถึงวันนี้ · จับคู่ด้วยรหัสพนักงาน (SALE_CODE ใน TSM / SALE_ID ใน All Product Rawdata = emp_id ใน Indy Target) · ไม่นับแถว Dummy · คนที่มี Target แต่ไม่มียอดแยกไว้ท้ายหน้า Detail',
   cols:['แกน','วัดอะไร (ยอดจริงรายคน)','เทียบกับ (ไฟล์ Individual Target)'], rows:[
   ['Postpay','All Product Rawdata แผ่น POSTPAID ตาม SALE_ID · ไม่นับ Suspend / Terminate','QTY: POST · Net: POST_NEW'],
   ['TOL','All Product Rawdata แผ่น TRUEONLINE ตาม SALE_ID','QTY: TOL · Net: TOL_NEW'],
   ['Device','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น DEVICE)','QTY: DEVICE · Net: DEV'],
   ['GIA','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น GIA)','ACC'],
-  ['TVS','สูตรเดียวกับ Sale (รวมแพ็กเกจพ่วง) ตาม SALE_ID','QTY: TVS · Net: TVS_NEW']]},
+  ['TVS','สูตรเดียวกับ Sale (รวมแพ็กเกจพ่วง) ตาม SALE_ID','QTY: TVS · Net: TVS_NEW'],
+  ['Prepay','TSM daily_sales (SIM,PRE) ตาม SALE_CODE','Individual Target ไฟล์เดียวกับ Prepay Dashboard (PRE units / PRE net)']]},
 service:{title:'Service & Retention · เทียบเกณฑ์ผ่าน', how:'แต่ละแกนเทียบเกณฑ์ผ่านของตัวเอง (Retention 88% · Service Level 85% · iCsat 92% · On Time 95%) · %Save = Save ÷ Req (จำนวนลูกค้าที่ขอยกเลิก/ย้ายออกแล้วรักษาไว้ได้) สะสมตั้งแต่ต้นเดือน · ภาพรวม Upper North = Save รวม ÷ Req รวมของทุกสาขา · กราฟวาดเป็นดัชนี ค่าจริง ÷ เกณฑ์ (เส้นประ = ผ่านเกณฑ์พอดี) แต่ตัวเลขใต้ชื่อแกนแสดงค่าจริง · ไฟล์ใหม่ของเดือนเดียวกันแทนที่ของเดิม · ไม่เทียบเดือนก่อน',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
   ['Ret. Postpay','%Save ของ True Mobile (Postpay) จาก Retention_Shops ... Postpay','เกณฑ์ผ่าน 88% · ดู UPC / BMA / ทั้งประเทศ ในหน้า Detail'],
@@ -751,6 +753,7 @@ function staffSection(id, p){
   if(v!=null) (v>=100?good:bad).push(`ทำได้ <b>${v.toFixed(0)}%</b> ของ Indy Target ถึงวันนี้ (${fmtN(a)} จาก ${fmtN(t)})`);
   if(p==='Postpay'&&MG){ const g=mgStaff(id), gv=mgPct(g), sz=MG.shops[e.shop];
     if(g) (gv>=100?good:bad).push(`เบอร์มงคล <b>${fmtN(g.a)} เบอร์</b> จาก Target ${fmtN(g.t)} = ${gv.toFixed(0)}% ของ Target ถึงวันนี้ (สาขา ${fmtP(mgPct(sz))} · Upper North ${fmtP(mgPct(MG.area))})`); }
+  if(p==='Prepay') return `<h4 style="margin:16px 0 4px">Prepay</h4>${lists(good, bad)}<div class="note">รายละเอียดซิมเติมเงินรายรุ่นดูได้ที่ Prepay Dashboard</div>`;
   if(!n||!n.dims.ALL) return `<h4 style="margin:16px 0 4px">${p}</h4>${lists(good, [...bad, 'ไม่พบรายการขายในไฟล์ All Product Rawdata'])}`;
   const tot=n.dims.ALL.ALL[0], ref=un;
   const refT=ref&&ref.dims.ALL?ref.dims.ALL.ALL[0]:0;

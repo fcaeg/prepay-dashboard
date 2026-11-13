@@ -726,13 +726,39 @@ def _stock_build():
         if r.age == r.age: a[2] = max(a[2] or 0, float(r.age))
     return {'asof': _meta().get('perf_stock_asof', ''), 'items': items, 'shops': shops_, 'locs': s.groupby('loc').qty.sum().to_dict()}
 
+# ---------- Prepay (Nami, 14 Nov 2026): same data as the Prepay Dashboard ----------
+#   target: targets_all.csv (PRE units / PRE net per shop) · individual: ind_targets.csv (pu / pn) · actual: sim_<month>.csv.gz (SIM PRE lines, Payment +1 / CreditNote -1)
+PALL = PRODUCTS + ['Prepay']
+def _prepay_actual(month, sh):
+    g = _load(f'sim_{month}.csv.gz')
+    if g is None: return None
+    g = g[g.SHOP_CODE.isin(sh)].copy()
+    if not len(g): return None
+    g['day'] = pd.to_datetime(g.BILL_DATE, format=FMT, errors='coerce').dt.strftime('%Y-%m-%d')
+    sign = g.ORDER_STATUS.map({'Payment': 1, 'CreditNote': -1}).fillna(0)
+    g['q'] = sign; g['n'] = sign * pd.to_numeric(g.NET_AMOUNT, errors='coerce').fillna(0); g['emp'] = g.SALE_CODE.fillna('').astype(str).str.strip()
+    return g.dropna(subset=['day']).groupby(['day', 'SHOP_CODE', 'emp'], as_index=False)[['q', 'n']].sum().rename(columns={'SHOP_CODE': 'shop'})
+
 def build():
     t = _load('perf_targets.csv')
     if t is None: print('perf: no targets - page not built'); return
     for c in ('q', 'n'): t[c] = pd.to_numeric(t[c])
+    pt = _load('targets_all.csv')
+    if pt is not None:
+        pt = pt[pt.shop.isin(set(t.shop)) & pt.month.isin(set(t.month))]
+        t = pd.concat([t, pd.DataFrame({'month': pt.month, 'shop': pt.shop, 'name': pt.name, 'type': '', 'product': 'Prepay',
+                                         'q': pd.to_numeric(pt.target_units, errors='coerce').fillna(0), 'n': pd.to_numeric(pt.target_net, errors='coerce').fillna(0)})])
     it = _load('perf_ind_targets.csv')
     if it is not None:
         for c in ('q', 'n'): it[c] = pd.to_numeric(it[c])
+        pi = _load('ind_targets.csv')
+        if pi is not None:
+            nm = it.drop_duplicates(['month', 'emp']).set_index(['month', 'emp'])
+            pi = pi[[(m_, e_) in nm.index for m_, e_ in zip(pi.month, pi.emp)]]
+            if len(pi):
+                info = nm.loc[list(zip(pi.month, pi.emp))]
+                it = pd.concat([it, pd.DataFrame({'month': pi.month.values, 'emp': pi.emp.values, 'name': info['name'].values, 'role': info.role.values, 'shop': info.shop.values,
+                                                  'product': 'Prepay', 'q': pd.to_numeric(pi.pu, errors='coerce').fillna(0).values, 'n': pd.to_numeric(pi.pn, errors='coerce').fillna(0).values})])
     m_ = _meta(); cur = t.month.max()
     y, mo = map(int, cur.split('-')); prev = f'{y - (mo == 1)}-{(mo - 2) % 12 + 1:02d}'
     sh = sorted(set(t[t.month == cur].shop)); names = t[t.month == cur].drop_duplicates('shop').set_index('shop')[['name', 'type']]
@@ -743,14 +769,14 @@ def build():
         if dev is not None:
             for c in ('q', 'n'): dev[c] = pd.to_numeric(dev[c])
         gia = _gia_actual(m, sh)
-        act = {'Device': dev, 'GIA': gia if len(gia) else None, }
+        act = {'Device': dev, 'GIA': gia if len(gia) else None, 'Prepay': _prepay_actual(m, sh)}
         tv = tm[tm['product'] == 'True Visions']; rate = float(tv.n.sum() / tv.q.sum()) if tv.q.sum() else 0.0
         act.update(_mix({p: _raw_lines(m, p) for p in RAW}, rate))
         ap = {k: v for k, v in _mix(_allprod_lines(m), rate).items() if v is not None}; src = {}
         for p in ('Device', 'GIA'):  # TSM first; the all-product file fills a month with no TSM data (e.g. Oct 2026)
             if (act.get(p) is None or not len(act[p])) and p in ap: act[p] = ap[p]; src[p] = 'allprod'
         # salesperson-level actuals: TSM SALE_CODE for Device / GIA, the all-product file's SALE_ID for the rest
-        sact = {p: a for p, a in act.items() if p in ('Device', 'GIA') and a is not None and len(a)}
+        sact = {p: a for p, a in act.items() if p in ('Device', 'GIA', 'Prepay') and a is not None and len(a)}
         sact.update({p: ap[p] for p in ('Postpay', 'True Online', 'True Visions') if p in ap})
         days = sorted(set().union(*[set(a.day) for a in act.values() if a is not None])) if any(a is not None for a in act.values()) else []
         dim = calendar.monthrange(int(m[:4]), int(m[5:]))[1]
@@ -760,7 +786,7 @@ def build():
         S = {}
         for s in sh:
             S[s] = {}
-            for p in PRODUCTS:
+            for p in PALL:
                 tr = tm[(tm.shop == s) & (tm['product'] == p)]
                 a = act.get(p)
                 row = {'tq': float(tr.q.sum()), 'tn': float(tr.n.sum())}
@@ -773,7 +799,7 @@ def build():
             for emp, g in im.groupby('emp'):
                 if 'dummy' in str(g.iloc[0]['name']).lower(): continue  # 'Dummy code for balancing shop target' is not a person
                 r0 = g.iloc[0]; e = {'name': r0['name'], 'role': r0.role, 'shop': r0.shop, 'p': {}}
-                for p in PRODUCTS:
+                for p in PALL:
                     tr = g[g['product'] == p]; row = {'tq': float(tr.q.sum()), 'tn': float(tr.n.sum())}
                     a = sact.get(p)
                     if a is not None:
@@ -781,8 +807,8 @@ def build():
                     e['p'][p] = row
                 E[emp] = e
         months[m] = {'has_target': bool(len(tm)), 'has_ind': it is not None and bool(len(it[it.month == m])), 'last_day': last, 'days_in_month': dim,
-                     'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
-    data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
+                     'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PALL if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
+    data = {'cur': cur, 'prev': prev, 'products': PALL, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
             'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev), 'mongkol': _mongkol_build(cur), 'stock': _stock_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
