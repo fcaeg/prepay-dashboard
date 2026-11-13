@@ -13,6 +13,7 @@
   --good:#16a34a; --goodbg:#dcfce7; --warn:#d97706; --warnbg:#fef3c7; --bad:#dc2626; --badbg:#fee2e2;
 }
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;font-family:"IBM Plex Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
 header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 .hwrap{max-width:1500px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
@@ -57,6 +58,38 @@ th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position
 .hm td.c{text-align:center;font-weight:600;font-size:12px}
 .hm tr:hover td{outline:0;background-image:linear-gradient(rgba(0,0,0,.03),rgba(0,0,0,.03))}
 .hm td:first-child{cursor:pointer}
+.grid>*{min-width:0}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.scroll{-webkit-overflow-scrolling:touch}
+.scroll td:first-child,.scroll th:first-child{position:sticky;left:0;background:#fff;z-index:1}
+.scroll th:first-child{z-index:2;background:#fafafa}
+.ns-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:8px 0 12px}
+.ns-tiles>div{background:#f9fafb;border-radius:10px;padding:10px 12px}
+@media(hover:none){.mini:hover,.tile:hover{box-shadow:none}}
+/* tablet */
+@media(max-width:1000px){.ns-tiles{grid-template-columns:repeat(3,1fr)} .scroll{max-height:70vh}}
+/* phone (iOS / Android) */
+@media(max-width:700px){
+  body{font-size:13px}
+  .hwrap{padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:6px}
+  .brand{font-size:15px;width:100%}
+  .hwrap label{width:100%;display:flex;align-items:center;gap:6px}
+  .hwrap select{flex:1;font-size:16px}
+  nav{padding:0 6px;scrollbar-width:none} nav::-webkit-scrollbar{display:none}
+  nav a{padding:8px 10px;font-size:13px}
+  main{padding:10px max(10px,env(safe-area-inset-right)) 24px max(10px,env(safe-area-inset-left))}
+  .grid{gap:10px}
+  .card{padding:12px;border-radius:10px}
+  .row{gap:8px}
+  .row h2{font-size:18px}
+  .row .spacer{display:none}
+  table{font-size:12px} th,td{padding:6px 6px}
+  .ns-tiles{grid-template-columns:repeat(2,1fr)}
+  body .hint-bg{padding:0;align-items:stretch}
+  body .hint{border-radius:0;min-height:100%;max-width:none;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+  body .hint .x{font-size:28px;padding:0 4px;position:sticky;top:0}
+  .seg button{padding:6px 10px}
+}
 .scroll{overflow:auto;max-height:560px}
 .fail-list li{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
 .fail-list{list-style:none;margin:0;padding:0}
@@ -72,6 +105,7 @@ th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position
 .info{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid #9ca3af;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;vertical-align:middle;background:#fff;font-family:Georgia,serif;font-style:italic}
 .info:hover{border-color:var(--cur);color:var(--cur)}
 .hint-bg{position:fixed;inset:0;background:rgba(17,24,39,.45);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;z-index:50;overflow:auto}
+.hint.hint-wide{max-width:980px}
 .hint{background:#fff;border-radius:12px;max-width:860px;width:100%;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .hint h3{margin:0 0 4px;font-size:17px}.hint table{margin-top:10px}.hint td,.hint th{white-space:normal;text-align:left;vertical-align:top;line-height:1.5}
 .hint .x{float:right;border:0;background:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1}
@@ -248,7 +282,7 @@ function showHint(id){ const h=HINT[id]; const el=document.createElement('div');
   <div class="how">${h.how}</div></div>`;
   const close=()=>el.remove(); el.onclick=e=>{ if(e.target===el||e.target.classList.contains('x')) close(); };
   document.addEventListener('keydown',function k(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',k);} });
-  document.body.appendChild(el); }
+  document.body.appendChild(el); wrapTables(el); }
 
 /* ---------- per-axis analysis (strengths / alerts) ---------- */
 state.axis = {};
@@ -427,6 +461,7 @@ function detailSale(){
       <div class="note">Postpay / TOL / TVS = Self Refresh Rawdata (QTY เทียบ Target POST / TOL / TVS · Net Amount เทียบ Target POST_NEW / TOL_NEW / TVS_NEW · ไม่นับเบอร์ Suspend / Terminate) · TVS รวมแพ็กเกจพ่วง: Postpay 5G DEVICE TVS + TOL 3P/4P OTT (Net ของรายการพ่วง = จำนวน × รายได้ต่อราย ตาม Target TVS; ไม่นับ TVS NOW Redeem จาก Postpaid / TOL ซ้ำ) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
   </div>
   ${saleAnalysis(false)}
+  ${noSaleCard()}
   ${mongkolCard()}
   <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
   <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
@@ -584,6 +619,27 @@ const MG = D.mongkol;
 const mgPct = z => z&&z.t ? z.a/(z.t*MG.frac)*100 : null;   // actual / target to date
 const mgRec = br => !MG ? null : br==='ALL' ? MG.area : MG.shops[br]||null;
 const mgStaff = id => { const r=MG&&MG.staff[id]; return r? {t:r[0], a:r[1], bucket:r[2]} : null; };
+function noSaleCard(){
+  if(!C.has_ind) return '';
+  const list=shopsOf(state.branch), prods=D.products.filter(p=>(C.staff_products||C.actual_products).includes(p));
+  const cols=[...prods.map(p=>({k:p, lbl:SHORT[p]})), ...(MG?[{k:'MG', lbl:'เบอร์มงคล'}]:[])];
+  const st=Object.entries(C.staff).filter(([,e])=>list.includes(e.shop)).map(([id,e])=>{
+    const c={}; prods.forEach(p=>{ const r=e.p[p]||{}; const t=(r.tq||0)+(r.tn||0)>0, a=(r.aq||0)+(r.an||0)>0; c[p]= !t&&!a ? null : {ns:!a, q:r.aq||0}; });
+    if(MG){ const g=mgStaff(id); c.MG = g&&g.t>0 ? {ns:g.a===0, q:g.a} : null; }
+    const any=prods.some(p=>((e.p[p]||{}).aq||0)+((e.p[p]||{}).an||0)>0);
+    return {id,e,c,any,n:cols.filter(x=>c[x.k]&&c[x.k].ns).length}; });
+  const act=st.filter(x=>x.any), gone=st.filter(x=>!x.any), rows=act.filter(x=>x.n>0).sort((a,b)=>b.n-a.n||a.e.shop.localeCompare(b.e.shop));
+  const tiles=cols.map(x=>{ const base=act.filter(r=>r.c[x.k]), z=base.filter(r=>r.c[x.k].ns).length, pc=base.length?z/base.length*100:0;
+    return `<div><div style="font-size:12px;color:var(--muted)">${x.lbl}</div><div style="font-size:22px;font-weight:700;color:${z?'var(--bad)':'var(--good)'}">${z} <span style="font-size:13px;font-weight:500;color:var(--muted)">/ ${base.length} คน</span></div><div style="font-size:11.5px;color:var(--muted)">${pc.toFixed(0)}% ยังไม่มียอด</div></div>`; }).join('');
+  const shopSum=[...new Set(rows.map(r=>r.e.shop))].map(s=>({s, k:rows.filter(r=>r.e.shop===s).length, tot:act.filter(r=>r.e.shop===s).length})).sort((a,b)=>b.k/b.tot-a.k/a.tot);
+  const cell=z=> z==null? `<td class="c" style="color:#cbd5e1">–</td>` : z.ns? `<td class="c" style="background:var(--badbg);color:var(--bad)">No Sale</td>` : `<td class="c" style="color:var(--good)">${fmtN(z.q)}</td>`;
+  return `<div class="card" style="margin-bottom:16px"><h3>🚫 No Sale รายพนักงาน</h3><div class="sub">${state.branch==='ALL'?'Upper North':nameOf(state.branch)} · ${CUR} ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]} · นับเฉพาะคนที่มี Indy Target ของสินค้านั้น · ตัวเลขในช่อง = จำนวนที่ขายได้ (QTY)</div>
+   <div class="ns-tiles">${tiles}</div>
+   ${shopSum.length&&state.branch==='ALL'?`<div class="note" style="margin:-4px 0 10px"><b>สาขาที่มีคน No Sale อย่างน้อย 1 สินค้า (สัดส่วนสูงสุด):</b> ${shopSum.slice(0,6).map(x=>`${nameOf(x.s)} ${x.k}/${x.tot} คน`).join(' · ')}</div>`:''}
+   <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th><th style="text-align:center">No Sale</th>${cols.map(x=>`<th style="text-align:center">${x.lbl}</th>`).join('')}</tr></thead><tbody>
+   ${rows.map(r=>`<tr><td>${r.e.name}${moreBtn(r.id,'ALL')}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td><td class="c"><span class="pill p-${r.n>=3?'bad':'warn'}">${r.n} สินค้า</span></td>${cols.map(x=>cell(r.c[x.k])).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length+2}" style="text-align:center;color:var(--muted)">ทุกคนมียอดครบทุกสินค้า</td></tr>`}</tbody></table></div>
+   <div class="note">เรียงจากคนที่ No Sale หลายสินค้าที่สุด · "–" = ไม่มี Target ของสินค้านั้น · เบอร์มงคลจากไฟล์ Mongkol Indi${gone.length?` · ไม่นับ ${gone.length} คนที่ไม่พบยอดขายเลยทุกสินค้า (อาจลาออก / ย้ายสาขา / ลา): ${gone.map(x=>x.e.name+' ('+nameOf(x.e.shop)+')').join(', ')}`:''}</div></div>`;
+}
 function mongkolCard(){
   if(!MG) return '';
   const day=Math.round(MG.frac*new Date(+MG.month.slice(0,4),+MG.month.slice(5),0).getDate());
@@ -658,13 +714,13 @@ function staffSection(id, p){
 function showStaff(id, p){
   const e=C.staff[id]; if(!e) return; const prods = p&&p!=='ALL' ? [p] : D.products;
   const el=document.createElement('div'); el.className='hint-bg';
-  el.innerHTML=`<div class="hint" role="dialog" style="max-width:980px"><button class="x" aria-label="ปิด">×</button><h3>${e.name}</h3><div class="sub">${e.role} · ${nameOf(e.shop)} · ${CUR} · เทียบกับทีม Upper North</div>
+  el.innerHTML=`<div class="hint hint-wide" role="dialog"><button class="x" aria-label="ปิด">×</button><h3>${e.name}</h3><div class="sub">${e.role} · ${nameOf(e.shop)} · ${CUR} · เทียบกับทีม Upper North</div>
     ${p&&p!=='ALL'?`<div style="margin-top:6px"><button onclick="this.closest('.hint-bg').remove();showStaff('${id}','ALL')" style="font:inherit;font-size:12px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;cursor:pointer">ดูทุกสินค้า</button></div>`:''}
     ${prods.map(x=>staffSection(id,x)).join('')}
     <div class="how">% เทียบ Indy Target ใช้ยอดเดียวกับหน้า Staff Productivity · รายละเอียดแยกประเภท / สินค้า / เบอร์มงคล มาจาก All Product Rawdata ตาม SALE_ID (ไม่นับ Suspend / Terminate) · "ทีม" = สัดส่วนของทั้ง Upper North</div></div>`;
   const close=()=>el.remove(); el.onclick=ev=>{ if(ev.target===el||ev.target.classList.contains('x')) close(); };
   document.addEventListener('keydown',function k(ev){ if(ev.key==='Escape'){close();document.removeEventListener('keydown',k);} });
-  document.body.appendChild(el);
+  document.body.appendChild(el); wrapTables(el);
 }
 /* estimated staff brand target = shop brand target x (staff Indy target / shop staff Indy target total); Net share, QTY share if Net target is 0 */
 function empShare(prod,id){ const e=C.staff[id]; if(!e) return null;
@@ -695,7 +751,9 @@ function render(){
   document.getElementById('nav').innerHTML=[{id:'summary',name:'Summary'}].concat(PILLARS).map(p=>`<a href="#${p.id}" class="${p.id===id?'on':''}">${p.name}</a>`).join('');
   const P_=PILLARS.find(p=>p.id===id);
   document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService(): id==='longevity'?detailLongevity(): MIXP[id]?detailMix(id):detailStaff();
+  wrapTables(document.getElementById('app'));
 }
+function wrapTables(root){ (root||document).querySelectorAll('table').forEach(t=>{ const p=t.parentElement; if(p.classList.contains('scroll')||p.classList.contains('tw')) return; const w=document.createElement('div'); w.className='tw'; p.insertBefore(w,t); w.appendChild(t); }); }
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}
 function setMode(m){state.mode=m;render();}
