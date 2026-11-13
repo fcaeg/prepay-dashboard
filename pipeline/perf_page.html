@@ -99,7 +99,7 @@ const PILLARS = [
   {id:'sale', name:'Sale', th:'ยอดขาย', basis:'เทียบ Target สาขา (ถึงวันนี้)', items:D.products},
   {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', basis:'เทียบเกณฑ์ผ่าน: Retention 88% · SL 85% · iCsat 92% · On Time 95%', pending:!D.ret&&!D.svc, items:['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time']},
   {id:'ebit', name:'EBIT & Revenue', th:'กำไรและรายได้', basis:'ต่อ ตร.ม. / ต่อคน เทียบค่าเฉลี่ย UPC ประเภทเดียวกัน', items:(D.pl&&D.pl.axes)||[], pending:!D.pl},
-  {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', basis:'TMC / Ext. Warranty เทียบ Target · Trade In / Down Sell เทียบค่าเฉลี่ย UPC', pending:!D.lon, items:['TMC','Ext. Warranty','Trade In','Customer Hub','Down Sell']},
+  {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', basis:'TMC / Ext. Warranty / Customer Hub เทียบ Target · Trade In / Down Sell เทียบค่าเฉลี่ย UPC', pending:!D.lon, items:['TMC','Ext. Warranty','Trade In','Customer Hub','Down Sell']},
   {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products}
 ];
 const SHORT = {'Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
@@ -207,12 +207,12 @@ service:{title:'Service & Retention · เทียบเกณฑ์ผ่า�
   ['Service Level','SL% Overall จาก ServiceLevel_Shops (มีเฉพาะสาขาที่มีระบบคิว) · ภาพรวมถ่วงด้วยจำนวน Transaction','เกณฑ์ผ่าน 85%'],
   ['iCsat','%iCSAT ของเดือนนี้ จาก iCSAT_by_Shop · ภาพรวมถ่วงด้วยจำนวน Survey','เกณฑ์ผ่าน 92%'],
   ['On Time','งานที่ปิดในกำหนด ÷ (ปิดในกำหนด + ปิดเกินกำหนด + ค้างเกินกำหนด) จาก OnTime_by_Shop (งานที่ค้างแต่ยังไม่เกินกำหนดไม่นับ)','เกณฑ์ผ่าน 95%']]},
- longevity:{title:'Sale Longevity · สินค้าต่อยอด', how:'TMC และ Extended Warranty: ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × วันล่าสุดของข้อมูล ÷ วันในเดือน) — 100 = ตาม Target · Trade In และ Down Sell ไม่มี Target จึงเทียบค่าเฉลี่ย UPC (รวมทุกสาขา UPC) — 100 = เท่าค่าเฉลี่ย · Down Sell ยิ่งต่ำยิ่งดี จึงกลับด้านดัชนี · ตัวเลขใต้ชื่อแกน: TMC / Ext. Warranty = % ทำได้เทียบ Target ถึงวันนี้, Trade In / Down Sell = ค่าจริง · ไม่เทียบเดือนก่อน',
+ longevity:{title:'Sale Longevity · สินค้าต่อยอด', how:'TMC, Extended Warranty และ Customer Hub (Consent): ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × วันล่าสุดของข้อมูล ÷ วันในเดือน) — 100 = ตาม Target · Trade In และ Down Sell ไม่มี Target จึงเทียบค่าเฉลี่ย UPC (รวมทุกสาขา UPC) — 100 = เท่าค่าเฉลี่ย · Down Sell ยิ่งต่ำยิ่งดี จึงกลับด้านดัชนี · ตัวเลขใต้ชื่อแกน: TMC / Ext. Warranty / Customer Hub = % ทำได้เทียบ Target ถึงวันนี้, Trade In / Down Sell = ค่าจริง · ไม่เทียบเดือนก่อน',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
   ['TMC (True Mobile Care)','จำนวนที่ขายได้ จาก True_Mobile_Care_Shops','Target ถึงวันนี้'],
   ['Ext. Warranty','ยอดขาย ฿ จาก Extended_W_Shops (ดู Attach % = เครื่องที่ซื้อประกันเพิ่ม ÷ เครื่องที่ขาย ในหน้า Detail)','Target ฿ ถึงวันนี้'],
   ['Trade In','Trade-in ÷ Handset ที่ขาย (Rate %) จาก Trade_In_Shops','ค่าเฉลี่ย UPC'],
-  ['Customer Hub','รอไฟล์ข้อมูล','–'],
+  ['Customer Hub','จำนวน Consent ที่เก็บได้ (CONSENT_ACQUISITION) จาก consent_shop_performance_&lt;วันเริ่ม&gt;_&lt;วันสิ้นสุด&gt; · นับถึงวันสิ้นสุดในชื่อไฟล์','Target Consent ถึงวันนี้'],
   ['Down Sell','Down Sell ฿ ÷ RC Prev = % ค่าบริการรายเดือนที่ลดลงเมื่อลูกค้าเปลี่ยนเป็นแพ็กเกจที่ถูกกว่า (Share Plan) จาก Downsell_SharePlan_by_shop · ยิ่งต่ำยิ่งดี','ค่าเฉลี่ย UPC (ดัชนีกลับด้าน)']]},
  ebit:{title:'EBIT & Revenue · ต่อ ตร.ม. และต่อพนักงาน', how:'ดัชนี = ค่าของเรา ÷ ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน × 100 (แกนต้นทุนกลับด้าน: ยิ่งต่ำยิ่งดี) · ภาพรวม Upper North ถ่วงตามประเภทและขนาดของแต่ละสาขา · ข้อมูลจาก Performance Report (Model WW) ซึ่งช้ากว่าเดือนปัจจุบันราว 3 เดือน · พื้นที่ = SQM All · สาขา DTAC (D) ใช้ 10 ตร.ม. และเทียบ UPC Non Matching (GM/คน เทียบ DTAC COCO) · ค่าเกิน 150 ตัดที่ 150 ในกราฟ<br><b>สูตรในไฟล์:</b> Revenue = ขายบริการ + Non Sale (Retention, Upsell, Renew, SQT, Bill/Kiosk) + ขายสินค้า · GM = (ขายสินค้า − ต้นทุนสินค้า) + ขายบริการ + Non Sale · EBITDA = GM − Front Cost (พนักงาน, การตลาด, อาคาร/ค่าเช่า, บริหาร) − ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH) · EBIT = EBITDA − ค่าเช่า Asset − ค่าเสื่อม',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
@@ -296,14 +296,14 @@ function detailLongevity(){
     const bench=g=> tgt ? (K.bench[g].den? f1(K.bench[g].num/(K.bench[g].den*K.frac)*100) : '–') : f1(pctOf(K.bench[g]));
     return `<tr><td><b>${k}</b><div style="font-size:11px;color:var(--muted)">ถึง ${K.asof}</div></td><td>${fN(r&&r.num)}</td><td>${tgt?fN(r&&r.den*K.frac)+'<div style="font-size:11px;color:var(--muted)">เดือน '+fN(r&&r.den)+'</div>':fN(r&&r.den)}</td><td>${v?v.lab:'–'}</td><td><span class="pill p-${cls(v&&v.idx)}">${v?Math.round(v.idx):'–'}</span></td><td>${bench('UPC')}</td><td>${bench('BMA')}</td><td>${bench('All')}</td></tr>`; }).join('');
   const sh=D.shops.map(s=>({s,v:LKEY.map(k=>lonVal(s.shop,k)), raw:LKEY.map(k=>(LN.shops[s.shop]||{})[k])})).map(x=>({...x,avg:avg(x.v.map(z=>z&&z.idx))})).sort((a,b)=>(a.avg??999)-(b.avg??999));
-  const base=['เครื่อง','฿','ho','','฿'];
-  const shRows=sh.map(({s,v,raw,avg:av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}</td>${v.map((z,i)=>`<td class="c" style="${hmColor(z&&z.idx)}">${z?z.lab+`<div style="font-size:10px;font-weight:400">${i===2?fN(raw[i].num)+' / '+fN(raw[i].den)+' เครื่อง':i===4?fN(raw[i].num)+' ฿':fN(raw[i].num)+(i===1?' ฿':' เครื่อง')}</div>`:'–'}</td>`).join('')}<td class="c"><span class="pill p-${cls(av)}">${fmtP(av)}</span></td></tr>`).join('');
+  
+  const shRows=sh.map(({s,v,raw,avg:av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}</td>${v.map((z,i)=>`<td class="c" style="${hmColor(z&&z.idx)}">${z?z.lab+`<div style="font-size:10px;font-weight:400">${i===2?fN(raw[i].num)+' / '+fN(raw[i].den)+' เครื่อง':i===4?fN(raw[i].num)+' ฿':i===3?fN(raw[i].num)+' / '+fN(raw[i].den)+' consent':fN(raw[i].num)+(i===1?' ฿':' เครื่อง')}</div>`:'–'}</td>`).join('')}<td class="c"><span class="pill p-${cls(av)}">${fmtP(av)}</span></td></tr>`).join('');
   return `<div class="row"><h2 style="margin:0">Sale Longevity${infoBtn('longevity')}</h2><span style="color:var(--muted)">ข้อมูลสะสม ${mLbl(LN.month)}</span></div>
   <div class="grid g2" style="margin-bottom:16px">
-    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${mLbl(LN.month)}</h3><div class="sub">ตัวเลขใต้แกน: TMC / Ext. Warranty = % เทียบ Target ถึงวันนี้ · Trade In / Down Sell = ค่าจริง</div>${radar(PILLARS[3].items,seriesFor('longevity',br))}${legendFor('longevity')}</div>
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${mLbl(LN.month)}</h3><div class="sub">ตัวเลขใต้แกน: TMC / Ext. Warranty / Customer Hub = % เทียบ Target ถึงวันนี้ · Trade In / Down Sell = ค่าจริง</div>${radar(PILLARS[3].items,seriesFor('longevity',br))}${legendFor('longevity')}</div>
     <div class="card"><h3>ตัวเลข</h3><div class="sub">${br==='ALL'?'รวมทุกสาขาใน Upper North':nameOf(br)}</div>
       <table><thead><tr><th>ตัวชี้วัด</th><th>ยอดจริง</th><th>Target ถึงวันนี้ / ฐาน</th><th>ค่า</th><th>ดัชนี</th><th>UPC</th><th>BMA</th><th>ทั้งประเทศ</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="note">TMC: จำนวนเครื่อง · Ext. Warranty: บาท · Trade In: ยอด Trade-in / ฐาน = เครื่องที่ขาย · Down Sell: บาทที่ลดลง / ฐาน = RC เดิม · คอลัมน์ UPC / BMA / ทั้งประเทศ = % ทำได้ (TMC, Ext.) หรือค่าเฉลี่ยของกลุ่ม (Trade In, Down Sell)</div></div>
+      <div class="note">TMC: จำนวนเครื่อง · Customer Hub: จำนวน Consent · Ext. Warranty: บาท · Trade In: ยอด Trade-in / ฐาน = เครื่องที่ขาย · Down Sell: บาทที่ลดลง / ฐาน = RC เดิม · คอลัมน์ UPC / BMA / ทั้งประเทศ = % ทำได้ (TMC, Ext.) หรือค่าเฉลี่ยของกลุ่ม (Trade In, Down Sell)</div></div>
   </div>
   <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · สีตามดัชนี (เขียว ≥ 100) · "–" = ไม่มีข้อมูล</div>
     <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${PILLARS[3].items.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>`;

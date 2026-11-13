@@ -167,4 +167,5 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 - Sale Longevity (Nami, 14 Nov 2026): `True_Mobile_Care_Shops_<date>.csv` (Target / Actual units) and `Extended_W_Shops_<date>.csv`
   (Target ฿ / Actual ฿) vs target to date; `Trade_In_Shops_<date>.csv` (trade-in ÷ handset) and `Downsell_SharePlan_by_shop.csv`
   (Down Sell ÷ RC Prev, lower is better; no date in the name → the day before the run) vs the UPC average (Nami: "use the average").
-  → `--longevity <csv> ...` → `state/perf_lon.csv`. Customer Hub: pending. No previous-month line.
+  Customer Hub = `consent_shop_performance_<from>_<to>.csv` (CONSENT_ACQUISITION vs TARGET_CONSENT to the <to> date; Nami 14 Nov).
+  → `--longevity <csv> ...` → `state/perf_lon.csv`. No previous-month line.

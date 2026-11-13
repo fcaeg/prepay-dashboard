@@ -402,24 +402,27 @@ def _svc_build():
 #   True_Mobile_Care_Shops_<date>.csv (Target, Actual units) and Extended_W_Shops_<date>.csv (Target ฿, Actual ฿): vs target to date
 #   Trade_In_Shops_<date>.csv (Handset, Trade-in): rate = trade-in ÷ handset, vs the UPC average ("use the average")
 #   Downsell_SharePlan_by_shop.csv (RC Prev, Down Sell = RC Prev − RC Cur): % RC lost, vs the UPC average, lower is better
-LON = {'TMC': ('True Mobile Care', 'target'), 'EXTW': ('Extended Warranty', 'target'), 'TI': ('Trade In', 'avg'), 'DS': ('Down Sell', 'avg_inv')}
+#   consent_shop_performance_<from>_<to>.csv (Customer Hub = consent; TARGET_CONSENT, CONSENT_ACQUISITION): vs target to the <to> date
+LON = {'CH': ('Customer Hub', 'target'), 'TMC': ('True Mobile Care', 'target'), 'EXTW': ('Extended Warranty', 'target'), 'TI': ('Trade In', 'avg'), 'DS': ('Down Sell', 'avg_inv')}
 LON_AXES = ['True Mobile Care', 'Extended Warranty', 'Trade In', 'Customer Hub', 'Down Sell']
 
 def merge_longevity(fp):
     name = os.path.basename(fp); low = name.lower()
-    m = re.search(r'(\d{4})-(\d{2})-(\d{2})', name)
-    asof = f'{m.group(1)}-{m.group(2)}-{m.group(3)}' if m else (datetime.datetime.utcnow() + datetime.timedelta(hours=7) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+    ds = re.findall(r'\d{4}-\d{2}-\d{2}', name)  # a period file (consent_..._<from>_<to>) is as of its last date
+    asof = max(ds) if ds else (datetime.datetime.utcnow() + datetime.timedelta(hours=7) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
     for enc in ('utf-8-sig', 'cp874'):
         try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
         except UnicodeDecodeError: continue
     d.columns = [str(c).strip() for c in d.columns]
     num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', '').str.replace('฿', ''), errors='coerce').fillna(0)
+    d.columns = [c if c not in ('REGION', 'AREA', 'SHOP_CODE') else c.title().replace('_', ' ') for c in d.columns]
     area = 'Region' if 'Region' in d else 'Area'
     grp = d[area].map(lambda r: 'BMA' if isinstance(r, str) and r.strip().upper().startswith('BMA') else 'UPC')
     if low.startswith('true_mobile_care') or low.startswith('true mobile care'): k, n, dn = 'TMC', num('Actual'), num('Target')
     elif low.startswith('extended_w'): k, n, dn = 'EXTW', num('Actual ฿'), num('Target ฿')
     elif low.startswith('trade_in') or low.startswith('trade in'): k, n, dn = 'TI', num('Trade-in'), num('Handset')
     elif low.startswith('downsell'): k, n, dn = 'DS', num('Down Sell'), num('RC Prev')
+    elif low.startswith('consent'): k, n, dn = 'CH', num('CONSENT_ACQUISITION'), num('TARGET_CONSENT')
     else: print('perf: unknown longevity file', name); return
     out = pd.DataFrame({'month': asof[:7], 'asof': asof, 'kpi': k, 'shop': d['Shop Code'].astype(str).str.extract(r'(\d{8})', expand=False), 'grp': grp, 'num': n, 'den': dn})
     out = out[out.shop.notna()]

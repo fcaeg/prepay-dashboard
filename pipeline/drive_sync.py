@@ -85,7 +85,7 @@ def kind(name):
     if re.search(r'performance[ _]+report', n): return 'pl'
     if n.startswith('retention_shops') or n.startswith('retention shops'): return 'retention'
     if n.startswith(('servicelevel', 'ontime', 'icsat')): return 'service'
-    if n.startswith(('true_mobile_care', 'true mobile care', 'extended_w', 'trade_in', 'trade in', 'downsell')): return 'longevity'
+    if n.startswith(('true_mobile_care', 'true mobile care', 'extended_w', 'trade_in', 'trade in', 'downsell', 'consent')): return 'longevity'
     if 'postpaid' in n and 'raw' in n: return 'postpay'
     if re.search(r'true ?online', n) and 'raw' in n: return 'tolraw'
     if re.search(r'true ?visions?', n) and 'raw' in n: return 'tvsraw'
