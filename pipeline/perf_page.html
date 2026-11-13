@@ -26,7 +26,7 @@ nav a.on{color:var(--ink);border-color:var(--cur)}
 main{max-width:1500px;margin:0 auto;padding:20px}
 .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 12px;border-radius:8px;margin-bottom:16px;font-size:13px}
 .grid{display:grid;gap:16px}
-.g5{grid-template-columns:repeat(5,1fr)}
+.g5{grid-template-columns:repeat(4,1fr)}
 .radars .card{padding:12px}
 .g2{grid-template-columns:1.25fr 1fr}
 .g4{grid-template-columns:repeat(4,1fr)}
@@ -100,8 +100,15 @@ const PILLARS = [
   {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', basis:'เทียบเกณฑ์ผ่าน: Retention 88% · SL 85% · iCsat 92% · On Time 95%', pending:!D.ret&&!D.svc, items:['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time']},
   {id:'ebit', name:'EBIT & Revenue', th:'กำไรและรายได้', basis:'ต่อ ตร.ม. / ต่อคน เทียบค่าเฉลี่ย UPC ประเภทเดียวกัน', items:(D.pl&&D.pl.axes)||[], pending:!D.pl},
   {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', basis:'TMC / Ext. Warranty / Customer Hub เทียบ Target · Trade In / Down Sell เทียบค่าเฉลี่ย UPC', pending:!D.lon, items:['TMC','Ext. Warranty','Trade In','Customer Hub','Down Sell']},
-  {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products}
+  {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products},
+  {id:'brand', name:'Device by Brand', th:'Device รายแบรนด์', basis:'ยอดแต่ละแบรนด์ เทียบ Target by Brand (ถึงวันนี้)', pending:!(D.mix&&D.mix.Device), items:(D.mix&&D.mix.Device&&D.mix.Device.axes)||[]},
+  {id:'giamix', name:'GIA', th:'GIA รายหมวด', basis:'ยอดแต่ละหมวดย่อย เทียบ Target GIA by Category (ถึงวันนี้)', pending:!(D.mix&&D.mix.GIA), items:(D.mix&&D.mix.GIA&&D.mix.GIA.axes)||[]}
 ];
+const MX = D.mix||{}, MIXP = {brand:'Device', giamix:'GIA'};
+// [aq, an, tq, tn] summed over shops for one axis
+const mixSum = (prod,m,br,ax) => { const M=MX[prod]&&MX[prod].months[m]; if(!M) return null; const o=[0,0,0,0]; shopsOf(br).forEach(s=>{const r=M.shops[s]&&M.shops[s][ax]; if(r) r.forEach((v,i)=>o[i]+=v);}); return o; };
+const mixAch = (prod,m,br,ax,mode) => { const o=mixSum(prod,m,br,ax), M=MX[prod]&&MX[prod].months[m]; if(!o) return null; const a=mode==='q'?o[0]:o[1], t=mode==='q'?o[2]:o[3]; return t? a/(t*M.frac)*100 : null; };
+const mixVals = (prod,m,br,mode) => (MX[prod]?MX[prod].axes:[]).map(ax=>mixAch(prod,m,br,ax,mode||state.mode));
 const SHORT = {'Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
 let state = {branch:'ALL', mode:'n'};
 
@@ -156,10 +163,11 @@ function radar(labels, series, opt={}){
   return s+'</svg>';
 }
 const hasPrev = pid => P && pillarVals(pid,P,state.branch).some(v=>v!=null);
-const BENCH = {sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC', service:'เกณฑ์ผ่าน', longevity:'Target / ค่าเฉลี่ย UPC'};
+const BENCH = {brand:'Target แบรนด์ ถึงวันนี้', giamix:'Target หมวด ถึงวันนี้', sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC', service:'เกณฑ์ผ่าน', longevity:'Target / ค่าเฉลี่ย UPC'};
 const ico = (stroke,dash,w) => `<svg width="22" height="8" style="vertical-align:middle;margin-right:4px"><line x1="1" y1="4" x2="21" y2="4" stroke="${stroke}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/></svg>`;
 const legendFor = (pid, small) => { const pl = pid==='ebit', rt = pid==='service', ln = pid==='longevity';
-  const c = ln ? `${mLbl(LN.month)}${small?'':' (ถึง '+(+((Object.values(LN.kpis).map(k=>k.asof).sort().pop()||'').slice(8)))+')'}` : rt ? `${mLbl((RT&&RT.cur)||SV.month)}${small?'':' (ถึง '+(+(([...(RT?Object.values(RT.months[RT.cur].asof):[]),...(SV?Object.values(SV.asof):[])].filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
+  const mx = MIXP[pid], mxa = mx&&MX[mx]&&MX[mx].months[D.cur]&&MX[mx].months[D.cur].asof;
+  const c = mx ? `${CUR}${small?'':` (ถึง ${mxa?+mxa.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}` : ln ? `${mLbl(LN.month)}${small?'':' (ถึง '+(+((Object.values(LN.kpis).map(k=>k.asof).sort().pop()||'').slice(8)))+')'}` : rt ? `${mLbl((RT&&RT.cur)||SV.month)}${small?'':' (ถึง '+(+(([...(RT?Object.values(RT.months[RT.cur].asof):[]),...(SV?Object.values(SV.asof):[])].filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
   const p = rt ? (RT.prev?mLbl(RT.prev):'ยังไม่มีข้อมูล') : pl ? plLbl(PL.prev) : PREV;
   return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span>${rt||ln?'':`<span>${ico('#475569','2 3',2)}${p}</span>`}<span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
 const legend = () => `<div class="legend"><span><i style="background:var(--cur)"></i>${CUR} (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})</span><span><i style="background:var(--prev)"></i>${PREV} ${hasPrev('sale')?'':'(ยังไม่มีข้อมูล)'}</span><span><i style="background:none;border-top:2px dashed #1b1f24;height:0"></i>100% = Target</span></div>`;
@@ -180,7 +188,7 @@ const lonVal = (br,k) => { const K=LN&&LN.kpis[k], r=lonRec(br,k); if(!K||!r) re
   if(K.mode==='target'){ const a=r.num/(r.den*K.frac)*100; return {idx:a, lab:a.toFixed(0)+'%'}; }
   const own=lonRate(r), ben=lonRate(K.bench.UPC); if(own==null||!ben) return null;
   return K.mode==='avg' ? {idx:own/ben*100, lab:(own*100).toFixed(1)+'%'} : {idx: own>0? ben/own*100 : 150, lab:(own*100).toFixed(1)+'%'}; };
-const seriesFor = (pid,br) => pid==='longevity' ? [{values:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.idx;}),labels:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.lab;}),color:'#e4002b',dots:true}] : pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
+const seriesFor = (pid,br) => MIXP[pid] ? [{values:mixVals(MIXP[pid],D.cur,br),color:'#e4002b',dots:true},{values:D.prev?mixVals(MIXP[pid],D.prev,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : pid==='longevity' ? [{values:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.idx;}),labels:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.lab;}),color:'#e4002b',dots:true}] : pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
 const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
 
 /* ---------- hints (ⓘ) ---------- */
@@ -214,6 +222,16 @@ service:{title:'Service & Retention · เทียบเกณฑ์ผ่า�
   ['Trade In','Trade-in ÷ Handset ที่ขาย (Rate %) จาก Trade_In_Shops','ค่าเฉลี่ย UPC'],
   ['Customer Hub','จำนวน Consent ที่เก็บได้ (CONSENT_ACQUISITION) จาก consent_shop_performance_&lt;วันเริ่ม&gt;_&lt;วันสิ้นสุด&gt; · นับถึงวันสิ้นสุดในชื่อไฟล์','Target Consent ถึงวันนี้'],
   ['Down Sell','Down Sell ฿ ÷ RC Prev = % ค่าบริการรายเดือนที่ลดลงเมื่อลูกค้าเปลี่ยนเป็นแพ็กเกจที่ถูกกว่า (Share Plan) จาก Downsell_SharePlan_by_shop · ยิ่งต่ำยิ่งดี','ค่าเฉลี่ย UPC (ดัชนีกลับด้าน)']]},
+ brand:{title:'Device by Brand · ยอดรายแบรนด์เทียบ Target', how:'% = ยอดจริงของแบรนด์ ÷ Target ถึงวันนี้ (Target เดือน × วันล่าสุดของข้อมูล ÷ วันในเดือน) · เดือนก่อนเทียบ Target ทั้งเดือน · แกน = 8 แบรนด์ที่มี Target สูงสุดของเดือน ที่เหลือรวมเป็น "อื่นๆ" · สลับ Net Amount / QTY ได้ที่ปุ่มด้านบน · 100 (เส้นประ) = ทำได้ตาม Target',
+  cols:['แกน','วัดอะไร (ยอดจริง)','เทียบกับ'], rows:[
+  ['แต่ละแบรนด์','ยอด Device (มือถือ + Tablet + iPad) จาก All Product Rawdata แผ่น DEVICE ตาม BRAND · ร้าน WW เท่านั้น','Target by Brand (OPERATION_TARGET_Q / _N) รวมทุกรุ่นของแบรนด์'],
+  ['อื่นๆ','แบรนด์ที่ Target น้อย (เช่น INFINIX, REALME, ALLDOCUBE)','Target รวมของแบรนด์เหล่านั้น'],
+  ['วิเคราะห์รายแกน','สัดส่วนแบรนด์ในยอดขายเทียบ UPC · ราคาเฉลี่ยต่อเครื่อง · สาขาที่ทำได้ดี / ต่ำ · รุ่นที่มี Target สูงสุด','ค่าเฉลี่ย UPC / Target']]},
+ giamix:{title:'GIA · ยอดรายหมวดย่อยเทียบ Target', how:'% = ยอดจริงของหมวดย่อย ÷ Target ถึงวันนี้ · เดือนก่อนเทียบ Target ทั้งเดือน · แกน = 8 หมวดย่อยที่มี Target สูงสุด ที่เหลือรวมเป็น "อื่นๆ" · ไม่นับ TRUE DIGITAL HD / OTT BOX (ยอด 0 บาท) · สลับ Net Amount / QTY ได้ที่ปุ่มด้านบน',
+  cols:['แกน','วัดอะไร (ยอดจริง)','เทียบกับ'], rows:[
+  ['แต่ละหมวดย่อย','ยอด GIA จาก All Product Rawdata แผ่น GIA ตาม SUB_CATEGORY (WEARABLE, POWERBANK, FILM, AIRPODS ...)','Target GIA by Category (Sum of Target QTY / NET) รวมทุกแบรนด์ในหมวด'],
+  ['อื่นๆ','หมวดย่อยที่ Target น้อย (PEN, EARPODS, IOT ฯลฯ)','Target รวมของหมวดเหล่านั้น'],
+  ['วิเคราะห์รายแกน','สัดส่วนหมวดในยอด GIA เทียบ UPC · สาขาที่ทำได้ดี / ต่ำ · แบรนด์ที่มี Target สูงสุดในหมวด','ค่าเฉลี่ย UPC / Target']]},
  ebit:{title:'EBIT & Revenue · ต่อ ตร.ม. และต่อพนักงาน', how:'ดัชนี = ค่าของเรา ÷ ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน × 100 (แกนต้นทุนกลับด้าน: ยิ่งต่ำยิ่งดี) · ภาพรวม Upper North ถ่วงตามประเภทและขนาดของแต่ละสาขา · ข้อมูลจาก Performance Report (Model WW) ซึ่งช้ากว่าเดือนปัจจุบันราว 3 เดือน · พื้นที่ = SQM All · สาขา DTAC (D) ใช้ 10 ตร.ม. และเทียบ UPC Non Matching (GM/คน เทียบ DTAC COCO) · ค่าเกิน 150 ตัดที่ 150 ในกราฟ<br><b>สูตรในไฟล์:</b> Revenue = ขายบริการ + Non Sale (Retention, Upsell, Renew, SQT, Bill/Kiosk) + ขายสินค้า · GM = (ขายสินค้า − ต้นทุนสินค้า) + ขายบริการ + Non Sale · EBITDA = GM − Front Cost (พนักงาน, การตลาด, อาคาร/ค่าเช่า, บริหาร) − ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH) · EBIT = EBITDA − ค่าเช่า Asset − ค่าเสื่อม',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
   ['Revenue / ตร.ม.','รายได้รวมต่อพื้นที่ — พื้นที่สร้างยอดได้แค่ไหน','ค่าเฉลี่ย UPC ประเภทเดียวกัน (BMA ดูในตาราง Detail)'],
@@ -383,7 +401,7 @@ function summary(){
     const ex = p.id==='ebit' ? `<div class="sub" style="margin-top:-6px">ข้อมูล ${plLbl(PL.last)} · ข้อมูลช้ากว่าเดือนปัจจุบัน</div>` : '';
     return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}${infoBtn(p.id)}</h3><div class="sub">${p.basis}</div>${ex}${radar(p.items.map(i=>SHORT[i]||(p.id==='ebit'?i.replace(' / ตร.ม.','').replace('GM / พนักงาน','GM/คน'):i)),seriesFor(p.id,br),{w:300,h:300,small:true,pad:64})}${legendFor(p.id,true)}<div class="go">กดเพื่อดู Detail →</div></div>`;
   }).join('');
-  return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2><div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff:</span>${modeSeg()}</div>
+  return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2><div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff / Brand / GIA:</span>${modeSeg()}</div>
   <div class="grid g5 radars">${cards}</div>
   <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · TSM (Device, GIA) ถึง ${D.sales_asof||'-'} · ${Object.entries(Object.assign(D.post_asof?{'Postpay':D.post_asof}:{}, D.raw_asof||{})).map(([k,v])=>`${SHORT[k]} ถึง ${v}`).join(' · ')}</div>`;
 }
@@ -509,6 +527,52 @@ function detailEbit(){
   <div class="card"><h3>แนวโน้ม 12 เดือน · สาขาในพื้นที่</h3><div class="sub">บาท · รวมทุกสาขาที่มีในรายงานเดือนนั้น (ก่อน ก.ค. 2569 ยังไม่มีสาขา DTAC)</div>
     <table><thead><tr><th>เดือน</th><th>Revenue</th><th>GM</th><th>EBIT</th><th>EBIT%</th></tr></thead><tbody>${tr}</tbody></table></div>`;
 }
+/* ---------- Device by Brand / GIA by sub-category ---------- */
+function mixAnalysis(pid){
+  const prod=MIXP[pid], X=MX[prod], br=state.branch, mode=state.mode, M=X.months[D.cur], Pm=D.prev&&X.months[D.prev];
+  const unit = prod==='Device'?'เครื่อง':'ชิ้น', fmtV = v => mode==='q'? fmtN(v)+' '+unit : fK(v)+' ฿';
+  return analysisCard(pid, X.axes, i=>{
+    const ax=X.axes[i], good=[], bad=[], o=mixSum(prod,D.cur,br,ax), a=mixAch(prod,D.cur,br,ax,mode), p=Pm?mixAch(prod,D.prev,br,ax,mode):null;
+    if(a!=null) (a>=100?good:bad).push(`ทำได้ <b>${a.toFixed(0)}%</b> ของ Target ถึงวันนี้ (${fmtV(mode==='q'?o[0]:o[1])} จาก ${fmtV((mode==='q'?o[2]:o[3])*M.frac)})`);
+    else bad.push('ไม่มี Target ของเดือนนี้');
+    if(a!=null&&p!=null) (a>=p?good:bad).push(`${a>=p?'ดีขึ้น':'ลดลง'}จากเดือนก่อน (${p.toFixed(0)}% → ${a.toFixed(0)}%)`);
+    // mix share vs UPC
+    const tot=X.axes.reduce((z,k)=>{const q=mixSum(prod,D.cur,br,k); return z+(q?(mode==='q'?q[0]:q[1]):0);},0);
+    const U=M.bench.UPC; const uTot=U?Object.values(U.v).reduce((z,v)=>z+(mode==='q'?v[0]:v[1]),0):0, uAx=U&&U.v[ax]?(mode==='q'?U.v[ax][0]:U.v[ax][1]):0;
+    if(tot&&uTot){ const sh=(mode==='q'?o[0]:o[1])/tot*100, us=uAx/uTot*100; const d=sh-us;
+      if(Math.abs(d)>=2) (d>0?good:bad).push(`สัดส่วนใน${prod==='Device'?'ยอด Device':'ยอด GIA'} ${sh.toFixed(1)}% ${d>0?'สูงกว่า':'ต่ำกว่า'} UPC (${us.toFixed(1)}%)`); }
+    if(prod==='Device'&&o&&o[0]&&U&&U.v[ax]&&U.v[ax][0]){ const asp=o[1]/o[0], uasp=U.v[ax][1]/U.v[ax][0], tasp=o[2]?o[3]/o[2]:null;
+      (asp>=uasp*0.97?good:bad).push(`ราคาเฉลี่ย ${fmtN(asp)} ฿/เครื่อง ${asp>=uasp?'สูงกว่า':'ต่ำกว่า'} UPC (${fmtN(uasp)} ฿)${tasp?` · Target ${fmtN(tasp)} ฿`:''}`); }
+    if(br==='ALL'){
+      const rows=D.shops.map(s=>{const r=M.shops[s.shop][ax]; return {name:s.name.replace('True Shop ',''), v:mixAch(prod,D.cur,s.shop,ax,mode), r};});
+      const zero=rows.filter(x=>x.r&&x.r[3]>0&&x.r[1]===0);
+      const rk=shopRank(rows.filter(x=>!zero.includes(x)),110,70,x=>`${x.v.toFixed(0)}%`); good.push(...rk.good); bad.push(...rk.bad);
+      if(zero.length) bad.push(`<b>${zero.length} สาขา</b> มี Target แต่ยังไม่มียอด: ${zero.map(x=>x.name).join(', ')}`);
+    }
+    const f=(X.focus||{})[ax]||[];
+    const foc = f.length? `<div class="note"><b>${prod==='Device'?'รุ่น':'แบรนด์'}ที่มี Target สูงสุดในแกนนี้ (ทั้ง Area):</b> ${f.map(z=>`${z[0]} (${fmtN(z[1])} ${unit} · ${fK(z[2])} ฿)`).join(' · ')}</div>`:'';
+    return lists(good.slice(0,8), bad.slice(0,9))+foc;
+  });
+}
+function detailMix(pid){
+  const prod=MIXP[pid], X=MX[prod], br=state.branch, mode=state.mode, M=X.months[D.cur], Pm=D.prev&&X.months[D.prev], P_=PILLARS.find(p=>p.id===pid);
+  const cur=mixVals(prod,D.cur,br), prv=Pm?mixVals(prod,D.prev,br):X.axes.map(()=>null);
+  const k_=mode==='q'?0:1, U=M.bench.UPC, uTot=U?Object.values(U.v).reduce((z,v)=>z+v[k_],0):0;
+  const tot=X.axes.reduce((z,ax)=>z+mixSum(prod,D.cur,br,ax)[k_],0);
+  const rows=X.axes.map((ax,i)=>{ const o=mixSum(prod,D.cur,br,ax); const us=U&&U.v[ax]&&uTot?U.v[ax][k_]/uTot*100:null;
+    return `<tr><td><b>${ax}</b></td><td>${fmtN(o[k_])}</td><td>${fmtN(o[k_+2]*M.frac)}</td><td>${fmtN(o[k_+2])}</td><td><span class="pill p-${cls(cur[i])}">${fmtP(cur[i])}</span></td><td>${fmtP(prv[i])}</td><td>${delta(cur[i],prv[i])}</td><td>${tot?(o[k_]/tot*100).toFixed(1)+'%':'–'}</td><td>${us==null?'–':us.toFixed(1)+'%'}</td></tr>`; }).join('');
+  const sh=D.shops.map(s=>({s,v:X.axes.map(ax=>mixAch(prod,D.cur,s.shop,ax,mode))})).map(x=>({...x,avg:avg(x.v)})).sort((a,b)=>(a.avg??999)-(b.avg??999));
+  const shRows=sh.map(({s,v,avg:av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}</td>${v.map((z,i)=>{const r=M.shops[s.shop][X.axes[i]]; return `<td class="c" style="${hmColor(z)}">${fmtP(z)}<div style="font-size:10px;font-weight:400">${fmtN(r[k_])} / ${fmtN(r[k_+2]*M.frac)}</div></td>`;}).join('')}<td class="c"><span class="pill p-${cls(av)}">${fmtP(av)}</span></td></tr>`).join('');
+  return `<div class="row"><h2 style="margin:0">${P_.name}${infoBtn(pid)}</h2><span style="color:var(--muted)">${CUR} ถึง ${M.asof?+M.asof.slice(8):'-'} ${TH[+D.cur.slice(5)-1]} (All Product Rawdata)</span><div class="spacer"></div>${modeSeg()}</div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${mode==='q'?'QTY':'Net Amount'}</h3><div class="sub">${P_.basis}</div>${radar(X.axes,seriesFor(pid,br))}${legendFor(pid)}</div>
+    <div class="card"><h3>ตัวเลข</h3><div class="sub">${br==='ALL'?'รวม '+D.shops.length+' สาขา':nameOf(br)} · ${mode==='q'?(prod==='Device'?'เครื่อง':'ชิ้น'):'บาท'} · Mix = สัดส่วนในยอดรวม</div>
+      <table><thead><tr><th>${prod==='Device'?'แบรนด์':'หมวดย่อย'}</th><th>ยอดจริง</th><th>Target ถึงวันนี้</th><th>Target เดือน</th><th>%</th><th>${PREV}</th><th>เปลี่ยน</th><th>Mix เรา</th><th>Mix UPC</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>
+  ${mixAnalysis(pid)}
+  <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · % เทียบ Target ถึงวันนี้ · ตัวเลขเล็ก = ยอดจริง / Target ถึงวันนี้</div>
+    <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${X.axes.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>`;
+}
 function pendingView(id){ const p=PILLARS.find(x=>x.id===id); return `<div class="card pending"><h2>${p.name}</h2><p>รอข้อมูล${p.items.length?': '+p.items.join(' · '):''}</p></div>`; }
 
 /* ---------- router ---------- */
@@ -516,7 +580,7 @@ function render(){
   const id=(location.hash||'#summary').slice(1);
   document.getElementById('nav').innerHTML=[{id:'summary',name:'Summary'}].concat(PILLARS).map(p=>`<a href="#${p.id}" class="${p.id===id?'on':''}">${p.name}</a>`).join('');
   const P_=PILLARS.find(p=>p.id===id);
-  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService(): id==='longevity'?detailLongevity():detailStaff();
+  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService(): id==='longevity'?detailLongevity(): MIXP[id]?detailMix(id):detailStaff();
 }
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}

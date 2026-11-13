@@ -175,3 +175,8 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   CAMPIGN_CODE, RC_TIER, FLAG_BUNDLE, TECHNOLOGY, SUB_PRODUCT, CATEGORY, SUB_CATEGORY, PRICE_TIER, CAPACITY; TVS 'ที่มา' = sources)).
   Rules: mix share ±4 pp vs UPC, units per shop vs UPC <70 / ≥130 (area view only), net per unit <85% of UPC, daily run-rate <70% of last month;
   NOT_CLASSIFIED / blank values stay in the tables only. EBIT uses P&L lines per sqm (area_lines / shops[].lines) vs UPC.
+
+## Device by Brand / GIA radars (14 Nov 2026)
+- Targets: `<yyyymm>_Target by Brand ...xlsx` → perf_brand_target.csv · `<yyyymm>_Target GIA by CATEGORY ...xlsx` → perf_gia_target.csv (drop into the Drive inbox, as-is or zipped).
+- Actual: All Product Rawdata (perf_dims.csv) — Device by BRAND, GIA by SUB_CATEGORY; Target to date = month target × All Product as-of day ÷ days in month.
+- Axes = top 8 by current-month Net target, rest grouped as "อื่นๆ". Built by perf._mix_build → `mix` in perf_data.json; page views detailMix / mixAnalysis.

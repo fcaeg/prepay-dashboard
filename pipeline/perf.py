@@ -565,6 +565,52 @@ def _gia_actual(month, sh):
     g['emp'] = g.SALE_CODE.fillna('').astype(str).str.strip()
     return g.groupby(['day', 'SHOP_CODE', 'emp'], as_index=False).agg(q=('q', 'sum'), n=('n', 'sum')).rename(columns={'SHOP_CODE': 'shop'})
 
+# ---------- Device by Brand / GIA by sub-category radars ----------
+MIX = {'Device': {'file': 'perf_brand_target.csv', 'key': 'brand', 'dim': 'BRAND', 'top': 8},
+       'GIA': {'file': 'perf_gia_target.csv', 'key': 'sub', 'dim': 'SUB_CATEGORY', 'top': 8}}
+
+def _mix_build(cur, prev):
+    d = _load('perf_dims.csv'); sh = shops(); asof = _meta().get('perf_allprod_asof', {}); out = {}
+    if d is None: return None
+    for c in ('q', 'n', 'shops'): d[c] = pd.to_numeric(d[c])
+    for prod, cfg in MIX.items():
+        t = _load(cfg['file'])
+        if t is None: continue
+        for c in ('tq', 'tn'): t[c] = pd.to_numeric(t[c])
+        t = t[t.shop.isin(sh)]; k = cfg['key']
+        tc = t[t.month == cur]
+        if not len(tc): continue
+        rank = tc.groupby(k).tn.sum().sort_values(ascending=False)
+        axes = [a for a in rank.index if rank[a] > 0][:cfg['top']]
+        bucket = lambda v: v if v in axes else 'อื่นๆ'
+        has_other = (rank.drop(axes, errors='ignore').sum() > 0)
+        axes_all = axes + (['อื่นๆ'] if has_other else [])
+        node = {'axes': axes_all, 'dim': cfg['dim'], 'months': {}}
+        for m in (cur, prev):
+            tm = t[t.month == m]; am = d[(d.month == m) & (d['product'] == prod) & (d.dim == cfg['dim'])]
+            if not len(tm) and not len(am): continue
+            dim_ = calendar.monthrange(int(m[:4]), int(m[5:]))[1]
+            a_ = asof.get(prod, '') if m == cur else ''
+            frac = (int(a_[8:]) / dim_) if (m == cur and a_[:7] == m) else 1.0
+            M = {'frac': round(frac, 4), 'asof': a_ if m == cur else None, 'shops': {}, 'bench': {}}
+            tm = tm.assign(ax=tm[k].map(bucket)); am = am[~am.val.isin(['(ว่าง)', 'TRUE BRAND', 'OTT BOX', 'TRUE DIGITAL HD'])].assign(ax=lambda z: z.val.map(bucket))
+            tg = tm.groupby(['shop', 'ax'])[['tq', 'tn']].sum()
+            ag = am[am.scope.isin(sh)].groupby(['scope', 'ax'])[['q', 'n']].sum()
+            for s in sh:
+                M['shops'][s] = {ax: [round(float(ag.loc[(s, ax)].q), 2) if (s, ax) in ag.index else 0, round(float(ag.loc[(s, ax)].n), 2) if (s, ax) in ag.index else 0,
+                                      round(float(tg.loc[(s, ax)].tq), 2) if (s, ax) in tg.index else 0, round(float(tg.loc[(s, ax)].tn), 2) if (s, ax) in tg.index else 0] for ax in axes_all}
+            for sc in ('UN', 'UPC', 'BMA'):
+                z = am[am.scope == sc]
+                if len(z): M['bench'][sc] = {'shops': int(z.shops.max()), 'v': {ax: [round(float(g.q.sum()), 2), round(float(g.n.sum()), 2)] for ax, g in z.groupby('ax')}}
+            node['months'][m] = M
+        # focus models / brands inside each axis (current-month target)
+        sub = 'model' if prod == 'Device' else 'brand'
+        tc2 = tc.assign(ax=tc[k].map(bucket))
+        node['focus'] = {ax: [[r[0], round(float(r[1].tq), 1), round(float(r[1].tn))] for r in g.groupby(sub)[['tq', 'tn']].sum().sort_values('tn', ascending=False).head(6).iterrows() if r[1].tn > 0]
+                         for ax, g in tc2.groupby('ax')}
+        out[prod] = node
+    return out
+
 def build():
     t = _load('perf_targets.csv')
     if t is None: print('perf: no targets - page not built'); return
@@ -623,6 +669,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev)}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev)}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")
