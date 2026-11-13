@@ -164,3 +164,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   the Shop name) → `--service <csv> ...` (Drive: names starting ServiceLevel / OnTime / iCSAT; a zip may hold all three) → `state/perf_svc.csv`
   (num/den per shop: SL = SL% x Transactions, On Time = in due ÷ (in due + closed over due + pending over due), iCsat = % x surveys).
   drive_sync unpacks every csv of a retention / service zip.
+- Sale Longevity (Nami, 14 Nov 2026): `True_Mobile_Care_Shops_<date>.csv` (Target / Actual units) and `Extended_W_Shops_<date>.csv`
+  (Target ฿ / Actual ฿) vs target to date; `Trade_In_Shops_<date>.csv` (trade-in ÷ handset) and `Downsell_SharePlan_by_shop.csv`
+  (Down Sell ÷ RC Prev, lower is better; no date in the name → the day before the run) vs the UPC average (Nami: "use the average").
+  → `--longevity <csv> ...` → `state/perf_lon.csv`. Customer Hub: pending. No previous-month line.

@@ -99,7 +99,7 @@ const PILLARS = [
   {id:'sale', name:'Sale', th:'ยอดขาย', basis:'เทียบ Target สาขา (ถึงวันนี้)', items:D.products},
   {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', basis:'เทียบเกณฑ์ผ่าน: Retention 88% · SL 85% · iCsat 92% · On Time 95%', pending:!D.ret&&!D.svc, items:['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time']},
   {id:'ebit', name:'EBIT & Revenue', th:'กำไรและรายได้', basis:'ต่อ ตร.ม. / ต่อคน เทียบค่าเฉลี่ย UPC ประเภทเดียวกัน', items:(D.pl&&D.pl.axes)||[], pending:!D.pl},
-  {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', pending:true, items:['True Mobile Care','Extended Warranty','Trade In','Customer Hub','Down Sale']},
+  {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', basis:'TMC / Ext. Warranty เทียบ Target · Trade In / Down Sell เทียบค่าเฉลี่ย UPC', pending:!D.lon, items:['TMC','Ext. Warranty','Trade In','Customer Hub','Down Sell']},
   {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products}
 ];
 const SHORT = {'Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
@@ -156,12 +156,12 @@ function radar(labels, series, opt={}){
   return s+'</svg>';
 }
 const hasPrev = pid => P && pillarVals(pid,P,state.branch).some(v=>v!=null);
-const BENCH = {sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC', service:'เกณฑ์ผ่าน'};
+const BENCH = {sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC', service:'เกณฑ์ผ่าน', longevity:'Target / ค่าเฉลี่ย UPC'};
 const ico = (stroke,dash,w) => `<svg width="22" height="8" style="vertical-align:middle;margin-right:4px"><line x1="1" y1="4" x2="21" y2="4" stroke="${stroke}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/></svg>`;
-const legendFor = (pid, small) => { const pl = pid==='ebit', rt = pid==='service';
-  const c = rt ? `${mLbl((RT&&RT.cur)||SV.month)}${small?'':' (ถึง '+(+(([...(RT?Object.values(RT.months[RT.cur].asof):[]),...(SV?Object.values(SV.asof):[])].filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
+const legendFor = (pid, small) => { const pl = pid==='ebit', rt = pid==='service', ln = pid==='longevity';
+  const c = ln ? `${mLbl(LN.month)}${small?'':' (ถึง '+(+((Object.values(LN.kpis).map(k=>k.asof).sort().pop()||'').slice(8)))+')'}` : rt ? `${mLbl((RT&&RT.cur)||SV.month)}${small?'':' (ถึง '+(+(([...(RT?Object.values(RT.months[RT.cur].asof):[]),...(SV?Object.values(SV.asof):[])].filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
   const p = rt ? (RT.prev?mLbl(RT.prev):'ยังไม่มีข้อมูล') : pl ? plLbl(PL.prev) : PREV;
-  return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span>${rt?'':`<span>${ico('#475569','2 3',2)}${p}</span>`}<span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
+  return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span>${rt||ln?'':`<span>${ico('#475569','2 3',2)}${p}</span>`}<span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
 const legend = () => `<div class="legend"><span><i style="background:var(--cur)"></i>${CUR} (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})</span><span><i style="background:var(--prev)"></i>${PREV} ${hasPrev('sale')?'':'(ยังไม่มีข้อมูล)'}</span><span><i style="background:none;border-top:2px dashed #1b1f24;height:0"></i>100% = Target</span></div>`;
 const PL = D.pl; const plVals = (m,br) => { const M=PL&&PL.months[m]; if(!M) return []; if(br==='ALL') return M.area_idx; const r=M.shops[br]; return (r&&r.idx)||PL.axes.map(()=>null); };
 const plLbl = m => m?mLbl(m):'-';
@@ -173,7 +173,14 @@ const svcRec = (br,k) => { if(!SV) return null; const r = br==='ALL' ? SV.area[k
 const svcPct = (br,k) => { const r=svcRec(br,k); return r? r.num/r.den*100 : null; };
 const retVals = (m,br) => [...RKEY.map(p=>{const v=RT?retPct(m,br,p):null; return v==null?null:v/RT.pass*100;}), ...SKEY.map(k=>{const v=svcPct(br,k); return v==null?null:v/SV.pass[k]*100;})];
 const retLabs = (m,br) => [...RKEY.map(p=>{const v=RT?retPct(m,br,p):null; return v==null?null:v.toFixed(1)+'%';}), ...SKEY.map(k=>{const v=svcPct(br,k); return v==null?null:v.toFixed(1)+'%';})];
-const seriesFor = (pid,br) => pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
+const LN = D.lon; const LKEY = ['True Mobile Care','Extended Warranty','Trade In','Customer Hub','Down Sell'];
+const lonRec = (br,k) => { const K=LN&&LN.kpis[k]; if(!K) return null; const r = br==='ALL' ? K.area : (LN.shops[br]||{})[k]; return r&&r.den? r : null; };
+const lonRate = z => z&&z.den? z.num/z.den : null;
+const lonVal = (br,k) => { const K=LN&&LN.kpis[k], r=lonRec(br,k); if(!K||!r) return null;   // {idx, label}
+  if(K.mode==='target'){ const a=r.num/(r.den*K.frac)*100; return {idx:a, lab:a.toFixed(0)+'%'}; }
+  const own=lonRate(r), ben=lonRate(K.bench.UPC); if(own==null||!ben) return null;
+  return K.mode==='avg' ? {idx:own/ben*100, lab:(own*100).toFixed(1)+'%'} : {idx: own>0? ben/own*100 : 150, lab:(own*100).toFixed(1)+'%'}; };
+const seriesFor = (pid,br) => pid==='longevity' ? [{values:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.idx;}),labels:LKEY.map(k=>{const v=lonVal(br,k); return v&&v.lab;}),color:'#e4002b',dots:true}] : pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
 const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
 
 /* ---------- hints (ⓘ) ---------- */
@@ -200,6 +207,13 @@ service:{title:'Service & Retention · เทียบเกณฑ์ผ่า�
   ['Service Level','SL% Overall จาก ServiceLevel_Shops (มีเฉพาะสาขาที่มีระบบคิว) · ภาพรวมถ่วงด้วยจำนวน Transaction','เกณฑ์ผ่าน 85%'],
   ['iCsat','%iCSAT ของเดือนนี้ จาก iCSAT_by_Shop · ภาพรวมถ่วงด้วยจำนวน Survey','เกณฑ์ผ่าน 92%'],
   ['On Time','งานที่ปิดในกำหนด ÷ (ปิดในกำหนด + ปิดเกินกำหนด + ค้างเกินกำหนด) จาก OnTime_by_Shop (งานที่ค้างแต่ยังไม่เกินกำหนดไม่นับ)','เกณฑ์ผ่าน 95%']]},
+ longevity:{title:'Sale Longevity · สินค้าต่อยอด', how:'TMC และ Extended Warranty: ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × วันล่าสุดของข้อมูล ÷ วันในเดือน) — 100 = ตาม Target · Trade In และ Down Sell ไม่มี Target จึงเทียบค่าเฉลี่ย UPC (รวมทุกสาขา UPC) — 100 = เท่าค่าเฉลี่ย · Down Sell ยิ่งต่ำยิ่งดี จึงกลับด้านดัชนี · ตัวเลขใต้ชื่อแกน: TMC / Ext. Warranty = % ทำได้เทียบ Target ถึงวันนี้, Trade In / Down Sell = ค่าจริง · ไม่เทียบเดือนก่อน',
+  cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
+  ['TMC (True Mobile Care)','จำนวนที่ขายได้ จาก True_Mobile_Care_Shops','Target ถึงวันนี้'],
+  ['Ext. Warranty','ยอดขาย ฿ จาก Extended_W_Shops (ดู Attach % = เครื่องที่ซื้อประกันเพิ่ม ÷ เครื่องที่ขาย ในหน้า Detail)','Target ฿ ถึงวันนี้'],
+  ['Trade In','Trade-in ÷ Handset ที่ขาย (Rate %) จาก Trade_In_Shops','ค่าเฉลี่ย UPC'],
+  ['Customer Hub','รอไฟล์ข้อมูล','–'],
+  ['Down Sell','Down Sell ฿ ÷ RC Prev = % ค่าบริการรายเดือนที่ลดลงเมื่อลูกค้าเปลี่ยนเป็นแพ็กเกจที่ถูกกว่า (Share Plan) จาก Downsell_SharePlan_by_shop · ยิ่งต่ำยิ่งดี','ค่าเฉลี่ย UPC (ดัชนีกลับด้าน)']]},
  ebit:{title:'EBIT & Revenue · ต่อ ตร.ม. และต่อพนักงาน', how:'ดัชนี = ค่าของเรา ÷ ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน × 100 (แกนต้นทุนกลับด้าน: ยิ่งต่ำยิ่งดี) · ภาพรวม Upper North ถ่วงตามประเภทและขนาดของแต่ละสาขา · ข้อมูลจาก Performance Report (Model WW) ซึ่งช้ากว่าเดือนปัจจุบันราว 3 เดือน · พื้นที่ = SQM All · สาขา DTAC (D) ใช้ 10 ตร.ม. และเทียบ UPC Non Matching (GM/คน เทียบ DTAC COCO) · ค่าเกิน 150 ตัดที่ 150 ในกราฟ<br><b>สูตรในไฟล์:</b> Revenue = ขายบริการ + Non Sale (Retention, Upsell, Renew, SQT, Bill/Kiosk) + ขายสินค้า · GM = (ขายสินค้า − ต้นทุนสินค้า) + ขายบริการ + Non Sale · EBITDA = GM − Front Cost (พนักงาน, การตลาด, อาคาร/ค่าเช่า, บริหาร) − ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH) · EBIT = EBITDA − ค่าเช่า Asset − ค่าเสื่อม',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
   ['Revenue / ตร.ม.','รายได้รวมต่อพื้นที่ — พื้นที่สร้างยอดได้แค่ไหน','ค่าเฉลี่ย UPC ประเภทเดียวกัน (BMA ดูในตาราง Detail)'],
@@ -274,6 +288,26 @@ function detailStaff(){
   ${none.length?`<div class="card" style="margin-top:16px"><h3>มี Indy Target แต่ไม่พบยอดขายใน ${CUR} (${none.length} คน)</h3><div class="sub">อาจลาออก / ย้ายสาขา / ลา หรือรหัสพนักงานขายในระบบไม่ตรงกับ Indy Target — ไม่นำมาจัดอันดับ</div>
   <ul class="fail-list">${none.map(r=>`<li><span>${r.e.name}</span><span style="color:var(--muted);font-size:12px">${r.e.role} · ${nameOf(r.e.shop)} · ${r.id}</span></li>`).join('')}</ul></div>`:''}`;
 }
+function detailLongevity(){
+  const br=state.branch, fN=v=>v==null?'–':Math.round(v).toLocaleString('th-TH');
+  const pctOf=z=>z&&z.den? (z.num/z.den*100) : null, f1=v=>v==null?'–':v.toFixed(1)+'%';
+  const rows=LKEY.map(k=>{ const K=LN.kpis[k]; if(!K) return `<tr><td><b>${k}</b></td><td colspan="7" style="text-align:left;color:var(--muted)">รอไฟล์ข้อมูล</td></tr>`;
+    const r=lonRec(br,k), v=lonVal(br,k), tgt=K.mode==='target';
+    const bench=g=> tgt ? (K.bench[g].den? f1(K.bench[g].num/(K.bench[g].den*K.frac)*100) : '–') : f1(pctOf(K.bench[g]));
+    return `<tr><td><b>${k}</b><div style="font-size:11px;color:var(--muted)">ถึง ${K.asof}</div></td><td>${fN(r&&r.num)}</td><td>${tgt?fN(r&&r.den*K.frac)+'<div style="font-size:11px;color:var(--muted)">เดือน '+fN(r&&r.den)+'</div>':fN(r&&r.den)}</td><td>${v?v.lab:'–'}</td><td><span class="pill p-${cls(v&&v.idx)}">${v?Math.round(v.idx):'–'}</span></td><td>${bench('UPC')}</td><td>${bench('BMA')}</td><td>${bench('All')}</td></tr>`; }).join('');
+  const sh=D.shops.map(s=>({s,v:LKEY.map(k=>lonVal(s.shop,k)), raw:LKEY.map(k=>(LN.shops[s.shop]||{})[k])})).map(x=>({...x,avg:avg(x.v.map(z=>z&&z.idx))})).sort((a,b)=>(a.avg??999)-(b.avg??999));
+  const base=['เครื่อง','฿','ho','','฿'];
+  const shRows=sh.map(({s,v,raw,avg:av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}</td>${v.map((z,i)=>`<td class="c" style="${hmColor(z&&z.idx)}">${z?z.lab+`<div style="font-size:10px;font-weight:400">${i===2?fN(raw[i].num)+' / '+fN(raw[i].den)+' เครื่อง':i===4?fN(raw[i].num)+' ฿':fN(raw[i].num)+(i===1?' ฿':' เครื่อง')}</div>`:'–'}</td>`).join('')}<td class="c"><span class="pill p-${cls(av)}">${fmtP(av)}</span></td></tr>`).join('');
+  return `<div class="row"><h2 style="margin:0">Sale Longevity${infoBtn('longevity')}</h2><span style="color:var(--muted)">ข้อมูลสะสม ${mLbl(LN.month)}</span></div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${mLbl(LN.month)}</h3><div class="sub">ตัวเลขใต้แกน: TMC / Ext. Warranty = % เทียบ Target ถึงวันนี้ · Trade In / Down Sell = ค่าจริง</div>${radar(PILLARS[3].items,seriesFor('longevity',br))}${legendFor('longevity')}</div>
+    <div class="card"><h3>ตัวเลข</h3><div class="sub">${br==='ALL'?'รวมทุกสาขาใน Upper North':nameOf(br)}</div>
+      <table><thead><tr><th>ตัวชี้วัด</th><th>ยอดจริง</th><th>Target ถึงวันนี้ / ฐาน</th><th>ค่า</th><th>ดัชนี</th><th>UPC</th><th>BMA</th><th>ทั้งประเทศ</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="note">TMC: จำนวนเครื่อง · Ext. Warranty: บาท · Trade In: ยอด Trade-in / ฐาน = เครื่องที่ขาย · Down Sell: บาทที่ลดลง / ฐาน = RC เดิม · คอลัมน์ UPC / BMA / ทั้งประเทศ = % ทำได้ (TMC, Ext.) หรือค่าเฉลี่ยของกลุ่ม (Trade In, Down Sell)</div></div>
+  </div>
+  <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · สีตามดัชนี (เขียว ≥ 100) · "–" = ไม่มีข้อมูล</div>
+    <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${PILLARS[3].items.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>`;
+}
 function detailService(){
   const br=state.branch, m=RT.cur, Mm=RT.months[m], pv=RT.prev;
   const pct=r=>r&&r.req? r.save/r.req*100 : null, f1=v=>v==null?'–':v.toFixed(1)+'%', fN=v=>v==null?'–':Math.round(v).toLocaleString('th-TH');
@@ -334,7 +368,7 @@ function render(){
   const id=(location.hash||'#summary').slice(1);
   document.getElementById('nav').innerHTML=[{id:'summary',name:'Summary'}].concat(PILLARS).map(p=>`<a href="#${p.id}" class="${p.id===id?'on':''}">${p.name}</a>`).join('');
   const P_=PILLARS.find(p=>p.id===id);
-  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService():detailStaff();
+  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService(): id==='longevity'?detailLongevity():detailStaff();
 }
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}

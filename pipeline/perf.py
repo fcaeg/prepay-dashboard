@@ -398,6 +398,54 @@ def _svc_build():
         for _, r in y[y.shop.isin(sh)].iterrows(): out['shops'].setdefault(r.shop, {})[k] = {'num': float(r.num), 'den': float(r.den)}
     return out
 
+# ---------- Sale Longevity (Nami, 14 Nov 2026): all shops, month to date ----------
+#   True_Mobile_Care_Shops_<date>.csv (Target, Actual units) and Extended_W_Shops_<date>.csv (Target ฿, Actual ฿): vs target to date
+#   Trade_In_Shops_<date>.csv (Handset, Trade-in): rate = trade-in ÷ handset, vs the UPC average ("use the average")
+#   Downsell_SharePlan_by_shop.csv (RC Prev, Down Sell = RC Prev − RC Cur): % RC lost, vs the UPC average, lower is better
+LON = {'TMC': ('True Mobile Care', 'target'), 'EXTW': ('Extended Warranty', 'target'), 'TI': ('Trade In', 'avg'), 'DS': ('Down Sell', 'avg_inv')}
+LON_AXES = ['True Mobile Care', 'Extended Warranty', 'Trade In', 'Customer Hub', 'Down Sell']
+
+def merge_longevity(fp):
+    name = os.path.basename(fp); low = name.lower()
+    m = re.search(r'(\d{4})-(\d{2})-(\d{2})', name)
+    asof = f'{m.group(1)}-{m.group(2)}-{m.group(3)}' if m else (datetime.datetime.utcnow() + datetime.timedelta(hours=7) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+    for enc in ('utf-8-sig', 'cp874'):
+        try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
+        except UnicodeDecodeError: continue
+    d.columns = [str(c).strip() for c in d.columns]
+    num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', '').str.replace('฿', ''), errors='coerce').fillna(0)
+    area = 'Region' if 'Region' in d else 'Area'
+    grp = d[area].map(lambda r: 'BMA' if isinstance(r, str) and r.strip().upper().startswith('BMA') else 'UPC')
+    if low.startswith('true_mobile_care') or low.startswith('true mobile care'): k, n, dn = 'TMC', num('Actual'), num('Target')
+    elif low.startswith('extended_w'): k, n, dn = 'EXTW', num('Actual ฿'), num('Target ฿')
+    elif low.startswith('trade_in') or low.startswith('trade in'): k, n, dn = 'TI', num('Trade-in'), num('Handset')
+    elif low.startswith('downsell'): k, n, dn = 'DS', num('Down Sell'), num('RC Prev')
+    else: print('perf: unknown longevity file', name); return
+    out = pd.DataFrame({'month': asof[:7], 'asof': asof, 'kpi': k, 'shop': d['Shop Code'].astype(str).str.extract(r'(\d{8})', expand=False), 'grp': grp, 'num': n, 'den': dn})
+    out = out[out.shop.notna()]
+    old = _load('perf_lon.csv')
+    if old is not None:
+        cur = old[(old.month == asof[:7]) & (old.kpi == k)]
+        if len(cur) and cur['asof'].max() > asof: print(f'perf: {k} {asof} is older than {cur["asof"].max()} - skipped'); return
+        old = old[~((old.month == asof[:7]) & (old.kpi == k))]
+    _save(pd.concat([old, out.astype(str)]) if old is not None else out, 'perf_lon.csv')
+    mine = out[out.shop.isin(shops())]
+    print(f'perf: longevity {LON[k][0]} {asof}: {len(out)} shops, ours {len(mine)} · {mine.num.sum():,.0f} / {mine.den.sum():,.0f}')
+
+def _lon_build():
+    v = _load('perf_lon.csv')
+    if v is None: return None
+    for c in ('num', 'den'): v[c] = pd.to_numeric(v[c])
+    sh = shops(); m = v.month.max(); x = v[v.month == m]; dim = calendar.monthrange(int(m[:4]), int(m[5:]))[1]
+    out = {'month': m, 'axes': LON_AXES, 'kpis': {}, 'shops': {}}
+    agg = lambda z: {'num': float(z.num.sum()), 'den': float(z.den.sum())}
+    for k, y in x.groupby('kpi'):
+        lbl, mode = LON[k]; asof = y['asof'].max(); frac = int(asof[8:]) / dim if mode == 'target' else 1.0
+        out['kpis'][lbl] = {'mode': mode, 'asof': asof, 'frac': round(frac, 4), 'area': agg(y[y.shop.isin(sh)]),
+                            'bench': {'UPC': agg(y[y.grp == 'UPC']), 'BMA': agg(y[y.grp == 'BMA']), 'All': agg(y)}}
+        for _, r in y[y.shop.isin(sh)].iterrows(): out['shops'].setdefault(r.shop, {})[lbl] = {'num': float(r.num), 'den': float(r.den)}
+    return out
+
 RET_ITEMS = ['Postpay', 'True Online', 'True Visions']
 
 def _ret_build():
@@ -486,6 +534,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build()}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")
