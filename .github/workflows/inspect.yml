@@ -21,6 +21,7 @@ jobs:
           PREFIXES: ${{ inputs.prefixes }}
           SHOW_UN: '1'
           SHOW_AREA: 'Upper North'
+          ALL_SHEETS: '1'
         run: |
           IFS='|' read -ra P <<< "$PREFIXES"
           python pipeline/inspect_drive.py "${P[@]}"

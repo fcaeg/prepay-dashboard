@@ -19,6 +19,13 @@ def frame(path, name):
         return pd.read_csv(io.BytesIO(b), dtype=str, encoding=enc, low_memory=False, nrows=20000)
     import openpyxl
     wb = openpyxl.load_workbook(path, read_only=True); print('sheets', wb.sheetnames)
+    if os.environ.get('ALL_SHEETS'):  # target files: show the top rows of every sheet (numbers and shop names only)
+        for w in wb.worksheets:
+            print('--- sheet', w.title, w.max_row, 'x', w.max_column)
+            for i, r in enumerate(w.iter_rows(values_only=True, max_col=40)):
+                vals = [(j, str(v)[:18]) for j, v in enumerate(r) if v not in (None, '')]
+                if vals: print('  ', i, vals[:34])
+                if i >= 9: break
     ws = wb['Rawdata'] if 'Rawdata' in wb.sheetnames else wb.worksheets[-1]; print('using sheet', ws.title, 'dims', ws.max_row, ws.max_column)
     it = ws.iter_rows(values_only=True); hdr = [str(x) for x in next(it)]; rows = []
     for i, r in enumerate(it):
