@@ -178,5 +178,5 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 
 ## Device by Brand / GIA radars (14 Nov 2026)
 - Targets: `<yyyymm>_Target by Brand ...xlsx` → perf_brand_target.csv · `<yyyymm>_Target GIA by CATEGORY ...xlsx` → perf_gia_target.csv (drop into the Drive inbox, as-is or zipped).
-- Actual: All Product Rawdata (perf_dims.csv) — Device by BRAND, GIA by SUB_CATEGORY; Target to date = month target × All Product as-of day ÷ days in month.
+- Actual: All Product Rawdata (perf_dims.csv) — Device by BRAND, GIA by BRAND (Apple, Samsung, Suplife PVL + top-3 other brands); Target to date = month target × All Product as-of day ÷ days in month.
 - Axes = top 8 by current-month Net target, rest grouped as "อื่นๆ". Built by perf._mix_build → `mix` in perf_data.json; page views detailMix / mixAnalysis.

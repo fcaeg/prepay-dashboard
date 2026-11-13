@@ -567,7 +567,7 @@ def _gia_actual(month, sh):
 
 # ---------- Device by Brand / GIA by sub-category radars ----------
 MIX = {'Device': {'file': 'perf_brand_target.csv', 'key': 'brand', 'dim': 'BRAND', 'top': 8},
-       'GIA': {'file': 'perf_gia_target.csv', 'key': 'sub', 'dim': 'SUB_CATEGORY', 'top': 8}}
+       'GIA': {'file': 'perf_gia_target.csv', 'key': 'brand', 'dim': 'BRAND', 'fixed': ['APPLE', 'SAMSUNG', 'SUPLIFE (PVL)'], 'top': 3}}  # Nami: Apple, Samsung, Suplife PVL + top-3 other brands by target
 
 def _mix_build(cur, prev):
     d = _load('perf_dims.csv'); sh = shops(); asof = _meta().get('perf_allprod_asof', {}); out = {}
@@ -581,7 +581,8 @@ def _mix_build(cur, prev):
         tc = t[t.month == cur]
         if not len(tc): continue
         rank = tc.groupby(k).tn.sum().sort_values(ascending=False)
-        axes = [a for a in rank.index if rank[a] > 0][:cfg['top']]
+        fixed = cfg.get('fixed', [])
+        axes = fixed + [a for a in rank.index if rank[a] > 0 and a not in fixed][:cfg['top']]
         bucket = lambda v: v if v in axes else 'อื่นๆ'
         has_other = (rank.drop(axes, errors='ignore').sum() > 0)
         axes_all = axes + (['อื่นๆ'] if has_other else [])
@@ -604,7 +605,7 @@ def _mix_build(cur, prev):
                 if len(z): M['bench'][sc] = {'shops': int(z.shops.max()), 'v': {ax: [round(float(g.q.sum()), 2), round(float(g.n.sum()), 2)] for ax, g in z.groupby('ax')}}
             node['months'][m] = M
         # focus models / brands inside each axis (current-month target)
-        sub = 'model' if prod == 'Device' else 'brand'
+        sub = 'model' if prod == 'Device' else 'sub'
         tc2 = tc.assign(ax=tc[k].map(bucket))
         node['focus'] = {ax: [[r[0], round(float(r[1].tq), 1), round(float(r[1].tn))] for r in g.groupby(sub)[['tq', 'tn']].sum().sort_values('tn', ascending=False).head(6).iterrows() if r[1].tn > 0]
                          for ax, g in tc2.groupby('ax')}
