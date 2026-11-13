@@ -147,3 +147,9 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   PRICE_PLAN_TYPE has "TVS" (5G DEVICE TVS) + TOL lines whose CAMPIGN_CODE starts 3P / 4P (3POTT, 4POTT). Net of a bundled unit =
   QTY x (TVS_NEW ÷ TVS subs of the month's target). Flags are set when the Rawdata / All Product files are read (column `flag`).
 - Reprocess a file already in Done: Actions → "Update from Google Drive" → Run workflow → reprocess = name prefixes separated by |.
+- EBIT & Revenue (Nami, 14 Nov 2026): `<n>. <yyyy>_Performance Report (Model WW)_<Mon>'<yy> ....xlsb` (monthly, ~3 months behind; sheet
+  "Data Model 2 WW" = P&L per shop per month; column positions are checked by name in perf.PL_FIELDS) → `--pl` (Drive: "performance report")
+  → `state/perf_pl_shop.csv` (our shops) + `perf_pl_bench.csv` (month x BMA/UPC x type sums). Radar = 6 values PER SQM (SQM All):
+  Revenue, GM, EBIT, Front Cost (inverse), rent ค่าเช่า (inverse), Transactions; 100 = UPC average of the same shop type
+  (area: mix-weighted by our shops' sqm). BMA shown for reference. DTAC COCO / HALL have no SQM in the report → no per-sqm values.
+  GitHub Actions installs pyxlsb for .xlsb. First load (Aug 2026 report) was done by hand from the file Nami attached in chat.

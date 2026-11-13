@@ -222,6 +222,82 @@ def _allprod_lines(month):
     p['flag'] = p['flag'].fillna('') if 'flag' in p else ''
     return {k: g[['day', 'shop', 'emp', 'flag', 'q', 'n']] for k, g in p.groupby('product')}
 
+# ---------- EBIT & Revenue: '<n>. <yyyy>_Performance Report (Model WW)_<Mon>'<yy> ....xlsb', sheet 'Data Model 2 WW' (P&L per shop per month) ----------
+PL_FIELDS = {'man': (113, 'Man'), 'pers': (132, 'Personnel Expense'), 'front': (136, 'Total'), 'tx': (140, 'Total Transaction'),
+             'rev_svc': (141, 'Rev. Sale Service'), 'rev_nonsale': (142, 'Rev.'), 'rev_prod': (143, 'Rev. Sale Product'), 'rev': (144, 'Total Rev.'),
+             'gm': (148, 'Total Gross Margin'), 'var': (160, 'Total Cost'), 'ebitda': (162, 'EBITDA'), 'ebit': (169, 'EBIT'), 'rent': (176, 'ค่าเช่า'),
+             'sqm': (187, 'Sum of SQM All')}
+PL_TYPES = ['Matching', 'Non Matching', 'DTAC COCO', 'DTAC HALL']
+PL_SUM = ['man', 'pers', 'front', 'tx', 'rev_svc', 'rev_nonsale', 'rev_prod', 'rev', 'gm', 'var', 'ebitda', 'ebit', 'rent', 'sqm']
+
+def merge_pl(fp):
+    """-> state/perf_pl_shop.csv (our shops, every month) + state/perf_pl_bench.csv (month x BMA/UPC x shop type sums, open shops;
+    per-sqm sums only over shops with SQM). Values per sqm use SQM All (the P&L includes the True Coffee costs)."""
+    sh = shops()
+    d = pd.read_excel(fp, sheet_name='Data Model 2 WW', header=None, dtype=object, engine='pyxlsb' if fp.lower().endswith('.xlsb') else None)
+    hr = next(i for i in range(min(30, len(d))) if str(d.iat[i, 0]).strip() == 'Shop Code WW')
+    h = [str(v).strip() for v in d.iloc[hr].tolist()]
+    for k, (j, nm) in PL_FIELDS.items():
+        if not h[j].startswith(nm): raise RuntimeError(f'P&L column {j} is {h[j]!r}, expected {nm!r} - the report layout changed')
+    x = d.iloc[hr + 1:]
+    out = pd.DataFrame({'shop': x[0].astype(str).str.strip().str.replace(r'\.0$', '', regex=True), 'name': x[3].astype(str), 'type': x[6].astype(str).str.strip(),
+                        'region': x[7].astype(str), 'status': x[8].astype(str).str.strip().str.lower(), 'month': x[9].astype(str).str.replace(r'\.0$', '', regex=True).str.zfill(6)})
+    for k, (j, _) in PL_FIELDS.items(): out[k] = pd.to_numeric(x[j], errors='coerce').fillna(0.0)
+    out['month'] = out.month.str[2:] + '-' + out.month.str[:2]
+    out['grp'] = out.region.str.extract(r'(BMA|UPC)', expand=False)
+    mine = out[out.shop.isin(sh)]
+    _save(mine, 'perf_pl_shop.csv')
+    b = out[out.status.eq('open') & out.type.isin(PL_TYPES) & out.grp.notna()].copy()
+    for k in PL_SUM:
+        if k != 'sqm': b[k + '_s'] = b[k].where(b.sqm > 0, 0.0)  # the same item, only shops that have an area
+    bench = b.groupby(['month', 'grp', 'type'], as_index=False).agg(shops=('shop', 'size'), **{k: (k, 'sum') for k in PL_SUM}, **{k + '_s': (k + '_s', 'sum') for k in PL_SUM if k != 'sqm'})
+    _save(bench, 'perf_pl_bench.csv')
+    m_ = _meta(); m_['perf_pl_month'] = out.month.max(); json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
+    print(f'perf: P&L months {out.month.min()}..{out.month.max()} · our shops {mine.shop.nunique()} · bench rows {len(bench)}')
+
+PL_AXES = [('Revenue / ตร.ม.', 'rev', 1), ('GM / ตร.ม.', 'gm', 1), ('EBIT / ตร.ม.', 'ebit', 1),
+           ('Front Cost / ตร.ม.', 'front', -1), ('ค่าเช่า / ตร.ม.', 'rent', -1), ('Transaction / ตร.ม.', 'tx', 1)]
+
+def _pl_build():
+    s = _load('perf_pl_shop.csv'); b = _load('perf_pl_bench.csv')
+    if s is None or b is None: return None
+    for c in PL_SUM: s[c] = pd.to_numeric(s[c])
+    for c in b.columns:
+        if c not in ('month', 'grp', 'type'): b[c] = pd.to_numeric(b[c])
+    months = sorted(s.month.unique()); last = months[-1]; prev = months[-2] if len(months) > 1 else None
+    def bench(m, grp, typ, k):  # per-sqm average of a group (shops with an area only)
+        r = b[(b.month == m) & (b.grp == grp) & (b.type == typ)]
+        return float(r[k + '_s'].sum() / r.sqm.sum()) if len(r) and r.sqm.sum() > 0 else None
+    def idx(own, ben, sign):
+        if own is None or ben is None or ben <= 0: return None
+        if sign > 0: return max(0.0, own / ben * 100)
+        return ben / own * 100 if own > 0 else None
+    res = {'last': last, 'prev': prev, 'axes': [a[0] for a in PL_AXES], 'months': {}}
+    for m in [x for x in (prev, last) if x]:
+        sm = s[s.month == m]; shops_out = {}; exp = {k: 0.0 for _, k, _ in PL_AXES}; tot = {k: 0.0 for k in PL_SUM}
+        for _, r in sm.iterrows():
+            typ = r.type; sq = r.sqm
+            row = {'type': typ, 'sqm': sq, **{k: float(r[k]) for k in PL_SUM}}
+            if sq > 0:
+                vals = [];
+                for lbl, k, sign in PL_AXES:
+                    ben = bench(m, 'UPC', typ, k); own = r[k] / sq; vals.append(idx(own, ben, sign))
+                    if ben is not None: exp[k] += ben * sq
+                row['idx'] = vals; row['per_sqm'] = {k: r[k] / sq for _, k, _ in PL_AXES}
+                for k in PL_SUM: tot[k] += r[k]
+            shops_out[r.shop] = row
+        area_idx = []
+        for lbl, k, sign in PL_AXES:
+            own = tot[k]; e = exp[k]
+            area_idx.append(None if e <= 0 else (max(0.0, own / e * 100) if sign > 0 else (e / own * 100 if own > 0 else None)))
+        types = sorted(set(sm.type))
+        ref = {g: {t: {k: bench(m, g, t, k) for _, k, _ in PL_AXES} for t in types} for g in ('UPC', 'BMA')}
+        res['months'][m] = {'shops': shops_out, 'area_idx': area_idx, 'area_tot': tot, 'area_bench': {k: (exp[k] / tot['sqm'] if tot['sqm'] else None) for _, k, _ in PL_AXES},
+                            'ref': ref, 'no_sqm': [sh for sh, v in shops_out.items() if not v['sqm']]}
+    trend = s[s.month >= months[max(0, len(months) - 12)]].groupby('month')[['rev', 'gm', 'ebit', 'sqm']].sum()
+    res['trend'] = [{'month': mm, **{k: float(v) for k, v in r.items()}} for mm, r in trend.iterrows()]
+    return res
+
 def _gia_actual(month, sh):
     g = _load(f'gia_sales_{month}.csv.gz')
     if g is None: return pd.DataFrame(columns=['day', 'shop', 'emp', 'q', 'n'])
@@ -289,6 +365,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}}
+            'notes': {}, 'pl': _pl_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

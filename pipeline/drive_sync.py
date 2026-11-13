@@ -16,6 +16,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *VIVO*Sale*                          -> Vivo Dashboard central-system sales (used up to its DATA_ASOF_DATE)
   *PC Brand* / *PC*vivo*              -> Vivo Dashboard PC per shop (PC Brand Update, or Update PC vivo with a "PC Active" column)
   GIA*.xlsx                            -> GIA Dashboard shop list + month targets (Nami's daily GIA report)
+  *Performance Report*                 -> Shop Performance: EBIT & Revenue (P&L per shop, .xlsb)
   *All Product*Raw*                    -> Shop Performance: all products with SALE_ID (latest 2 months)
   *Postpaid*Raw* / *TrueOnline*Raw* / *TrueVision*Raw*  -> Shop Performance: Postpay / TOL / TVS actuals (Self Refresh Rawdata, sheet Rawdata)
 Processed files are moved to the sub-folder "Done" (or "Error" if the update failed) and remembered in
@@ -78,6 +79,7 @@ def kind(name):
     n = name.lower()
     if n.startswith('daily_sales'): return 'sales'
     if 'all product' in n and 'raw' in n: return 'allprod'
+    if re.search(r'performance[ _]+report', n): return 'pl'
     if 'postpaid' in n and 'raw' in n: return 'postpay'
     if re.search(r'true ?online', n) and 'raw' in n: return 'tolraw'
     if re.search(r'true ?visions?', n) and 'raw' in n: return 'tvsraw'
@@ -107,7 +109,7 @@ def unpack(fp, k):
     """zip -> the file update.py needs (sales/stock keep the zip; xlsx inputs are extracted)"""
     if not fp.lower().endswith('.zip') or k in ('sales', 'stock'): return fp
     d = fp + '_x'; zipfile.ZipFile(fp).extractall(d)
-    xs = [os.path.join(r, f) for r, _, fs in os.walk(d) for f in fs if f.lower().endswith(('.xlsx', '.xlsm', '.xls')) and not f.startswith('~$')]
+    xs = [os.path.join(r, f) for r, _, fs in os.walk(d) for f in fs if f.lower().endswith(('.xlsx', '.xlsm', '.xls', '.xlsb')) and not f.startswith('~$')]
     if not xs: raise RuntimeError('no Excel file inside ' + os.path.basename(fp))
     x = xs[0]; nice = os.path.join(d, os.path.basename(fp)[:-4] + os.path.splitext(x)[1])  # keep the zip's name (has the month)
     if kind(os.path.basename(x)) == k: return x
@@ -133,7 +135,7 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp]}[k]
     # update.py takes several --sales / --target values as one list each
     merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': []}
     for i in range(0, len(args), 2):

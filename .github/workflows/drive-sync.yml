@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install
-        run: pip install pandas openpyxl google-auth requests cryptography
+        run: pip install pandas openpyxl pyxlsb google-auth requests cryptography
       - name: Pull new files from Drive and rebuild
         id: sync
         env:

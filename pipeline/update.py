@@ -404,7 +404,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
     ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--snexpiry', help='SN expiry snapshot xlsx from HQ (replaces the expiring-SIM lists)'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
     ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)'); ap.add_argument('--vivo-hist', nargs='*', default=[], help='central-system VIVO sales xlsx'); ap.add_argument('--vivo-rrp', help='Vivo RRP xlsx (Model | RRP) for the Gross unit')
-    ap.add_argument('--allprod', help='All Product Rawdata (latest 2 months, with SALE_ID)'); ap.add_argument('--tol-raw', help='TrueOnline Rawdata xlsx'); ap.add_argument('--tvs-raw', help='TrueVision Rawdata xlsx'); ap.add_argument('--postpay', help='Postpaid Rawdata xlsx (sheet Rawdata) for the Shop Performance page'); ap.add_argument('--gia-target', help="Nami's GIA report xlsx (GIA_North_<Mon>_<d>.xlsx: shops + month targets)")
+    ap.add_argument('--pl', help='Performance Report (Model WW) xlsb/xlsx: P&L per shop'); ap.add_argument('--allprod', help='All Product Rawdata (latest 2 months, with SALE_ID)'); ap.add_argument('--tol-raw', help='TrueOnline Rawdata xlsx'); ap.add_argument('--tvs-raw', help='TrueVision Rawdata xlsx'); ap.add_argument('--postpay', help='Postpaid Rawdata xlsx (sheet Rawdata) for the Shop Performance page'); ap.add_argument('--gia-target', help="Nami's GIA report xlsx (GIA_North_<Mon>_<d>.xlsx: shops + month targets)")
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
     if a.snexpiry: load_snexpiry(a.snexpiry)
@@ -415,6 +415,7 @@ if __name__ == '__main__':
     if a.tol_raw: _vivo(perf.merge_tol, a.tol_raw)
     if a.tvs_raw: _vivo(perf.merge_tvs, a.tvs_raw)
     if a.allprod: _vivo(perf.merge_allprod, a.allprod)
+    if a.pl: _vivo(perf.merge_pl, a.pl)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')
     if a.target: merge_targets(a.target)
