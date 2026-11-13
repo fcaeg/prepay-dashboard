@@ -339,7 +339,7 @@ function render(){
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}
 function setMode(m){state.mode=m;render();}
-document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 01:28 น.`;
+document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต 14 พ.ย. 2569 01:29 น.`;
 const sel=document.getElementById('branch');
 sel.innerHTML='<option value="ALL">ทั้งหมด (Upper North)</option>'+D.shops.map(s=>`<option value="${s.shop}">${s.name.replace('True Shop ','')}</option>`).join('');
 sel.onchange=e=>{state.branch=e.target.value;render();};
