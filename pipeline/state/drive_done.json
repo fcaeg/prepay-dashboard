@@ -262,5 +262,11 @@
   "kind": "sales",
   "at": "2026-11-12 20:15",
   "ok": true
+ },
+ "1r89RCle5eM8AMdK1CBaUf2XGoLiLiD1I": {
+  "name": "stock_balance_report as of 13 Nov 2026 Time 1130.zip",
+  "kind": "stock",
+  "at": "2026-11-13 11:36",
+  "ok": true
  }
 }
