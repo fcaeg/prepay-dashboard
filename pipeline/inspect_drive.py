@@ -51,6 +51,8 @@ def describe(d):
             cols = [x for x in d.columns if not SENS.search(str(x))]
             print(d[d[c].astype(str).str.strip().isin(UN)][cols].to_string(max_colwidth=28))
 
+if sys.argv[1:] == ['ANALYZE_ALLPROD']:
+    import runpy; runpy.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'analyze_allprod.py')); sys.exit(0)
 if sys.argv[1:] == ['ANALYZE_TVS']:
     import runpy; runpy.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'analyze_tvs.py')); sys.exit(0)
 s = ds.session(); folder = os.environ['DRIVE_FOLDER_ID'].strip(); files = ds.ls(s, folder)
