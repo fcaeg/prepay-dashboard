@@ -242,6 +242,7 @@ def build():
         if it is not None:
             im = it[it.month == m]
             for emp, g in im.groupby('emp'):
+                if 'dummy' in str(g.iloc[0]['name']).lower(): continue  # 'Dummy code for balancing shop target' is not a person
                 r0 = g.iloc[0]; e = {'name': r0['name'], 'role': r0.role, 'shop': r0.shop, 'p': {}}
                 for p in PRODUCTS:
                     tr = g[g['product'] == p]; row = {'tq': float(tr.q.sum()), 'tn': float(tr.n.sum())}
