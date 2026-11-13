@@ -635,6 +635,16 @@ def _mix_build(cur, prev):
         tc2 = tc.assign(ax=tc[k].map(bucket))
         node['focus'] = {ax: [[r[0], round(float(r[1].tq), 1), round(float(r[1].tn))] for r in g.groupby(sub)[['tq', 'tn']].sum().sort_values('tn', ascending=False).head(6).iterrows() if r[1].tn > 0]
                          for ax, g in tc2.groupby('ax')}
+        # current-month target per shop at model level (Device) / brand x sub-category (GIA) for the best-seller table
+        nm = lambda v: re.sub(r'\s+', ' ', str(v).replace('\xa0', ' ')).strip().upper()
+        tk = tc.assign(key=tc.model.map(nm) if prod == 'Device' else tc.brand.map(nm) + '|' + tc['sub'].map(nm))
+        tk = tk.groupby(['shop', 'key'])[['tq', 'tn']].sum(); tk = tk[(tk.tq > 0) | (tk.tn > 0)]
+        mt = {}
+        for (sh_, key), r in tk.iterrows(): mt.setdefault(sh_, {})[key] = [round(float(r.tq), 2), round(float(r.tn))]
+        node['mt'] = mt
+        if prod == 'Device':
+            tk2 = tc.assign(key=tc.model.map(nm), ax=tc[k].map(bucket)); tk2 = tk2[(tk2.tq > 0) | (tk2.tn > 0)]
+            node['axm'] = {ax: sorted(g.key.unique().tolist()) for ax, g in tk2.groupby('ax')}
         out[prod] = node
     return out
 
