@@ -1,0 +1,505 @@
+month,asof,product,shop,name,grp,kpitype,req,save,cancel,rev_req,rev_save
+2026-11,2026-11-13,True Online,80100925,True Shop Fashion Island,BMA,Matching,1170,1021,149,658395,571143
+2026-11,2026-11-13,True Online,80101071,True Shop Seacon Square 2,BMA,Matching,979,889,90,643545,589319
+2026-11,2026-11-13,True Online,80101340,True Shop Future Park Rangsit,BMA,Matching,918,821,97,534044,470217
+2026-11,2026-11-13,True Online,80101070,True Shop Mega Bangna,BMA,Matching,801,704,98,501984,438491
+2026-11,2026-11-13,True Online,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,795,715,80,433373,391930
+2026-11,2026-11-13,True Online,80101185,True Shop Central Plaza West Gate,BMA,Matching,774,651,123,429338,367269
+2026-11,2026-11-13,True Online,80100484,True Shop The Mall Bangkae,BMA,Matching,738,674,64,422363,385673
+2026-11,2026-11-13,True Online,80100476,True Shop Central Festival Phuket,UPC,Matching,688,646,108,415784,390135
+2026-11,2026-11-13,True Online,80100622,True Shop Central Rama 9 4Fl.,BMA,Matching,634,551,85,387576,332852
+2026-11,2026-11-13,True Online,80100477,True Shop Central Ladprao,BMA,Matching,628,525,105,355232,296060
+2026-11,2026-11-13,True Online,80100565,True Shop Central Rama 2,BMA,Matching,623,565,59,341772,309772
+2026-11,2026-11-13,True Online,80100481,True Shop The Mall Bangkapi,BMA,Matching,591,488,106,355954,287041
+2026-11,2026-11-13,True Online,80101068,True Shop Central Rama 3,BMA,Matching,581,518,64,332946,293497
+2026-11,2026-11-13,True Online,80100928,True Shop Seacon Bangkae,BMA,Matching,536,491,45,315683,286254
+2026-11,2026-11-13,True Online,80100621,True Shop Central Chiangrai,UPC,Matching,502,454,49,269154,240670
+2026-11,2026-11-13,True Online,80101186,True Shop Central Festival East Ville,BMA,Matching,495,437,63,288996,252974
+2026-11,2026-11-13,True Online,80101066,True Shop Central Bangna,BMA,Matching,489,435,56,301955,269002
+2026-11,2026-11-13,True Online,80100837,True Shop Central Chonburi,UPC,Matching,488,434,54,284134,250192
+2026-11,2026-11-13,True Online,80100836,True Shop Central World Fl.4,BMA,Matching,443,390,54,257182,223336
+2026-11,2026-11-13,True Online,80101221,True Shop Emquartier,BMA,Matching,437,388,55,263870,233596
+2026-11,2026-11-13,True Online,80100486,True Shop Central Festival Chiangmai,UPC,Matching,426,386,42,243450,219668
+2026-11,2026-11-13,True Online,80100625,True Shop Central Plaza Rayong,UPC,Matching,390,341,49,223582,190680
+2026-11,2026-11-13,True Online,80100480,True Shop The Mall Ngamwongwan 5Fl.,BMA,Matching,374,341,33,217453,196089
+2026-11,2026-11-13,True Online,80101067,True Shop Central Airport Plaza Chiangmai,UPC,Matching,355,308,47,194107,164935
+2026-11,2026-11-13,True Online,80101349,True Shop Silom Complex,BMA,Non_Matching,346,314,32,206188,185907
+2026-11,2026-11-13,True Online,80101418,True Shop Imperial Samrong,BMA,Non_Matching,345,316,29,200429,181467
+2026-11,2026-11-13,True Online,80101182,True Shop Central Chaengwattana,BMA,Matching,337,285,52,186908,158884
+2026-11,2026-11-13,True Online,80101123,True Shop Lotus's Sukhapiban 3,BMA,Non_Matching,333,307,26,184906,167187
+2026-11,2026-11-13,True Online,80101713,True Shop Central Northville,BMA,Matching,320,295,26,183133,169819
+2026-11,2026-11-13,True Online,80101198,True Shop Central Phitsanulok,UPC,Matching,320,277,43,171797,146481
+2026-11,2026-11-13,True Online,80101214,True Shop Central Plaza Salaya,UPC,Matching,314,279,35,181805,158918
+2026-11,2026-11-13,True Online,80100483,True Shop The Mall Thapra,BMA,Matching,311,264,48,175919,145004
+2026-11,2026-11-13,True Online,80100487,True Shop The Mall Nakhonratchasima 3Fl,UPC,Matching,300,269,32,159581,141722
+2026-11,2026-11-13,True Online,80101183,True Shop Central Khonkaen,UPC,Matching,297,265,32,169976,151686
+2026-11,2026-11-13,True Online,80101305,True Shop Robinson Sri Saman,BMA,Matching,279,257,22,152021,138711
+2026-11,2026-11-13,True Online,80101312,True Shop Robinson Kanchanaburi,UPC,Non_Matching,269,242,28,154716,138326
+2026-11,2026-11-13,True Online,80100840,True Shop Central Plaza Mahachai,UPC,Matching,258,231,27,145558,128211
+2026-11,2026-11-13,True Online,80101222,True Shop Central Festival Hadyai,UPC,Matching,251,225,26,133316,119439
+2026-11,2026-11-13,True Online,80101196,True Shop Central Plaza Udonthani,UPC,Matching,242,216,26,133187,117835
+2026-11,2026-11-13,True Online,80100478,True Shop Terminal 21,BMA,Matching,232,189,45,156659,123879
+2026-11,2026-11-13,True Online,80100858,True Shop Maesai Chiangrai,UPC,Non_Matching,218,210,8,99446,94573
+2026-11,2026-11-13,True Online,80100615,True Shop Central Festival Pattaya Beach,UPC,Matching,212,195,18,126975,115271
+2026-11,2026-11-13,True Online,80100839,True Shop Central Plaza Nakhonsithammarat,UPC,Matching,212,184,28,115419,98528
+2026-11,2026-11-13,True Online,80101627,True Shop Central Westville,BMA,Matching,205,177,28,131696,114465
+2026-11,2026-11-13,True Online,80100926,True Shop Ayudhaya Park,UPC,Matching,190,166,24,101464,87349
+2026-11,2026-11-13,True Online,80101281,True Shop Big C Chiangmai,UPC,Non_Matching,189,166,23,98516,85606
+2026-11,2026-11-13,True Online,80101180,True Shop Wongsawang Town Center,BMA,Non_Matching,181,161,20,101969,88259
+2026-11,2026-11-13,True Online,80101341,True Shop Future Park Rangsit(H),BMA,Matching,181,149,32,103202,84154
+2026-11,2026-11-13,True Online,80101629,True Shop Central Nakhonpathom,UPC,Matching,181,154,27,102207,86648
+2026-11,2026-11-13,True Online,80101117,True Shop Central Lampang,UPC,Matching,176,155,21,95440,83001
+2026-11,2026-11-13,True Online,80101306,True Shop Robinson Mae Sot,UPC,Non_Matching,170,160,10,98605,93253
+2026-11,2026-11-13,True Online,80101184,True Shop Chonburi,UPC,Non_Matching,164,151,13,93212,85586
+2026-11,2026-11-13,True Online,80100623,True Shop Central Rama 9,BMA,Matching,163,136,29,94976,79138
+2026-11,2026-11-13,True Online,80101271,True Shop Big C Chaengwattana,BMA,Non_Matching,160,150,10,86899,80826
+2026-11,2026-11-13,True Online,80101290,True Shop Big C Korat2,UPC,Non_Matching,160,145,15,85481,76218
+2026-11,2026-11-13,True Online,80101296,True Shop Paradise Park Srinakarin,BMA,Non_Matching,156,143,13,87371,81236
+2026-11,2026-11-13,True Online,80101269,True Shop Mahboon Krong 4Fl.,BMA,Non_Matching,145,135,10,84212,78203
+2026-11,2026-11-13,True Online,80101313,True Shop Robinson Chaiyaphum,UPC,Matching,145,132,13,79037,73230
+2026-11,2026-11-13,True Online,80101119,True Shop Central Plaza Nakhonratchasima,UPC,Matching,145,128,17,79582,70650
+2026-11,2026-11-13,True Online,80101115,True Shop Central Plaza Suratthani,UPC,Matching,143,127,16,75443,65545
+2026-11,2026-11-13,True Online,80101264,True Shop Central Plaza Ramindra,BMA,Non_Matching,141,117,24,87099,73215
+2026-11,2026-11-13,True Online,80100763,True Shop The Walk Nakornsawan,UPC,Non_Matching,140,124,16,74604,65680
+2026-11,2026-11-13,True Online,80101189,True shop Central Plaza Si Racha,UPC,Matching,137,122,15,82670,72638
+2026-11,2026-11-13,True Online,80100782,True Shop Lotus's Thaluang Phichit,UPC,Non_Matching,133,121,12,66803,59795
+2026-11,2026-11-13,True Online,80100750,True Shop Lotus's Fang Chiangmai,UPC,Non_Matching,131,121,10,70610,65382
+2026-11,2026-11-13,True Online,80100727,True Shop Lotus's Udonthani,UPC,Non_Matching,131,129,2,69613,68280
+2026-11,2026-11-13,True Online,80100776,True Shop Lotus's Jorhor Nakhonratchasima,UPC,Non_Matching,131,127,4,68277,66262
+2026-11,2026-11-13,True Online,80101628,True Shop Central Nakhonsawan,UPC,Matching,127,121,6,68376,64814
+2026-11,2026-11-13,True Online,80101225,True Shop Kao Yai Market Village,UPC,Non_Matching,115,96,19,67965,55017
+2026-11,2026-11-13,True Online,80101266,True Shop Central Ubonratchathani,UPC,Matching,114,102,12,58861,53373
+2026-11,2026-11-13,True Online,80100774,True Shop Lotus's Phimai Nakhonratchasima,UPC,Non_Matching,112,103,9,56044,50453
+2026-11,2026-11-13,True Online,80101307,True Shop Robinson Lopburi,UPC,Matching,111,97,14,62801,54211
+2026-11,2026-11-13,True Online,80101303,True Shop Robinson Roi Et,UPC,Matching,110,91,19,53964,45872
+2026-11,2026-11-13,True Online,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC,Non_Matching,108,98,10,57068,50480
+2026-11,2026-11-13,True Online,80100479,True Shop Terminal 21 Pattaya,UPC,Non_Matching,106,87,20,63835,51521
+2026-11,2026-11-13,True Online,80101294,True Shop Big C Loei,UPC,Non_Matching,106,97,9,49511,46002
+2026-11,2026-11-13,True Online,80101309,True Shop Robinson Mukdahan,UPC,Non_Matching,105,94,11,55152,48296
+2026-11,2026-11-13,True Online,80101363,True Shop at Chamchuri Square 1,BMA,Non_Matching,103,82,21,56960,44253
+2026-11,2026-11-13,True Online,80100854,True Shop Lomsak Phetchabun,UPC,Non_Matching,101,97,4,51782,49176
+2026-11,2026-11-13,True Online,80100778,True Shop Lotus's Yasothon,UPC,Non_Matching,96,86,10,46120,41730
+2026-11,2026-11-13,True Online,80100760,True Shop Lotus's Nakhon Phanom,UPC,Non_Matching,93,80,13,49619,41080
+2026-11,2026-11-13,True Online,80101584,True Shop Robinson Ratchapruek,BMA,Non_Matching,91,70,21,43734,33984
+2026-11,2026-11-13,True Online,80100838,True Shop Central Festival Samui,UPC,Matching,87,74,13,56789,47675
+2026-11,2026-11-13,True Online,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC,Non_Matching,85,72,13,43635,35075
+2026-11,2026-11-13,True Online,80100859,True Shop Trat,UPC,Non_Matching,82,71,11,43145,36671
+2026-11,2026-11-13,True Online,80101304,True Shop Robinson Buriram,UPC,Matching,82,74,8,44066,39635
+2026-11,2026-11-13,True Online,80101647,True Shop Central Krabi,UPC,Matching,80,71,9,47610,43484
+2026-11,2026-11-13,True Online,80100822,True Shop Lotus's Ranong,UPC,Non_Matching,75,62,13,39923,32700
+2026-11,2026-11-13,True Online,80101358,True Shop Central Ayutthaya,UPC,Matching,73,60,13,41175,34693
+2026-11,2026-11-13,True Online,80101308,True Shop Robinson Kamphaengphet,UPC,Non_Matching,70,58,12,39087,31438
+2026-11,2026-11-13,True Online,80100756,True Shop Lotus's Nongbualamphu,UPC,Non_Matching,67,54,13,36340,28251
+2026-11,2026-11-13,True Online,80100780,True Shop Lotus's Prakhonchai Buriram,UPC,Non_Matching,67,63,4,35262,32615
+2026-11,2026-11-13,True Online,80101263,True Shop Maya Chiangmai,UPC,Non_Matching,66,61,5,36343,33519
+2026-11,2026-11-13,True Online,80100772,True Shop Lotus's Kaengkhro Chaiyaphum,UPC,Non_Matching,64,58,6,31909,29267
+2026-11,2026-11-13,True Online,80101289,True Shop Big C Banphai Khonkaen,UPC,Non_Matching,64,61,3,33823,32207
+2026-11,2026-11-13,True Online,80100842,True Shop Terminal 21 Korat,UPC,Non_Matching,63,59,4,32645,31285
+2026-11,2026-11-13,True Online,80100832,True Shop Tesco Lotus Det Udom Ubonratchathani,UPC,Non_Matching,60,52,8,26685,22793
+2026-11,2026-11-13,True Online,80100792,True Shop Lotus's Phayao,UPC,Non_Matching,59,48,11,31632,24733
+2026-11,2026-11-13,True Online,80101378,True Shop South Pattaya,UPC,Non_Matching,58,45,13,34588,26450
+2026-11,2026-11-13,True Online,80101391,True Shop Central Chantaburi,UPC,Matching,56,48,8,32139,26635
+2026-11,2026-11-13,True Online,80100765,True Shop Lotus's Prasat Surin,UPC,Non_Matching,56,44,12,28483,21809
+2026-11,2026-11-13,True Online,80100770,True Shop Lotus's Buengkan,UPC,Non_Matching,55,47,8,25950,21145
+2026-11,2026-11-13,True Online,80101697,True Shop (dtac) Central Plaza Udonthani 2Fl.,UPC,Hall,52,34,18,32218,19473
+2026-11,2026-11-13,True Online,80101227,True Shop Tesco Lotus Ubonratchathani,UPC,Non_Matching,52,48,4,25706,23640
+2026-11,2026-11-13,True Online,80100848,True Shop Wang Saphung Loei,UPC,Non_Matching,47,42,5,23976,21034
+2026-11,2026-11-13,True Online,80100786,True Shop Lotus's Somdet Kalasin,UPC,Non_Matching,47,40,7,23181,19730
+2026-11,2026-11-13,True Online,80101292,True Shop Big C Bandung Udonthani,UPC,Non_Matching,46,45,1,21978,21379
+2026-11,2026-11-13,True Online,80100801,True Shop Lotus's Banphue Udonthani,UPC,Non_Matching,45,43,2,22182,21084
+2026-11,2026-11-13,True Online,80100793,True Shop Lotus's Satuek Buriram,UPC,Non_Matching,44,40,4,22339,20353
+2026-11,2026-11-13,True Online,80101648,True Shop UD Town Udonthani,UPC,Non_Matching,43,37,6,25583,20890
+2026-11,2026-11-13,True Online,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC,Non_Matching,42,36,6,19463,15450
+2026-11,2026-11-13,True Online,80101331,True Shop Big C Nongki Buriram,UPC,Non_Matching,42,39,3,21379,19663
+2026-11,2026-11-13,True Online,80100873,True Shop Mueang Loei,UPC,Non_Matching,40,35,5,19214,16828
+2026-11,2026-11-13,True Online,80100771,True Shop Lotus's Chiangyuen Mahasarakham,UPC,Non_Matching,40,37,3,19947,18471
+2026-11,2026-11-13,True Online,80101122,True Shop  Ocean Complex Chumphon,UPC,Non_Matching,38,30,8,20816,14704
+2026-11,2026-11-13,True Online,80100783,True Shop Lotus's Phonthong Roiet,UPC,Non_Matching,36,34,2,17380,16181
+2026-11,2026-11-13,True Online,80101702,True Shop (dtac) Central Chaengwattana 4Fl.,BMA,Hall,35,33,2,18802,17622
+2026-11,2026-11-13,True Online,80101377,True Shop Big C Chaiyaphumi,UPC,Non_Matching,35,31,4,18159,15802
+2026-11,2026-11-13,True Online,80101704,True Shop (dtac) Central Phitsanulok 2Fl.,UPC,Hall,34,32,2,18623,17625
+2026-11,2026-11-13,True Online,80101293,True Shop Big C Khonkaen 2,UPC,Non_Matching,34,27,7,18496,14145
+2026-11,2026-11-13,True Online,80100797,True Shop Lotus's Trakan Phuet Phon Ubonratchathani,UPC,Non_Matching,31,29,2,15769,14572
+2026-11,2026-11-13,True Online,80100821,True Shop Station Lotus Pranburee,UPC,Non_Matching,30,24,6,17164,13680
+2026-11,2026-11-13,True Online,80100749,True Shop Lotus's Kalasin,UPC,Non_Matching,30,25,5,16104,13700
+2026-11,2026-11-13,True Online,80100769,True Shop Lotus's Thatum Surin,UPC,Non_Matching,30,28,2,16202,14745
+2026-11,2026-11-13,True Online,80100794,True Shop Lotus's Nonthai Nakhonratchasima,UPC,Non_Matching,28,25,3,14451,12425
+2026-11,2026-11-13,True Online,80101328,True Shop Big C Khamtakla Sakonnakhon,UPC,Non_Matching,27,23,4,13835,11739
+2026-11,2026-11-13,True Online,80100764,True Shop Lotus's Sangkha Surin,UPC,Non_Matching,27,26,1,13118,12619
+2026-11,2026-11-13,True Online,80101701,True Shop (dtac) Central Festival Samui 2Fl.,UPC,Hall,26,26,0,15565,15565
+2026-11,2026-11-13,True Online,80100781,True Shop Lotus's Lamplaimat Buriram,UPC,Non_Matching,23,18,5,13349,10164
+2026-11,2026-11-13,True Online,80100864,True Shop Buntharik Ubonratchathani,UPC,Non_Matching,22,21,1,10688,10161
+2026-11,2026-11-13,True Online,80100733,True Shop Lotus's Sampran,UPC,Non_Matching,21,20,1,13432,12533
+2026-11,2026-11-13,True Online,80100865,True Shop Taphan Hin Phichit,UPC,Non_Matching,21,20,1,11821,10533
+2026-11,2026-11-13,True Online,80100861,True Shop Kasetwisai Roiet,UPC,Non_Matching,21,21,0,8380,8380
+2026-11,2026-11-13,True Online,80100860,True Shop Sikhoraphum Surin,UPC,Non_Matching,19,18,1,10531,9932
+2026-11,2026-11-13,True Online,80101265,True Shop Chumphuang Nakhonratchasima,UPC,Non_Matching,19,18,1,10072,9673
+2026-11,2026-11-13,True Online,80101698,True Shop (dtac) Central Plaza Westgate 2Fl.,BMA,Hall,18,18,0,10123,10123
+2026-11,2026-11-13,True Online,80101013,True Shop Mini Mueang Maehongson,UPC,Non_Matching,18,17,1,8252,7853
+2026-11,2026-11-13,True Online,80100798,True Shop Lotus's Chiangkham Phayao,UPC,Non_Matching,17,17,0,9843,9843
+2026-11,2026-11-13,True Online,80100863,True Shop Huai Thalaeng Nakhonratchasima,UPC,Non_Matching,16,16,0,7684,7684
+2026-11,2026-11-13,True Online,80101709,True Shop (dtac) Mega Bangna 2Fl.,BMA,Hall,15,15,0,9529,9529
+2026-11,2026-11-13,True Online,80100856,True Shop Uthai Thani,UPC,Non_Matching,15,12,3,8687,6438
+2026-11,2026-11-13,True Online,80100847,True Shop Senangkhanikhom Amnat Charoen,UPC,Non_Matching,15,11,4,7675,5679
+2026-11,2026-11-13,True Online,80100853,True Shop Mueang Satun,UPC,Non_Matching,15,15,0,7978,7978
+2026-11,2026-11-13,True Online,80100803,True Shop Lotus's Nongruea  Khonkaen,UPC,Non_Matching,14,14,0,7516,7516
+2026-11,2026-11-13,True Online,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC,Non_Matching,14,11,3,6738,5091
+2026-11,2026-11-13,True Online,80101691,True Shop (dtac) Ayudhaya Park 1Fl.,UPC,Hall,13,9,4,6987,5433
+2026-11,2026-11-13,True Online,80100849,True Shop Mueang Phayao,UPC,Non_Matching,11,9,2,5038,4042
+2026-11,2026-11-13,True Online,80101705,True Shop (dtac) Central Plaza Suratthani 2Fl.,UPC,Hall,11,8,3,5290,4003
+2026-11,2026-11-13,True Online,80100872,True Shop Chatturat Chaiyaphum,UPC,Non_Matching,10,10,0,5140,5140
+2026-11,2026-11-13,True Online,80100790,True Shop Lotus's Phibun Mangsahan Ubonratchathani,UPC,Non_Matching,9,6,3,4678,3022
+2026-11,2026-11-13,True Online,80100852,True Shop Khamcha-I Mukdahan,UPC,Non_Matching,9,9,0,3561,3561
+2026-11,2026-11-13,True Online,80100845,True Shop Kaset Sombun Chaiyaphum,UPC,Non_Matching,8,8,0,4462,4462
+2026-11,2026-11-13,True Online,80100862,True Shop Pakthongchai Nakhonratchasima,UPC,Non_Matching,8,7,1,3881,3423
+2026-11,2026-11-13,True Online,80101715,Ten Ten Shop Phaholyothin Soi 69/1,BMA,TEN TEN,7,6,1,4552,3594
+2026-11,2026-11-13,True Online,80101345,True Shop Down Town Nakhonratchasima,UPC,Non_Matching,7,7,0,3684,3684
+2026-11,2026-11-13,True Online,80101692,True Shop (dtac) Central Plaza Nakhonsithammarat 2Fl.,UPC,Hall,7,7,0,3374,3374
+2026-11,2026-11-13,True Online,80101346,True Shop Asawann Phonphisai Nong Khai,UPC,Non_Matching,6,4,2,3623,2126
+2026-11,2026-11-13,True Online,80100806,True Shop Lotus's Samchuk Suphanburi,UPC,Non_Matching,5,3,2,3195,1897
+2026-11,2026-11-13,True Online,80100802,True Shop Lotus's Borabue Mahasarakham,UPC,Non_Matching,5,5,0,2421,2421
+2026-11,2026-11-13,True Online,80101706,True Shop (dtac) Fashion Island 3Fl.,BMA,Hall,4,2,2,2296,1298
+2026-11,2026-11-13,True Online,80100627,True Shop Huahin,UPC,Non_Matching,4,2,2,2496,898
+2026-11,2026-11-13,True Online,80100869,True Shop Khon Buri Nakhonratchasima,UPC,Non_Matching,4,4,0,2246,2246
+2026-11,2026-11-13,True Online,80100870,True Shop Soeng Sang Nakhonratchasima,UPC,Non_Matching,4,4,0,1796,1796
+2026-11,2026-11-13,True Online,80101707,True Shop (dtac) Future Park Rangsit 2Fl.,BMA,Hall,3,3,0,1867,1867
+2026-11,2026-11-13,True Online,80100796,True Shop Lotus's Khoksamrong Lopburi,UPC,Non_Matching,3,3,0,1548,1548
+2026-11,2026-11-13,True Online,80101714,Ten Ten Shop Ban Tangsin Salaya,UPC,TEN TEN,3,0,3,2615,0
+2026-11,2026-11-13,True Online,80101653,True Shop (dtac) Robinson Chaiyaphum 2Fl.,UPC,COCO,3,1,2,1535,499
+2026-11,2026-11-13,True Online,80100851,True Shop Nongbunmak Nakhonratchasima,UPC,Non_Matching,3,3,0,1388,1388
+2026-11,2026-11-13,True Online,80101673,True Shop (dtac) Lotus's Prasat 2Fl.,UPC,COCO,3,3,0,1297,1297
+2026-11,2026-11-13,True Online,80101711,True Shop (dtac) The Mall Nakhonratchasima 3Fl.,UPC,Hall,3,3,0,1518,1518
+2026-11,2026-11-13,True Online,80100725,True Shop Lotus's Bang Pa-In Ayudhaya,UPC,Non_Matching,2,2,0,1228,1228
+2026-11,2026-11-13,True Online,80101351,True Shop Lotus's Keangkoi Saraburi,UPC,Non_Matching,2,2,0,898,898
+2026-11,2026-11-13,True Online,80101658,True Shop (dtac) Lotus's Lomsak 1Fl.,UPC,COCO,2,2,0,1019,1019
+2026-11,2026-11-13,True Online,80101662,True Shop (dtac) Ocean Complex 2Fl.,UPC,COCO,2,2,0,938,938
+2026-11,2026-11-13,True Online,80100253,True 7-11 Moo Ban Nakkeela 1,BMA,SIS,1,0,1,599,0
+2026-11,2026-11-13,True Online,80100581,MiniTS UPC Muban ChaoPhraya Chut 4,BMA,Mini_Shop_in_Shop_7-11,1,1,0,499,499
+2026-11,2026-11-13,True Online,80100736,True Shop Tesco Lotus Bangpakok,BMA,Non_Matching,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101708,True Shop (dtac) Future Park Rangsit GFl.,BMA,Hall,1,1,0,599,599
+2026-11,2026-11-13,True Online,80100784,True Shop Lotus'sU-Thong Suphangburi,UPC,Non_Matching,1,1,0,499,499
+2026-11,2026-11-13,True Online,80100804,True Shop Lotus's Jomthong Chiangmai,UPC,Non_Matching,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101656,True Shop (dtac) Lotus's Phitsanulok 1Fl.,UPC,COCO,1,1,0,599,599
+2026-11,2026-11-13,True Online,80101657,True Shop (dtac) Asawann Phonphisai 1Fl.,UPC,COCO,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101664,True Shop (dtac) Big C Loei 1Fl.,UPC,COCO,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101650,True Shop (dtac) Lotus's Pakthongchai 1Fl.,UPC,COCO,1,1,0,539,539
+2026-11,2026-11-13,True Online,80101666,True Shop (dtac) Lotus's Sangkha 2Fl.,UPC,COCO,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101712,True Shop (dtac) Central Ubonratchathani 2Fl.,UPC,Hall,1,1,0,474,474
+2026-11,2026-11-13,True Online,80101688,True Shop (dtac) Lotus's Chaiya 1Fl.,UPC,COCO,1,1,0,499,499
+2026-11,2026-11-13,True Online,80101699,True Shop (dtac) Central Festival Hatyai 3Fl.,UPC,Hall,1,1,0,539,539
+2026-11,2026-11-13,True Online,80101710,True Shop (dtac) Phuket Thalang,UPC,Hall,1,1,0,569,569
+2026-11,2026-11-13,True Visions,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,39,37,2,27981,27582
+2026-11,2026-11-13,True Visions,80100925,True Shop Fashion Island,BMA,Matching,37,32,5,26989,24234
+2026-11,2026-11-13,True Visions,80101185,True Shop Central Plaza West Gate,BMA,Matching,34,31,3,16154,15854
+2026-11,2026-11-13,True Visions,80100836,True Shop Central World Fl.4,BMA,Matching,26,26,0,23849,23849
+2026-11,2026-11-13,True Visions,80101071,True Shop Seacon Square 2,BMA,Matching,25,24,1,23125,23025
+2026-11,2026-11-13,True Visions,80101713,True Shop Central Northville,BMA,Matching,25,25,0,14189,14189
+2026-11,2026-11-13,True Visions,80101070,True Shop Mega Bangna,BMA,Matching,24,23,1,21048,20948
+2026-11,2026-11-13,True Visions,80101221,True Shop Emquartier,BMA,Matching,23,23,0,28578,28578
+2026-11,2026-11-13,True Visions,80100481,True Shop The Mall Bangkapi,BMA,Matching,22,20,2,14963,14763
+2026-11,2026-11-13,True Visions,80101066,True Shop Central Bangna,BMA,Matching,21,20,1,16204,16104
+2026-11,2026-11-13,True Visions,80101186,True Shop Central Festival East Ville,BMA,Matching,20,20,0,13515,13515
+2026-11,2026-11-13,True Visions,80101296,True Shop Paradise Park Srinakarin,BMA,Non_Matching,20,18,2,18369,16700
+2026-11,2026-11-13,True Visions,80101340,True Shop Future Park Rangsit,BMA,Matching,20,15,5,16992,12969
+2026-11,2026-11-13,True Visions,80101068,True Shop Central Rama 3,BMA,Matching,19,19,0,19454,19454
+2026-11,2026-11-13,True Visions,80100483,True Shop The Mall Thapra,BMA,Matching,19,15,4,11309,10509
+2026-11,2026-11-13,True Visions,80100484,True Shop The Mall Bangkae,BMA,Matching,19,15,4,14418,13819
+2026-11,2026-11-13,True Visions,80101123,True Shop Lotus's Sukhapiban 3,BMA,Non_Matching,18,18,0,8319,8319
+2026-11,2026-11-13,True Visions,80101180,True Shop Wongsawang Town Center,BMA,Non_Matching,16,14,2,11317,10918
+2026-11,2026-11-13,True Visions,80100486,True Shop Central Festival Chiangmai,UPC,Matching,16,15,1,7361,7261
+2026-11,2026-11-13,True Visions,80100565,True Shop Central Rama 2,BMA,Matching,14,13,1,8004,7904
+2026-11,2026-11-13,True Visions,80100928,True Shop Seacon Bangkae,BMA,Matching,14,12,2,4775,4575
+2026-11,2026-11-13,True Visions,80100476,True Shop Central Festival Phuket,UPC,Matching,14,12,2,9981,9781
+2026-11,2026-11-13,True Visions,80100477,True Shop Central Ladprao,BMA,Matching,13,12,1,10046,9946
+2026-11,2026-11-13,True Visions,80100622,True Shop Central Rama 9 4Fl.,BMA,Matching,11,11,0,6608,6608
+2026-11,2026-11-13,True Visions,80101627,True Shop Central Westville,BMA,Matching,11,9,2,8663,8264
+2026-11,2026-11-13,True Visions,80100623,True Shop Central Rama 9,BMA,Matching,10,9,1,7843,7743
+2026-11,2026-11-13,True Visions,80101629,True Shop Central Nakhonpathom,UPC,Matching,10,8,2,2596,2396
+2026-11,2026-11-13,True Visions,80100615,True Shop Central Festival Pattaya Beach,UPC,Matching,10,10,0,8423,8423
+2026-11,2026-11-13,True Visions,80100625,True Shop Central Plaza Rayong,UPC,Matching,10,8,2,3561,3361
+2026-11,2026-11-13,True Visions,80100480,True Shop The Mall Ngamwongwan 5Fl.,BMA,Matching,9,9,0,4768,4768
+2026-11,2026-11-13,True Visions,80101067,True Shop Central Airport Plaza Chiangmai,UPC,Matching,9,7,2,12274,12074
+2026-11,2026-11-13,True Visions,80101271,True Shop Big C Chaengwattana,BMA,Non_Matching,8,7,1,4299,3999
+2026-11,2026-11-13,True Visions,80101312,True Shop Robinson Kanchanaburi,UPC,Non_Matching,8,6,2,6114,5914
+2026-11,2026-11-13,True Visions,80100621,True Shop Central Chiangrai,UPC,Matching,8,8,0,7694,7694
+2026-11,2026-11-13,True Visions,80101119,True Shop Central Plaza Nakhonratchasima,UPC,Matching,8,8,0,6637,6637
+2026-11,2026-11-13,True Visions,80101214,True Shop Central Plaza Salaya,UPC,Matching,7,7,0,4472,4472
+2026-11,2026-11-13,True Visions,80100837,True Shop Central Chonburi,UPC,Matching,7,6,1,2913,2813
+2026-11,2026-11-13,True Visions,80101184,True Shop Chonburi,UPC,Non_Matching,7,6,1,900,800
+2026-11,2026-11-13,True Visions,80100478,True Shop Terminal 21,BMA,Matching,6,3,3,6209,3614
+2026-11,2026-11-13,True Visions,80101269,True Shop Mahboon Krong 4Fl.,BMA,Non_Matching,6,6,0,2566,2566
+2026-11,2026-11-13,True Visions,80101182,True Shop Central Chaengwattana,BMA,Matching,6,6,0,6333,6333
+2026-11,2026-11-13,True Visions,80100859,True Shop Trat,UPC,Non_Matching,6,3,3,2905,2405
+2026-11,2026-11-13,True Visions,80101363,True Shop at Chamchuri Square 1,BMA,Non_Matching,5,5,0,3612,3612
+2026-11,2026-11-13,True Visions,80100763,True Shop The Walk Nakornsawan,UPC,Non_Matching,5,5,0,1457,1457
+2026-11,2026-11-13,True Visions,80101189,True shop Central Plaza Si Racha,UPC,Matching,5,3,2,3814,3614
+2026-11,2026-11-13,True Visions,80101648,True Shop UD Town Udonthani,UPC,Non_Matching,5,4,1,1288,798
+2026-11,2026-11-13,True Visions,80101584,True Shop Robinson Ratchapruek,BMA,Non_Matching,4,4,0,999,999
+2026-11,2026-11-13,True Visions,80101263,True Shop Maya Chiangmai,UPC,Non_Matching,4,3,1,2265,1965
+2026-11,2026-11-13,True Visions,80101290,True Shop Big C Korat2,UPC,Non_Matching,4,2,2,3880,3480
+2026-11,2026-11-13,True Visions,80101264,True Shop Central Plaza Ramindra,BMA,Non_Matching,3,2,1,1494,1394
+2026-11,2026-11-13,True Visions,80101349,True Shop Silom Complex,BMA,Non_Matching,3,3,0,3231,3231
+2026-11,2026-11-13,True Visions,80101418,True Shop Imperial Samrong,BMA,Non_Matching,3,2,1,1666,1566
+2026-11,2026-11-13,True Visions,80101305,True Shop Robinson Sri Saman,BMA,Matching,3,3,0,4128,4128
+2026-11,2026-11-13,True Visions,80100840,True Shop Central Plaza Mahachai,UPC,Matching,3,2,1,1335,1235
+2026-11,2026-11-13,True Visions,80100926,True Shop Ayudhaya Park,UPC,Matching,3,2,1,1967,399
+2026-11,2026-11-13,True Visions,80101378,True Shop South Pattaya,UPC,Non_Matching,3,3,0,698,698
+2026-11,2026-11-13,True Visions,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC,Non_Matching,3,2,1,1335,1235
+2026-11,2026-11-13,True Visions,80101198,True Shop Central Phitsanulok,UPC,Matching,3,3,0,808,808
+2026-11,2026-11-13,True Visions,80101281,True Shop Big C Chiangmai,UPC,Non_Matching,3,3,0,2558,2558
+2026-11,2026-11-13,True Visions,80101225,True Shop Kao Yai Market Village,UPC,Non_Matching,3,2,1,2612,2313
+2026-11,2026-11-13,True Visions,80100838,True Shop Central Festival Samui,UPC,Matching,3,1,2,699,100
+2026-11,2026-11-13,True Visions,80101222,True Shop Central Festival Hadyai,UPC,Matching,3,3,0,1736,1736
+2026-11,2026-11-13,True Visions,80101698,True Shop (dtac) Central Plaza Westgate 2Fl.,BMA,Hall,2,2,0,2314,2314
+2026-11,2026-11-13,True Visions,80101358,True Shop Central Ayutthaya,UPC,Matching,2,2,0,699,699
+2026-11,2026-11-13,True Visions,80101628,True Shop Central Nakhonsawan,UPC,Matching,2,2,0,2351,2351
+2026-11,2026-11-13,True Visions,80100750,True Shop Lotus's Fang Chiangmai,UPC,Non_Matching,2,1,1,651,551
+2026-11,2026-11-13,True Visions,80100858,True Shop Maesai Chiangrai,UPC,Non_Matching,2,2,0,2950,2950
+2026-11,2026-11-13,True Visions,80100727,True Shop Lotus's Udonthani,UPC,Non_Matching,2,2,0,3814,3814
+2026-11,2026-11-13,True Visions,80101183,True Shop Central Khonkaen,UPC,Matching,2,2,0,3266,3266
+2026-11,2026-11-13,True Visions,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC,Non_Matching,2,2,0,399,399
+2026-11,2026-11-13,True Visions,80100764,True Shop Lotus's Sangkha Surin,UPC,Non_Matching,2,1,1,400,100
+2026-11,2026-11-13,True Visions,80100780,True Shop Lotus's Prakhonchai Buriram,UPC,Non_Matching,2,2,0,2565,2565
+2026-11,2026-11-13,True Visions,80101303,True Shop Robinson Roi Et,UPC,Matching,2,2,0,757,757
+2026-11,2026-11-13,True Visions,80101331,True Shop Big C Nongki Buriram,UPC,Non_Matching,2,1,1,851,551
+2026-11,2026-11-13,True Visions,80100839,True Shop Central Plaza Nakhonsithammarat,UPC,Matching,2,2,0,558,558
+2026-11,2026-11-13,True Visions,80101115,True Shop Central Plaza Suratthani,UPC,Matching,2,2,0,800,800
+2026-11,2026-11-13,True Visions,80101709,True Shop (dtac) Mega Bangna 2Fl.,BMA,Hall,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101341,True Shop Future Park Rangsit(H),BMA,Matching,1,1,0,490,490
+2026-11,2026-11-13,True Visions,80100627,True Shop Huahin,UPC,Non_Matching,1,0,1,100,0
+2026-11,2026-11-13,True Visions,80101307,True Shop Robinson Lopburi,UPC,Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100479,True Shop Terminal 21 Pattaya,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100782,True Shop Lotus's Thaluang Phichit,UPC,Non_Matching,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101117,True Shop Central Lampang,UPC,Matching,1,1,0,936,936
+2026-11,2026-11-13,True Visions,80101306,True Shop Robinson Mae Sot,UPC,Non_Matching,1,0,1,300,0
+2026-11,2026-11-13,True Visions,80101704,True Shop (dtac) Central Phitsanulok 2Fl.,UPC,Hall,1,1,0,2014,2014
+2026-11,2026-11-13,True Visions,80100760,True Shop Lotus's Nakhon Phanom,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101294,True Shop Big C Loei,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101313,True Shop Robinson Chaiyaphum,UPC,Matching,1,1,0,300,300
+2026-11,2026-11-13,True Visions,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC,Non_Matching,1,1,0,458,458
+2026-11,2026-11-13,True Visions,80100769,True Shop Lotus's Thatum Surin,UPC,Non_Matching,1,1,0,458,458
+2026-11,2026-11-13,True Visions,80100778,True Shop Lotus's Yasothon,UPC,Non_Matching,1,1,0,1466,1466
+2026-11,2026-11-13,True Visions,80100793,True Shop Lotus's Satuek Buriram,UPC,Non_Matching,1,1,0,200,200
+2026-11,2026-11-13,True Visions,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC,Non_Matching,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101227,True Shop Tesco Lotus Ubonratchathani,UPC,Non_Matching,1,1,0,2014,2014
+2026-11,2026-11-13,True Visions,80101345,True Shop Down Town Nakhonratchasima,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100822,True Shop Lotus's Ranong,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101122,True Shop  Ocean Complex Chumphon,UPC,Non_Matching,1,1,0,1466,1466
+2026-11,2026-11-13,Postpay,80100925,True Shop Fashion Island,BMA,Matching,1571,1355,216,844239,734093
+2026-11,2026-11-13,Postpay,80101340,True Shop Future Park Rangsit,BMA,Matching,1373,1202,171,681460,603078
+2026-11,2026-11-13,Postpay,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,1189,1065,124,652365,588392
+2026-11,2026-11-13,Postpay,80101071,True Shop Seacon Square 2,BMA,Matching,1090,965,125,743260,682717
+2026-11,2026-11-13,Postpay,80101070,True Shop Mega Bangna,BMA,Matching,1018,869,149,625214,541276
+2026-11,2026-11-13,Postpay,80100837,True Shop Central Chonburi,UPC,Matching,973,872,101,539309,479846
+2026-11,2026-11-13,Postpay,80101185,True Shop Central Plaza West Gate,BMA,Matching,917,803,114,478742,436009
+2026-11,2026-11-13,Postpay,80100477,True Shop Central Ladprao,BMA,Matching,913,792,121,490882,434958
+2026-11,2026-11-13,Postpay,80100476,True Shop Central Festival Phuket,UPC,Matching,900,842,58,607874,581177
+2026-11,2026-11-13,Postpay,80100486,True Shop Central Festival Chiangmai,UPC,Matching,882,796,86,461711,422600
+2026-11,2026-11-13,Postpay,80100481,True Shop The Mall Bangkapi,BMA,Matching,879,747,132,429734,364848
+2026-11,2026-11-13,Postpay,80100484,True Shop The Mall Bangkae,BMA,Matching,835,720,115,460254,397764
+2026-11,2026-11-13,Postpay,80100621,True Shop Central Chiangrai,UPC,Matching,815,712,103,408634,355848
+2026-11,2026-11-13,Postpay,80101186,True Shop Central Festival East Ville,BMA,Matching,718,633,85,420718,376345
+2026-11,2026-11-13,Postpay,80100928,True Shop Seacon Bangkae,BMA,Matching,699,626,73,343696,309304
+2026-11,2026-11-13,Postpay,80101198,True Shop Central Phitsanulok,UPC,Matching,665,588,77,313742,283590
+2026-11,2026-11-13,Postpay,80101214,True Shop Central Plaza Salaya,UPC,Matching,663,572,91,358645,306984
+2026-11,2026-11-13,Postpay,80100622,True Shop Central Rama 9 4Fl.,BMA,Matching,656,563,93,430412,377063
+2026-11,2026-11-13,Postpay,80100565,True Shop Central Rama 2,BMA,Matching,646,562,84,318168,281246
+2026-11,2026-11-13,Postpay,80100487,True Shop The Mall Nakhonratchasima 3Fl,UPC,Matching,634,575,59,303775,280963
+2026-11,2026-11-13,Postpay,80101067,True Shop Central Airport Plaza Chiangmai,UPC,Matching,606,530,76,299930,262938
+2026-11,2026-11-13,Postpay,80100840,True Shop Central Plaza Mahachai,UPC,Matching,603,513,90,323123,284232
+2026-11,2026-11-13,Postpay,80100625,True Shop Central Plaza Rayong,UPC,Matching,590,497,93,316527,264893
+2026-11,2026-11-13,Postpay,80100480,True Shop The Mall Ngamwongwan 5Fl.,BMA,Matching,575,526,49,298990,278809
+2026-11,2026-11-13,Postpay,80101183,True Shop Central Khonkaen,UPC,Matching,555,476,79,305539,270924
+2026-11,2026-11-13,Postpay,80101068,True Shop Central Rama 3,BMA,Matching,543,471,72,295876,259110
+2026-11,2026-11-13,Postpay,80101066,True Shop Central Bangna,BMA,Matching,541,494,47,337795,310521
+2026-11,2026-11-13,Postpay,80101312,True Shop Robinson Kanchanaburi,UPC,Non_Matching,526,459,67,303481,271193
+2026-11,2026-11-13,Postpay,80101713,True Shop Central Northville,BMA,Matching,514,484,30,251302,240044
+2026-11,2026-11-13,Postpay,80101418,True Shop Imperial Samrong,BMA,Non_Matching,498,443,55,266396,233765
+2026-11,2026-11-13,Postpay,80100839,True Shop Central Plaza Nakhonsithammarat,UPC,Matching,489,442,47,222051,202836
+2026-11,2026-11-13,Postpay,80100483,True Shop The Mall Thapra,BMA,Matching,480,421,59,228279,200995
+2026-11,2026-11-13,Postpay,80101123,True Shop Lotus's Sukhapiban 3,BMA,Non_Matching,478,447,31,229962,214556
+2026-11,2026-11-13,Postpay,80101196,True Shop Central Plaza Udonthani,UPC,Matching,467,412,55,224987,199959
+2026-11,2026-11-13,Postpay,80101182,True Shop Central Chaengwattana,BMA,Matching,462,419,43,251875,233637
+2026-11,2026-11-13,Postpay,80100926,True Shop Ayudhaya Park,UPC,Matching,447,392,55,221562,201246
+2026-11,2026-11-13,Postpay,80100858,True Shop Maesai Chiangrai,UPC,Non_Matching,443,422,21,151944,145081
+2026-11,2026-11-13,Postpay,80101222,True Shop Central Festival Hadyai,UPC,Matching,437,374,63,220028,193634
+2026-11,2026-11-13,Postpay,80101629,True Shop Central Nakhonpathom,UPC,Matching,406,340,66,232984,201096
+2026-11,2026-11-13,Postpay,80101221,True Shop Emquartier,BMA,Matching,383,349,34,220165,199458
+2026-11,2026-11-13,Postpay,80100836,True Shop Central World Fl.4,BMA,Matching,382,328,54,211696,184984
+2026-11,2026-11-13,Postpay,80101306,True Shop Robinson Mae Sot,UPC,Non_Matching,373,324,49,197960,172237
+2026-11,2026-11-13,Postpay,80101305,True Shop Robinson Sri Saman,BMA,Matching,372,326,46,205322,181451
+2026-11,2026-11-13,Postpay,80100615,True Shop Central Festival Pattaya Beach,UPC,Matching,353,328,25,192059,180288
+2026-11,2026-11-13,Postpay,80101341,True Shop Future Park Rangsit(H),BMA,Matching,348,304,44,186671,163628
+2026-11,2026-11-13,Postpay,80101119,True Shop Central Plaza Nakhonratchasima,UPC,Matching,341,290,51,171618,151453
+2026-11,2026-11-13,Postpay,80101184,True Shop Chonburi,UPC,Non_Matching,324,296,28,155428,139847
+2026-11,2026-11-13,Postpay,80100854,True Shop Lomsak Phetchabun,UPC,Non_Matching,317,279,38,107933,94935
+2026-11,2026-11-13,Postpay,80101115,True Shop Central Plaza Suratthani,UPC,Matching,312,282,30,140733,129185
+2026-11,2026-11-13,Postpay,80101266,True Shop Central Ubonratchathani,UPC,Matching,308,271,37,154578,137863
+2026-11,2026-11-13,Postpay,80101281,True Shop Big C Chiangmai,UPC,Non_Matching,303,265,38,146198,130590
+2026-11,2026-11-13,Postpay,80101180,True Shop Wongsawang Town Center,BMA,Non_Matching,288,258,30,139495,125612
+2026-11,2026-11-13,Postpay,80101313,True Shop Robinson Chaiyaphum,UPC,Matching,287,250,37,124444,106534
+2026-11,2026-11-13,Postpay,80101628,True Shop Central Nakhonsawan,UPC,Matching,280,243,37,128735,112420
+2026-11,2026-11-13,Postpay,80101309,True Shop Robinson Mukdahan,UPC,Non_Matching,265,232,33,113994,102864
+2026-11,2026-11-13,Postpay,80101303,True Shop Robinson Roi Et,UPC,Matching,263,236,27,127435,118995
+2026-11,2026-11-13,Postpay,80101271,True Shop Big C Chaengwattana,BMA,Non_Matching,254,234,20,115754,106176
+2026-11,2026-11-13,Postpay,80101225,True Shop Kao Yai Market Village,UPC,Non_Matching,251,219,32,125441,106954
+2026-11,2026-11-13,Postpay,80101189,True shop Central Plaza Si Racha,UPC,Matching,246,213,33,143610,123408
+2026-11,2026-11-13,Postpay,80100778,True Shop Lotus's Yasothon,UPC,Non_Matching,245,217,28,102604,93821
+2026-11,2026-11-13,Postpay,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC,Non_Matching,243,206,37,111394,94061
+2026-11,2026-11-13,Postpay,80100727,True Shop Lotus's Udonthani,UPC,Non_Matching,241,220,21,106836,99103
+2026-11,2026-11-13,Postpay,80101264,True Shop Central Plaza Ramindra,BMA,Non_Matching,230,180,50,127261,102956
+2026-11,2026-11-13,Postpay,80101117,True Shop Central Lampang,UPC,Matching,229,195,34,101055,88185
+2026-11,2026-11-13,Postpay,80100763,True Shop The Walk Nakornsawan,UPC,Non_Matching,228,205,23,137895,128246
+2026-11,2026-11-13,Postpay,80101294,True Shop Big C Loei,UPC,Non_Matching,226,203,23,91886,84691
+2026-11,2026-11-13,Postpay,80100760,True Shop Lotus's Nakhon Phanom,UPC,Non_Matching,218,196,22,91904,85438
+2026-11,2026-11-13,Postpay,80101263,True Shop Maya Chiangmai,UPC,Non_Matching,216,195,21,101605,91077
+2026-11,2026-11-13,Postpay,80100478,True Shop Terminal 21,BMA,Matching,215,167,48,125837,102693
+2026-11,2026-11-13,Postpay,80100623,True Shop Central Rama 9,BMA,Matching,212,176,36,121456,102104
+2026-11,2026-11-13,Postpay,80100750,True Shop Lotus's Fang Chiangmai,UPC,Non_Matching,208,189,19,100867,91156
+2026-11,2026-11-13,Postpay,80101290,True Shop Big C Korat2,UPC,Non_Matching,207,187,20,95409,85151
+2026-11,2026-11-13,Postpay,80101349,True Shop Silom Complex,BMA,Non_Matching,204,181,23,121931,110691
+2026-11,2026-11-13,Postpay,80100859,True Shop Trat,UPC,Non_Matching,191,168,23,82880,71073
+2026-11,2026-11-13,Postpay,80100774,True Shop Lotus's Phimai Nakhonratchasima,UPC,Non_Matching,189,165,24,73747,64864
+2026-11,2026-11-13,Postpay,80101269,True Shop Mahboon Krong 4Fl.,BMA,Non_Matching,185,172,13,100645,95278
+2026-11,2026-11-13,Postpay,80100479,True Shop Terminal 21 Pattaya,UPC,Non_Matching,180,152,28,107667,92572
+2026-11,2026-11-13,Postpay,80100822,True Shop Lotus's Ranong,UPC,Non_Matching,179,164,15,82274,76780
+2026-11,2026-11-13,Postpay,80101358,True Shop Central Ayutthaya,UPC,Matching,176,148,28,95295,81223
+2026-11,2026-11-13,Postpay,80101307,True Shop Robinson Lopburi,UPC,Matching,173,151,22,84467,77180
+2026-11,2026-11-13,Postpay,80100786,True Shop Lotus's Somdet Kalasin,UPC,Non_Matching,172,159,13,61471,55452
+2026-11,2026-11-13,Postpay,80100780,True Shop Lotus's Prakhonchai Buriram,UPC,Non_Matching,171,157,14,73036,67107
+2026-11,2026-11-13,Postpay,80101296,True Shop Paradise Park Srinakarin,BMA,Non_Matching,170,157,13,86580,82616
+2026-11,2026-11-13,Postpay,80100842,True Shop Terminal 21 Korat,UPC,Non_Matching,169,151,18,75217,65400
+2026-11,2026-11-13,Postpay,80100832,True Shop Tesco Lotus Det Udom Ubonratchathani,UPC,Non_Matching,167,149,18,62610,53812
+2026-11,2026-11-13,Postpay,80100782,True Shop Lotus's Thaluang Phichit,UPC,Non_Matching,161,144,17,74542,64590
+2026-11,2026-11-13,Postpay,80101363,True Shop at Chamchuri Square 1,BMA,Non_Matching,160,132,28,82068,66635
+2026-11,2026-11-13,Postpay,80101292,True Shop Big C Bandung Udonthani,UPC,Non_Matching,156,142,14,57162,49407
+2026-11,2026-11-13,Postpay,80101627,True Shop Central Westville,BMA,Matching,154,126,28,105334,90601
+2026-11,2026-11-13,Postpay,80100756,True Shop Lotus's Nongbualamphu,UPC,Non_Matching,153,123,30,59634,48216
+2026-11,2026-11-13,Postpay,80101304,True Shop Robinson Buriram,UPC,Matching,147,127,20,73349,64568
+2026-11,2026-11-13,Postpay,80101647,True Shop Central Krabi,UPC,Matching,147,133,14,82320,76046
+2026-11,2026-11-13,Postpay,80101289,True Shop Big C Banphai Khonkaen,UPC,Non_Matching,145,124,21,62561,53043
+2026-11,2026-11-13,Postpay,80101584,True Shop Robinson Ratchapruek,BMA,Non_Matching,143,115,28,85826,74841
+2026-11,2026-11-13,Postpay,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC,Non_Matching,143,122,21,62075,54976
+2026-11,2026-11-13,Postpay,80100772,True Shop Lotus's Kaengkhro Chaiyaphum,UPC,Non_Matching,143,134,9,49589,46724
+2026-11,2026-11-13,Postpay,80100848,True Shop Wang Saphung Loei,UPC,Non_Matching,131,111,20,51298,41294
+2026-11,2026-11-13,Postpay,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC,Non_Matching,131,113,18,50695,44625
+2026-11,2026-11-13,Postpay,80101391,True Shop Central Chantaburi,UPC,Matching,130,112,18,70825,61809
+2026-11,2026-11-13,Postpay,80100770,True Shop Lotus's Buengkan,UPC,Non_Matching,130,114,16,47824,40937
+2026-11,2026-11-13,Postpay,80100801,True Shop Lotus's Banphue Udonthani,UPC,Non_Matching,130,117,13,45450,41077
+2026-11,2026-11-13,Postpay,80101308,True Shop Robinson Kamphaengphet,UPC,Non_Matching,125,109,16,61251,52652
+2026-11,2026-11-13,Postpay,80100873,True Shop Mueang Loei,UPC,Non_Matching,119,104,15,42805,37081
+2026-11,2026-11-13,Postpay,80100765,True Shop Lotus's Prasat Surin,UPC,Non_Matching,113,99,14,45229,38080
+2026-11,2026-11-13,Postpay,80100783,True Shop Lotus's Phonthong Roiet,UPC,Non_Matching,103,93,10,32188,28807
+2026-11,2026-11-13,Postpay,80101707,True Shop (dtac) Future Park Rangsit 2Fl.,BMA,Hall,101,90,11,47653,42739
+2026-11,2026-11-13,Postpay,80100838,True Shop Central Festival Samui,UPC,Matching,101,84,17,60601,50411
+2026-11,2026-11-13,Postpay,80100790,True Shop Lotus's Phibun Mangsahan Ubonratchathani,UPC,Non_Matching,95,80,15,38663,30356
+2026-11,2026-11-13,Postpay,80101227,True Shop Tesco Lotus Ubonratchathani,UPC,Non_Matching,92,81,11,37040,32803
+2026-11,2026-11-13,Postpay,80100776,True Shop Lotus's Jorhor Nakhonratchasima,UPC,Non_Matching,88,79,9,38770,34328
+2026-11,2026-11-13,Postpay,80100793,True Shop Lotus's Satuek Buriram,UPC,Non_Matching,88,77,11,33774,29738
+2026-11,2026-11-13,Postpay,80100733,True Shop Lotus's Sampran,UPC,Non_Matching,79,72,7,38489,34947
+2026-11,2026-11-13,Postpay,80101648,True Shop UD Town Udonthani,UPC,Non_Matching,78,73,5,38514,36268
+2026-11,2026-11-13,Postpay,80100781,True Shop Lotus's Lamplaimat Buriram,UPC,Non_Matching,77,70,7,27282,24692
+2026-11,2026-11-13,Postpay,80101378,True Shop South Pattaya,UPC,Non_Matching,74,58,16,34668,29168
+2026-11,2026-11-13,Postpay,80100798,True Shop Lotus's Chiangkham Phayao,UPC,Non_Matching,73,67,6,29246,27183
+2026-11,2026-11-13,Postpay,80100792,True Shop Lotus's Phayao,UPC,Non_Matching,71,63,8,26137,24599
+2026-11,2026-11-13,Postpay,80100797,True Shop Lotus's Trakan Phuet Phon Ubonratchathani,UPC,Non_Matching,71,63,8,29812,26450
+2026-11,2026-11-13,Postpay,80100771,True Shop Lotus's Chiangyuen Mahasarakham,UPC,Non_Matching,70,63,7,30858,27915
+2026-11,2026-11-13,Postpay,80100864,True Shop Buntharik Ubonratchathani,UPC,Non_Matching,70,64,6,25290,22709
+2026-11,2026-11-13,Postpay,80100861,True Shop Kasetwisai Roiet,UPC,Non_Matching,66,60,6,22921,20633
+2026-11,2026-11-13,Postpay,80100862,True Shop Pakthongchai Nakhonratchasima,UPC,Non_Matching,66,66,0,21564,21564
+2026-11,2026-11-13,Postpay,80100856,True Shop Uthai Thani,UPC,Non_Matching,61,49,12,20952,15222
+2026-11,2026-11-13,Postpay,80100794,True Shop Lotus's Nonthai Nakhonratchasima,UPC,Non_Matching,61,51,10,22919,18815
+2026-11,2026-11-13,Postpay,80100853,True Shop Mueang Satun,UPC,Non_Matching,59,51,8,18866,16101
+2026-11,2026-11-13,Postpay,80101328,True Shop Big C Khamtakla Sakonnakhon,UPC,Non_Matching,58,47,11,26696,21883
+2026-11,2026-11-13,Postpay,80100852,True Shop Khamcha-I Mukdahan,UPC,Non_Matching,56,44,12,19391,13852
+2026-11,2026-11-13,Postpay,80101293,True Shop Big C Khonkaen 2,UPC,Non_Matching,54,50,4,21977,20980
+2026-11,2026-11-13,Postpay,80100860,True Shop Sikhoraphum Surin,UPC,Non_Matching,54,46,8,19813,17003
+2026-11,2026-11-13,Postpay,80101704,True Shop (dtac) Central Phitsanulok 2Fl.,UPC,Hall,53,50,3,25793,24746
+2026-11,2026-11-13,Postpay,80100749,True Shop Lotus's Kalasin,UPC,Non_Matching,52,40,12,28206,22100
+2026-11,2026-11-13,Postpay,80101699,True Shop (dtac) Central Festival Hatyai 3Fl.,UPC,Hall,52,38,14,23620,17220
+2026-11,2026-11-13,Postpay,80100849,True Shop Mueang Phayao,UPC,Non_Matching,51,44,7,20181,16468
+2026-11,2026-11-13,Postpay,80101691,True Shop (dtac) Ayudhaya Park 1Fl.,UPC,Hall,50,46,4,26755,25169
+2026-11,2026-11-13,Postpay,80100803,True Shop Lotus's Nongruea  Khonkaen,UPC,Non_Matching,50,46,4,18785,17486
+2026-11,2026-11-13,Postpay,80100764,True Shop Lotus's Sangkha Surin,UPC,Non_Matching,50,43,7,25384,20620
+2026-11,2026-11-13,Postpay,80101331,True Shop Big C Nongki Buriram,UPC,Non_Matching,49,42,7,19434,17344
+2026-11,2026-11-13,Postpay,80101705,True Shop (dtac) Central Plaza Suratthani 2Fl.,UPC,Hall,49,42,7,21336,18902
+2026-11,2026-11-13,Postpay,80100845,True Shop Kaset Sombun Chaiyaphum,UPC,Non_Matching,48,47,1,17144,16890
+2026-11,2026-11-13,Postpay,80100769,True Shop Lotus's Thatum Surin,UPC,Non_Matching,48,41,7,16237,13577
+2026-11,2026-11-13,Postpay,80101345,True Shop Down Town Nakhonratchasima,UPC,Non_Matching,48,44,4,18235,16539
+2026-11,2026-11-13,Postpay,80100821,True Shop Station Lotus Pranburee,UPC,Non_Matching,47,41,6,20161,16959
+2026-11,2026-11-13,Postpay,80100865,True Shop Taphan Hin Phichit,UPC,Non_Matching,44,41,3,14080,13322
+2026-11,2026-11-13,Postpay,80100802,True Shop Lotus's Borabue Mahasarakham,UPC,Non_Matching,41,34,7,14388,11208
+2026-11,2026-11-13,Postpay,80101265,True Shop Chumphuang Nakhonratchasima,UPC,Non_Matching,40,36,4,19578,17975
+2026-11,2026-11-13,Postpay,80100784,True Shop Lotus'sU-Thong Suphangburi,UPC,Non_Matching,39,33,6,17132,14057
+2026-11,2026-11-13,Postpay,80101711,True Shop (dtac) The Mall Nakhonratchasima 3Fl.,UPC,Hall,39,38,1,15858,15359
+2026-11,2026-11-13,Postpay,80100847,True Shop Senangkhanikhom Amnat Charoen,UPC,Non_Matching,35,29,6,14346,12519
+2026-11,2026-11-13,Postpay,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC,Non_Matching,35,33,2,12476,12361
+2026-11,2026-11-13,Postpay,80100804,True Shop Lotus's Jomthong Chiangmai,UPC,Non_Matching,34,34,0,11615,11615
+2026-11,2026-11-13,Postpay,80101697,True Shop (dtac) Central Plaza Udonthani 2Fl.,UPC,Hall,33,29,4,14964,13214
+2026-11,2026-11-13,Postpay,80101122,True Shop  Ocean Complex Chumphon,UPC,Non_Matching,33,31,2,11748,11048
+2026-11,2026-11-13,Postpay,80100872,True Shop Chatturat Chaiyaphum,UPC,Non_Matching,32,30,2,11547,10880
+2026-11,2026-11-13,Postpay,80100863,True Shop Huai Thalaeng Nakhonratchasima,UPC,Non_Matching,32,29,3,11161,10309
+2026-11,2026-11-13,Postpay,80101013,True Shop Mini Mueang Maehongson,UPC,Non_Matching,30,30,0,9315,9315
+2026-11,2026-11-13,Postpay,80100870,True Shop Soeng Sang Nakhonratchasima,UPC,Non_Matching,30,28,2,12338,11439
+2026-11,2026-11-13,Postpay,80100725,True Shop Lotus's Bang Pa-In Ayudhaya,UPC,Non_Matching,28,25,3,12188,10210
+2026-11,2026-11-13,Postpay,80101329,True Shop Big C Nongbua Nakhonsawan,UPC,Non_Matching,28,26,2,8913,8319
+2026-11,2026-11-13,Postpay,80101377,True Shop Big C Chaiyaphumi,UPC,Non_Matching,26,23,3,9564,8555
+2026-11,2026-11-13,Postpay,80100851,True Shop Nongbunmak Nakhonratchasima,UPC,Non_Matching,26,23,3,10255,9697
+2026-11,2026-11-13,Postpay,80101698,True Shop (dtac) Central Plaza Westgate 2Fl.,BMA,Hall,25,25,0,15500,15500
+2026-11,2026-11-13,Postpay,80101715,Ten Ten Shop Phaholyothin Soi 69/1,BMA,TEN TEN,25,25,0,14762,14762
+2026-11,2026-11-13,Postpay,80101708,True Shop (dtac) Future Park Rangsit GFl.,BMA,Hall,24,22,2,11219,9721
+2026-11,2026-11-13,Postpay,80100715,True Shop Fortune Town 1Fl.,BMA,Non_Matching,23,22,1,10631,10049
+2026-11,2026-11-13,Postpay,80100806,True Shop Lotus's Samchuk Suphanburi,UPC,Non_Matching,23,19,4,10137,9168
+2026-11,2026-11-13,Postpay,80101692,True Shop (dtac) Central Plaza Nakhonsithammarat 2Fl.,UPC,Hall,23,22,1,10122,9333
+2026-11,2026-11-13,Postpay,80100627,True Shop Huahin,UPC,Non_Matching,20,17,3,6864,6057
+2026-11,2026-11-13,Postpay,80101702,True Shop (dtac) Central Chaengwattana 4Fl.,BMA,Hall,19,18,1,13555,13405
+2026-11,2026-11-13,Postpay,80100869,True Shop Khon Buri Nakhonratchasima,UPC,Non_Matching,18,17,1,6839,6590
+2026-11,2026-11-13,Postpay,80101346,True Shop Asawann Phonphisai Nong Khai,UPC,Non_Matching,17,15,2,7287,6709
+2026-11,2026-11-13,Postpay,80101693,True Shop (dtac) Central Plaza Mahachai 2Fl.,UPC,Hall,13,11,2,5459,4590
+2026-11,2026-11-13,Postpay,80101658,True Shop (dtac) Lotus's Lomsak 1Fl.,UPC,COCO,13,13,0,4200,4200
+2026-11,2026-11-13,Postpay,80101706,True Shop (dtac) Fashion Island 3Fl.,BMA,Hall,12,11,1,4330,3952
+2026-11,2026-11-13,Postpay,80100796,True Shop Lotus's Khoksamrong Lopburi,UPC,Non_Matching,12,12,0,4093,4093
+2026-11,2026-11-13,Postpay,80101351,True Shop Lotus's Keangkoi Saraburi,UPC,Non_Matching,12,12,0,4332,4332
+2026-11,2026-11-13,Postpay,80101653,True Shop (dtac) Robinson Chaiyaphum 2Fl.,UPC,COCO,12,11,1,5049,4250
+2026-11,2026-11-13,Postpay,80101710,True Shop (dtac) Phuket Thalang,UPC,Hall,12,12,0,4332,4332
+2026-11,2026-11-13,Postpay,80100805,True Shop Lotus's  Phatthanakan,BMA,Non_Matching,11,11,0,5011,5011
+2026-11,2026-11-13,Postpay,80101709,True Shop (dtac) Mega Bangna 2Fl.,BMA,Hall,11,11,0,6350,6350
+2026-11,2026-11-13,Postpay,80101662,True Shop (dtac) Ocean Complex 2Fl.,UPC,COCO,10,10,0,3634,3634
+2026-11,2026-11-13,Postpay,80101714,Ten Ten Shop Ban Tangsin Salaya,UPC,TEN TEN,9,6,3,3146,2397
+2026-11,2026-11-13,Postpay,80101650,True Shop (dtac) Lotus's Pakthongchai 1Fl.,UPC,COCO,9,9,0,2718,2718
+2026-11,2026-11-13,Postpay,80101668,True Shop (dtac) Lotus's Nongruea 1Fl.,UPC,COCO,8,8,0,3113,3113
+2026-11,2026-11-13,Postpay,80101632,True Shop Lotus's Bangna Trad,BMA,Non_Matching,7,7,0,2944,2944
+2026-11,2026-11-13,Postpay,80101656,True Shop (dtac) Lotus's Phitsanulok 1Fl.,UPC,COCO,7,7,0,2893,2893
+2026-11,2026-11-13,Postpay,80101651,True Shop (dtac) Lotus's Banphue 1Fl.,UPC,COCO,7,7,0,2374,2374
+2026-11,2026-11-13,Postpay,80101675,True Shop (dtac) Big C Ranong 1Fl.,UPC,COCO,7,7,0,2564,2564
+2026-11,2026-11-13,Postpay,80101684,True Shop (dtac) Lotus's Kantharalak 1Fl.,UPC,COCO,6,6,0,1705,1705
+2026-11,2026-11-13,Postpay,80101701,True Shop (dtac) Central Festival Samui 2Fl.,UPC,Hall,6,6,0,3135,3135
+2026-11,2026-11-13,Postpay,80100736,True Shop Tesco Lotus Bangpakok,BMA,Non_Matching,5,5,0,2997,2997
+2026-11,2026-11-13,Postpay,80101670,True Shop (dtac) Lotus's Ruamchok 1Fl.,UPC,COCO,5,5,0,1827,1827
+2026-11,2026-11-13,Postpay,80101664,True Shop (dtac) Big C Loei 1Fl.,UPC,COCO,5,5,0,1598,1598
+2026-11,2026-11-13,Postpay,80101660,True Shop (dtac) Lotus's Phimai 1Fl.,UPC,COCO,5,5,0,1826,1826
+2026-11,2026-11-13,Postpay,80101712,True Shop (dtac) Central Ubonratchathani 2Fl.,UPC,Hall,5,4,1,2146,1747
+2026-11,2026-11-13,Postpay,80100721,True Shop Lotus's Nakhonpathom,UPC,Non_Matching,4,4,0,2199,2199
+2026-11,2026-11-13,Postpay,80101657,True Shop (dtac) Asawann Phonphisai 1Fl.,UPC,COCO,4,4,0,1699,1699
+2026-11,2026-11-13,Postpay,80101703,True Shop (dtac) Central Khonkaen 3Fl.,UPC,Hall,4,4,0,1996,1996
+2026-11,2026-11-13,Postpay,80101688,True Shop (dtac) Lotus's Chaiya 1Fl.,UPC,COCO,4,4,0,1498,1498
+2026-11,2026-11-13,Postpay,80101217,True Shop Big C Sukhapibal 5,BMA,Non_Matching,3,3,0,1497,1497
+2026-11,2026-11-13,Postpay,80101350,True Shop iPlace Latkrabang,BMA,Non_Matching,3,3,0,1198,1198
+2026-11,2026-11-13,Postpay,80100581,MiniTS UPC Muban ChaoPhraya Chut 4,BMA,Mini_Shop_in_Shop_7-11,3,3,0,1428,1428
+2026-11,2026-11-13,Postpay,80101669,True Shop (dtac) Lotus's Samchuk 1Fl.,UPC,COCO,3,2,1,2258,1998
+2026-11,2026-11-13,Postpay,80101696,True Shop (dtac) Central Plaza Salaya 2Fl.,UPC,Hall,3,3,0,1347,1347
+2026-11,2026-11-13,Postpay,80101685,True Shop (dtac) Lotus's Det Udom 1Fl.,UPC,COCO,3,3,0,1797,1797
+2026-11,2026-11-13,Postpay,80100729,True Shop Station Lotus's Rama 4,BMA,Non_Matching,2,2,0,1798,1798
+2026-11,2026-11-13,Postpay,80101686,True Shop (dtac) Lotus's Uthong 1Fl.,UPC,COCO,2,2,0,698,698
+2026-11,2026-11-13,Postpay,80101695,True Shop (dtac) Central Plaza Rayong 2Fl.,UPC,Hall,2,2,0,1499,1499
+2026-11,2026-11-13,Postpay,80101655,True Shop (dtac) Lotus's Fang 1Fl.,UPC,COCO,2,2,0,519,519
+2026-11,2026-11-13,Postpay,80101671,True Shop (dtac) Lotus's Sawandandin 1Fl.,UPC,COCO,2,2,0,499,499
+2026-11,2026-11-13,Postpay,80101678,True Shop (dtac) Big C Market Puwieng 1Fl.,UPC,COCO,2,2,0,898,898
+2026-11,2026-11-13,Postpay,80101687,True Shop (dtac) Ampur Ranot,UPC,COCO,2,2,0,848,848
+2026-11,2026-11-13,Postpay,80101623,True Shop สาขา WW ศูนย์ราชการเฉลิมพระเกียรติ 80 พรรษา,BMA,Non_Matching,1,1,0,300,300
+2026-11,2026-11-13,Postpay,80101633,True Shop Makro Sri Ayutthaya,BMA,Non_Matching,1,1,0,1199,1199
+2026-11,2026-11-13,Postpay,80101626,True Kiosk Lotus's Sena  Ayutthaya,UPC,Non_Matching,1,1,0,750,750
+2026-11,2026-11-13,Postpay,80101665,True Shop (dtac) Salokbat,UPC,COCO,1,1,0,229,229
+2026-11,2026-11-13,Postpay,80101666,True Shop (dtac) Lotus's Sangkha 2Fl.,UPC,COCO,1,1,0,299,299
+2026-11,2026-11-13,Postpay,80101672,True Shop (dtac) Big C Korat 2 1Fl.,UPC,COCO,1,1,0,300,300
+2026-11,2026-11-13,Postpay,80101673,True Shop (dtac) Lotus's Prasat 2Fl.,UPC,COCO,1,1,0,499,499

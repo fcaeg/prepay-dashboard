@@ -155,3 +155,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   (area: mix-weighted by our shops' sqm). BMA shown for reference. DTAC COCO / HALL have no SQM in the report → no per-sqm values.
   GitHub Actions installs pyxlsb for .xlsb. First load (Aug 2026 report) was done by hand from the file Nami attached in chat.
 - DTAC COCO (D) shops 80101655 / 80101661 / 80101670 = 10 sqm each (Nami, 14 Nov 2026; perf.PL_SQM_OVERRIDE), compared with UPC Non Matching.
+- Service & Retention (Nami, 14 Nov 2026): `Retention_Shops_<yyyy-mm-dd> <Postpay|True Online|True Visions>.csv` (all shops, month to date:
+  Req / Save / Cancel / %Save / Rev Req / Rev Save) → `--retention <csv> ...` (Drive: names starting "Retention_Shops") → `state/perf_ret.csv`
+  (month from the date in the name; a newer file of the same month + product replaces it). KPI = %Save (Save ÷ Req), pass mark 88%.
+  Radar plots %Save ÷ 88% but labels the real %Save. BMA = Region starting "BMA", the rest UPC. Service Level / iCsat / On Time: pending.

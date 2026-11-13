@@ -97,7 +97,7 @@ const CUR = mLbl(D.cur), PREV = mLbl(D.prev);
 const C = D.months[D.cur], P = D.months[D.prev] || null;
 const PILLARS = [
   {id:'sale', name:'Sale', th:'ยอดขาย', basis:'เทียบ Target สาขา (ถึงวันนี้)', items:D.products},
-  {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', pending:true, items:['Retention Postpay','Retention True Online','Retention True Visions','Service Level','iCsat','On Time']},
+  {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', basis:'%Save เทียบเกณฑ์ผ่าน 88% (ถึงวันนี้)', pending:!D.ret, items:['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time']},
   {id:'ebit', name:'EBIT & Revenue', th:'กำไรและรายได้', basis:'ต่อ ตร.ม. / ต่อคน เทียบค่าเฉลี่ย UPC ประเภทเดียวกัน', items:(D.pl&&D.pl.axes)||[], pending:!D.pl},
   {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', pending:true, items:['True Mobile Care','Extended Warranty','Trade In','Customer Hub','Down Sale']},
   {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products}
@@ -149,23 +149,28 @@ function radar(labels, series, opt={}){
   });
   labels.forEach((l,i)=>{
     const [x,y]=pt(i,MAX+(opt.small?20:24)); const a=Math.cos(ang(i)); const anc=Math.abs(a)<.2?'middle':a>0?'start':'end';
-    const v=series[0].values[i];
+    const v=series[0].values[i]; const lab=series[0].labels&&series[0].labels[i];
     s+=`<text x="${x}" y="${y}" text-anchor="${anc}" dominant-baseline="middle" font-size="${opt.small?10.5:12.5}" font-weight="500" fill="#1b1f24">${l}</text>`;
-    s+=`<text x="${x}" y="${y+(opt.small?13:15)}" text-anchor="${anc}" dominant-baseline="middle" font-size="${opt.small?10.5:11.5}" font-weight="700" fill="${v==null?'#9ca3af':v>=100?'#16a34a':v>=90?'#d97706':'#dc2626'}">${v==null?'รอข้อมูล':v.toFixed(0)+'%'}</text>`;
+    s+=`<text x="${x}" y="${y+(opt.small?13:15)}" text-anchor="${anc}" dominant-baseline="middle" font-size="${opt.small?10.5:11.5}" font-weight="700" fill="${v==null?'#9ca3af':v>=100?'#16a34a':v>=90?'#d97706':'#dc2626'}">${v==null?'รอข้อมูล':(lab||v.toFixed(0)+'%')}</text>`;
   });
   return s+'</svg>';
 }
 const hasPrev = pid => P && pillarVals(pid,P,state.branch).some(v=>v!=null);
-const BENCH = {sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC'};
+const BENCH = {sale:'Target ถึงวันนี้', staff:'Indy Target ถึงวันนี้', ebit:'ค่าเฉลี่ย UPC', service:'เกณฑ์ผ่าน 88%'};
 const ico = (stroke,dash,w) => `<svg width="22" height="8" style="vertical-align:middle;margin-right:4px"><line x1="1" y1="4" x2="21" y2="4" stroke="${stroke}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/></svg>`;
-const legendFor = (pid, small) => { const pl = pid==='ebit';
-  const c = pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
-  const p = pl ? plLbl(PL.prev) : PREV;
+const legendFor = (pid, small) => { const pl = pid==='ebit', rt = pid==='service';
+  const c = rt ? `${mLbl(RT.cur)}${small?'':' (ถึง '+(+((Object.values(RT.months[RT.cur].asof).filter(Boolean).sort().pop()||'').slice(8)))+')'}` : pl ? plLbl(PL.last) : `${CUR}${small?'':` (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})`}`;
+  const p = rt ? (RT.prev?mLbl(RT.prev):'ยังไม่มีข้อมูล') : pl ? plLbl(PL.prev) : PREV;
   return `<div class="legend" style="justify-content:center;margin-top:4px;gap:${small?'4px 10px':'14px'};font-size:${small?11:12}px"><span>${ico('#e4002b','',3)}${c}</span><span>${ico('#475569','2 3',2)}${p}</span><span>${ico('#111827','7 4',1.6)}${small?'':'100 = '}${BENCH[pid]}</span></div>`; };
 const legend = () => `<div class="legend"><span><i style="background:var(--cur)"></i>${CUR} (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})</span><span><i style="background:var(--prev)"></i>${PREV} ${hasPrev('sale')?'':'(ยังไม่มีข้อมูล)'}</span><span><i style="background:none;border-top:2px dashed #1b1f24;height:0"></i>100% = Target</span></div>`;
 const PL = D.pl; const plVals = (m,br) => { const M=PL&&PL.months[m]; if(!M) return []; if(br==='ALL') return M.area_idx; const r=M.shops[br]; return (r&&r.idx)||PL.axes.map(()=>null); };
 const plLbl = m => m?mLbl(m):'-';
-const seriesFor = (pid,br) => pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
+const RT = D.ret; const RKEY = ['Postpay','True Online','True Visions'];
+const retRec = (m,br,p) => { const M=RT&&RT.months[m]; if(!M) return null; const r = br==='ALL' ? M.area[p] : (M.shops[br]||{})[p]; return r&&r.req? r : null; };
+const retPct = (m,br,p) => { const r=retRec(m,br,p); return r? r.save/r.req*100 : null; };
+const retVals = (m,br) => [...RKEY.map(p=>{const v=retPct(m,br,p); return v==null?null:v/RT.pass*100;}), null, null, null];
+const retLabs = (m,br) => [...RKEY.map(p=>{const v=retPct(m,br,p); return v==null?null:v.toFixed(1)+'%';}), null, null, null];
+const seriesFor = (pid,br) => pid==='service' ? [{values:retVals(RT.cur,br),labels:retLabs(RT.cur,br),color:'#e4002b',dots:true},{values:RT.prev?retVals(RT.prev,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : pid==='ebit' ? [{values:plVals(PL.last,br),color:'#e4002b',dots:true},{values:plVals(PL.prev,br),color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}] : [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#475569',fill:.04,width:1.8,dash:'2 3',dots:true,prev:true}];
 const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
 
 /* ---------- hints (ⓘ) ---------- */
@@ -184,6 +189,12 @@ const HINT = {
   ['Device','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น DEVICE)','QTY: DEVICE · Net: DEV'],
   ['GIA','TSM daily_sales ตาม SALE_CODE (เดือนที่ไม่มี TSM ใช้ All Product แผ่น GIA)','ACC'],
   ['TVS','สูตรเดียวกับ Sale (รวมแพ็กเกจพ่วง) ตาม SALE_ID','QTY: TVS · Net: TVS_NEW']]},
+service:{title:'Service & Retention · %Save เทียบเกณฑ์ 88%', how:'%Save = Save ÷ Req (จำนวนลูกค้าที่ขอยกเลิก/ย้ายออกแล้วรักษาไว้ได้) สะสมตั้งแต่ต้นเดือน · ภาพรวม Upper North = Save รวม ÷ Req รวมของทุกสาขา · กราฟวาดเป็นดัชนี %Save ÷ 88% (เส้นประ = ผ่านเกณฑ์พอดี) แต่ตัวเลขใต้ชื่อแกนแสดง %Save จริง · ข้อมูลจากไฟล์ Retention_Shops_&lt;วันที่&gt; &lt;สินค้า&gt;.csv ไฟล์ใหม่ของเดือนเดียวกันแทนที่ของเดิม',
+  cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
+  ['Ret. Postpay','%Save ของ True Mobile (Postpay) จาก Retention_Shops ... Postpay','เกณฑ์ผ่าน 88% · ดู UPC / BMA / ทั้งประเทศ ในหน้า Detail'],
+  ['Ret. TOL','%Save ของ True Online','เกณฑ์ผ่าน 88%'],
+  ['Ret. TVS','%Save ของ True Visions (จำนวน Req ต่อสาขาน้อย % จึงแกว่งง่าย)','เกณฑ์ผ่าน 88%'],
+  ['Service Level / iCsat / On Time','รอไฟล์ข้อมูล','–']]},
  ebit:{title:'EBIT & Revenue · ต่อ ตร.ม. และต่อพนักงาน', how:'ดัชนี = ค่าของเรา ÷ ค่าเฉลี่ย UPC ของสาขาประเภทเดียวกัน × 100 (แกนต้นทุนกลับด้าน: ยิ่งต่ำยิ่งดี) · ภาพรวม Upper North ถ่วงตามประเภทและขนาดของแต่ละสาขา · ข้อมูลจาก Performance Report (Model WW) ซึ่งช้ากว่าเดือนปัจจุบันราว 3 เดือน · พื้นที่ = SQM All · สาขา DTAC (D) ใช้ 10 ตร.ม. และเทียบ UPC Non Matching (GM/คน เทียบ DTAC COCO) · ค่าเกิน 150 ตัดที่ 150 ในกราฟ<br><b>สูตรในไฟล์:</b> Revenue = ขายบริการ + Non Sale (Retention, Upsell, Renew, SQT, Bill/Kiosk) + ขายสินค้า · GM = (ขายสินค้า − ต้นทุนสินค้า) + ขายบริการ + Non Sale · EBITDA = GM − Front Cost (พนักงาน, การตลาด, อาคาร/ค่าเช่า, บริหาร) − ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH) · EBIT = EBITDA − ค่าเช่า Asset − ค่าเสื่อม',
   cols:['แกน','วัดอะไร','เทียบกับ'], rows:[
   ['Revenue / ตร.ม.','รายได้รวมต่อพื้นที่ — พื้นที่สร้างยอดได้แค่ไหน','ค่าเฉลี่ย UPC ประเภทเดียวกัน (BMA ดูในตาราง Detail)'],
@@ -258,6 +269,25 @@ function detailStaff(){
   ${none.length?`<div class="card" style="margin-top:16px"><h3>มี Indy Target แต่ไม่พบยอดขายใน ${CUR} (${none.length} คน)</h3><div class="sub">อาจลาออก / ย้ายสาขา / ลา หรือรหัสพนักงานขายในระบบไม่ตรงกับ Indy Target — ไม่นำมาจัดอันดับ</div>
   <ul class="fail-list">${none.map(r=>`<li><span>${r.e.name}</span><span style="color:var(--muted);font-size:12px">${r.e.role} · ${nameOf(r.e.shop)} · ${r.id}</span></li>`).join('')}</ul></div>`:''}`;
 }
+function detailService(){
+  const br=state.branch, m=RT.cur, Mm=RT.months[m], pv=RT.prev;
+  const pct=r=>r&&r.req? r.save/r.req*100 : null, f1=v=>v==null?'–':v.toFixed(1)+'%', fN=v=>v==null?'–':Math.round(v).toLocaleString('th-TH');
+  const pill=v=>v==null?'–':`<span class="pill p-${v>=RT.pass?'good':v>=RT.pass-3?'warn':'bad'}">${v.toFixed(1)}%</span>`;
+  const rows=RKEY.map(p=>{ const r=retRec(m,br,p), b=Mm.bench[p]||{}; const v=pct(r), pp=pv?retPct(pv,br,p):null;
+    return `<tr><td><b>${p}</b><div style="font-size:11px;color:var(--muted)">ถึง ${Mm.asof[p]||'-'}</div></td><td>${fN(r&&r.req)}</td><td>${fN(r&&r.save)}</td><td>${fN(r&&r.cancel)}</td><td>${pill(v)}</td><td>${v==null?'–':((v-RT.pass)>=0?'+':'')+(v-RT.pass).toFixed(1)+' pp'}</td><td>${r&&r.rev_req?f1(r.rev_save/r.rev_req*100):'–'}</td><td>${f1(pct(b.UPC))}</td><td>${f1(pct(b.BMA))}</td><td>${f1(pct(b.All))}</td></tr>`;}).join('');
+  const sh=D.shops.map(s=>({s,v:RKEY.map(p=>{const r=(Mm.shops[s.shop]||{})[p]; return r&&r.req? {pct:r.save/r.req*100, req:r.req, cancel:r.cancel} : null;})}))
+    .map(x=>({...x,avg:avg(x.v.map(z=>z&&z.pct/RT.pass*100))})).sort((a,b)=>(a.avg??999)-(b.avg??999));
+  const shRows=sh.map(({s,v,avg:av})=>`<tr ${s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${s.shop}')">${s.name.replace('True Shop ','')}</td>${v.map(z=>`<td class="c" style="${hmColor(z&&z.pct/RT.pass*100)}" title="${z?`Req ${z.req} · Cancel ${z.cancel}`:''}">${z?z.pct.toFixed(1)+'%<div style=\"font-size:10px;font-weight:400\">'+z.req+' req</div>':'–'}</td>`).join('')}</tr>`).join('');
+  return `<div class="row"><h2 style="margin:0">Service & Retention${infoBtn('service')}</h2><span style="color:var(--muted)">%Save เทียบเกณฑ์ 88% · ข้อมูลสะสม ${mLbl(m)}</span></div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${mLbl(m)}</h3><div class="sub">ตัวเลข = %Save จริง · รูปกราฟ = เทียบเกณฑ์ 88%</div>${radar(PILLARS[1].items,seriesFor('service',br))}${legendFor('service')}</div>
+    <div class="card"><h3>Retention</h3><div class="sub">${br==='ALL'?'รวมทุกสาขาใน Upper North':nameOf(br)}</div>
+      <table><thead><tr><th>สินค้า</th><th>Req</th><th>Save</th><th>Cancel</th><th>%Save</th><th>vs 88%</th><th>%Rev Save</th><th>UPC</th><th>BMA</th><th>ทั้งประเทศ</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="note">UPC / BMA / ทั้งประเทศ = %Save รวมของทุกสาขาในกลุ่ม (Save รวม ÷ Req รวม) · Service Level, iCsat, On Time: รอไฟล์ข้อมูล</div></div>
+  </div>
+  <div class="card"><h3>รายสาขา · %Save</h3><div class="sub">เรียงจากสาขาที่แย่สุด · เขียว ≥ 88% · ตัวเล็ก = จำนวน Req · ชี้ที่ช่องเพื่อดู Cancel · "–" = ไม่มี Req</div>
+    <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${RKEY.map(p=>`<th style="text-align:center">${p}</th>`).join('')}</tr></thead><tbody>${shRows}</tbody></table></div></div>`;
+}
 function detailEbit(){
   const br=state.branch, M=PL.months[PL.last], Pm=PL.months[PL.prev]||null, sh0=M.shops[br];
   const fN=v=>v==null?'–':Math.round(v).toLocaleString('th-TH');
@@ -292,7 +322,7 @@ function render(){
   const id=(location.hash||'#summary').slice(1);
   document.getElementById('nav').innerHTML=[{id:'summary',name:'Summary'}].concat(PILLARS).map(p=>`<a href="#${p.id}" class="${p.id===id?'on':''}">${p.name}</a>`).join('');
   const P_=PILLARS.find(p=>p.id===id);
-  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit():detailStaff();
+  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale(): id==='ebit'?detailEbit(): id==='service'?detailService():detailStaff();
 }
 function go(id){location.hash=id;}
 function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}

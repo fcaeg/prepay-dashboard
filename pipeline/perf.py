@@ -13,7 +13,7 @@ GIA actuals come from gia.py's state/gia_sales_<YYYY-MM>.csv.gz (same GIA rule a
                          -> state/perf_post.csv (month x day x shop x activity x SIM_STATUS: q = QTY, n = NET_AMOUNT); months in the file replace.
                          Postpay Net Amount is compared with the target's POST_NEW revenue (acquisition), QTY with POST subscribers.
                          Lines with SIM_STATUS Suspend / Terminate are not counted (Nami, 14 Nov 2026). The file has no salesperson, so Staff Productivity shows Postpay as 'no data'.
-TVS includes bundles (tvs_flag; Net of a bundled unit = QTY x TVS target revenue per unit).
+Service & Retention: merge_retention (Retention_Shops_<date> <product>.csv), %Save vs 88%.\nTVS includes bundles (tvs_flag; Net of a bundled unit = QTY x TVS target revenue per unit).
 True Online / True Visions: the same Self Refresh Rawdata format (merge_tol / merge_tvs); Net Amount vs TOL_NEW / TVS_NEW revenue (Nami, 14 Nov 2026).
 Shops (Nami, 13 Nov 2026): region UPC - Upper North in the target file, without the Lotus's-company shops (Nan, Hangdong, Chiang Khong) = 17 shops.
 GIA target = column ACC of the target file (Nami, 13 Nov 2026). Device = H/S incl. tablets + iPad (Nami, 13 Nov 2026).
@@ -311,6 +311,59 @@ def _pl_build():
     res['trend'] = [{'month': mm, **{k: float(v) for k, v in r.items()}} for mm, r in trend.iterrows()]
     return res
 
+# ---------- Service & Retention: 'Retention_Shops_<yyyy-mm-dd> <Postpay|True Online|True Visions>.csv' (all shops, month to date) ----------
+RET_PASS = 88.0  # Nami, 14 Nov 2026: %Save must reach 88%
+RET_PRODUCTS = {'postpay': 'Postpay', 'true mobile': 'Postpay', 'true online': 'True Online', 'true visions': 'True Visions', 'true vision': 'True Visions'}
+
+def merge_retention(fp):
+    """-> state/perf_ret.csv: month x as-of day x product x shop (all shops, BMA/UPC from Region) with Req / Save / Cancel / Rev Req / Rev Save.
+    The file is month to date; a newer file for the same month and product replaces it."""
+    name = os.path.basename(fp)
+    m = re.search(r'(\d{4})-(\d{2})-(\d{2})', name)
+    if not m: print('perf: retention file has no date in its name', name); return
+    asof = f'{m.group(1)}-{m.group(2)}-{m.group(3)}'; month = asof[:7]
+    for enc in ('utf-8-sig', 'cp874'):
+        try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
+        except UnicodeDecodeError: continue
+    d.columns = [c.strip() for c in d.columns]
+    prod = RET_PRODUCTS.get(str(d['Product'].dropna().iloc[0]).strip().lower()) if 'Product' in d and d['Product'].notna().any() else None
+    if not prod:
+        low = name.lower(); prod = next((v for k, v in RET_PRODUCTS.items() if k in low), None)
+    if not prod: print('perf: retention product unknown', name); return
+    num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', '').str.replace('%', ''), errors='coerce').fillna(0)
+    out = pd.DataFrame({'month': month, 'asof': asof, 'product': prod, 'shop': d['Shop Code'].astype(str).str.strip(), 'name': d['Shop'],
+                        'grp': d['Region'].astype(str).map(lambda r: 'BMA' if r.upper().startswith('BMA') else 'UPC'), 'kpitype': d.get('KPIType', ''),
+                        'req': num('Req'), 'save': num('Save'), 'cancel': num('Cancel'), 'rev_req': num('Rev Req'), 'rev_save': num('Rev Save')})
+    old = _load('perf_ret.csv')
+    if old is not None:
+        cur = old[(old.month == month) & (old['product'] == prod)]
+        if len(cur) and cur['asof'].max() > asof: print(f'perf: retention {prod} {asof} is older than {cur["asof"].max()} - skipped'); return
+        old = old[~((old.month == month) & (old['product'] == prod))]
+    _save(pd.concat([old, out.astype(str)]) if old is not None else out, 'perf_ret.csv')
+    mine = out[out.shop.isin(shops())]
+    print(f'perf: retention {prod} {asof}: {len(out)} shops, ours {len(mine)} · %Save ours {mine.save.sum() / max(mine.req.sum(), 1) * 100:.1f}%')
+
+RET_ITEMS = ['Postpay', 'True Online', 'True Visions']
+
+def _ret_build():
+    r = _load('perf_ret.csv')
+    if r is None: return None
+    for c in ('req', 'save', 'cancel', 'rev_req', 'rev_save'): r[c] = pd.to_numeric(r[c])
+    sh = shops(); months = sorted(r.month.unique()); out = {'pass': RET_PASS, 'items': RET_ITEMS, 'months': {}}
+    for m in months[-2:]:
+        x = r[r.month == m]; M = {'asof': {p: (x[x['product'] == p]['asof'].max() if (x['product'] == p).any() else None) for p in RET_ITEMS}, 'shops': {}, 'area': {}, 'bench': {}}
+        for p in RET_ITEMS:
+            y = x[x['product'] == p]
+            if not len(y): continue
+            ours = y[y.shop.isin(sh)]
+            agg = lambda z: {'req': float(z.req.sum()), 'save': float(z.save.sum()), 'cancel': float(z.cancel.sum()), 'rev_req': float(z.rev_req.sum()), 'rev_save': float(z.rev_save.sum())}
+            M['area'][p] = agg(ours)
+            M['bench'][p] = {'UPC': agg(y[y.grp == 'UPC']), 'BMA': agg(y[y.grp == 'BMA']), 'All': agg(y)}
+            for _, row in ours.iterrows(): M['shops'].setdefault(row.shop, {})[p] = agg(pd.DataFrame([row]))
+        out['months'][m] = M
+    out['cur'] = months[-1]; out['prev'] = months[-2] if len(months) > 1 else None
+    return out
+
 def _gia_actual(month, sh):
     g = _load(f'gia_sales_{month}.csv.gz')
     if g is None: return pd.DataFrame(columns=['day', 'shop', 'emp', 'q', 'n'])
@@ -378,6 +431,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build()}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

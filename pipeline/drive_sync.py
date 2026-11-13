@@ -16,6 +16,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *VIVO*Sale*                          -> Vivo Dashboard central-system sales (used up to its DATA_ASOF_DATE)
   *PC Brand* / *PC*vivo*              -> Vivo Dashboard PC per shop (PC Brand Update, or Update PC vivo with a "PC Active" column)
   GIA*.xlsx                            -> GIA Dashboard shop list + month targets (Nami's daily GIA report)
+  Retention_Shops_<date> <product>.csv  -> Shop Performance: Retention %Save per shop (month to date)
   *Performance Report*                 -> Shop Performance: EBIT & Revenue (P&L per shop, .xlsb)
   *All Product*Raw*                    -> Shop Performance: all products with SALE_ID (latest 2 months)
   *Postpaid*Raw* / *TrueOnline*Raw* / *TrueVision*Raw*  -> Shop Performance: Postpay / TOL / TVS actuals (Self Refresh Rawdata, sheet Rawdata)
@@ -80,6 +81,7 @@ def kind(name):
     if n.startswith('daily_sales'): return 'sales'
     if 'all product' in n and 'raw' in n: return 'allprod'
     if re.search(r'performance[ _]+report', n): return 'pl'
+    if n.startswith('retention_shops') or n.startswith('retention shops'): return 'retention'
     if 'postpaid' in n and 'raw' in n: return 'postpay'
     if re.search(r'true ?online', n) and 'raw' in n: return 'tolraw'
     if re.search(r'true ?visions?', n) and 'raw' in n: return 'tvsraw'
@@ -135,9 +137,9 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp]}[k]
     # update.py takes several --sales / --target values as one list each
-    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': []}
+    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': []}
     for i in range(0, len(args), 2):
         if args[i] in lists: lists[args[i]].append(args[i + 1])
         else: merged += args[i:i + 2]
