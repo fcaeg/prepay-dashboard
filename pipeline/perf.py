@@ -18,7 +18,7 @@ True Online / True Visions: the same Self Refresh Rawdata format (merge_tol / me
 Shops (Nami, 13 Nov 2026): region UPC - Upper North in the target file, without the Lotus's-company shops (Nan, Hangdong, Chiang Khong) = 17 shops.
 GIA target = column ACC of the target file (Nami, 13 Nov 2026). Device = H/S incl. tablets + iPad (Nami, 13 Nov 2026).
 """
-import calendar, datetime, json, os, re
+import io, calendar, datetime, json, os, re
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ST = os.path.join(HERE, 'state'); OUT = os.path.join(HERE, 'out')
@@ -619,6 +619,39 @@ def _mix_build(cur, prev):
         out[prod] = node
     return out
 
+# ---------- เบอร์มงคล (Indi): 'Mongkol_Indi_Staff_MONGKOL_QTY_<yyyymm>.csv' - every WW staff nationwide: TARGET / ACTUAL / ACTUAL-RR (QTY) ----------
+#   shop = sum of its staff (bottom-up); benchmarks per REGION (BMA / UPC I / UPC II) and UPC. Names are not stored.
+def merge_mongkol(fp):
+    name = os.path.basename(fp); m = re.search(r'(20\d{2})(\d{2})', name)
+    if not m: print('perf: mongkol skipped (no yyyymm in name)', name); return
+    month = f'{m.group(1)}-{m.group(2)}'
+    raw = open(fp, 'rb').read(); enc = 'utf-8-sig'
+    try: raw.decode('utf-8')
+    except UnicodeDecodeError: enc = 'cp874'
+    d = pd.read_csv(io.BytesIO(raw), dtype=str, encoding=enc)
+    d.columns = [c.strip().upper() for c in d.columns]
+    num = lambda c: pd.to_numeric(d[c], errors='coerce').fillna(0)
+    o = pd.DataFrame({'month': month, 'emp': d['ID EMP'].str.strip(), 'pos': d['POSITION'].fillna('').str.strip(), 'shop': d['SHOP CODE'].str.strip(),
+                      'region': d['REGION'].fillna('').str.strip(), 'area': d['AREA'].fillna('').str.strip(), 'stype': d['SHOP TYPE'].fillna('').str.strip(),
+                      't': num('TARGET'), 'a': num('ACTUAL'), 'rr': num('ACTUAL-RR'), 'bucket': d['BUCKET'].fillna('').str.strip()})
+    old = _load('perf_mongkol.csv'); out = pd.concat([old[old.month != month], o.astype(str)]) if old is not None else o
+    _save(out, 'perf_mongkol.csv'); mine = o[o.shop.isin(shops())]
+    print(f'perf: mongkol {month}: {len(o)} staff ({o.shop.nunique()} shops) · ours {len(mine)} staff · target {mine.t.sum():,.0f} · actual {mine.a.sum():,.0f}')
+
+def _mongkol_build(cur):
+    d = _load('perf_mongkol.csv')
+    if d is None: return None
+    for c in ('t', 'a', 'rr'): d[c] = pd.to_numeric(d[c])
+    m = cur if (d.month == cur).any() else d.month.max(); x = d[d.month == m]; sh = shops()
+    rr = x[x.rr > 0]; frac = float(rr.a.sum() / rr.rr.sum()) if len(rr) and rr.rr.sum() else 1.0
+    agg = lambda z: {'t': float(z.t.sum()), 'a': float(z.a.sum()), 'n': int(len(z)), 'hit': int((z.a >= z.t * frac).sum()), 'zero': int((z.a == 0).sum())}
+    ours = x[x.shop.isin(sh)]
+    out = {'month': m, 'frac': round(frac, 4), 'staff': {r.emp: [float(r.t), float(r.a), r.bucket, r.stype] for r in ours.itertuples()},
+           'shops': {s: agg(g) for s, g in ours.groupby('shop')}, 'area': agg(ours),
+           'bench': {'UPC': agg(x[x.region.str.startswith('UPC')]), 'BMA': agg(x[x.region == 'BMA']), 'All': agg(x), **{r: agg(g) for r, g in x.groupby('region')}}}
+    # per-shop average achievement in UPC (bottom-up per shop) for the shop comparison
+    return out
+
 def build():
     t = _load('perf_targets.csv')
     if t is None: print('perf: no targets - page not built'); return
@@ -677,6 +710,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev)}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev), 'mongkol': _mongkol_build(cur)}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

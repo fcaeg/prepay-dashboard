@@ -256,7 +256,7 @@ const DM = D.dims || {};
 const AP_ASOF = D.allprod_asof || {};
 const dimLbl = {ACTIVITY_GROUP:'ประเภทการขาย', GP_SKU:'กลุ่มสินค้า (SKU)', CAMPAIGN_GROUP_LV1:'แคมเปญ', NET_RC_TIER:'ช่วงค่าบริการ (RC)', BRAND:'แบรนด์เครื่อง',
   CAMPIGN_CODE:'แคมเปญ / แพ็กเกจ', RC_TIER:'ช่วงค่าบริการ (RC)', FLAG_BUNDLE:'ขายเดี่ยว / พ่วง', TECHNOLOGY:'เทคโนโลยี', SUB_PRODUCT:'ประเภท TVS NOW',
-  'ที่มา':'ที่มาของยอด TVS', CATEGORY:'หมวดสินค้า', SUB_CATEGORY:'หมวดย่อย', PRICE_TIER:'ช่วงราคา', CAPACITY:'ความจุ', 'เบอร์มงคล':'เบอร์มงคล', SUB_PRODUCT:'ประเภท TVS NOW'};
+  'ที่มา':'ที่มาของยอด TVS', CATEGORY:'หมวดสินค้า', SUB_CATEGORY:'หมวดย่อย', PRICE_TIER:'ช่วงราคา', CAPACITY:'ความจุ', 'เบอร์มงคล':'แคมเปญเบอร์มงคล (All Product)', SUB_PRODUCT:'ประเภท TVS NOW'};
 const setAxis = (pid,i) => { state.axis[pid]=i; render(); const el=document.getElementById('an-'+pid); if(el) el.scrollIntoView({block:'nearest'}); };
 const fK = v => v==null?'–':Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' ล้าน':Math.round(v).toLocaleString('th-TH');
 const li = (t) => `<li style="padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.5">${t}</li>`;
@@ -314,8 +314,8 @@ function saleAnalysis(staff){
   return analysisCard(staff?'staff':'sale', items, i=>{
     const p=items[i], a=dimAnalysis(p);
     let good=[...a.good], bad=[...a.bad];
-    if(p==='Postpay'){ const sc=state.branch==='ALL'?'UN':state.branch, N=(DM[D.cur]||{}).Postpay||{}, l=luckyOf(N[sc]), u=luckyOf(N.UPC), pl=luckyOf(((DM[D.prev]||{}).Postpay||{})[sc]);
-      if(l&&u&&l.t) (l.sh>=u.sh?good:bad).unshift(`เบอร์มงคล <b>${fmtN(l.q)} เบอร์</b> = ${l.sh.toFixed(1)}% ของยอด Postpay ${l.sh>=u.sh?'สูงกว่า':'ต่ำกว่า'} UPC (${u.sh.toFixed(1)}%)${pl&&pl.sh!=null?` · เดือนก่อน ${pl.sh.toFixed(1)}%`:''}`); }
+    if(p==='Postpay'&&MG){ const z=mgRec(state.branch), v=mgPct(z), u=mgPct(MG.bench.UPC);
+      if(z&&v!=null) (v>=Math.min(100,u)?good:bad).unshift(`เบอร์มงคล <b>${fmtN(z.a)} เบอร์</b> = ${v.toFixed(0)}% ของ Target ถึงวันนี้ (UPC ${u.toFixed(0)}%) · ถึง Target ${z.hit}/${z.n} คน · ยังไม่มียอด ${z.zero} คน`); }
     if(!staff){
       const rows=D.shops.map(s=>({name:s.name.replace('True Shop ',''), v:shopAch(C,[s.shop],p,state.mode)}));
       if(state.branch==='ALL'){ const r=shopRank(rows,110,80,x=>`ทำได้ ${x.v.toFixed(0)}% ของ Target ถึงวันนี้`); good=[...r.good,...good]; bad=[...r.bad,...bad]; }
@@ -427,6 +427,7 @@ function detailSale(){
       <div class="note">Postpay / TOL / TVS = Self Refresh Rawdata (QTY เทียบ Target POST / TOL / TVS · Net Amount เทียบ Target POST_NEW / TOL_NEW / TVS_NEW · ไม่นับเบอร์ Suspend / Terminate) · TVS รวมแพ็กเกจพ่วง: Postpay 5G DEVICE TVS + TOL 3P/4P OTT (Net ของรายการพ่วง = จำนวน × รายได้ต่อราย ตาม Target TVS; ไม่นับ TVS NOW Redeem จาก Postpaid / TOL ซ้ำ) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
   </div>
   ${saleAnalysis(false)}
+  ${mongkolCard()}
   <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
   <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
   <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>`;
@@ -579,6 +580,21 @@ function detailMix(pid){
 }
 /* ---------- staff drill-down (ดูเพิ่มเติม) ---------- */
 const moreBtn = (id,p) => `<button onclick="event.stopPropagation();showStaff('${id}','${p}')" style="font:inherit;font-size:11px;margin-left:6px;padding:1px 8px;border-radius:999px;border:1px solid var(--cur);background:#fff;color:var(--cur);cursor:pointer;vertical-align:middle">ดูเพิ่มเติม</button>`;
+const MG = D.mongkol;
+const mgPct = z => z&&z.t ? z.a/(z.t*MG.frac)*100 : null;   // actual / target to date
+const mgRec = br => !MG ? null : br==='ALL' ? MG.area : MG.shops[br]||null;
+const mgStaff = id => { const r=MG&&MG.staff[id]; return r? {t:r[0], a:r[1], bucket:r[2]} : null; };
+function mongkolCard(){
+  if(!MG) return '';
+  const day=Math.round(MG.frac*new Date(+MG.month.slice(0,4),+MG.month.slice(5),0).getDate());
+  const rows=D.shops.map(s=>({s, z:MG.shops[s.shop]})).filter(x=>x.z).map(x=>({...x, v:mgPct(x.z)})).sort((a,b)=>(a.v??999)-(b.v??999));
+  const A=MG.area, B=MG.bench;
+  return `<div class="card" style="margin-bottom:16px"><h3>🔮 เบอร์มงคล (Indi → สาขา)</h3><div class="sub">ยอดรายพนักงานจากไฟล์ Mongkol Indi Staff รวมขึ้นเป็นยอดสาขา (Bottom Up) · Target: DTAC Hall & COCO 5 เบอร์/คน · True Shop 8 เบอร์/คน · ถึงวันที่ ${day} ${TH[+MG.month.slice(5)-1]} (Target ถึงวันนี้ = ${(MG.frac*100).toFixed(0)}% ของเดือน)</div>
+   <div class="grid g4" style="margin:8px 0 12px">${[['Upper North',A],['UPC',B.UPC],['BMA',B.BMA],['ทั้งประเทศ',B.All]].map(([n,z])=>`<div style="background:#f9fafb;border-radius:10px;padding:10px 12px"><div style="font-size:12px;color:var(--muted)">${n}</div><div style="font-size:20px;font-weight:700"><span class="pill p-${cls(mgPct(z))}">${fmtP(mgPct(z))}</span></div><div style="font-size:12px;color:var(--muted)">${fmtN(z.a)} / ${fmtN(z.t*MG.frac)} เบอร์ · ถึง Target ${z.hit}/${z.n} คน · ยังไม่มียอด ${z.zero} คน</div></div>`).join('')}</div>
+   <div class="scroll"><table><thead><tr><th>สาขา</th><th>พนักงาน</th><th>Target เดือน</th><th>Target ถึงวันนี้</th><th>ยอดจริง</th><th>%</th><th>ถึง Target</th><th>ยังไม่มียอด</th></tr></thead><tbody>
+   ${rows.map(x=>`<tr ${x.s.shop===state.branch?'style="outline:2px solid var(--cur)"':''}><td style="text-align:left" onclick="pick('${x.s.shop}')">${x.s.name.replace('True Shop ','')}</td><td>${x.z.n}</td><td>${fmtN(x.z.t)}</td><td>${fmtN(x.z.t*MG.frac)}</td><td><b>${fmtN(x.z.a)}</b></td><td><span class="pill p-${cls(x.v)}">${fmtP(x.v)}</span></td><td>${x.z.hit}</td><td style="${x.z.zero?'color:var(--bad)':''}">${x.z.zero}</td></tr>`).join('')}</tbody></table></div>
+   <div class="note">เรียงจากสาขาที่ % ต่ำสุด · ดูรายคนได้ที่หน้า Staff Productivity → เลือก Postpay · ใช้ไฟล์นี้เป็นตัวเลขหลักของเบอร์มงคล (นับครบกว่าแคมเปญเบอร์มงคลใน All Product Rawdata ซึ่งเก็บไว้ดูสัดส่วนประเภทเท่านั้น)</div></div>`;
+}
 const empNode = (p,id,m) => (((DM[m||D.cur]||{})[p]||{})['E:'+id]) || null;
 const luckyOf = n => { const d=n&&n.dims['เบอร์มงคล']; if(!d) return null; let q=0,t=0; Object.entries(d).forEach(([k,v])=>{t+=v[0]; if(k.startsWith('มงคล')) q+=v[0];}); return {q,t,sh:t?q/t*100:null}; };
 const itemSplit = k => { const [m,b,c]=k.split('|'); return {m,b,c}; };
@@ -586,12 +602,12 @@ function staffProdTable(ids, p){
   const mode=state.mode, k_=mode==='q'?0:1, hasT=(C.staff_products||C.actual_products).includes(p);
   const rows=ids.map(id=>{ const e=C.staff[id], r=e.p[p], t=(r['t'+mode]||0)*frs(C,p), a=r['a'+mode]||0, n=empNode(p,id);
     let extra='–';
-    if(p==='Postpay'){ const l=luckyOf(n); extra=l&&l.t? `${fmtN(l.q)} เบอร์ (${l.sh.toFixed(0)}%)` : '–'; }
+    if(p==='Postpay'){ const g=mgStaff(id); extra=g? `<span class="pill p-${cls(mgPct(g))}">${fmtP(mgPct(g))}</span> ${fmtN(g.a)} / ${fmtN(g.t)} เบอร์` : '–'; }
     else if(n&&n.dims['สินค้า']){ const top=Object.entries(n.dims['สินค้า']).sort((x,y)=>y[1][k_]-x[1][k_])[0]; if(top){ const it=itemSplit(top[0]); extra=`${it.m} <span style="color:var(--muted)">(${it.b})</span>`; } }
     else if(n&&n.dims.ACTIVITY_GROUP){ const top=Object.entries(n.dims.ACTIVITY_GROUP).sort((x,y)=>y[1][0]-x[1][0])[0]; if(top) extra=top[0]; }
     else if(n&&n.dims.RC_TIER){ const top=Object.entries(n.dims.RC_TIER).sort((x,y)=>y[1][0]-x[1][0])[0]; if(top) extra='RC '+top[0]; }
     return {id,e,a,t,v:t?a/t*100:null,extra}; }).sort((x,y)=>y.a-x.a);
-  const head = p==='Postpay'?'เบอร์มงคล':(p==='Device'||p==='GIA')?'ขายมากสุด (สินค้า · แบรนด์)':p==='True Visions'?'ประเภทหลัก':'ช่วง RC หลัก';
+  const head = p==='Postpay'?'เบอร์มงคล (ยอด / Target เดือน)':(p==='Device'||p==='GIA')?'ขายมากสุด (สินค้า · แบรนด์)':p==='True Visions'?'ประเภทหลัก':'ช่วง RC หลัก';
   return `<div class="scroll"><table><thead><tr><th>#</th><th>พนักงาน</th><th>สาขา</th><th>ยอดจริง (${mode==='q'?'QTY':'Net'})</th><th>Indy Target ถึงวันนี้</th><th>%</th><th>${head}</th></tr></thead><tbody>
   ${rows.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r.e.name}${moreBtn(r.id,p)}</td><td style="text-align:left">${nameOf(r.e.shop)}</td><td>${fmtN(r.a)}</td><td>${hasT?fmtN(r.t):'–'}</td><td><span class="pill p-${cls(r.v)}">${fmtP(r.v)}</span></td><td style="text-align:left">${r.extra}</td></tr>`).join('')}</tbody></table></div>
   <div class="note">ยอดจริงและ % ตามสูตร Staff Productivity · คอลัมน์ขวาสุดมาจาก All Product Rawdata (ถึง ${AP_ASOF[p]||'-'}) · กด "ดูเพิ่มเติม" เพื่อเจาะการขายรายคน</div>`;
@@ -602,12 +618,11 @@ function staffSection(id, p){
   const n=empNode(p,id), shop=((DM[D.cur]||{})[p]||{})[e.shop], un=((DM[D.cur]||{})[p]||{}).UN;
   const good=[], bad=[];
   if(v!=null) (v>=100?good:bad).push(`ทำได้ <b>${v.toFixed(0)}%</b> ของ Indy Target ถึงวันนี้ (${fmtN(a)} จาก ${fmtN(t)})`);
+  if(p==='Postpay'&&MG){ const g=mgStaff(id), gv=mgPct(g), sz=MG.shops[e.shop];
+    if(g) (gv>=100?good:bad).push(`เบอร์มงคล <b>${fmtN(g.a)} เบอร์</b> จาก Target ${fmtN(g.t)} = ${gv.toFixed(0)}% ของ Target ถึงวันนี้ (สาขา ${fmtP(mgPct(sz))} · Upper North ${fmtP(mgPct(MG.area))})`); }
   if(!n||!n.dims.ALL) return `<h4 style="margin:16px 0 4px">${p}</h4>${lists(good, [...bad, 'ไม่พบรายการขายในไฟล์ All Product Rawdata'])}`;
   const tot=n.dims.ALL.ALL[0], ref=un;
   const refT=ref&&ref.dims.ALL?ref.dims.ALL.ALL[0]:0;
-  if(p==='Postpay'){ const l=luckyOf(n), lu=luckyOf(un), ls=luckyOf(shop);
-    if(l){ const txt=`เบอร์มงคล <b>${fmtN(l.q)} เบอร์</b> = ${l.sh.toFixed(0)}% ของยอด (สาขา ${ls&&ls.sh!=null?ls.sh.toFixed(0):'–'}% · Upper North ${lu&&lu.sh!=null?lu.sh.toFixed(0):'–'}%)`;
-      (lu&&l.sh>=lu.sh?good:bad).push(txt); } }
   if((p==='Postpay'||p==='Device'||p==='GIA')&&tot&&refT){ const ap=n.dims.ALL.ALL[1]/tot, au=ref.dims.ALL.ALL[1]/refT;
     if(au) (ap>=au?good:bad).push(`${p==='Postpay'?'ค่าบริการเฉลี่ย':'ราคาเฉลี่ย'} ${fmtN(ap)} ฿/${p==='Postpay'?'เบอร์':'ชิ้น'} ${ap>=au?'สูงกว่า':'ต่ำกว่า'} Upper North (${fmtN(au)} ฿)`); }
   const skip=['ALL','สินค้า'];

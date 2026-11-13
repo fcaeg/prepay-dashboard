@@ -1,0 +1,1548 @@
+month,emp,pos,shop,region,area,stype,t,a,rr,bucket
+2026-11,12810385,RR_Multi,80101689,BMA,BMA I - North West,COCO,5,0,0.0,No Sales
+2026-11,12809901,RR_Multi,80101679,BMA,BMA II - South West,COCO,5,0,0.0,No Sales
+2026-11,12810190,RR_Multi,80101679,BMA,BMA II - South West,COCO,5,0,0.0,No Sales
+2026-11,12809460,RR_Multi,80101679,BMA,BMA II - South West,COCO,5,0,0.0,No Sales
+2026-11,12810007,RR_Multi,80101679,BMA,BMA II - South West,COCO,5,0,0.0,No Sales
+2026-11,010L6099,RR_Multi,80101667,BMA,BMA V - Central,COCO,5,0,0.0,No Sales
+2026-11,12809940,RR_Multi,80101667,BMA,BMA V - Central,COCO,5,0,0.0,No Sales
+2026-11,12810470,RR_Multi,80101667,BMA,BMA V - Central,COCO,5,0,0.0,No Sales
+2026-11,01061826,RR_Multi,80101663,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,01059517,RR_Multi,80101676,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810329,RR_Multi,80101676,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810101,RR_Multi,80101676,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,01073888,RR_Multi,80101677,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809936,RR_Multi,80101677,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,39129250,RR_Multi,80101677,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810336,RR_Multi,80101680,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810362,RR_Multi,80101680,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810341,RR_Multi,80101681,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809984,RR_Multi,80101685,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809665,RR_Multi,80101685,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810094,RR_Multi,80101685,UPC I,UPC - Central Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810019,RR_Multi,80101658,UPC I,UPC - Lower North,COCO,5,0,0.0,No Sales
+2026-11,12808755,RR_Multi,80101659,UPC I,UPC - Lower North,COCO,5,0,0.0,No Sales
+2026-11,12810033,RR_Multi,80101659,UPC I,UPC - Lower North,COCO,5,0,0.0,No Sales
+2026-11,12809977,RR_Multi,80101665,UPC I,UPC - Lower North,COCO,5,0,0.0,No Sales
+2026-11,12810503,RR_Multi,80101650,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810433,RR_Multi,80101650,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,010N0193,RR_Multi,80101653,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,12808986,RR_Multi,80101654,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,010H3098,RR_Multi,80101660,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,12808986,RR_Multi,80101660,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810346,RR_Multi,80101672,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,010N8698,RR_Multi,80101673,UPC I,UPC - Lower Northeast,COCO,5,0,0.0,No Sales
+2026-11,39124615,RR_Multi,80101687,UPC II,UPC - Lower South,COCO,5,0,0.0,No Sales
+2026-11,12810237,RR_Multi,80101687,UPC II,UPC - Lower South,COCO,5,0,0.0,No Sales
+2026-11,12808419,RR_Multi,80101670,UPC I,UPC - Upper North,COCO,5,0,0.0,No Sales
+2026-11,010L6148,RR_Multi,80101651,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810454,RR_Multi,80101652,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810055,RR_Multi,80101657,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810106,RR_Multi,80101657,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,010L0433,RR_Multi,80101664,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810583,RR_Multi,80101664,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,010G2197,RR_Multi,80101668,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810344,RR_Multi,80101671,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810123,RR_Multi,80101671,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809966,RR_Multi,80101674,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810421,RR_Multi,80101678,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809942,RR_Multi,80101683,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810429,RR_Multi,80101683,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12809990,RR_Multi,80101683,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810105,RR_Multi,80101690,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810582,RR_Multi,80101690,UPC I,UPC - Upper Northeast,COCO,5,0,0.0,No Sales
+2026-11,12810045,RR_Multi,80101675,UPC II,UPC - Upper South,COCO,5,0,0.0,No Sales
+2026-11,12810183,RR_Multi,80101688,UPC II,UPC - Upper South,COCO,5,0,0.0,No Sales
+2026-11,12810108,RR_Multi,80101682,UPC II,UPC - West,COCO,5,0,0.0,No Sales
+2026-11,12809999,RR_Multi,80101682,UPC II,UPC - West,COCO,5,0,0.0,No Sales
+2026-11,12810155,RR_Multi,80101686,UPC II,UPC - West,COCO,5,0,0.0,No Sales
+2026-11,12810023,RR_Multi,80101686,UPC II,UPC - West,COCO,5,0,0.0,No Sales
+2026-11,12810143,RR_Multi,80101686,UPC II,UPC - West,COCO,5,0,0.0,No Sales
+2026-11,12810270,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,12810442,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,12808104,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,010L6093,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,01091393,Ret_chpn_1,80101698,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,12810316,RR_Multi,80101702,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,12810363,RR_Multi,80101702,BMA,BMA I - North West,Hall,5,0,0.0,No Sales
+2026-11,010D9708,RR_ITF,80101706,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,12810277,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,12810432,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,12810392,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,12809963,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,010J1189,Ret_chpn_1,80101707,BMA,BMA III - North East,Hall,5,0,0.0,No Sales
+2026-11,12810434,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,0,0.0,No Sales
+2026-11,12810096,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,0,0.0,No Sales
+2026-11,010N4804,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,0,0.0,No Sales
+2026-11,12810515,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810338,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810059,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810474,RR_Multi,80101695,UPC II,UPC - East,Hall,5,0,0.0,No Sales
+2026-11,12810374,RR_Multi,80101695,UPC II,UPC - East,Hall,5,0,0.0,No Sales
+2026-11,12810132,RR_Multi,80101700,UPC II,UPC - East,Hall,5,0,0.0,No Sales
+2026-11,12809956,RR_ITF,80101704,UPC I,UPC - Lower North,Hall,5,0,0.0,No Sales
+2026-11,12810011,RR_Multi,80101704,UPC I,UPC - Lower North,Hall,5,0,0.0,No Sales
+2026-11,12809531,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810226,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810004,RR_Multi,80101692,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810006,RR_Multi,80101692,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810160,RR_Multi,80101692,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810005,RR_Multi,80101692,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,010J6270,Ret_chpn_1,80101692,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12808634,RR_ITF,80101699,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12809951,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810335,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810066,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,39125432,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,0,0.0,No Sales
+2026-11,12810571,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,0,0.0,No Sales
+2026-11,12809991,RR_Multi,80101703,UPC I,UPC - Upper Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810529,RR_Multi,80101703,UPC I,UPC - Upper Northeast,Hall,5,0,0.0,No Sales
+2026-11,01056575,RR_Multi,80101703,UPC I,UPC - Upper Northeast,Hall,5,0,0.0,No Sales
+2026-11,12810133,RR_Multi,80101703,UPC I,UPC - Upper Northeast,Hall,5,0,0.0,No Sales
+2026-11,39113843,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,0,0.0,No Sales
+2026-11,12810372,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,0,0.0,No Sales
+2026-11,12809285,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,0,0.0,No Sales
+2026-11,12810379,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,0,0.0,No Sales
+2026-11,12810002,RR_Multi,80101710,UPC II,UPC - Upper South,Hall,5,0,0.0,No Sales
+2026-11,010J3735,RR_ITF,80101696,UPC II,UPC - West,Hall,5,0,0.0,No Sales
+2026-11,010H8315,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810420,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810581,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12809336,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12808858,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12809720,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,01092138,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810509,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810481,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810453,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12809554,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810245,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,01052482,Ret_chpn_1,80100480,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810401,RR_Multi,80101182,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,01069697,Ret_chpn_1,80101182,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810265,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,010D3028,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12808748,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810549,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,38303615,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12809520,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12809519,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,01070028,Ret_chpn_1,80101305,BMA,BMA I - North West,Matching,8,0,0.0,No Sales
+2026-11,12810584,RR_Multi,80100483,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01075853,Ret_chpn_1,80100483,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01073814,Ret_chpn_1,80100483,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12809407,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12809875,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01097420,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01091702,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01075152,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,010H9472,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01027571,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01076375,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01032631,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810468,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12809859,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810376,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12808944,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12808061,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01092766,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01074582,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01084501,RR_ITF,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,010N3909,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810585,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810397,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01075618,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810576,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12809478,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810405,RR_Multi,80100928,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,01092552,Ret_chpn_1,80100928,BMA,BMA II - South West,Matching,8,0,0.0,No Sales
+2026-11,12810482,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,12810427,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,010J0731,RR_ITF,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,01022425,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,12810396,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,12810409,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,12810186,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,38004448,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,01087488,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,010G9247,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,0,0.0,No Sales
+2026-11,12810446,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,010J1642,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,12810506,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,12810465,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,01048298,RR_ITF,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,12810443,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,010H7056,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,01060059,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,010L6771,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,01049336,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,010D0313,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,010H1159,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,0,0.0,No Sales
+2026-11,12809770,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809712,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12807805,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010E5550,RR_ITF,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809836,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809262,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809844,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809038,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809806,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01076709,Ret_chpn_1,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010L4569,Ret_chpn_1,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010L6302,Ret_chpn_1,80100622,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12808229,RR_Multi,80100623,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010D5464,Ret_chpn_1,80100623,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01070015,Ret_chpn_1,80100623,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01057385,RR_ITF,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010H2981,RR_ITF_Apple,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01047304,RR_ITF_Apple,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01069200,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12810579,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809534,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01025994,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12808736,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010D4800,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01083665,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01092803,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12807770,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01048712,RR_ITF,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01030759,RR_Multi,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010L3593,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01055869,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01070734,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01039135,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010E4585,RR_ITF,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,010J5206,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01073085,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12809713,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12808121,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01048325,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01091580,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01092771,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01039369,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12810544,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,01028922,Ret_chpn_1,80101221,BMA,BMA V - Central,Matching,8,0,0.0,No Sales
+2026-11,12807689,RR_ITF,80100926,UPC II,UPC - Central,Matching,8,0,0.0,No Sales
+2026-11,12810342,RR_Multi,80100926,UPC II,UPC - Central,Matching,8,0,0.0,No Sales
+2026-11,12809413,RR_Multi,80100926,UPC II,UPC - Central,Matching,8,0,0.0,No Sales
+2026-11,12810568,RR_Multi,80100926,UPC II,UPC - Central,Matching,8,0,0.0,No Sales
+2026-11,12810498,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,12809872,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810260,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810535,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,01052573,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,010H9178,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810559,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810548,RR_Multi,80100615,UPC II,UPC - East,Matching,8,0,0.0,No Sales
+2026-11,38304224,RR_Multi,80100615,UPC II,UPC - East,Matching,8,0,0.0,No Sales
+2026-11,12809774,RR_Multi,80100615,UPC II,UPC - East,Matching,8,0,0.0,No Sales
+2026-11,12810492,RR_Multi,80100837,UPC II,UPC - East,Matching,8,0,0.0,No Sales
+2026-11,12810250,RR_Multi,80101189,UPC II,UPC - East,Matching,8,0,0.0,No Sales
+2026-11,12810206,RR_Multi,80101198,UPC I,UPC - Lower North,Matching,8,0,0.0,No Sales
+2026-11,12810276,RR_Multi,80101198,UPC I,UPC - Lower North,Matching,8,0,0.0,No Sales
+2026-11,12807999,Ret_chpn_1,80101198,UPC I,UPC - Lower North,Matching,8,0,0.0,No Sales
+2026-11,010H4764,Ret_chpn_1,80101198,UPC I,UPC - Lower North,Matching,8,0,0.0,No Sales
+2026-11,12810552,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810562,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,010H7268,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,39130087,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810469,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,010L6982,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810318,RR_Multi,80100839,UPC II,UPC - Lower South,Matching,8,0,0.0,No Sales
+2026-11,12810539,RR_Multi,80100839,UPC II,UPC - Lower South,Matching,8,0,0.0,No Sales
+2026-11,12807677,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,0,0.0,No Sales
+2026-11,12810227,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,0,0.0,No Sales
+2026-11,12807647,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,0,0.0,No Sales
+2026-11,12808036,RR_ITF,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810156,RR_Multi,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12809852,RR_Multi,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12809910,RR_Multi,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810567,RR_Multi,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,010J2597,Ret_chpn_1,80100486,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12808394,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,010L0445,Ret_chpn_1,80100621,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810291,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810292,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,01088022,Ret_chpn_1,80101067,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810452,RR_Multi,80101117,UPC I,UPC - Upper North,Matching,8,0,0.0,No Sales
+2026-11,12810146,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,12809179,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,12810246,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,12809759,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,12807591,Ret_chpn_1,80101183,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,39124403,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,010J1353,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,0,0.0,No Sales
+2026-11,010E0152,RR_ITF_Apple,80100476,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,12809638,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,12810527,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,01097323,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,010J1078,RR_Multi,80100838,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,12810181,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,0,0.0,No Sales
+2026-11,12809516,RR_Multi,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,12809551,RR_Multi,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,12810570,RR_Multi,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,12807876,Ret_chpn_1,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,010O4064,Ret_chpn_1,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,010O5552,Ret_chpn_1,80100840,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,010Q6136,RR_ITF_Apple,80101214,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,12810243,RR_Multi,80101214,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,01075140,Ret_chpn_1,80101214,UPC II,UPC - West,Matching,8,0,0.0,No Sales
+2026-11,12810387,RR_Multi,80101180,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,12808899,RR_Multi,80101264,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,01095379,RR_Multi,80101264,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,01052468,Ret_chpn_1,80101264,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,12809781,RR_Multi,80101271,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,010N4833,RR_Multi,80101584,BMA,BMA I - North West,Non Matching,8,0,0.0,No Sales
+2026-11,39118244,RR_Multi,80100566,BMA,BMA II - South West,Non Matching,8,0,0.0,No Sales
+2026-11,38304047,RR_Multi,80100566,BMA,BMA II - South West,Non Matching,8,0,0.0,No Sales
+2026-11,12810578,RR_Multi,80100736,BMA,BMA II - South West,Non Matching,8,0,0.0,No Sales
+2026-11,01045368,RR_Multi,80100736,BMA,BMA II - South West,Non Matching,8,0,0.0,No Sales
+2026-11,12809915,RR_Multi,80100736,BMA,BMA II - South West,Non Matching,8,0,0.0,No Sales
+2026-11,12809845,RR_Multi,80100805,BMA,BMA IV - South East,Non Matching,8,0,0.0,No Sales
+2026-11,010O2425,RR_Multi,80100805,BMA,BMA IV - South East,Non Matching,8,0,0.0,No Sales
+2026-11,12810390,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,0,0.0,No Sales
+2026-11,12810467,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,0,0.0,No Sales
+2026-11,010J4920,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,0,0.0,No Sales
+2026-11,12809011,RR_Multi,80100715,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12810366,RR_Multi,80100729,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01048235,RR_Multi,80100729,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01029433,RR_ITF,80101269,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12810572,RR_Multi,80101347,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01011258,RR_Multi,80101347,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01032838,RR_ITF,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,010H2216,RR_ITF,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,010O0085,RR_Multi,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12809370,RR_Multi,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12807803,RR_Multi,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01069199,Ret_chpn_1,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01059591,Ret_chpn_1,80101349,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12809926,RR_Multi,80101363,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,010D2410,Ret_chpn_1,80101363,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12808087,RR_Multi,80101630,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12809105,RR_Multi,80101633,BMA,BMA V - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01033133,RR_Multi,80100725,UPC II,UPC - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12808032,RR_Multi,80100763,UPC II,UPC - Central,Non Matching,8,0,0.0,No Sales
+2026-11,01053206,RR_Multi,80100796,UPC II,UPC - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12807458,RR_Multi,80100796,UPC II,UPC - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12808359,RR_Multi,80101626,UPC II,UPC - Central,Non Matching,8,0,0.0,No Sales
+2026-11,12810314,RR_Multi,80100771,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810586,RR_Multi,80100771,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809893,RR_Multi,80100783,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809877,RR_Multi,80100783,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809935,RR_Multi,80100790,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010J4577,RR_Multi,80100802,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01094671,RR_Multi,80100832,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810476,RR_Multi,80100832,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01092325,RR_Multi,80100847,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810213,RR_Multi,80100847,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809743,RR_Multi,80100864,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010H0564,RR_Multi,80100864,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810558,RR_Multi,80101227,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810524,RR_Multi,80101227,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810566,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010D4896,RR_Multi,80100859,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,38004492,RR_Multi,80100859,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,010L6026,RR_Multi,80100859,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,010D8269,RR_Multi,80101184,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,01074216,RR_Multi,80101184,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,010G5589,RR_Multi,80101378,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,01093316,RR_Multi,80101378,UPC II,UPC - East,Non Matching,8,0,0.0,No Sales
+2026-11,010L6711,RR_Multi,80100865,UPC I,UPC - Lower North,Non Matching,8,0,0.0,No Sales
+2026-11,12810555,RR_Multi,80100764,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809587,RR_Multi,80100765,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810176,RR_Multi,80100769,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010E1034,RR_Multi,80100769,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12808471,RR_Multi,80100769,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810380,RR_Multi,80100776,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809274,RR_Multi,80100793,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010J0114,RR_Multi,80100793,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010O4433,RR_Multi,80100794,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01069334,RR_Multi,80100794,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809623,RR_Multi,80100794,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810403,RR_Multi,80100842,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810365,RR_Multi,80100842,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810473,RR_Multi,80100851,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809086,RR_Multi,80100851,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810545,RR_Multi,80100860,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010N7495,RR_Multi,80100860,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810505,RR_Multi,80100862,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809213,RR_Multi,80100863,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810553,RR_Multi,80100867,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810546,RR_Multi,80100869,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809835,RR_Multi,80100870,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810547,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12808867,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01049059,Ret_chpn_1,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010L6783,RR_Multi,80101265,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12807540,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010E5348,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01068346,RR_Multi,80101331,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809393,RR_Multi,80101345,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010L6265,RR_Multi,80101377,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810347,RR_Multi,80101377,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12808240,RR_Multi,80101377,UPC I,UPC - Lower Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809343,RR_Multi,80100853,UPC II,UPC - Lower South,Non Matching,8,0,0.0,No Sales
+2026-11,010N0108,RR_Multi,80100853,UPC II,UPC - Lower South,Non Matching,8,0,0.0,No Sales
+2026-11,38304134,RR_Multi,80100853,UPC II,UPC - Lower South,Non Matching,8,0,0.0,No Sales
+2026-11,010J1215,RR_Multi,80100792,UPC I,UPC - Upper North,Non Matching,8,0,0.0,No Sales
+2026-11,12808151,RR_Multi,80100798,UPC I,UPC - Upper North,Non Matching,8,0,0.0,No Sales
+2026-11,38303964,RR_Multi,80101281,UPC I,UPC - Upper North,Non Matching,8,0,0.0,No Sales
+2026-11,12807940,RR_Multi,80100628,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810463,RR_Multi,80100727,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01059467,RR_Multi,80100749,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810525,RR_Multi,80100760,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809579,RR_Multi,80100786,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,01059464,RR_Multi,80100801,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810406,RR_Multi,80100803,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,38005084,RR_Multi,80100848,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010E4204,RR_Multi,80100848,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810480,RR_Multi,80100873,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010H4677,RR_Multi,80100873,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12808309,RR_Multi,80101289,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810532,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809822,RR_Multi,80101328,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010H8975,RR_Multi,80101346,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810573,RR_Multi,80101346,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810357,RR_Multi,80101346,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12810441,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,12809729,RR_Multi,80101648,UPC I,UPC - Upper Northeast,Non Matching,8,0,0.0,No Sales
+2026-11,010J1044,RR_Multi,80100822,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,12810528,RR_Multi,80100822,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,010L9052,RR_Multi,80100822,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,12810462,RR_Multi,80101122,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,010L6307,RR_Multi,80101122,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,12810321,RR_Multi,80101122,UPC II,UPC - Upper South,Non Matching,8,0,0.0,No Sales
+2026-11,12810274,RR_Multi,80100627,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12810368,RR_Multi,80100721,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12809645,RR_Multi,80100784,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12810152,RR_Multi,80100806,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12810248,RR_Multi,80100821,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12809320,RR_Multi,80100821,UPC II,UPC - West,Non Matching,8,0,0.0,No Sales
+2026-11,12808150,RR_ITF,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809209,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809651,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809652,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809762,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808834,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809141,RR_ITF,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H7025,RR_ITF_Apple,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808365,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809660,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809515,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01054486,Ret_chpn_1,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01051676,Ret_chpn_1,80100480,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12810290,RR_ITF,80101182,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H8876,RR_ITF_Apple,80101182,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12807714,Ret_chpn_1,80101182,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01057330,Ret_chpn_1,80101182,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H7101,RR_ITF,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,010F8555,RR_ITF,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01033603,RR_ITF_Apple,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809681,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12810355,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12807974,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01068978,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12807700,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809115,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808413,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01084504,RR_Multi,80101627,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,010Q5421,Ret_chpn_1,80101713,BMA,BMA I - North West,Matching,8,1,2.5,Needs Improvement
+2026-11,01025110,RR_Multi,80100483,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808624,RR_Multi,80100483,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12807718,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808124,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010E5547,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01074655,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010D2671,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H5349,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010G9536,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01055203,RR_ITF_Apple,80100565,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808950,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01069469,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01078205,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808676,RR_ITF,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01017152,RR_ITF,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H7119,RR_ITF,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01067834,RR_ITF,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H5864,RR_ITF_Apple,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809611,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12810400,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01053636,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809916,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H1618,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809718,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H6222,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01087032,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01031765,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01049324,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01069491,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01054343,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12809824,RR_Multi,80100928,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808323,RR_Multi,80100928,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,12808237,RR_Multi,80100928,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,01034881,Ret_chpn_1,80100928,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010H1899,Ret_chpn_1,80100928,BMA,BMA II - South West,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6083,RR_ITF,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010J8954,RR_ITF,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010O0058,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010N3316,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010L7539,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810519,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010J4212,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810173,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810381,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810460,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12807860,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810211,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010L4571,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12809607,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01068954,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01085279,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010G9248,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010F8570,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010H5494,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01047211,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01073224,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01058093,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010E9025,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01023523,Ret_chpn_1,80100925,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010G9240,RR_ITF,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010E6326,RR_ITF_Apple,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810332,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,39128380,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810330,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01035060,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12809685,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01043980,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01096486,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01024295,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01055947,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010E2950,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010H2183,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010J2195,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010H9535,RR_ITF,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,12808501,RR_Multi,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010F8580,RR_Multi,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010E5352,Ret_chpn_1,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010L0077,Ret_chpn_1,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,01070325,Ret_chpn_1,80101341,BMA,BMA III - North East,Matching,8,1,2.5,Needs Improvement
+2026-11,010N7568,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01095851,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,39127184,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6088,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,12808961,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,39119941,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,010H4225,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,010J1636,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01078591,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01079933,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,12809635,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810520,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01028888,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01047193,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,010H5336,RR_ITF,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01043911,RR_ITF_Apple,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01057393,RR_ITF_Apple,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,010N6472,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,12808239,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01043190,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01074650,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01074507,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01027061,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01026318,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,01048312,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,1,2.5,Needs Improvement
+2026-11,12809654,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,010F8548,Ret_chpn_1,80100478,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01085282,RR_ITF_Apple,80100622,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01062623,RR_ITF_Apple,80100622,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12809625,RR_Multi,80100622,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01076706,Ret_chpn_1,80100622,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01054484,RR_ITF,80100623,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12808583,RR_Multi,80100623,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01071240,RR_ITF,80100836,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12809911,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12808999,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,010H7671,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12810217,RR_Multi,80101068,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01038253,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01085276,RR_ITF_Apple,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01027620,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12810550,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12808846,RR_Multi,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01052221,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01054350,Ret_chpn_1,80101186,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,12809909,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01083147,Ret_chpn_1,80101221,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01096493,Ret_chpn_1,80101221,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01031189,Ret_chpn_1,80101221,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,010D5904,Ret_chpn_1,80101221,BMA,BMA V - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01070085,RR_ITF,80100926,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01068985,Ret_chpn_1,80100926,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01094365,RR_ITF,80101307,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,010D2344,RR_Multi,80101307,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6912,RR_Multi,80101307,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01090831,RR_Multi,80101628,UPC II,UPC - Central,Matching,8,1,2.5,Needs Improvement
+2026-11,01092328,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,010H6132,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,12810253,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,12810478,RR_Multi,80100615,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01088282,Ret_chpn_1,80100615,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,010N2399,Ret_chpn_1,80100615,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810569,RR_Multi,80100625,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810203,RR_Multi,80100625,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01031397,Ret_chpn_1,80100625,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01045421,Ret_chpn_1,80100625,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01045422,Ret_chpn_1,80100625,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01042364,Ret_chpn_1,80100837,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,12810263,RR_Multi,80101189,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,010N2718,RR_Multi,80101391,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,12808798,RR_Multi,80101391,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01080876,Ret_chpn_1,80101391,UPC II,UPC - East,Matching,8,1,2.5,Needs Improvement
+2026-11,01080308,Ret_chpn_1,80101198,UPC I,UPC - Lower North,Matching,8,1,2.5,Needs Improvement
+2026-11,12809140,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,010O1455,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,010J4201,RR_ITF,80100839,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810479,RR_Multi,80100839,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810049,RR_Multi,80100839,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,010E2192,Ret_chpn_1,80100839,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,01068673,RR_ITF,80101222,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,38303862,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810522,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810533,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,1,2.5,Needs Improvement
+2026-11,010E4398,RR_ITF,80100486,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,38002195,RR_ITF_Apple,80100486,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,01096928,Ret_chpn_1,80100486,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,01050893,Ret_chpn_1,80100486,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,010F8576,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,010L2952,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,12810395,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,12809557,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,1,2.5,Needs Improvement
+2026-11,12810047,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,12810512,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,12810538,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,1,2.5,Needs Improvement
+2026-11,010H3861,RR_ITF_Apple,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810358,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12808430,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809387,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810412,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12808654,RR_Multi,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,01097325,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,010J0384,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,010H9198,RR_Multi,80100838,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810416,RR_Multi,80100838,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809807,RR_Multi,80100838,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12810417,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12807586,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809692,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809723,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809125,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,12809839,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6235,Ret_chpn_1,80101115,UPC II,UPC - Upper South,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6645,RR_ITF,80100840,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,01085573,RR_ITF,80100840,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,12807839,RR_ITF,80101214,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,010O1412,RR_Multi,80101214,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,010L6458,Ret_chpn_1,80101214,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,01095679,Ret_chpn_1,80101629,UPC II,UPC - West,Matching,8,1,2.5,Needs Improvement
+2026-11,010O5917,RR_Multi,80101180,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01034156,Ret_chpn_1,80101180,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807623,RR_Multi,80101218,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6081,RR_Multi,80101223,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L4565,RR_Multi,80101264,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01070013,Ret_chpn_1,80101264,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39105570,RR_Multi,80101271,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010H7777,Ret_chpn_1,80101584,BMA,BMA I - North West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010E4430,RR_Multi,80100566,BMA,BMA II - South West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809132,RR_Multi,80101123,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807826,RR_Multi,80101123,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6106,RR_Multi,80101123,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01054512,Ret_chpn_1,80101123,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01086280,Ret_chpn_1,80101123,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010D9707,RR_Multi,80101350,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,38001880,RR_Multi,80101350,BMA,BMA III - North East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6770,RR_Multi,80100805,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010N6112,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809589,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01035238,Ret_chpn_1,80101418,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810475,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808188,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810574,RR_Multi,80100715,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01090513,RR_Multi,80101349,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809779,RR_Multi,80101363,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809863,RR_Multi,80101363,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808680,RR_Multi,80101630,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810554,RR_Multi,80101633,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010O4460,RR_Multi,80101633,BMA,BMA V - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808659,RR_Multi,80100725,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807765,RR_Multi,80100763,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810551,RR_Multi,80100763,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808890,RR_Multi,80100796,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01073720,RR_Multi,80100856,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010D1871,RR_Multi,80100856,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010N7671,RR_Multi,80101329,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809728,RR_Multi,80101329,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J8615,RR_Multi,80101329,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J4530,RR_Multi,80101351,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809033,RR_Multi,80101351,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810337,RR_Multi,80101626,UPC II,UPC - Central,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809143,RR_Multi,80100778,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808177,RR_Multi,80100783,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809523,RR_Multi,80100797,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01089065,RR_Multi,80100802,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810224,RR_Multi,80100847,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J5211,RR_Multi,80100864,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010H6128,RR_Multi,80101227,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808354,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810354,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01059492,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810399,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809564,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810393,RR_Multi,80100479,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,38001617,RR_Multi,80100479,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010G1707,RR_Multi,80100479,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01093393,Ret_chpn_1,80100479,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010O0150,RR_Multi,80100859,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L5983,RR_Multi,80101184,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6064,RR_Multi,80101184,UPC II,UPC - East,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J2971,RR_Multi,80101306,UPC I,UPC - Lower North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809390,RR_Multi,80101308,UPC I,UPC - Lower North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010N5593,RR_Multi,80101308,UPC I,UPC - Lower North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809406,RR_Multi,80100774,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810523,RR_Multi,80100776,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,38301363,RR_Multi,80100776,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809269,RR_Multi,80100781,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809890,RR_Multi,80100781,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,38001473,RR_Multi,80100793,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39111335,RR_Multi,80100845,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01061825,RR_Multi,80100851,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010N7497,RR_Multi,80100860,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809382,RR_Multi,80100863,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807798,RR_Multi,80100867,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807874,RR_Multi,80100872,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810419,RR_Multi,80100872,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39118441,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,01070432,RR_Multi,80101265,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810466,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810242,RR_Multi,80101331,UPC I,UPC - Lower Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808646,RR_Multi,80100853,UPC II,UPC - Lower South,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810100,RR_Multi,80100750,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L4971,RR_Multi,80100750,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39111196,RR_Multi,80100754,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807933,RR_Multi,80100804,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12804011,RR_Multi,80100849,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810540,RR_Multi,80100849,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810450,RR_Multi,80100858,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809560,RR_Multi,80101013,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010G7719,RR_Multi,80101013,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6947,RR_Multi,80101281,UPC I,UPC - Upper North,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L8245,RR_Multi,80100727,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39124818,RR_Multi,80100756,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808840,RR_Multi,80100770,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010L6846,RR_Multi,80100770,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808002,RR_Multi,80100801,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809294,RR_Multi,80100803,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807985,RR_Multi,80100873,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809792,RR_Multi,80101289,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809612,RR_Multi,80101292,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810199,RR_Multi,80101292,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010N8246,RR_Multi,80101293,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810514,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810537,RR_Multi,80101327,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J6318,RR_Multi,80101328,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810162,RR_Multi,80101648,UPC I,UPC - Upper Northeast,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809555,RR_Multi,80100822,UPC II,UPC - Upper South,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010J2258,Ret_chpn_1,80100822,UPC II,UPC - Upper South,Non Matching,8,1,2.5,Needs Improvement
+2026-11,010O4864,RR_Multi,80100733,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,38004465,RR_Multi,80100733,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12808443,RR_Multi,80100733,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809208,RR_Multi,80100784,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12807733,RR_Multi,80100784,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12809582,RR_Multi,80100821,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,12810425,RR_Multi,80101312,UPC II,UPC - West,Non Matching,8,1,2.5,Needs Improvement
+2026-11,39129679,RR_Multi,80101679,BMA,BMA II - South West,COCO,5,1,2.5,Getting There
+2026-11,12810063,RR_Multi,80101663,UPC I,UPC - Central Northeast,COCO,5,1,2.5,Getting There
+2026-11,12809949,RR_Multi,80101680,UPC I,UPC - Central Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810018,RR_Multi,80101681,UPC I,UPC - Central Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810286,RR_Multi,80101684,UPC I,UPC - Central Northeast,COCO,5,1,2.5,Getting There
+2026-11,010L7813,RR_Multi,80101658,UPC I,UPC - Lower North,COCO,5,1,2.5,Getting There
+2026-11,12810315,RR_Multi,80101665,UPC I,UPC - Lower North,COCO,5,1,2.5,Getting There
+2026-11,39122333,RR_Multi,80101653,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810235,RR_Multi,80101653,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810348,RR_Multi,80101660,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12809042,RR_Multi,80101666,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,010E0125,RR_Multi,80101666,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810098,RR_Multi,80101672,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810198,RR_Multi,80101673,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810209,RR_Multi,80101673,UPC I,UPC - Lower Northeast,COCO,5,1,2.5,Getting There
+2026-11,12809989,RR_Multi,80101687,UPC II,UPC - Lower South,COCO,5,1,2.5,Getting There
+2026-11,12810510,RR_Multi,80101661,UPC I,UPC - Upper North,COCO,5,1,2.5,Getting There
+2026-11,12807697,RR_Multi,80101661,UPC I,UPC - Upper North,COCO,5,1,2.5,Getting There
+2026-11,12810220,RR_Multi,80101651,UPC I,UPC - Upper Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810411,RR_Multi,80101651,UPC I,UPC - Upper Northeast,COCO,5,1,2.5,Getting There
+2026-11,12809695,RR_Multi,80101657,UPC I,UPC - Upper Northeast,COCO,5,1,2.5,Getting There
+2026-11,12810517,RR_Multi,80101668,UPC I,UPC - Upper Northeast,COCO,5,1,2.5,Getting There
+2026-11,12808843,RR_Multi,80101662,UPC II,UPC - Upper South,COCO,5,1,2.5,Getting There
+2026-11,12810046,RR_Multi,80101675,UPC II,UPC - Upper South,COCO,5,1,2.5,Getting There
+2026-11,12809980,RR_Multi,80101688,UPC II,UPC - Upper South,COCO,5,1,2.5,Getting There
+2026-11,12810071,RR_Multi,80101688,UPC II,UPC - Upper South,COCO,5,1,2.5,Getting There
+2026-11,12808921,RR_Multi,80101669,UPC II,UPC - West,COCO,5,1,2.5,Getting There
+2026-11,12810084,RR_Multi,80101669,UPC II,UPC - West,COCO,5,1,2.5,Getting There
+2026-11,12810109,RR_Multi,80101682,UPC II,UPC - West,COCO,5,1,2.5,Getting There
+2026-11,010H4238,RR_ITF,80101698,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,12810218,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,12810491,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,12809353,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,12810008,RR_Multi,80101702,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,12810076,Ret_chpn_1,80101702,BMA,BMA I - North West,Hall,5,1,2.5,Getting There
+2026-11,01047181,RR_ITF,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12807852,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,010J7562,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12809996,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12809993,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810028,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,010J7561,RR_ITF,80101707,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12809965,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810223,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810264,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,01055160,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12807641,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810113,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810426,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810464,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810048,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,1,2.5,Getting There
+2026-11,12810079,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,1,2.5,Getting There
+2026-11,12809986,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,1,2.5,Getting There
+2026-11,12809988,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,1,2.5,Getting There
+2026-11,12809975,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,1,2.5,Getting There
+2026-11,010L5374,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,1,2.5,Getting There
+2026-11,12809982,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,1,2.5,Getting There
+2026-11,010J2580,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,1,2.5,Getting There
+2026-11,010J0181,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,1,2.5,Getting There
+2026-11,12810483,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,1,2.5,Getting There
+2026-11,12810030,RR_Multi,80101695,UPC II,UPC - East,Hall,5,1,2.5,Getting There
+2026-11,12810090,RR_Multi,80101695,UPC II,UPC - East,Hall,5,1,2.5,Getting There
+2026-11,39128114,RR_Multi,80101695,UPC II,UPC - East,Hall,5,1,2.5,Getting There
+2026-11,12810451,RR_Multi,80101700,UPC II,UPC - East,Hall,5,1,2.5,Getting There
+2026-11,010O6206,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,1,2.5,Getting There
+2026-11,12810225,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,1,2.5,Getting There
+2026-11,12810097,RR_Multi,80101692,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,12810065,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,01038060,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,12809225,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,39127451,RR_Multi,80101699,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,12810042,Ret_chpn_1,80101699,UPC II,UPC - Lower South,Hall,5,1,2.5,Getting There
+2026-11,12810074,RR_ITF,80101697,UPC I,UPC - Upper Northeast,Hall,5,1,2.5,Getting There
+2026-11,12810197,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,1,2.5,Getting There
+2026-11,12810487,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,1,2.5,Getting There
+2026-11,12809981,RR_Multi,80101710,UPC II,UPC - Upper South,Hall,5,1,2.5,Getting There
+2026-11,12810167,Ret_chpn_1,80101693,UPC II,UPC - West,Hall,5,1,2.5,Getting There
+2026-11,12810257,Ret_chpn_1,80101693,UPC II,UPC - West,Hall,5,1,2.5,Getting There
+2026-11,12809742,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01075126,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010D6456,RR_ITF,80100480,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12810271,RR_Multi,80101182,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01072950,Ret_chpn_1,80101182,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010G9239,RR_ITF,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010H9473,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01094958,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12808453,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12809270,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01074850,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01087019,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010H9508,RR_ITF,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010H9506,RR_ITF,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010H5698,RR_ITF_Apple,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12810384,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01052499,Ret_chpn_1,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01062540,Ret_chpn_1,80101305,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,010E4450,Ret_chpn_1,80101627,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12810439,RR_Multi,80101713,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12810288,RR_Multi,80101713,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,12808303,Ret_chpn_1,80101713,BMA,BMA I - North West,Matching,8,2,5.0,Getting There
+2026-11,01046971,RR_ITF,80100483,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01074257,RR_Multi,80100483,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01076141,Ret_chpn_1,80100483,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010F8586,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01044539,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01040851,RR_ITF_Apple,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010N4810,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01040454,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01049648,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,12809873,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,12809394,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01080302,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010H9700,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01074688,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01049308,Ret_chpn_1,80100565,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01031766,RR_Multi,80100626,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01026587,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,01087604,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010N6125,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,12809514,RR_Multi,80100928,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010D6489,Ret_chpn_1,80100928,BMA,BMA II - South West,Matching,8,2,5.0,Getting There
+2026-11,010H8532,RR_ITF,80100925,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,01075328,RR_ITF,80100925,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010O0432,RR_ITF_Apple,80100925,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010G9246,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010O5398,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010H1912,RR_ITF,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010H3553,RR_ITF,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,01073421,RR_ITF_Apple,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,01026427,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,12808930,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,12808234,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,01086109,Ret_chpn_1,80101340,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,12810204,RR_Multi,80101341,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010F8562,Ret_chpn_1,80101341,BMA,BMA III - North East,Matching,8,2,5.0,Getting There
+2026-11,010J2568,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01060986,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010N3918,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,12808857,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01040960,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010J6173,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01067123,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01073000,RR_ITF,80101070,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010L5226,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01069275,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010E3690,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01096806,Ret_chpn_1,80101070,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01069194,RR_ITF,80101071,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01025153,RR_ITF_Apple,80101071,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,12807883,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010D3495,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,01086883,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,2,5.0,Getting There
+2026-11,010G6284,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,010J4867,RR_Multi,80100478,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01081353,RR_ITF,80100622,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,010E7338,Ret_chpn_1,80100622,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01081966,RR_ITF,80100623,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01055221,RR_ITF,80100623,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01028453,RR_ITF,80100836,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,12807810,Ret_chpn_1,80100836,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01084584,RR_ITF,80101068,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01049983,RR_ITF_Apple,80101068,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,12809424,RR_Multi,80101068,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,12808689,RR_Multi,80101068,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,010G5406,Ret_chpn_1,80101068,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01062511,RR_ITF,80101186,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01074241,RR_ITF_Apple,80101186,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01070664,RR_ITF,80101221,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,12809462,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,01075860,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,2,5.0,Getting There
+2026-11,12809896,RR_Multi,80100926,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,010E1689,Ret_chpn_1,80100926,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,12803804,RR_ITF,80101307,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,010N1113,RR_ITF,80101628,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,12810530,RR_Multi,80101628,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,01061302,RR_Multi,80101628,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,12809054,RR_Multi,80101628,UPC II,UPC - Central,Matching,8,2,5.0,Getting There
+2026-11,01059507,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,2,5.0,Getting There
+2026-11,12808431,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,2,5.0,Getting There
+2026-11,12810565,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,2,5.0,Getting There
+2026-11,12810564,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,2,5.0,Getting There
+2026-11,010L6913,Ret_chpn_1,80101303,UPC I,UPC - Central Northeast,Matching,8,2,5.0,Getting There
+2026-11,12809709,RR_Multi,80100615,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,010L7417,RR_ITF,80100625,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,01052664,Ret_chpn_1,80100625,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,010N7469,RR_ITF,80100837,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,12807660,RR_Multi,80100837,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,010E3719,RR_Multi,80100837,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,010D4883,Ret_chpn_1,80100837,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,01079258,RR_Multi,80101189,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,12808117,RR_Multi,80101391,UPC II,UPC - East,Matching,8,2,5.0,Getting There
+2026-11,12807868,RR_ITF,80101198,UPC I,UPC - Lower North,Matching,8,2,5.0,Getting There
+2026-11,010H2535,RR_ITF,80101198,UPC I,UPC - Lower North,Matching,8,2,5.0,Getting There
+2026-11,12809767,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,12808008,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,12808706,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,010H5705,Ret_chpn_1,80101304,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,01069523,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,010N7637,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,2,5.0,Getting There
+2026-11,010H4515,Ret_chpn_1,80100839,UPC II,UPC - Lower South,Matching,8,2,5.0,Getting There
+2026-11,12810241,RR_Multi,80101222,UPC II,UPC - Lower South,Matching,8,2,5.0,Getting There
+2026-11,01088371,Ret_chpn_1,80101222,UPC II,UPC - Lower South,Matching,8,2,5.0,Getting There
+2026-11,010L6800,Ret_chpn_1,80101222,UPC II,UPC - Lower South,Matching,8,2,5.0,Getting There
+2026-11,010H7388,RR_ITF_Apple,80100486,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010J4122,Ret_chpn_1,80100486,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,01057319,Ret_chpn_1,80100486,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,01074715,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,12807507,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010D2802,Ret_chpn_1,80100621,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010N2401,RR_ITF,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010H8816,RR_ITF,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,12809158,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010O2742,Ret_chpn_1,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,01080990,Ret_chpn_1,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,01097361,Ret_chpn_1,80101067,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,010N6754,RR_Multi,80101117,UPC I,UPC - Upper North,Matching,8,2,5.0,Getting There
+2026-11,12808476,RR_ITF,80101183,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,12810015,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,010E0102,Ret_chpn_1,80101183,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,12809151,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,010J8724,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,01070042,Ret_chpn_1,80101196,UPC I,UPC - Upper Northeast,Matching,8,2,5.0,Getting There
+2026-11,010L7810,RR_ITF,80100476,UPC II,UPC - Upper South,Matching,8,2,5.0,Getting There
+2026-11,12808538,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,2,5.0,Getting There
+2026-11,010D3147,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,2,5.0,Getting There
+2026-11,01067918,RR_Multi,80101115,UPC II,UPC - Upper South,Matching,8,2,5.0,Getting There
+2026-11,01087131,Ret_chpn_1,80101115,UPC II,UPC - Upper South,Matching,8,2,5.0,Getting There
+2026-11,12810444,RR_Multi,80100840,UPC II,UPC - West,Matching,8,2,5.0,Getting There
+2026-11,01042235,Ret_chpn_1,80100840,UPC II,UPC - West,Matching,8,2,5.0,Getting There
+2026-11,010L6648,RR_ITF,80101214,UPC II,UPC - West,Matching,8,2,5.0,Getting There
+2026-11,12807799,Ret_chpn_1,80101214,UPC II,UPC - West,Matching,8,2,5.0,Getting There
+2026-11,010J3014,RR_ITF_Apple,80101629,UPC II,UPC - West,Matching,8,2,5.0,Getting There
+2026-11,12809683,RR_Multi,80101217,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,010O5841,RR_Multi,80101217,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,12807557,RR_Multi,80101218,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,12809848,RR_Multi,80101223,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,12808173,RR_Multi,80101271,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,12808645,RR_Multi,80101584,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,12809810,RR_Multi,80101584,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,010J1195,RR_Multi,80101623,BMA,BMA I - North West,Non Matching,8,2,5.0,Getting There
+2026-11,010L6767,RR_Multi,80101123,BMA,BMA III - North East,Non Matching,8,2,5.0,Getting There
+2026-11,01056422,Ret_chpn_1,80101123,BMA,BMA III - North East,Non Matching,8,2,5.0,Getting There
+2026-11,12808046,RR_Multi,80101350,BMA,BMA III - North East,Non Matching,8,2,5.0,Getting There
+2026-11,12810521,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,010L9662,RR_ITF,80101418,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,12808040,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,010J1201,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,01017609,Ret_chpn_1,80101418,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,010H5727,Ret_chpn_1,80101418,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,12810580,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,2,5.0,Getting There
+2026-11,12810518,RR_Multi,80100715,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01057875,RR_Multi,80100715,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01072940,RR_Multi,80100729,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,12810221,RR_Multi,80101269,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01035335,RR_Multi,80101269,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,010N9118,Ret_chpn_1,80101269,BMA,BMA V - Central,Non Matching,8,2,5.0,Getting There
+2026-11,010O5884,RR_Multi,80100763,UPC II,UPC - Central,Non Matching,8,2,5.0,Getting There
+2026-11,12807767,RR_Multi,80100763,UPC II,UPC - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01095030,Ret_chpn_1,80100763,UPC II,UPC - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01073166,RR_Multi,80100841,UPC II,UPC - Central,Non Matching,8,2,5.0,Getting There
+2026-11,12807553,RR_Multi,80100856,UPC II,UPC - Central,Non Matching,8,2,5.0,Getting There
+2026-11,01059024,RR_Multi,80100771,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12807501,RR_Multi,80100778,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809778,RR_Multi,80100783,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810307,RR_Multi,80100790,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,01060491,RR_Multi,80100797,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,39127837,RR_Multi,80100852,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809509,RR_Multi,80100861,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809761,RR_Multi,80100861,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010O4050,RR_Multi,80100861,UPC I,UPC - Central Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,01042379,RR_Multi,80101184,UPC II,UPC - East,Non Matching,8,2,5.0,Getting There
+2026-11,38004866,RR_Multi,80101378,UPC II,UPC - East,Non Matching,8,2,5.0,Getting There
+2026-11,010N4244,RR_Multi,80100782,UPC I,UPC - Lower North,Non Matching,8,2,5.0,Getting There
+2026-11,12810542,RR_Multi,80100854,UPC I,UPC - Lower North,Non Matching,8,2,5.0,Getting There
+2026-11,12809171,RR_Multi,80101308,UPC I,UPC - Lower North,Non Matching,8,2,5.0,Getting There
+2026-11,12810494,RR_Multi,80100758,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12808803,RR_Multi,80100772,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810541,RR_Multi,80100772,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010G2019,RR_Multi,80100772,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809517,RR_Multi,80100774,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810402,RR_Multi,80100774,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810494,RR_Multi,80100774,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,01074760,RR_Multi,80100781,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12808054,RR_Multi,80100842,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010L6259,RR_Multi,80100845,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010O1074,RR_Multi,80100851,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,38004359,RR_Multi,80100862,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12807480,RR_Multi,80100862,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809850,RR_Multi,80100863,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809005,RR_Multi,80100867,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010O5389,RR_Multi,80100869,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809790,RR_Multi,80100869,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810561,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809912,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010E0621,RR_Multi,80101331,UPC I,UPC - Lower Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010H8827,RR_Multi,80100754,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,12809581,RR_Multi,80100754,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,12809650,RR_Multi,80100792,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,12810193,RR_Multi,80100804,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,12810536,RR_Multi,80100858,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,12808094,RR_Multi,80101013,UPC I,UPC - Upper North,Non Matching,8,2,5.0,Getting There
+2026-11,01055950,RR_Multi,80100727,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010N8951,RR_Multi,80100749,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12808619,RR_Multi,80100770,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,01059010,RR_Multi,80100786,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010J3758,RR_Multi,80100801,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010L6149,RR_Multi,80100848,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809744,RR_Multi,80101289,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010L6363,RR_Multi,80101289,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010H8965,RR_Multi,80101292,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809903,RR_Multi,80101292,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810560,RR_Multi,80101293,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,010H8962,RR_Multi,80101327,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809000,RR_Multi,80101328,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810575,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12810577,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,2,5.0,Getting There
+2026-11,12809076,RR_Multi,80100627,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,12808989,RR_Multi,80100627,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,12807531,RR_Multi,80100806,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,12810158,RR_Multi,80100806,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,010H2136,RR_ITF,80101312,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,010O4055,Ret_chpn_1,80101312,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,010N5210,Ret_chpn_1,80101312,UPC II,UPC - West,Non Matching,8,2,5.0,Getting There
+2026-11,01069687,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809608,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,01069181,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,01049964,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809618,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12807565,RR_ITF,80101182,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809053,RR_ITF,80101182,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,010H8325,Ret_chpn_1,80101182,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12810194,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,01071403,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809194,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12808920,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809867,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,01089219,Ret_chpn_1,80101305,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12809613,RR_Multi,80101627,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,12810386,RR_Multi,80101713,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,01086890,Ret_chpn_1,80101713,BMA,BMA I - North West,Matching,8,3,7.5,Almost Target
+2026-11,010H7011,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,12807889,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,12808734,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,01047197,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,12809271,RR_Multi,80100484,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,12808759,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,01046311,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,12809286,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,010N9114,RR_ITF_Apple,80100626,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,010H6243,Ret_chpn_1,80100626,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,01067117,Ret_chpn_1,80100928,BMA,BMA II - South West,Matching,8,3,7.5,Almost Target
+2026-11,01053329,RR_ITF_Apple,80100925,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,010F8559,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,12807774,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,12809637,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,01087033,RR_Multi,80100925,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,01042366,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,12807942,RR_Multi,80101341,BMA,BMA III - North East,Matching,8,3,7.5,Almost Target
+2026-11,01074634,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,12809616,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,12808658,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01034360,Ret_chpn_1,80100481,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,12808761,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01073215,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01031626,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,010E3992,Ret_chpn_1,80101066,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01068611,RR_ITF,80101070,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01068816,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,39111229,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01081978,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01040516,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,010E3817,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,010D2417,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01099931,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,3,7.5,Almost Target
+2026-11,01073230,RR_ITF,80100836,BMA,BMA V - Central,Matching,8,3,7.5,Almost Target
+2026-11,010E5010,RR_ITF_Apple,80101221,BMA,BMA V - Central,Matching,8,3,7.5,Almost Target
+2026-11,010J2651,Ret_chpn_1,80101307,UPC II,UPC - Central,Matching,8,3,7.5,Almost Target
+2026-11,010N4803,RR_Multi,80101358,UPC II,UPC - Central,Matching,8,3,7.5,Almost Target
+2026-11,010L6848,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,3,7.5,Almost Target
+2026-11,12810298,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,3,7.5,Almost Target
+2026-11,01094281,Ret_chpn_1,80100615,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,12808776,RR_ITF,80100625,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,010O3749,RR_Multi,80100625,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,010E4200,RR_ITF,80100837,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,12808513,RR_ITF,80100837,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,010N7148,RR_Multi,80100837,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,010N2591,RR_ITF,80101391,UPC II,UPC - East,Matching,8,3,7.5,Almost Target
+2026-11,12809422,RR_ITF,80101198,UPC I,UPC - Lower North,Matching,8,3,7.5,Almost Target
+2026-11,010N4264,RR_Multi,80101198,UPC I,UPC - Lower North,Matching,8,3,7.5,Almost Target
+2026-11,12810513,RR_Multi,80101198,UPC I,UPC - Lower North,Matching,8,3,7.5,Almost Target
+2026-11,010L6270,RR_Multi,80101119,UPC I,UPC - Lower Northeast,Matching,8,3,7.5,Almost Target
+2026-11,01070578,Ret_chpn_1,80101119,UPC I,UPC - Lower Northeast,Matching,8,3,7.5,Almost Target
+2026-11,010H4400,Ret_chpn_1,80100839,UPC II,UPC - Lower South,Matching,8,3,7.5,Almost Target
+2026-11,12808632,Ret_chpn_1,80101222,UPC II,UPC - Lower South,Matching,8,3,7.5,Almost Target
+2026-11,010H2457,RR_ITF,80100486,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,12808948,RR_ITF,80100621,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,010H1143,RR_ITF,80100621,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,010D9411,RR_ITF,80100621,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,12809363,RR_Multi,80100621,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,12807955,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,12808613,RR_Multi,80101117,UPC I,UPC - Upper North,Matching,8,3,7.5,Almost Target
+2026-11,01060532,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,12808459,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,010L8250,RR_ITF,80101196,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,12810009,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,12809549,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,12809934,RR_Multi,80101196,UPC I,UPC - Upper Northeast,Matching,8,3,7.5,Almost Target
+2026-11,01096006,RR_ITF,80100476,UPC II,UPC - Upper South,Matching,8,3,7.5,Almost Target
+2026-11,010N5520,Ret_chpn_1,80100476,UPC II,UPC - Upper South,Matching,8,3,7.5,Almost Target
+2026-11,010L5548,Ret_chpn_1,80100838,UPC II,UPC - Upper South,Matching,8,3,7.5,Almost Target
+2026-11,010L1308,RR_Multi,80101647,UPC II,UPC - Upper South,Matching,8,3,7.5,Almost Target
+2026-11,010J7353,RR_ITF,80100840,UPC II,UPC - West,Matching,8,3,7.5,Almost Target
+2026-11,12809703,RR_Multi,80101214,UPC II,UPC - West,Matching,8,3,7.5,Almost Target
+2026-11,12809752,RR_Multi,80101214,UPC II,UPC - West,Matching,8,3,7.5,Almost Target
+2026-11,12808800,RR_ITF,80101629,UPC II,UPC - West,Matching,8,3,7.5,Almost Target
+2026-11,12809882,RR_Multi,80101629,UPC II,UPC - West,Matching,8,3,7.5,Almost Target
+2026-11,12810205,RR_Multi,80100807,BMA,BMA I - North West,Non Matching,8,3,7.5,Almost Target
+2026-11,01034876,RR_Multi,80100807,BMA,BMA I - North West,Non Matching,8,3,7.5,Almost Target
+2026-11,01080303,Ret_chpn_1,80101180,BMA,BMA I - North West,Non Matching,8,3,7.5,Almost Target
+2026-11,01089230,Ret_chpn_1,80101271,BMA,BMA I - North West,Non Matching,8,3,7.5,Almost Target
+2026-11,12807924,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,3,7.5,Almost Target
+2026-11,12808935,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,3,7.5,Almost Target
+2026-11,12808041,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,3,7.5,Almost Target
+2026-11,010L6084,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,3,7.5,Almost Target
+2026-11,01040334,RR_Multi,80100841,UPC II,UPC - Central,Non Matching,8,3,7.5,Almost Target
+2026-11,01040334,RR_Multi,80101351,UPC II,UPC - Central,Non Matching,8,3,7.5,Almost Target
+2026-11,010N4715,RR_Multi,80100771,UPC I,UPC - Central Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01074935,RR_Multi,80100778,UPC I,UPC - Central Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010J1311,RR_Multi,80100778,UPC I,UPC - Central Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01074681,Ret_chpn_1,80100778,UPC I,UPC - Central Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010L6898,RR_Multi,80100852,UPC I,UPC - Central Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01084431,RR_Multi,80100479,UPC II,UPC - East,Non Matching,8,3,7.5,Almost Target
+2026-11,01056614,RR_Multi,80101378,UPC II,UPC - East,Non Matching,8,3,7.5,Almost Target
+2026-11,12810511,RR_Multi,80100782,UPC I,UPC - Lower North,Non Matching,8,3,7.5,Almost Target
+2026-11,12808494,RR_Multi,80100865,UPC I,UPC - Lower North,Non Matching,8,3,7.5,Almost Target
+2026-11,12809236,RR_Multi,80100774,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,12809690,RR_Multi,80100776,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010L6258,RR_Multi,80100872,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01079538,RR_ITF,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010L6267,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010N6328,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01069524,RR_Multi,80101265,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01096950,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,12810490,RR_Multi,80101345,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010O2270,RR_Multi,80101345,UPC I,UPC - Lower Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,12810556,RR_Multi,80100750,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,12807779,RR_Multi,80100750,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,010H8834,RR_Multi,80100792,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,12809967,RR_Multi,80100804,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,12808301,RR_Multi,80100858,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,010L7727,RR_Multi,80101263,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,010J6120,RR_Multi,80101263,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,010O1259,RR_Multi,80101263,UPC I,UPC - Upper North,Non Matching,8,3,7.5,Almost Target
+2026-11,010H6055,RR_Multi,80100756,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,12809221,RR_Multi,80100760,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010L6146,RR_Multi,80100770,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01023056,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01059940,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,01094684,RR_Multi,80101648,UPC I,UPC - Upper Northeast,Non Matching,8,3,7.5,Almost Target
+2026-11,010H3509,RR_ITF,80101312,UPC II,UPC - West,Non Matching,8,3,7.5,Almost Target
+2026-11,12808742,RR_Multi,80101312,UPC II,UPC - West,Non Matching,8,3,7.5,Almost Target
+2026-11,12809452,RR_Multi,80101312,UPC II,UPC - West,Non Matching,8,3,7.5,Almost Target
+2026-11,12808604,Ret_chpn_1,80101312,UPC II,UPC - West,Non Matching,8,3,7.5,Almost Target
+2026-11,12809983,RR_Multi,80101689,BMA,BMA I - North West,COCO,5,2,5.0,Target Achieved
+2026-11,12808161,RR_Multi,80101656,UPC I,UPC - Lower North,COCO,5,2,5.0,Target Achieved
+2026-11,39123442,RR_Multi,80101656,UPC I,UPC - Lower North,COCO,5,2,5.0,Target Achieved
+2026-11,12810062,RR_Multi,80101658,UPC I,UPC - Lower North,COCO,5,2,5.0,Target Achieved
+2026-11,12810041,RR_Multi,80101659,UPC I,UPC - Lower North,COCO,5,2,5.0,Target Achieved
+2026-11,12809972,RR_Multi,80101665,UPC I,UPC - Lower North,COCO,5,2,5.0,Target Achieved
+2026-11,010J1133,RR_Multi,80101650,UPC I,UPC - Lower Northeast,COCO,5,2,5.0,Target Achieved
+2026-11,12810349,RR_Multi,80101672,UPC I,UPC - Lower Northeast,COCO,5,2,5.0,Target Achieved
+2026-11,12810070,RR_Multi,80101655,UPC I,UPC - Upper North,COCO,5,2,5.0,Target Achieved
+2026-11,01047245,RR_Multi,80101655,UPC I,UPC - Upper North,COCO,5,2,5.0,Target Achieved
+2026-11,12810437,RR_Multi,80101670,UPC I,UPC - Upper North,COCO,5,2,5.0,Target Achieved
+2026-11,12809971,RR_Multi,80101690,UPC I,UPC - Upper Northeast,COCO,5,2,5.0,Target Achieved
+2026-11,12810012,RR_Multi,80101690,UPC I,UPC - Upper Northeast,COCO,5,2,5.0,Target Achieved
+2026-11,12810026,RR_Multi,80101662,UPC II,UPC - Upper South,COCO,5,2,5.0,Target Achieved
+2026-11,12810128,RR_Multi,80101675,UPC II,UPC - Upper South,COCO,5,2,5.0,Target Achieved
+2026-11,12809923,RR_Multi,80101686,UPC II,UPC - West,COCO,5,2,5.0,Target Achieved
+2026-11,12810196,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,2,5.0,Target Achieved
+2026-11,12809572,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,2,5.0,Target Achieved
+2026-11,12809644,RR_Multi,80101702,BMA,BMA I - North West,Hall,5,2,5.0,Target Achieved
+2026-11,12809954,Ret_chpn_1,80101702,BMA,BMA I - North West,Hall,5,2,5.0,Target Achieved
+2026-11,010O5842,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,2,5.0,Target Achieved
+2026-11,12810088,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,2,5.0,Target Achieved
+2026-11,12809706,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,2,5.0,Target Achieved
+2026-11,12810249,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,2,5.0,Target Achieved
+2026-11,12810229,RR_Multi,80101708,BMA,BMA III - North East,Hall,5,2,5.0,Target Achieved
+2026-11,12809969,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,2,5.0,Target Achieved
+2026-11,12810388,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,2,5.0,Target Achieved
+2026-11,010L3591,RR_Multi,80101709,BMA,BMA IV - South East,Hall,5,2,5.0,Target Achieved
+2026-11,12810120,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,2,5.0,Target Achieved
+2026-11,01073166,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,2,5.0,Target Achieved
+2026-11,12809953,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,2,5.0,Target Achieved
+2026-11,12810343,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,12810504,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,12809946,RR_Multi,80101695,UPC II,UPC - East,Hall,5,2,5.0,Target Achieved
+2026-11,12810057,RR_Multi,80101695,UPC II,UPC - East,Hall,5,2,5.0,Target Achieved
+2026-11,12810328,RR_Multi,80101695,UPC II,UPC - East,Hall,5,2,5.0,Target Achieved
+2026-11,12810000,RR_ITF,80101700,UPC II,UPC - East,Hall,5,2,5.0,Target Achieved
+2026-11,010H2536,Ret_chpn_1,80101704,UPC I,UPC - Lower North,Hall,5,2,5.0,Target Achieved
+2026-11,010E4202,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,12808134,RR_ITF,80101703,UPC I,UPC - Upper Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,12809938,RR_ITF,80101703,UPC I,UPC - Upper Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,12810015,RR_Multi,80101703,UPC I,UPC - Upper Northeast,Hall,5,2,5.0,Target Achieved
+2026-11,01090147,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12810543,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12809968,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,39115089,RR_ITF,80101705,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12810247,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12808648,Ret_chpn_1,80101705,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12810256,RR_Multi,80101710,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12810117,RR_Multi,80101710,UPC II,UPC - Upper South,Hall,5,2,5.0,Target Achieved
+2026-11,12809887,RR_Multi,80101693,UPC II,UPC - West,Hall,5,2,5.0,Target Achieved
+2026-11,12810495,RR_Multi,80101696,UPC II,UPC - West,Hall,5,2,5.0,Target Achieved
+2026-11,12809178,RR_ITF,80100477,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,39116996,RR_ITF,80100477,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,010F8563,RR_ITF_Apple,80100477,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,01056670,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,12809463,RR_Multi,80101182,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,12810418,RR_Multi,80101182,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,010N7661,RR_ITF,80101305,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,12809197,RR_Multi,80101305,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,010G9243,RR_ITF,80101627,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,01067699,RR_ITF,80101627,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,010J1190,Ret_chpn_1,80101713,BMA,BMA I - North West,Matching,8,4,10.0,Target Achieved
+2026-11,01070321,Ret_chpn_1,80100483,BMA,BMA II - South West,Matching,8,4,10.0,Target Achieved
+2026-11,01086107,Ret_chpn_1,80100483,BMA,BMA II - South West,Matching,8,4,10.0,Target Achieved
+2026-11,010N8508,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,4,10.0,Target Achieved
+2026-11,12809880,RR_Multi,80100565,BMA,BMA II - South West,Matching,8,4,10.0,Target Achieved
+2026-11,010H6246,RR_ITF,80100928,BMA,BMA II - South West,Matching,8,4,10.0,Target Achieved
+2026-11,01040503,RR_ITF,80101340,BMA,BMA III - North East,Matching,8,4,10.0,Target Achieved
+2026-11,010H2224,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,01032997,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,01056426,RR_ITF,80101066,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,12810391,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,12808954,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,010N2251,RR_ITF,80101071,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,010L1218,RR_ITF_Apple,80101071,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,010H9467,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,4,10.0,Target Achieved
+2026-11,010E4956,RR_ITF,80100622,BMA,BMA V - Central,Matching,8,4,10.0,Target Achieved
+2026-11,010L6090,RR_ITF,80100836,BMA,BMA V - Central,Matching,8,4,10.0,Target Achieved
+2026-11,01047016,RR_ITF_Apple,80101068,BMA,BMA V - Central,Matching,8,4,10.0,Target Achieved
+2026-11,12808302,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,4,10.0,Target Achieved
+2026-11,12808055,RR_Multi,80101221,BMA,BMA V - Central,Matching,8,4,10.0,Target Achieved
+2026-11,010F8568,Ret_chpn_1,80100926,UPC II,UPC - Central,Matching,8,4,10.0,Target Achieved
+2026-11,12808451,RR_ITF,80101358,UPC II,UPC - Central,Matching,8,4,10.0,Target Achieved
+2026-11,010L9959,RR_Multi,80101358,UPC II,UPC - Central,Matching,8,4,10.0,Target Achieved
+2026-11,010H7398,RR_ITF,80101303,UPC I,UPC - Central Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12807927,RR_Multi,80101303,UPC I,UPC - Central Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12808918,RR_ITF,80100615,UPC II,UPC - East,Matching,8,4,10.0,Target Achieved
+2026-11,010F8579,RR_Multi,80100837,UPC II,UPC - East,Matching,8,4,10.0,Target Achieved
+2026-11,12809756,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12809379,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12810147,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12809843,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,12809367,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,010N0196,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,4,10.0,Target Achieved
+2026-11,010L6871,RR_ITF,80100839,UPC II,UPC - Lower South,Matching,8,4,10.0,Target Achieved
+2026-11,010N5455,RR_Multi,80100839,UPC II,UPC - Lower South,Matching,8,4,10.0,Target Achieved
+2026-11,010J4472,Ret_chpn_1,80100621,UPC I,UPC - Upper North,Matching,8,4,10.0,Target Achieved
+2026-11,010H4924,Ret_chpn_1,80100621,UPC I,UPC - Upper North,Matching,8,4,10.0,Target Achieved
+2026-11,01080991,RR_Multi,80101067,UPC I,UPC - Upper North,Matching,8,4,10.0,Target Achieved
+2026-11,12809315,RR_ITF,80101117,UPC I,UPC - Upper North,Matching,8,4,10.0,Target Achieved
+2026-11,01021762,Ret_chpn_1,80101117,UPC I,UPC - Upper North,Matching,8,4,10.0,Target Achieved
+2026-11,12809268,RR_Multi,80101647,UPC II,UPC - Upper South,Matching,8,4,10.0,Target Achieved
+2026-11,010N3216,Ret_chpn_1,80101647,UPC II,UPC - Upper South,Matching,8,4,10.0,Target Achieved
+2026-11,010L6649,Ret_chpn_1,80101214,UPC II,UPC - West,Matching,8,4,10.0,Target Achieved
+2026-11,12809438,RR_Multi,80101629,UPC II,UPC - West,Matching,8,4,10.0,Target Achieved
+2026-11,12808790,RR_Multi,80101629,UPC II,UPC - West,Matching,8,4,10.0,Target Achieved
+2026-11,12808363,Ret_chpn_1,80101629,UPC II,UPC - West,Matching,8,4,10.0,Target Achieved
+2026-11,010F8356,RR_Multi,80101584,BMA,BMA I - North West,Non Matching,8,4,10.0,Target Achieved
+2026-11,010J9581,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,4,10.0,Target Achieved
+2026-11,01075327,RR_Multi,80101296,BMA,BMA IV - South East,Non Matching,8,4,10.0,Target Achieved
+2026-11,01055175,Ret_chpn_1,80101296,BMA,BMA IV - South East,Non Matching,8,4,10.0,Target Achieved
+2026-11,12809680,RR_Multi,80101418,BMA,BMA IV - South East,Non Matching,8,4,10.0,Target Achieved
+2026-11,39115146,RR_Multi,80101632,BMA,BMA IV - South East,Non Matching,8,4,10.0,Target Achieved
+2026-11,010H4234,Ret_chpn_1,80101363,BMA,BMA V - Central,Non Matching,8,4,10.0,Target Achieved
+2026-11,010L9959,RR_Multi,80100841,UPC II,UPC - Central,Non Matching,8,4,10.0,Target Achieved
+2026-11,12809814,RR_Multi,80100778,UPC I,UPC - Central Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12809330,RR_Multi,80100790,UPC I,UPC - Central Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12809846,RR_Multi,80100797,UPC I,UPC - Central Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12810356,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12807690,RR_Multi,80101309,UPC I,UPC - Central Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,38000743,RR_Multi,80100479,UPC II,UPC - East,Non Matching,8,4,10.0,Target Achieved
+2026-11,010L6712,RR_Multi,80100865,UPC I,UPC - Lower North,Non Matching,8,4,10.0,Target Achieved
+2026-11,12810353,RR_Multi,80100765,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12808348,RR_Multi,80100780,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12808626,RR_Multi,80100780,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12810175,RR_Multi,80100842,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010L6260,RR_Multi,80100845,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010O0739,RR_Multi,80101225,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,38304189,RR_Multi,80101290,UPC I,UPC - Lower Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12808582,RR_Multi,80100798,UPC I,UPC - Upper North,Non Matching,8,4,10.0,Target Achieved
+2026-11,12809919,RR_Multi,80100858,UPC I,UPC - Upper North,Non Matching,8,4,10.0,Target Achieved
+2026-11,010L6233,RR_Multi,80101281,UPC I,UPC - Upper North,Non Matching,8,4,10.0,Target Achieved
+2026-11,12808972,RR_Multi,80100727,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,12810455,RR_Multi,80100749,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010N2720,RR_Multi,80100756,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,01055424,RR_Multi,80100803,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,39127839,RR_Multi,80101293,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010J2370,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010N0470,RR_Multi,80101327,UPC I,UPC - Upper Northeast,Non Matching,8,4,10.0,Target Achieved
+2026-11,010N2449,RR_Multi,80101684,UPC I,UPC - Central Northeast,COCO,5,3,7.5,Target Achieved
+2026-11,12809957,RR_Multi,80101687,UPC II,UPC - Lower South,COCO,5,3,7.5,Target Achieved
+2026-11,12809527,RR_Multi,80101655,UPC I,UPC - Upper North,COCO,5,3,7.5,Target Achieved
+2026-11,12810037,RR_Multi,80101661,UPC I,UPC - Upper North,COCO,5,3,7.5,Target Achieved
+2026-11,39126969,RR_Multi,80101670,UPC I,UPC - Upper North,COCO,5,3,7.5,Target Achieved
+2026-11,12810039,RR_Multi,80101664,UPC I,UPC - Upper Northeast,COCO,5,3,7.5,Target Achieved
+2026-11,12810119,RR_Multi,80101674,UPC I,UPC - Upper Northeast,COCO,5,3,7.5,Target Achieved
+2026-11,010J2564,RR_ITF,80101698,BMA,BMA I - North West,Hall,5,3,7.5,Target Achieved
+2026-11,12808698,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,3,7.5,Target Achieved
+2026-11,12807610,RR_ITF,80101695,UPC II,UPC - East,Hall,5,3,7.5,Target Achieved
+2026-11,38003603,RR_Multi,80101695,UPC II,UPC - East,Hall,5,3,7.5,Target Achieved
+2026-11,12810052,RR_Multi,80101700,UPC II,UPC - East,Hall,5,3,7.5,Target Achieved
+2026-11,12809979,RR_Multi,80101700,UPC II,UPC - East,Hall,5,3,7.5,Target Achieved
+2026-11,12810258,RR_Multi,80101704,UPC I,UPC - Lower North,Hall,5,3,7.5,Target Achieved
+2026-11,12809955,RR_Multi,80101704,UPC I,UPC - Lower North,Hall,5,3,7.5,Target Achieved
+2026-11,010O3297,RR_ITF,80101692,UPC II,UPC - Lower South,Hall,5,3,7.5,Target Achieved
+2026-11,010H5090,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,3,7.5,Target Achieved
+2026-11,12810485,RR_Multi,80101705,UPC II,UPC - Upper South,Hall,5,3,7.5,Target Achieved
+2026-11,12810360,RR_Multi,80101696,UPC II,UPC - West,Hall,5,3,7.5,Target Achieved
+2026-11,01089720,RR_ITF_Apple,80100477,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,01091825,Ret_chpn_1,80100477,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,12809667,RR_Multi,80100480,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,12810308,RR_Multi,80101182,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,01086518,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,01079056,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,01076153,Ret_chpn_1,80101627,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,12809585,RR_Multi,80101713,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,12809854,RR_Multi,80101713,BMA,BMA I - North West,Matching,8,5,12.5,Target Achieved
+2026-11,01052561,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,5,12.5,Target Achieved
+2026-11,010J2570,RR_ITF,80100484,BMA,BMA II - South West,Matching,8,5,12.5,Target Achieved
+2026-11,01056133,RR_ITF,80100928,BMA,BMA II - South West,Matching,8,5,12.5,Target Achieved
+2026-11,010L6876,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,5,12.5,Target Achieved
+2026-11,010J4922,RR_ITF,80100481,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,01090065,RR_ITF_Apple,80100481,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,01024322,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,01049666,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,12809457,RR_Multi,80100481,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,12808638,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,12809987,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,12809673,RR_Multi,80101071,BMA,BMA IV - South East,Matching,8,5,12.5,Target Achieved
+2026-11,12809571,RR_Multi,80100836,BMA,BMA V - Central,Matching,8,5,12.5,Target Achieved
+2026-11,010N4802,RR_Multi,80101358,UPC II,UPC - Central,Matching,8,5,12.5,Target Achieved
+2026-11,010L6903,RR_ITF_Apple,80101628,UPC II,UPC - Central,Matching,8,5,12.5,Target Achieved
+2026-11,010H8761,Ret_chpn_1,80101628,UPC II,UPC - Central,Matching,8,5,12.5,Target Achieved
+2026-11,12808908,RR_ITF,80101266,UPC I,UPC - Central Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,010L0444,RR_Multi,80100625,UPC II,UPC - East,Matching,8,5,12.5,Target Achieved
+2026-11,01032621,RR_Multi,80100837,UPC II,UPC - East,Matching,8,5,12.5,Target Achieved
+2026-11,12810516,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,12810187,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,12810165,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,010L5679,RR_ITF,80101119,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,010J4524,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,12809177,RR_Multi,80101304,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,01058191,RR_Multi,80101313,UPC I,UPC - Lower Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,010H6247,Ret_chpn_1,80101222,UPC II,UPC - Lower South,Matching,8,5,12.5,Target Achieved
+2026-11,010L7730,RR_ITF_Apple,80101067,UPC I,UPC - Upper North,Matching,8,5,12.5,Target Achieved
+2026-11,010G0469,RR_ITF,80101196,UPC I,UPC - Upper Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,01091029,Ret_chpn_1,80101196,UPC I,UPC - Upper Northeast,Matching,8,5,12.5,Target Achieved
+2026-11,12809505,RR_ITF,80101647,UPC II,UPC - Upper South,Matching,8,5,12.5,Target Achieved
+2026-11,010H2138,Ret_chpn_1,80101214,UPC II,UPC - West,Matching,8,5,12.5,Target Achieved
+2026-11,010H9703,RR_Multi,80101584,BMA,BMA I - North West,Non Matching,8,5,12.5,Target Achieved
+2026-11,010H3563,RR_ITF,80101269,BMA,BMA V - Central,Non Matching,8,5,12.5,Target Achieved
+2026-11,12809311,RR_Multi,80100832,UPC I,UPC - Central Northeast,Non Matching,8,5,12.5,Target Achieved
+2026-11,010N6211,RR_ITF,80100479,UPC II,UPC - East,Non Matching,8,5,12.5,Target Achieved
+2026-11,010J5766,RR_Multi,80100782,UPC I,UPC - Lower North,Non Matching,8,5,12.5,Target Achieved
+2026-11,12809765,RR_Multi,80100782,UPC I,UPC - Lower North,Non Matching,8,5,12.5,Target Achieved
+2026-11,010E2284,RR_Multi,80100764,UPC I,UPC - Lower Northeast,Non Matching,8,5,12.5,Target Achieved
+2026-11,010E2422,RR_Multi,80100765,UPC I,UPC - Lower Northeast,Non Matching,8,5,12.5,Target Achieved
+2026-11,12809275,RR_Multi,80100870,UPC I,UPC - Lower Northeast,Non Matching,8,5,12.5,Target Achieved
+2026-11,12809373,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,5,12.5,Target Achieved
+2026-11,010H8321,Ret_chpn_1,80100480,BMA,BMA I - North West,Matching,8,6,15.0,Target Achieved
+2026-11,010F8556,Ret_chpn_1,80100480,BMA,BMA I - North West,Matching,8,6,15.0,Target Achieved
+2026-11,01053154,RR_ITF_Apple,80101185,BMA,BMA I - North West,Matching,8,6,15.0,Target Achieved
+2026-11,12808349,RR_ITF,80101713,BMA,BMA I - North West,Matching,8,6,15.0,Target Achieved
+2026-11,010H8845,Ret_chpn_1,80100484,BMA,BMA II - South West,Matching,8,6,15.0,Target Achieved
+2026-11,01079936,RR_ITF,80100565,BMA,BMA II - South West,Matching,8,6,15.0,Target Achieved
+2026-11,12810022,RR_Multi,80101340,BMA,BMA III - North East,Matching,8,6,15.0,Target Achieved
+2026-11,01097075,RR_ITF_Apple,80100481,BMA,BMA IV - South East,Matching,8,6,15.0,Target Achieved
+2026-11,010O5021,RR_Multi,80101070,BMA,BMA IV - South East,Matching,8,6,15.0,Target Achieved
+2026-11,01051670,Ret_chpn_1,80101071,BMA,BMA IV - South East,Matching,8,6,15.0,Target Achieved
+2026-11,010L8880,RR_Multi,80101307,UPC II,UPC - Central,Matching,8,6,15.0,Target Achieved
+2026-11,01089487,RR_ITF,80101303,UPC I,UPC - Central Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,01065595,RR_ITF,80100615,UPC II,UPC - East,Matching,8,6,15.0,Target Achieved
+2026-11,01074744,Ret_chpn_1,80100837,UPC II,UPC - East,Matching,8,6,15.0,Target Achieved
+2026-11,01042359,RR_Multi,80101189,UPC II,UPC - East,Matching,8,6,15.0,Target Achieved
+2026-11,01094584,Ret_chpn_1,80101198,UPC I,UPC - Lower North,Matching,8,6,15.0,Target Achieved
+2026-11,12810216,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,01094136,Ret_chpn_1,80100487,UPC I,UPC - Lower Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,12809207,RR_Multi,80101117,UPC I,UPC - Upper North,Matching,8,6,15.0,Target Achieved
+2026-11,12809799,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,01055032,Ret_chpn_1,80101183,UPC I,UPC - Upper Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,01084318,Ret_chpn_1,80101196,UPC I,UPC - Upper Northeast,Matching,8,6,15.0,Target Achieved
+2026-11,01081894,Ret_chpn_1,80101647,UPC II,UPC - Upper South,Matching,8,6,15.0,Target Achieved
+2026-11,010L6079,RR_Multi,80101180,BMA,BMA I - North West,Non Matching,8,6,15.0,Target Achieved
+2026-11,12810534,RR_Multi,80100854,UPC I,UPC - Lower North,Non Matching,8,6,15.0,Target Achieved
+2026-11,010J4590,RR_Multi,80100854,UPC I,UPC - Lower North,Non Matching,8,6,15.0,Target Achieved
+2026-11,12807594,RR_Multi,80101306,UPC I,UPC - Lower North,Non Matching,8,6,15.0,Target Achieved
+2026-11,12810407,RR_Multi,80100754,UPC I,UPC - Upper North,Non Matching,8,6,15.0,Target Achieved
+2026-11,010J1529,RR_Multi,80101281,UPC I,UPC - Upper North,Non Matching,8,6,15.0,Target Achieved
+2026-11,12809144,RR_Multi,80100756,UPC I,UPC - Upper Northeast,Non Matching,8,6,15.0,Target Achieved
+2026-11,010E0671,RR_Multi,80100760,UPC I,UPC - Upper Northeast,Non Matching,8,6,15.0,Target Achieved
+2026-11,01084330,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,6,15.0,Target Achieved
+2026-11,12809974,RR_Multi,80101681,UPC I,UPC - Central Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,12810122,RR_Multi,80101656,UPC I,UPC - Lower North,COCO,5,4,10.0,Target Achieved
+2026-11,12810134,RR_Multi,80101660,UPC I,UPC - Lower Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,12810322,RR_Multi,80101652,UPC I,UPC - Upper Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,010L2831,RR_Multi,80101671,UPC I,UPC - Upper Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,010H0644,RR_Multi,80101674,UPC I,UPC - Upper Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,12810285,RR_Multi,80101678,UPC I,UPC - Upper Northeast,COCO,5,4,10.0,Target Achieved
+2026-11,12808938,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,4,10.0,Target Achieved
+2026-11,12810430,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,4,10.0,Target Achieved
+2026-11,12810056,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,4,10.0,Target Achieved
+2026-11,12810027,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,4,10.0,Target Achieved
+2026-11,12810001,RR_Multi,80101707,BMA,BMA III - North East,Hall,5,4,10.0,Target Achieved
+2026-11,12810531,RR_Multi,80101691,UPC II,UPC - Central,Hall,5,4,10.0,Target Achieved
+2026-11,12810053,RR_Multi,80101700,UPC II,UPC - East,Hall,5,4,10.0,Target Achieved
+2026-11,010J1108,RR_ITF,80101704,UPC I,UPC - Lower North,Hall,5,4,10.0,Target Achieved
+2026-11,12810061,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,4,10.0,Target Achieved
+2026-11,12810104,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,4,10.0,Target Achieved
+2026-11,12809705,RR_Multi,80101711,UPC I,UPC - Lower Northeast,Hall,5,4,10.0,Target Achieved
+2026-11,12810077,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,4,10.0,Target Achieved
+2026-11,12808608,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,4,10.0,Target Achieved
+2026-11,12807589,RR_Multi,80101710,UPC II,UPC - Upper South,Hall,5,4,10.0,Target Achieved
+2026-11,12810024,RR_Multi,80101696,UPC II,UPC - West,Hall,5,4,10.0,Target Achieved
+2026-11,01043914,RR_ITF,80100477,BMA,BMA I - North West,Matching,8,7,17.5,Target Achieved
+2026-11,12809260,RR_Multi,80100477,BMA,BMA I - North West,Matching,8,7,17.5,Target Achieved
+2026-11,12808766,RR_Multi,80101185,BMA,BMA I - North West,Matching,8,7,17.5,Target Achieved
+2026-11,010E4193,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,7,17.5,Target Achieved
+2026-11,01029194,RR_ITF,80100483,BMA,BMA II - South West,Matching,8,7,17.5,Target Achieved
+2026-11,01046318,RR_ITF,80101070,BMA,BMA IV - South East,Matching,8,7,17.5,Target Achieved
+2026-11,39125047,RR_Multi,80100926,UPC II,UPC - Central,Matching,8,7,17.5,Target Achieved
+2026-11,01095052,RR_ITF_Apple,80100615,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,010O5300,RR_Multi,80100625,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,01073716,RR_ITF_Apple,80100837,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,010O4868,RR_ITF_Apple,80100837,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,010E0150,Ret_chpn_1,80100837,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,010N3784,RR_ITF,80101189,UPC II,UPC - East,Matching,8,7,17.5,Target Achieved
+2026-11,01084895,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,7,17.5,Target Achieved
+2026-11,010O5503,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,7,17.5,Target Achieved
+2026-11,01072677,RR_ITF,80101629,UPC II,UPC - West,Matching,8,7,17.5,Target Achieved
+2026-11,12809847,RR_Multi,80101263,UPC I,UPC - Upper North,Non Matching,8,7,17.5,Target Achieved
+2026-11,01093392,RR_Multi,80101348,UPC I,UPC - Upper Northeast,Non Matching,8,7,17.5,Target Achieved
+2026-11,01053411,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,5,12.5,Target Achieved
+2026-11,12810210,RR_Multi,80101701,UPC II,UPC - Upper South,Hall,5,5,12.5,Target Achieved
+2026-11,12808153,RR_ITF,80101710,UPC II,UPC - Upper South,Hall,5,5,12.5,Target Achieved
+2026-11,12809961,Ret_chpn_1,80101696,UPC II,UPC - West,Hall,5,5,12.5,Target Achieved
+2026-11,12809978,Ret_chpn_1,80101696,UPC II,UPC - West,Hall,5,5,12.5,Target Achieved
+2026-11,01055067,RR_ITF_Apple,80100487,UPC I,UPC - Lower Northeast,Matching,8,8,20.0,Target Achieved
+2026-11,010J5139,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,8,20.0,Target Achieved
+2026-11,010O5459,RR_Multi,80100487,UPC I,UPC - Lower Northeast,Matching,8,8,20.0,Target Achieved
+2026-11,01055033,RR_ITF_Apple,80101183,UPC I,UPC - Upper Northeast,Matching,8,8,20.0,Target Achieved
+2026-11,12810497,RR_Multi,80101629,UPC II,UPC - West,Matching,8,8,20.0,Target Achieved
+2026-11,12807857,Ret_chpn_1,80101629,UPC II,UPC - West,Matching,8,8,20.0,Target Achieved
+2026-11,01099945,RR_Multi,80100842,UPC I,UPC - Lower Northeast,Non Matching,8,8,20.0,Target Achieved
+2026-11,01058516,RR_Multi,80100727,UPC I,UPC - Upper Northeast,Non Matching,8,8,20.0,Target Achieved
+2026-11,01090063,Ret_chpn_1,80101185,BMA,BMA I - North West,Matching,8,9,22.5,Target Achieved
+2026-11,01075608,RR_ITF,80101071,BMA,BMA IV - South East,Matching,8,9,22.5,Target Achieved
+2026-11,01055559,RR_ITF,80101221,BMA,BMA V - Central,Matching,8,9,22.5,Target Achieved
+2026-11,01051927,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,9,22.5,Target Achieved
+2026-11,010E5070,RR_ITF,80101183,UPC I,UPC - Upper Northeast,Matching,8,9,22.5,Target Achieved
+2026-11,12809777,RR_Multi,80101183,UPC I,UPC - Upper Northeast,Matching,8,9,22.5,Target Achieved
+2026-11,12809853,RR_Multi,80101306,UPC I,UPC - Lower North,Non Matching,8,9,22.5,Target Achieved
+2026-11,12809964,RR_Multi,80101712,UPC I,UPC - Central Northeast,Hall,5,6,15.0,Target Achieved
+2026-11,39132220,RR_ITF,80101693,UPC II,UPC - West,Hall,5,6,15.0,Target Achieved
+2026-11,010E1688,Ret_chpn_1,80101358,UPC II,UPC - Central,Matching,8,10,25.0,Target Achieved
+2026-11,01089510,RR_Multi,80101266,UPC I,UPC - Central Northeast,Matching,8,10,25.0,Target Achieved
+2026-11,12809537,RR_Multi,80100854,UPC I,UPC - Lower North,Non Matching,8,10,25.0,Target Achieved
+2026-11,12810459,RR_Multi,80101306,UPC I,UPC - Lower North,Non Matching,8,10,25.0,Target Achieved
+2026-11,010N8490,RR_Multi,80100780,UPC I,UPC - Lower Northeast,Non Matching,8,10,25.0,Target Achieved
+2026-11,12807665,RR_Multi,80101294,UPC I,UPC - Upper Northeast,Non Matching,8,11,27.5,Target Achieved
+2026-11,12810502,RR_Multi,80101684,UPC I,UPC - Central Northeast,COCO,5,7,17.5,Target Achieved
+2026-11,12810188,RR_Multi,80101698,BMA,BMA I - North West,Hall,5,7,17.5,Target Achieved
+2026-11,12809026,RR_ITF,80101702,BMA,BMA I - North West,Hall,5,7,17.5,Target Achieved
+2026-11,12810050,RR_Multi,80101697,UPC I,UPC - Upper Northeast,Hall,5,7,17.5,Target Achieved
+2026-11,010J3187,Ret_chpn_1,80100478,BMA,BMA V - Central,Matching,8,12,30.0,Target Achieved
+2026-11,010J0258,RR_ITF,80101119,UPC I,UPC - Lower Northeast,Matching,8,12,30.0,Target Achieved
+2026-11,01094688,RR_ITF,80100479,UPC II,UPC - East,Non Matching,8,12,30.0,Target Achieved
+2026-11,12810073,RR_Multi,80101706,BMA,BMA III - North East,Hall,5,8,20.0,Target Achieved
+2026-11,01099927,RR_Multi,80101189,UPC II,UPC - East,Matching,8,13,32.5,Target Achieved
+2026-11,12809998,RR_Multi,80101696,UPC II,UPC - West,Hall,5,9,22.5,Target Achieved
+2026-11,12809994,RR_Multi,80101704,UPC I,UPC - Lower North,Hall,5,10,25.0,Target Achieved
+2026-11,010N8978,RR_Multi,80100760,UPC I,UPC - Upper Northeast,Non Matching,8,16,40.0,Target Achieved
+2026-11,010N4326,RR_ITF,80101709,BMA,BMA IV - South East,Hall,5,11,27.5,Target Achieved
+2026-11,12810414,RR_Multi,80101066,BMA,BMA IV - South East,Matching,8,26,65.0,Target Achieved

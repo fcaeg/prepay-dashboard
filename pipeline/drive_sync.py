@@ -83,6 +83,7 @@ def kind(name):
     n = name.lower()
     if n.startswith('daily_sales'): return 'sales'
     if re.match(r'^20\d{4}_target (by brand|gia by category)', n): return 'mixtarget'
+    if n.startswith('mongkol'): return 'mongkol'
     if 'all product' in n and 'raw' in n: return 'allprod'
     if re.search(r'performance[ _]+report', n): return 'pl'
     if n.startswith('retention_shops') or n.startswith('retention shops'): return 'retention'
@@ -116,7 +117,7 @@ def stock_time(name):
 def unpack(fp, k):
     """zip -> the file update.py needs (sales/stock keep the zip; xlsx inputs are extracted)"""
     if not fp.lower().endswith('.zip') or k in ('sales', 'stock'): return fp
-    if k in ('retention', 'service', 'longevity', 'mixtarget'):  # zip of one or more files (csv / xlsx), each routed by its own name
+    if k in ('retention', 'service', 'longevity', 'mixtarget', 'mongkol'):  # zip of one or more files (csv / xlsx), each routed by its own name
         d = fp + '_x'; zipfile.ZipFile(fp).extractall(d)
         return [os.path.join(r, f) for r, _, fs in os.walk(d) for f in fs if f.lower().endswith(('.csv', '.xlsx')) and not f.startswith(('.', '__', '~$'))]
     d = fp + '_x'; zipfile.ZipFile(fp).extractall(d)
@@ -151,10 +152,11 @@ def main():
                 kx = kind(os.path.basename(x)) or k
                 if kx in ('retention', 'service', 'longevity'): args += ['--' + kx, x]
                 elif kx == 'mixtarget': args += ['--mix-target', x]
+                elif kx == 'mongkol': args += ['--mongkol', x]
             continue
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp], 'service': ['--service', fp], 'longevity': ['--longevity', fp], 'mixtarget': ['--mix-target', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp], 'service': ['--service', fp], 'longevity': ['--longevity', fp], 'mixtarget': ['--mix-target', fp], 'mongkol': ['--mongkol', fp]}[k]
     # update.py takes several --sales / --target values as one list each
-    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': [], '--service': [], '--longevity': [], '--mix-target': []}
+    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': [], '--service': [], '--longevity': [], '--mix-target': [], '--mongkol': []}
     for i in range(0, len(args), 2):
         if args[i] in lists: lists[args[i]].append(args[i + 1])
         else: merged += args[i:i + 2]

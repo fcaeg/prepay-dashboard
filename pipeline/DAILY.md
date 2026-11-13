@@ -184,3 +184,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 ## Staff drill-down (14 Nov 2026)
 - All Product dims now also carry scope `E:<SALE_ID>` (our shops), dim `เบอร์มงคล` (Postpay: CAMPAIGN_GROUP_LV1 = เบอร์มงคล → "มงคล · <LV2>", else เบอร์ทั่วไป) and dim `สินค้า` = "SUB_MODEL|BRAND|CATEGORY / SUB_CATEGORY" (Device / GIA, local scopes). Staff / item detail is shipped for the current month only.
 - Page: Staff product chips + "ดูเพิ่มเติม" modal (showStaff); Staff Ranking table on Device by Brand / GIA pages (mixStaffTable).
+
+## เบอร์มงคล Indi (14 Nov 2026)
+- File `Mongkol_Indi_Staff_MONGKOL_QTY_<yyyymm>.csv` (csv or zip) → perf.merge_mongkol → state/perf_mongkol.csv (all WW staff, no names). Drive kind `mongkol`, update.py `--mongkol`.
+- Shop = sum of its staff (bottom-up); target to date = target × (ACTUAL ÷ ACTUAL-RR of the file). This file is the main lucky-number figure on the page (Sale card, Staff table, drill-down); the All Product campaign split stays as a breakdown only.
