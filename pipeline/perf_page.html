@@ -27,13 +27,13 @@ nav a.on{color:var(--ink);border-color:var(--cur)}
 main{max-width:1500px;margin:0 auto;padding:20px}
 .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 12px;border-radius:8px;margin-bottom:16px;font-size:13px}
 .grid{display:grid;gap:16px}
-.g5{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(4,minmax(0,1fr))}
 .radars .card{padding:12px}
-.g2{grid-template-columns:1.25fr 1fr}
-.g4{grid-template-columns:repeat(4,1fr)}
-@media(max-width:1200px){.g5{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:1000px){.g5{grid-template-columns:repeat(2,1fr)}.g2,.g4{grid-template-columns:1fr}}
-@media(max-width:600px){.g5{grid-template-columns:1fr}}
+.g2{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1200px){.g5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1000px){.g5{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.g4{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.g5{grid-template-columns:minmax(0,1fr)}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 .card h3{margin:0 0 4px;font-size:15px}
 .card .sub{color:var(--muted);font-size:12px;margin-bottom:8px}
@@ -59,6 +59,10 @@ th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position
 .hm tr:hover td{outline:0;background-image:linear-gradient(rgba(0,0,0,.03),rgba(0,0,0,.03))}
 .hm td:first-child{cursor:pointer}
 .grid>*{min-width:0}
+.card{max-width:100%;min-width:0}
+.sub,.note,h2,h3,.hint li,.legend{overflow-wrap:anywhere}
+main{overflow-x:clip}
+.row>*{min-width:0}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .scroll{-webkit-overflow-scrolling:touch}
 .scroll td:first-child,.scroll th:first-child{position:sticky;left:0;background:#fff;z-index:1}
@@ -74,7 +78,7 @@ th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position
   .hwrap{padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:6px}
   .brand{font-size:15px;width:100%}
   .hwrap label{width:100%;display:flex;align-items:center;gap:6px}
-  .hwrap select{flex:1;font-size:16px}
+  .hwrap select{flex:1;min-width:0;width:100%;font-size:16px}
   nav{padding:0 6px;scrollbar-width:none} nav::-webkit-scrollbar{display:none}
   nav a{padding:8px 10px;font-size:13px}
   main{padding:10px max(10px,env(safe-area-inset-right)) 24px max(10px,env(safe-area-inset-left))}
