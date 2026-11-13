@@ -17,8 +17,14 @@ for inf in z.infolist():
         except UnicodeDecodeError: enc = 'cp874'
         d = pd.read_csv(io.BytesIO(b), dtype=str, encoding=enc, low_memory=False)
     elif n.endswith(('.xlsx', '.xlsb', '.xls')):
-        xl = pd.ExcelFile(io.BytesIO(raw.read()), engine='pyxlsb' if n.endswith('.xlsb') else None); print('sheets', xl.sheet_names)
-        d = pd.read_excel(xl, xl.sheet_names[0], dtype=str)
+        import openpyxl, time; t0 = time.time()
+        z.extract(inf, '/tmp/x'); wb = openpyxl.load_workbook('/tmp/x/' + inf.filename, read_only=True)
+        ws = wb['Rawdata']; print('Rawdata dims', ws.max_row, ws.max_column, 'open s', round(time.time() - t0))
+        it = ws.iter_rows(values_only=True); hdr = [str(x) for x in next(it)]; rows = []
+        for i, r in enumerate(it):
+            rows.append(r)
+            if i >= 20000: break
+        d = pd.DataFrame(rows, columns=hdr).astype(str).replace({'None': None}); print('read s', round(time.time() - t0))
     else: continue
     print('==', inf.filename, 'rows', len(d), 'cols', len(d.columns))
     for c in d.columns:
