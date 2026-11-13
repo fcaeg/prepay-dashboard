@@ -183,6 +183,13 @@ def _mix(lines, rate):
 
 ALLPROD = {'DEVICE': 'Device', 'GIA': 'GIA', 'POSTPAID': 'Postpay', 'TRUEONLINE': 'True Online', 'TRUEVISION': 'True Visions'}
 
+# breakdown dimensions per product (whichever columns the sheet has); used by the per-axis analysis on the page
+DIMS = {'Postpay': ['ACTIVITY_GROUP', 'GP_SKU', 'CAMPAIGN_GROUP_LV1', 'NET_RC_TIER', 'BRAND'],
+        'True Online': ['CAMPIGN_CODE', 'RC_TIER', 'FLAG_BUNDLE', 'TECHNOLOGY'],
+        'True Visions': ['SUB_PRODUCT', 'GP_SKU'],
+        'Device': ['BRAND', 'CATEGORY', 'SUB_CATEGORY', 'PRICE_TIER', 'CAPACITY'],
+        'GIA': ['CATEGORY', 'SUB_CATEGORY', 'BRAND']}
+
 def merge_allprod(fp):
     """'Self Refresh All Product Rawdata Latest 2 Months For DB' - one sheet per product (PREPAID skipped), each line with SALE_ID.
     -> state/perf_allprod.csv (product x month x day x shop x emp x SIM_STATUS: q, n); months in the file replace those months.
@@ -190,17 +197,36 @@ def merge_allprod(fp):
     import openpyxl
     sh = shops()
     if not sh: print('perf: no shop list yet - all-product file skipped'); return
+    import collections
     wb = openpyxl.load_workbook(fp, read_only=True); rows = []; months = set(); asof = {}
+    dims = collections.defaultdict(lambda: [0.0, 0.0]); dshops = collections.defaultdict(set); found = {}
+    def add(month, product, scope, dim, val, q, n, shop):
+        a = dims[(month, product, scope, dim, val)]; a[0] += q; a[1] += n; dshops[(month, product, scope)].add(shop)
     for sheet, product in ALLPROD.items():
         if sheet not in wb.sheetnames: continue
         it = wb[sheet].iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]
         ix = {c: h.index(c) for c in ['SHOP_CODE', 'SALE_ID', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'DATA_ASOF_DATE']}
         st = h.index('SIM_STATUS') if 'SIM_STATUS' in h else None
         hx = {c: i for i, c in enumerate(h)}
+        dcols = [c for c in DIMS.get(product, []) if c in hx]; found[product] = dcols
+        ag = hx.get('AREA_GROUP'); ww = hx.get('WW_FLAG')
         for r in it:
             bm = str(r[ix['BM']] or '').strip()
             if len(bm) == 6: months.add(f'{bm[:4]}-{bm[4:]}')
-            if str(r[ix['SHOP_CODE']] or '').strip() not in sh: continue
+            code = str(r[ix['SHOP_CODE']] or '').strip(); mon = f'{bm[:4]}-{bm[4:]}'
+            if st is not None and re.search('SUSPEND|TERMINATE', str(r[st] or '').upper()): pass
+            elif ww is None or str(r[ww] or '').strip().upper() == 'WW':
+                q_, n_ = float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)
+                g = str(r[ag] or '').strip().upper() if ag is not None else ''
+                scopes = ([g] if g in ('UPC', 'BMA') else []) + (['UN', code] if code in sh else [])
+                fl = tvs_flag(product, lambda c: r[hx[c]] if c in hx else None)
+                for sc in scopes:
+                    add(mon, product, sc, 'ALL', 'ALL', q_, n_, code)
+                    for c in dcols: add(mon, product, sc, c, str(r[hx[c]] if r[hx[c]] is not None else '').strip() or '(ว่าง)', q_, n_, code)
+                    # TVS sources (TVS NOW without the bundle redeem + Postpay / TOL bundles) - same rule as the TVS axis
+                    if product == 'True Visions' and fl != 'redeem_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'TVS NOW ' + str(r[hx['SUB_PRODUCT']] if 'SUB_PRODUCT' in hx else '').replace('TVS NOW ', ''), q_, 0.0, code)
+                    if product in ('Postpay', 'True Online') and fl == 'tvs_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'Postpay 5G DEVICE TVS' if product == 'Postpay' else 'TOL 3P/4P OTT', q_, 0.0, code)
+            if code not in sh: continue
             asof[product] = max(asof.get(product, ''), str(r[ix['DATA_ASOF_DATE']] or '')[:10])
             rows.append((product, f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(), str(r[ix['SALE_ID']] or '').strip(),
                          str(r[st] or '') if st is not None else '', tvs_flag(product, lambda c: r[hx[c]] if c in hx else None),
@@ -210,6 +236,10 @@ def merge_allprod(fp):
     old = _load('perf_allprod.csv')
     out = pd.concat([old[~old.month.isin(months)], d.astype(str)]) if old is not None else d
     _save(out.sort_values(['product', 'month', 'day', 'shop']), 'perf_allprod.csv')
+    dd = pd.DataFrame([(*k, v[0], v[1], len(dshops[k[:3]])) for k, v in dims.items()], columns=['month', 'product', 'scope', 'dim', 'val', 'q', 'n', 'shops'])
+    oldd = _load('perf_dims.csv')
+    _save(pd.concat([oldd[~oldd.month.isin(months)], dd.astype(str)]) if oldd is not None else dd, 'perf_dims.csv')
+    print('perf: breakdown columns found', found, '·', len(dd), 'rows')
     m_ = _meta(); m_['perf_allprod_asof'] = asof; json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
     print(f'perf: all-product months {sorted(months)} · UN lines {len(rows)} · as of {asof} · qty by product', d.groupby('product').q.sum().round().to_dict())
 
@@ -303,7 +333,20 @@ def _pl_build():
         area_idx = [None if a_exp[i] <= 0 else (max(0.0, a_own[i] / a_exp[i] * 100) if PL_AXES[i][2] > 0 else (a_exp[i] / a_own[i] * 100 if a_own[i] > 0 else None)) for i in range(nexp)]
         types = sorted(set(sm.type) | {PL_BENCH_FALLBACK})
         ref = {g: {t: [bench(m, g, t, k, unit) for _, k, _, unit in PL_AXES] for t in types} for g in ('UPC', 'BMA')}
-        res['months'][m] = {'shops': shops_out, 'area_idx': area_idx, 'area_tot': tot,
+        # P&L lines per sqm for the drill-down: own vs UPC average of the same type (area: weighted by our shops' sqm)
+        LINES = ['rev_prod', 'rev_svc', 'rev_nonsale', 'gm', 'pers', 'rent', 'var', 'front', 'ebitda', 'ebit', 'tx']
+        lown = {k: 0.0 for k in LINES}; lexp = {k: 0.0 for k in LINES}; lsq = 0.0
+        for _, r in sm.iterrows():
+            if r.sqm <= 0: continue
+            bt = btype(m, r.type, 'sqm'); lsq += r.sqm
+            sl = {}
+            for k in LINES:
+                ben = bench(m, 'UPC', bt, k, 'sqm'); lown[k] += r[k]
+                if ben is not None: lexp[k] += ben * r.sqm
+                sl[k] = [r[k] / r.sqm, ben]
+            shops_out[r.shop]['lines'] = sl
+        area_lines = {k: [lown[k] / lsq if lsq else None, lexp[k] / lsq if lsq else None] for k in LINES}
+        res['months'][m] = {'shops': shops_out, 'area_idx': area_idx, 'area_tot': tot, 'area_lines': area_lines,
                             'area_own': [a_own[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
                             'area_ben': [a_exp[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
                             'ref': ref, 'no_sqm': [sh for sh, v in shops_out.items() if not v['sqm']]}
@@ -470,6 +513,18 @@ def _ret_build():
     out['cur'] = months[-1]; out['prev'] = months[-2] if len(months) > 1 else None
     return out
 
+def _dims_build(cur, prev):
+    d = _load('perf_dims.csv')
+    if d is None: return None
+    d = d[d.month.isin([cur, prev])]
+    for c in ('q', 'n', 'shops'): d[c] = pd.to_numeric(d[c])
+    out = {}
+    for (m, p, sc), g in d.groupby(['month', 'product', 'scope']):
+        node = out.setdefault(m, {}).setdefault(p, {}).setdefault(sc, {'shops': int(g.shops.max()), 'dims': {}})
+        for dim, gg in g.groupby('dim'):
+            node['dims'][dim] = {r.val: [round(r.q, 2), round(r.n, 2)] for r in gg.itertuples()}
+    return out
+
 def _gia_actual(month, sh):
     g = _load(f'gia_sales_{month}.csv.gz')
     if g is None: return pd.DataFrame(columns=['day', 'shop', 'emp', 'q', 'n'])
@@ -537,6 +592,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build()}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev)}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")
