@@ -388,5 +388,29 @@
   "kind": "longevity",
   "at": "2026-11-14 01:55",
   "ok": true
+ },
+ "11AVZ-yAl9OoWzKljxD21FAhYiCsT1JFl": {
+  "name": "202611_Target by Brand Nov'26 V.2.zip",
+  "kind": "mixtarget",
+  "at": "2026-11-14 02:14",
+  "ok": true
+ },
+ "1b3vqrDFKwEgL2G-t9lyOI1TSjnIpuawI": {
+  "name": "202610_Target by Brand Oct'26 V.3 (1).zip",
+  "kind": "mixtarget",
+  "at": "2026-11-14 02:14",
+  "ok": true
+ },
+ "11WQnYoCdUpNdfOsct8oYb6gugCRm1VBR": {
+  "name": "202610_Target GIA by CATEGORY Oct'26 V.3.zip",
+  "kind": "mixtarget",
+  "at": "2026-11-14 02:14",
+  "ok": true
+ },
+ "1U3dS4P_L6PPLw7d8feXnZkNTqqzNdYUT": {
+  "name": "202611_Target GIA by CATEGORY Nov'26 V.2.zip",
+  "kind": "mixtarget",
+  "at": "2026-11-14 02:14",
+  "ok": true
  }
 }
