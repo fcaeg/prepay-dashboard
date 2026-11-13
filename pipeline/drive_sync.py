@@ -16,6 +16,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *VIVO*Sale*                          -> Vivo Dashboard central-system sales (used up to its DATA_ASOF_DATE)
   *PC Brand* / *PC*vivo*              -> Vivo Dashboard PC per shop (PC Brand Update, or Update PC vivo with a "PC Active" column)
   GIA*.xlsx                            -> GIA Dashboard shop list + month targets (Nami's daily GIA report)
+  *Postpaid*Raw*                       -> Shop Performance: Postpay actuals (Self Refresh Postpaid Rawdata, sheet Rawdata)
 Processed files are moved to the sub-folder "Done" (or "Error" if the update failed) and remembered in
 pipeline/state/drive_done.json, so a file is never processed twice. Raw files never leave Drive / the runner.
 Exit code 0; writes changed=true|false to $GITHUB_OUTPUT.
@@ -75,6 +76,7 @@ def move(s, f, src, dst):
 def kind(name):
     n = name.lower()
     if n.startswith('daily_sales'): return 'sales'
+    if 'postpaid' in n and 'raw' in n: return 'postpay'
     if 'vivo' in n and 'rrp' in n: return 'vivorrp'
     if 'vivo' in n and 'target' in n: return 'vivotarget'
     if 'vivo' in n and 'sale' in n: return 'vivohist'
@@ -120,7 +122,7 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp]}[k]
     # update.py takes several --sales / --target values as one list each
     merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': []}
     for i in range(0, len(args), 2):

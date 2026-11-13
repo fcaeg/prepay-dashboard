@@ -102,13 +102,14 @@ let state = {branch:'ALL', mode:'n'};
 function shopAch(M, shopList, p, mode){
   if(!M || !M.actual_products.includes(p)) return null;
   let a=0,t=0; shopList.forEach(s=>{const r=M.shops[s]&&M.shops[s][p]; if(r){a+=r['a'+mode]||0;t+=r['t'+mode]||0;}});
-  return t? a/(t*M.frac)*100 : null;
+  return t? a/(t*fr(M,p))*100 : null;
 }
 function staffAch(M, shopList, p, mode){
-  if(!M || !M.has_ind || !M.actual_products.includes(p)) return null;
+  if(!M || !M.has_ind || !(M.staff_products||M.actual_products).includes(p)) return null;
   let a=0,t=0; Object.values(M.staff).forEach(e=>{ if(!shopList.includes(e.shop)) return; const r=e.p[p]; a+=r['a'+mode]||0; t+=r['t'+mode]||0; });
-  return t? a/(t*M.frac)*100 : null;
+  return t? a/(t*fr(M,p))*100 : null;
 }
+const fr = (M,p) => (M.frac_p && M.frac_p[p]) || M.frac;
 const shopsOf = br => br==='ALL' ? D.shops.map(s=>s.shop) : [br];
 function pillarVals(pid, M, br, mode){
   const P_ = PILLARS.find(x=>x.id===pid); const f = pid==='staff'?staffAch:shopAch;
@@ -159,7 +160,7 @@ function summary(){
   }).join('');
   return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2>${legend()}<div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff:</span>${modeSeg()}</div>
   <div class="grid g5 radars">${cards}</div>
-  <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · Postpay / TOL / TVS รอไฟล์ยอดขาย · ข้อมูลขายถึง ${D.sales_asof||'-'}</div>`;
+  <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · TOL / TVS รอไฟล์ยอดขาย · TSM ถึง ${D.sales_asof||'-'} · Postpay ถึง ${D.post_asof||'-'}</div>`;
 }
 const nameOf = s => (D.shops.find(x=>x.shop===s)||{name:s}).name.replace('True Shop ','');
 
@@ -169,8 +170,8 @@ function detailSale(){
   const list=shopsOf(br);
   const rows=items.map((p,k)=>{
     let a=0,t=0; list.forEach(s=>{const r=C.shops[s][p]; a+=r['a'+mode]||0; t+=r['t'+mode]||0;});
-    const has=C.actual_products.includes(p);
-    return `<tr><td><b>${p}</b></td><td>${has?fmtN(a):'รอข้อมูล'}</td><td>${fmtN(t*C.frac)}</td><td>${fmtN(t)}</td><td><span class="pill p-${cls(cur[k])}">${fmtP(cur[k])}</span></td><td>${fmtP(prv[k])}</td><td>${delta(cur[k],prv[k])}</td></tr>`;}).join('');
+    const has=C.actual_products.includes(p); const ld=C.last_day_p&&C.last_day_p[p];
+    return `<tr><td><b>${p}</b>${ld?`<div style="font-size:11px;color:var(--muted)">ถึง ${+ld.slice(8)} ${TH[+ld.slice(5,7)-1]}</div>`:''}</td><td>${has?fmtN(a):'รอข้อมูล'}</td><td>${fmtN(t*fr(C,p))}</td><td>${fmtN(t)}</td><td><span class="pill p-${cls(cur[k])}">${fmtP(cur[k])}</span></td><td>${fmtP(prv[k])}</td><td>${delta(cur[k],prv[k])}</td></tr>`;}).join('');
   const hm=D.shops.map(s=>{const v=items.map(p=>shopAch(C,[s.shop],p,mode)); return {s,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const hmRows=hm.map(r=>`<tr ${r.s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${r.s.shop}')">${r.s.name.replace('True Shop ','')}</td>${r.v.map(v=>`<td class="c" style="${hmColor(v)}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
   return `<div class="row"><h2 style="margin:0">Sale</h2><span style="color:var(--muted)">ยอดขายเทียบ Target สาขา</span><div class="spacer"></div>${modeSeg()}</div>
@@ -178,7 +179,7 @@ function detailSale(){
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">% Achievement เทียบ Target ถึงวันนี้</div>${radar(items,seriesFor('sale',br))}${legend()}</div>
     <div class="card"><h3>ตัวเลขเทียบ Target</h3><div class="sub">${mode==='n'?'Net Amount (บาท)':'จำนวน (QTY)'} · ถึง ${C.last_day||'-'}</div>
       <table><thead><tr><th>สินค้า</th><th>Actual</th><th>Target ถึงวันนี้</th><th>Target เดือน</th><th>%Ach</th><th>${PREV}</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="note">Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC</div></div>
+      <div class="note">Postpay = Self Refresh Postpaid Rawdata (QTY เทียบ Target POST · Net Amount เทียบ Target POST_NEW) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
   </div>
   <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
   <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
@@ -188,14 +189,14 @@ function detailStaff(){
   const br=state.branch, items=D.products, mode=state.mode, list=shopsOf(br);
   if(!C.has_ind) return `<div class="card pending"><h2>Staff Productivity</h2><p>ยังไม่มี Indy Target ของ ${CUR}</p></div>`;
   const st=Object.entries(C.staff).filter(([,e])=>list.includes(e.shop)).map(([id,e])=>{
-    const v=items.map(p=>{ if(!C.actual_products.includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*C.frac; return t?(r['a'+mode]||0)/t*100:null; });
+    const v=items.map(p=>{ if(!(C.staff_products||C.actual_products).includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*fr(C,p); return t?(r['a'+mode]||0)/t*100:null; });
     return {id,e,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
   const rows=st.map(r=>`<tr><td>${r.e.name}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
   return `<div class="row"><h2 style="margin:0">Staff Productivity</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legend()}</div>
     <div class="card"><h3>สรุป</h3><div class="sub">${st.length} คน · ต่ำกว่า Target (เฉลี่ย) ${st.filter(r=>r.avg!=null&&r.avg<100).length} คน</div>
-      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
+      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay: ไฟล์ Rawdata ไม่มีรหัสพนักงาน จึงยังวัดรายคนไม่ได้<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
   </div>
   <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
   <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>

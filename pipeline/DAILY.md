@@ -130,3 +130,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 - % = actual ÷ (month target × days to latest sale ÷ days in month); previous month = full month.
 - Pending: Postpay / TOL / TVS actuals (report from Nami), Service & Retention, EBIT & Revenue, Sale Longevity; Oct 2026 actuals.
 - Nov 2026 Device was backfilled by hand from Drive snapshots: 3 Nov missing, 4 Nov up to 16:23, 5 Nov up to 19:00 (Device understated).
+- Postpay (13 Nov 2026): `3.Self Refresh Postpaid Rawdata This year <yyyy> For DB.zip` (xlsx ~140 MB, sheet Rawdata, whole year, DATA_ASOF_DATE)
+  → `update.py --postpay <xlsx>` (Drive: name contains "postpaid" + "raw") → `state/perf_post.csv` (17 shops, month x day x shop x activity x SIM_STATUS).
+  QTY vs target POST subscribers, NET_AMOUNT vs target POST_NEW revenue (≈ 600-650 THB/sub, matches the file's net RC). No salesperson column,
+  so Staff Productivity has no Postpay. Each product's "target to date" uses that product's latest data day (frac_p).
