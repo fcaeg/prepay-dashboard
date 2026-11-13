@@ -3,7 +3,12 @@ name: Update from Google Drive
 on:
   schedule:
     - cron: '7,22,37,52 2-15 * * *'   # every 15 min, 09:07–22:52 Bangkok time (GitHub may start a run late)
-  workflow_dispatch: {}       # "Run workflow" button for an immediate update
+  workflow_dispatch:          # "Run workflow" button for an immediate update
+    inputs:
+      reprocess:
+        description: 'Optional: file name prefixes in Done to process again, separated by |'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -28,6 +33,7 @@ jobs:
         env:
           GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
+          REPROCESS: ${{ inputs.reprocess }}
         run: python pipeline/drive_sync.py
       - name: Commit and push
         if: always() && steps.sync.outputs.changed == 'true'

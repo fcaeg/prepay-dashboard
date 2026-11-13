@@ -13,6 +13,7 @@ GIA actuals come from gia.py's state/gia_sales_<YYYY-MM>.csv.gz (same GIA rule a
                          -> state/perf_post.csv (month x day x shop x activity x SIM_STATUS: q = QTY, n = NET_AMOUNT); months in the file replace.
                          Postpay Net Amount is compared with the target's POST_NEW revenue (acquisition), QTY with POST subscribers.
                          Lines with SIM_STATUS Suspend / Terminate are not counted (Nami, 14 Nov 2026). The file has no salesperson, so Staff Productivity shows Postpay as 'no data'.
+TVS includes bundles (tvs_flag; Net of a bundled unit = QTY x TVS target revenue per unit).
 True Online / True Visions: the same Self Refresh Rawdata format (merge_tol / merge_tvs); Net Amount vs TOL_NEW / TVS_NEW revenue (Nami, 14 Nov 2026).
 Shops (Nami, 13 Nov 2026): region UPC - Upper North in the target file, without the Lotus's-company shops (Nan, Hangdong, Chiang Khong) = 17 shops.
 GIA target = column ACC of the target file (Nami, 13 Nov 2026). Device = H/S incl. tablets + iPad (Nami, 13 Nov 2026).
@@ -109,6 +110,17 @@ def add_sales(raw):
     json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
     print(f'perf: device days {sorted(replace) or "-"} · {int(v.q.sum())} units')
 
+def tvs_flag(product, get):
+    """TVS sold in a bundle (Nami, 14 Nov 2026: TVS counts bundles with True Online / Postpay):
+    Postpay price plan type with 'TVS' (5G DEVICE TVS) and TOL campaign code 3P.../4P... (3POTT, 4POTT) = 'tvs_bundle';
+    a TVS NOW 'REDEEM ... POSTPAID / TOL' line is that bundle's entitlement = 'redeem_bundle' (not counted again)."""
+    if product == 'Postpay': return 'tvs_bundle' if 'TVS' in str(get('PRICE_PLAN_TYPE') or '').upper() else ''
+    if product == 'True Online': return 'tvs_bundle' if re.match(r'^[34]P', str(get('CAMPIGN_CODE') or '').strip().upper()) else ''
+    if product == 'True Visions':
+        g = str(get('GP_SPECIAL_SKU') or get('CAMPAIGN') or '').upper()
+        return 'redeem_bundle' if 'REDEEM' in g and ('POSTPAID' in g or 'TOL' in g) else ''
+    return ''
+
 RAW = {'Postpay': 'perf_post.csv', 'True Online': 'perf_tol.csv', 'True Visions': 'perf_tvs.csv'}
 
 def merge_raw(fp, product):
@@ -120,6 +132,7 @@ def merge_raw(fp, product):
     it = ws.iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]
     ix = {c: h.index(c) for c in ['SHOP_CODE', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'DATA_ASOF_DATE']}
     opt = {c: h.index(c) for c in ['SIM_STATUS', 'ACTIVITY_GROUP'] if c in h}
+    hx = {c: i for i, c in enumerate(h)}
     rows = []; months = set(); asof = ''
     for r in it:
         bm = str(r[ix['BM']] or '').strip()
@@ -128,9 +141,9 @@ def merge_raw(fp, product):
         asof = max(asof, str(r[ix['DATA_ASOF_DATE']] or '')[:10])
         rows.append((f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(),
                      str(r[opt['ACTIVITY_GROUP']] or '') if 'ACTIVITY_GROUP' in opt else '', str(r[opt['SIM_STATUS']] or '') if 'SIM_STATUS' in opt else '',
-                     float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
-    d = pd.DataFrame(rows, columns=['month', 'day', 'shop', 'activity', 'sim_status', 'q', 'n'])
-    d = d.groupby(['month', 'day', 'shop', 'activity', 'sim_status'], as_index=False)[['q', 'n']].sum()
+                     tvs_flag(product, lambda c: r[hx[c]] if c in hx else None), float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
+    d = pd.DataFrame(rows, columns=['month', 'day', 'shop', 'activity', 'sim_status', 'flag', 'q', 'n'])
+    d = d.groupby(['month', 'day', 'shop', 'activity', 'sim_status', 'flag'], as_index=False)[['q', 'n']].sum()
     old = _load(RAW[product])
     out = pd.concat([old[~old.month.isin(months)], d.astype(str)]) if old is not None else d
     _save(out.sort_values(['month', 'day', 'shop']), RAW[product])
@@ -143,14 +156,30 @@ def merge_postpay(fp): merge_raw(fp, 'Postpay')
 def merge_tol(fp): merge_raw(fp, 'True Online')
 def merge_tvs(fp): merge_raw(fp, 'True Visions')
 
-def _raw_actual(month, product):
+def _raw_lines(month, product):
     p = _load(RAW[product])
     if p is None: return None
     p = p[(p.month == month) & ~p.sim_status.fillna('').str.upper().str.contains('SUSPEND|TERMINATE')].copy()  # Nami, 14 Nov 2026
     if not len(p): return None
     for c in ('q', 'n'): p[c] = pd.to_numeric(p[c])
     p['day'] = month + '-' + p.day.astype(int).map('{:02d}'.format); p['emp'] = ''
-    return p.groupby(['day', 'shop', 'emp'], as_index=False)[['q', 'n']].sum()
+    p['flag'] = p['flag'].fillna('') if 'flag' in p else ''
+    return p[['day', 'shop', 'emp', 'flag', 'q', 'n']]
+
+def _agg(d): return None if d is None or not len(d) else d.groupby(['day', 'shop', 'emp'], as_index=False)[['q', 'n']].sum()
+
+def _mix(lines, rate):
+    """lines: product -> line frame (day, shop, emp, flag, q, n) -> product -> aggregated actuals, where TVS = TVS lines except
+    'redeem_bundle' + Postpay / TOL 'tvs_bundle' lines (their QTY; Net = QTY x the month's TVS target revenue per unit)."""
+    out = {p: _agg(d) for p, d in lines.items()}
+    parts = []
+    if lines.get('True Visions') is not None: parts.append(lines['True Visions'][lines['True Visions'].flag != 'redeem_bundle'])
+    for p in ('Postpay', 'True Online'):
+        d = lines.get(p)
+        if d is not None:
+            b = d[d.flag == 'tvs_bundle'].copy(); b['n'] = b.q * rate; parts.append(b)
+    if parts: out['True Visions'] = _agg(pd.concat(parts))
+    return out
 
 ALLPROD = {'DEVICE': 'Device', 'GIA': 'GIA', 'POSTPAID': 'Postpay', 'TRUEONLINE': 'True Online', 'TRUEVISION': 'True Visions'}
 
@@ -167,28 +196,31 @@ def merge_allprod(fp):
         it = wb[sheet].iter_rows(values_only=True); h = [str(x).strip() for x in next(it)]
         ix = {c: h.index(c) for c in ['SHOP_CODE', 'SALE_ID', 'BM', 'DAY', 'QTY', 'NET_AMOUNT', 'DATA_ASOF_DATE']}
         st = h.index('SIM_STATUS') if 'SIM_STATUS' in h else None
+        hx = {c: i for i, c in enumerate(h)}
         for r in it:
             bm = str(r[ix['BM']] or '').strip()
             if len(bm) == 6: months.add(f'{bm[:4]}-{bm[4:]}')
             if str(r[ix['SHOP_CODE']] or '').strip() not in sh: continue
             asof[product] = max(asof.get(product, ''), str(r[ix['DATA_ASOF_DATE']] or '')[:10])
             rows.append((product, f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(), str(r[ix['SALE_ID']] or '').strip(),
-                         str(r[st] or '') if st is not None else '', float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
-    d = pd.DataFrame(rows, columns=['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'q', 'n'])
-    d = d.groupby(['product', 'month', 'day', 'shop', 'emp', 'sim_status'], as_index=False)[['q', 'n']].sum()
+                         str(r[st] or '') if st is not None else '', tvs_flag(product, lambda c: r[hx[c]] if c in hx else None),
+                         float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
+    d = pd.DataFrame(rows, columns=['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'flag', 'q', 'n'])
+    d = d.groupby(['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'flag'], as_index=False)[['q', 'n']].sum()
     old = _load('perf_allprod.csv')
     out = pd.concat([old[~old.month.isin(months)], d.astype(str)]) if old is not None else d
     _save(out.sort_values(['product', 'month', 'day', 'shop']), 'perf_allprod.csv')
     m_ = _meta(); m_['perf_allprod_asof'] = asof; json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
     print(f'perf: all-product months {sorted(months)} · UN lines {len(rows)} · as of {asof} · qty by product', d.groupby('product').q.sum().round().to_dict())
 
-def _allprod_actual(month):
+def _allprod_lines(month):
     p = _load('perf_allprod.csv')
     if p is None: return {}
     p = p[(p.month == month) & ~p.sim_status.fillna('').str.upper().str.contains('SUSPEND|TERMINATE')].copy()
     for c in ('q', 'n'): p[c] = pd.to_numeric(p[c])
     p['day'] = month + '-' + p.day.astype(int).map('{:02d}'.format); p['emp'] = p.emp.fillna('')
-    return {k: g.groupby(['day', 'shop', 'emp'], as_index=False)[['q', 'n']].sum() for k, g in p.groupby('product')}
+    p['flag'] = p['flag'].fillna('') if 'flag' in p else ''
+    return {k: g[['day', 'shop', 'emp', 'flag', 'q', 'n']] for k, g in p.groupby('product')}
 
 def _gia_actual(month, sh):
     g = _load(f'gia_sales_{month}.csv.gz')
@@ -216,8 +248,10 @@ def build():
         if dev is not None:
             for c in ('q', 'n'): dev[c] = pd.to_numeric(dev[c])
         gia = _gia_actual(m, sh)
-        act = {'Device': dev, 'GIA': gia if len(gia) else None, **{p: _raw_actual(m, p) for p in RAW}}
-        ap = _allprod_actual(m); src = {}
+        act = {'Device': dev, 'GIA': gia if len(gia) else None, }
+        tv = tm[tm['product'] == 'True Visions']; rate = float(tv.n.sum() / tv.q.sum()) if tv.q.sum() else 0.0
+        act.update(_mix({p: _raw_lines(m, p) for p in RAW}, rate))
+        ap = {k: v for k, v in _mix(_allprod_lines(m), rate).items() if v is not None}; src = {}
         for p in ('Device', 'GIA'):  # TSM first; the all-product file fills a month with no TSM data (e.g. Oct 2026)
             if (act.get(p) is None or not len(act[p])) and p in ap: act[p] = ap[p]; src[p] = 'allprod'
         # salesperson-level actuals: TSM SALE_CODE for Device / GIA, the all-product file's SALE_ID for the rest

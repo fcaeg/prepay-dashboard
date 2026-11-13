@@ -117,6 +117,13 @@ def main():
     folder = os.environ['DRIVE_FOLDER_ID'].strip(); s = session()
     done = json.load(open(DONE)) if os.path.exists(DONE) else {}
     files = [f for f in ls(s, folder) if f['id'] not in done]
+    # REPROCESS (manual run input): name prefixes separated by | - also take the newest matching file from Done and process it again
+    rp = [x.strip().lower() for x in os.environ.get('REPROCESS', '').split('|') if x.strip()]
+    if rp:
+        newest = {}
+        for f in ls(s, subfolder(s, folder, 'Done')):
+            if any(f['name'].lower().startswith(x) for x in rp) and f['createdTime'] > newest.get(f['name'], {}).get('createdTime', ''): newest[f['name']] = f
+        files += list(newest.values()); log('reprocess:', sorted(newest))
     todo = [(f, kind(f['name'])) for f in files]; skip = [f['name'] for f, k in todo if not k]; todo = [(f, k) for f, k in todo if k]
     if skip: log('ignored (name not recognised):', skip)
     if not todo: log('no new files'); output('changed', 'false'); summary('ไม่มีไฟล์ใหม่ใน Google Drive'); return

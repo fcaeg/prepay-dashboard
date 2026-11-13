@@ -143,3 +143,7 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   Used for staff-level Postpay / TOL / TVS (SALE_ID = emp_id8), and for Device / GIA of a month with no TSM daily_sales (Oct 2026).
   Shop-level Postpay / TOL / TVS still come from the yearly Rawdata files.
 - TVS open question (14 Nov): the TrueVision Rawdata / TRUEVISION sheet hold TVS NOW only (~220/month for the 17 shops vs target ~1,400).
+- TVS (Nami, 14 Nov 2026: count bundles): TVS = TVS NOW lines except "REDEEM ... POSTPAID / TOL" (bundle entitlement) + Postpay lines whose
+  PRICE_PLAN_TYPE has "TVS" (5G DEVICE TVS) + TOL lines whose CAMPIGN_CODE starts 3P / 4P (3POTT, 4POTT). Net of a bundled unit =
+  QTY x (TVS_NEW ÷ TVS subs of the month's target). Flags are set when the Rawdata / All Product files are read (column `flag`).
+- Reprocess a file already in Done: Actions → "Update from Google Drive" → Run workflow → reprocess = name prefixes separated by |.
