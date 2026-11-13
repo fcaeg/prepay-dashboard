@@ -332,7 +332,7 @@ def merge_retention(fp):
     if not prod: print('perf: retention product unknown', name); return
     num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', '').str.replace('%', ''), errors='coerce').fillna(0)
     out = pd.DataFrame({'month': month, 'asof': asof, 'product': prod, 'shop': d['Shop Code'].astype(str).str.strip(), 'name': d['Shop'],
-                        'grp': d['Region'].astype(str).map(lambda r: 'BMA' if r.upper().startswith('BMA') else 'UPC'), 'kpitype': d.get('KPIType', ''),
+                        'grp': d['Region'].map(lambda r: 'BMA' if isinstance(r, str) and r.strip().upper().startswith('BMA') else 'UPC'), 'kpitype': d.get('KPIType', ''),
                         'req': num('Req'), 'save': num('Save'), 'cancel': num('Cancel'), 'rev_req': num('Rev Req'), 'rev_save': num('Rev Save')})
     old = _load('perf_ret.csv')
     if old is not None:
@@ -363,7 +363,7 @@ def merge_service(fp):
     d.columns = [str(c).strip() for c in d.columns]
     pct = lambda c: pd.to_numeric(d[c].astype(str).str.replace('%', '').str.replace(',', ''), errors='coerce')
     num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
-    grp = lambda c: d[c].astype(str).map(lambda r: 'BMA' if r.strip().upper().startswith('BMA') else 'UPC')
+    grp = lambda c: d[c].map(lambda r: 'BMA' if str(r if isinstance(r, str) else '').strip().upper().startswith('BMA') else 'UPC')  # blank cells stay NA in newer pandas
     if low.startswith('servicelevel'):
         kpi = 'Service Level'; den = num('Transactions'); p = pct('SL% Overall')
         out = pd.DataFrame({'shop': d['Shop Code'].map(_code), 'grp': grp('Region'), 'den': den, 'num': den * p / 100})
