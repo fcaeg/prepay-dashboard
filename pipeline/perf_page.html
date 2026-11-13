@@ -623,6 +623,12 @@ function mixAnalysis(pid){
 }
 /* best sellers inside one axis (brand): items from All Product (current month) vs model target (Device) / brand x sub-category target (GIA) */
 const normK = s => String(s||'').replace(/\s+/g,' ').trim().toUpperCase();
+const SK = D.stock;
+// stock of a product in a set of shops, keyed by normalised model: {key:{m, b, c, main, other, age}}
+function stockBy(prod, list){ const o={}; if(!SK) return o;
+  list.forEach(sh=>Object.entries(SK.shops[sh]||{}).forEach(([code,v])=>{ const it=SK.items[code]; if(!it||it[0]!==prod) return;
+    const key=normK(it[1])||normK(it[4]); const a=o[key]||(o[key]={m:it[1]||it[4], b:it[2], c:it[3], main:0, other:0, age:0}); a.main+=v[0]; a.other+=v[1]; a.age=Math.max(a.age, v[2]||0); }));
+  return o; }
 function bestSellers(prod, ax){
   const X=MX[prod], M=X.months[D.cur], br=state.branch, mode=state.mode, k_=mode==='q'?0:1, scope=br==='ALL'?'UN':br;
   const node=((DM[D.cur]||{})[prod]||{})[scope], items=node&&node.dims['สินค้า'];
@@ -634,25 +640,33 @@ function bestSellers(prod, ax){
   let html='';
   if(prod==='Device'){
     const agg={}; rows.forEach(z=>{ const key=normK(z.m)||'(ไม่ระบุรุ่น)'; const a=agg[key]||(agg[key]={m:z.m||'(ไม่ระบุรุ่น)', c:z.c, q:0, n:0}); a.q+=z.q; a.n+=z.n; });
-    const r=Object.entries(agg).map(([key,a])=>{ const t=tgt[key]; const tt=t?t[k_]*M.frac:null; return {...a, key, tt, v: tt? (mode==='q'?a.q:a.n)/tt*100 : null}; }).sort((a,b)=>(mode==='q'?b.q-a.q:b.n-a.n));
+    const stk=stockBy(prod, list), day=+((AP_ASOF[prod]||'').slice(8))||1;
+    const r=Object.entries(agg).map(([key,a])=>{ const t=tgt[key]; const tt=t?t[k_]*M.frac:null; const sk=stk[key]; return {...a, key, tt, v: tt? (mode==='q'?a.q:a.n)/tt*100 : null, sk:sk?sk.main:0, cover: a.q>0 ? (sk?sk.main:0)/(a.q/day) : null}; }).sort((a,b)=>(mode==='q'?b.q-a.q:b.n-a.n));
+    const idle=Object.entries(stk).filter(([key,z])=>!agg[key]&&z.main>0&&inAx(z.b)).sort((a,b)=>b[1].main-a[1].main);
+    const out=r.filter(a=>a.q>=2&&a.sk===0);
     // models with target in this brand but no sale: target keys belonging to this axis (match brand via the focus list / prefix of sold models)
     const brandModels=new Set(Object.keys(agg)); const tgtBrand=Object.entries(tgt).filter(([key])=>((X.axm||{})[ax]||[]).includes(key));
     const zero=tgtBrand.filter(([key])=>!brandModels.has(key)).sort((a,b)=>b[1][1]-a[1][1]).slice(0,8);
-    html=`<table style="margin-top:6px"><thead><tr><th>#</th><th>รุ่น</th><th>ประเภท</th><th>QTY</th><th>Net ฿</th><th>สัดส่วนใน${ax}</th><th>Target รุ่น ถึงวันนี้</th><th>%</th></tr></thead><tbody>
-      ${r.slice(0,20).map((a,i)=>`<tr><td>${i+1}</td><td style="text-align:left"><b>${a.m}</b></td><td style="text-align:left">${a.c}</td><td>${fmtN(a.q)}</td><td>${fmtN(a.n)}</td><td>${tot?((mode==='q'?a.q:a.n)/tot*100).toFixed(1)+'%':'–'}</td><td>${a.tt==null?'<span style="color:var(--muted)">ไม่มี Target</span>':fmtN(a.tt)}</td><td>${a.v==null?'–':`<span class="pill p-${cls(a.v)}">${fmtP(a.v)}</span>`}</td></tr>`).join('')}</tbody></table>
+    const covCell=a=> !SK?'–': a.sk===0? '<span class="pill p-bad">หมด</span>' : a.cover==null?'–': `<span class="pill p-${a.cover<7?'bad':a.cover<14?'warn':'good'}">${a.cover.toFixed(0)} วัน</span>`;
+    html=`${SK&&out.length?`<div class="note" style="color:var(--bad)"><b>⚠️ ขายดีแต่ Stock พร้อมขายหมด:</b> ${out.map(a=>`${a.m} (ขาย ${fmtN(a.q)})`).join(' · ')}</div>`:''}
+      <table style="margin-top:6px"><thead><tr><th>#</th><th>รุ่น</th><th>ประเภท</th><th>QTY</th><th>Net ฿</th><th>สัดส่วนใน${ax}</th><th>Target รุ่น ถึงวันนี้</th><th>%</th>${SK?'<th>Stock พร้อมขาย</th><th>พอขาย</th>':''}</tr></thead><tbody>
+      ${r.slice(0,20).map((a,i)=>`<tr><td>${i+1}</td><td style="text-align:left"><b>${a.m}</b></td><td style="text-align:left">${a.c}</td><td>${fmtN(a.q)}</td><td>${fmtN(a.n)}</td><td>${tot?((mode==='q'?a.q:a.n)/tot*100).toFixed(1)+'%':'–'}</td><td>${a.tt==null?'<span style="color:var(--muted)">ไม่มี Target</span>':fmtN(a.tt)}</td><td>${a.v==null?'–':`<span class="pill p-${cls(a.v)}">${fmtP(a.v)}</span>`}</td>${SK?`<td>${fmtN(a.sk)}</td><td>${covCell(a)}</td>`:''}</tr>`).join('')}</tbody></table>
+      ${SK&&idle.length?`<div class="note"><b>มี Stock แต่ยังไม่มียอดขายเดือนนี้:</b> ${idle.slice(0,10).map(([k,z])=>`${z.m} (${fmtN(z.main)} เครื่อง${z.age?` · อายุสูงสุด ${fmtN(z.age)} วัน`:''})`).join(' · ')}</div>`:''}
       ${zero.length?`<div class="note" style="color:var(--bad)"><b>รุ่นที่มี Target แต่ยังขายไม่ได้:</b> ${zero.map(([k,t])=>`${k} (Target ${fmtN(t[0])} เครื่อง · ${fK(t[1])} ฿)`).join(' · ')}</div>`:''}`;
   } else {
-    const r=rows.sort((a,b)=>(mode==='q'?b.q-a.q:b.n-a.n));
+    const r=rows.sort((a,b)=>(mode==='q'?b.q-a.q:b.n-a.n)); const stk=stockBy(prod, list); const sold=new Set(r.map(a=>normK(a.m)));
+    const idle=Object.entries(stk).filter(([key,z])=>!sold.has(key)&&z.main>0&&inAx(z.b)).sort((a,b)=>b[1].main-a[1].main);
     const subs={}; rows.forEach(z=>{ const sub=(z.c.split(' / ')[1]||'').trim(); const a=subs[sub]||(subs[sub]={q:0,n:0}); a.q+=z.q; a.n+=z.n; });
     Object.entries(tgt).forEach(([key])=>{ const [b,sub]=key.split('|'); if(inAx(b)&&!subs[sub]) subs[sub]={q:0,n:0}; });
     const st=Object.entries(subs).map(([sub,a])=>{ let t=0; Object.entries(tgt).forEach(([key,v])=>{ const [b,s2]=key.split('|'); if(inAx(b)&&s2===sub) t+=v[k_]; }); const tt=t*M.frac; return {sub,...a,tt,v:tt?(mode==='q'?a.q:a.n)/tt*100:null}; }).sort((a,b)=>(b.tt||0)-(a.tt||0));
     html=`<table style="margin-top:6px"><thead><tr><th>หมวดย่อย (${ax})</th><th>QTY</th><th>Net ฿</th><th>Target ถึงวันนี้</th><th>%</th></tr></thead><tbody>
       ${st.map(a=>`<tr><td style="text-align:left"><b>${a.sub||'(ไม่ระบุ)'}</b></td><td>${fmtN(a.q)}</td><td>${fmtN(a.n)}</td><td>${a.tt?fmtN(a.tt):'–'}</td><td>${a.v==null?'–':`<span class="pill p-${cls(a.v)}">${fmtP(a.v)}</span>`}</td></tr>`).join('')}</tbody></table>
-      <table style="margin-top:10px"><thead><tr><th>#</th><th>สินค้า</th><th>แบรนด์</th><th>หมวด</th><th>QTY</th><th>Net ฿</th><th>สัดส่วนใน${ax}</th></tr></thead><tbody>
-      ${r.slice(0,20).map((a,i)=>`<tr><td>${i+1}</td><td style="text-align:left"><b>${a.m||'(ไม่ระบุ)'}</b></td><td style="text-align:left">${a.b}</td><td style="text-align:left">${a.c}</td><td>${fmtN(a.q)}</td><td>${fmtN(a.n)}</td><td>${tot?((mode==='q'?a.q:a.n)/tot*100).toFixed(1)+'%':'–'}</td></tr>`).join('')}</tbody></table>`;
+      <table style="margin-top:10px"><thead><tr><th>#</th><th>สินค้า</th><th>แบรนด์</th><th>หมวด</th><th>QTY</th><th>Net ฿</th><th>สัดส่วนใน${ax}</th>${SK?'<th>Stock พร้อมขาย</th>':''}</tr></thead><tbody>
+      ${r.slice(0,20).map((a,i)=>{ const sk=(stk[normK(a.m)]||{}).main||0; return `<tr><td>${i+1}</td><td style="text-align:left"><b>${a.m||'(ไม่ระบุ)'}</b></td><td style="text-align:left">${a.b}</td><td style="text-align:left">${a.c}</td><td>${fmtN(a.q)}</td><td>${fmtN(a.n)}</td><td>${tot?((mode==='q'?a.q:a.n)/tot*100).toFixed(1)+'%':'–'}</td>${SK?`<td>${sk?fmtN(sk):'<span class="pill p-bad">หมด</span>'}</td>`:''}</tr>`; }).join('')}</tbody></table>
+      ${SK&&idle.length?`<div class="note"><b>มี Stock แต่ยังไม่มียอดขายเดือนนี้:</b> ${idle.slice(0,12).map(([k,z])=>`${z.m} (${fmtN(z.main)} ชิ้น)`).join(' · ')}</div>`:''}`;
   }
   return `<details style="margin-top:10px" ${state.bsOpen?'open':''} ontoggle="state.bsOpen=this.open"><summary style="cursor:pointer;font-weight:600;display:inline-block;padding:6px 14px;border:1px solid var(--cur);color:var(--cur);border-radius:999px">${prod==='Device'?'📱 ดูรุ่นที่ขายดี':'🎧 ดูสินค้าที่ขายดี'} · ${ax}</summary>
-    <div class="sub" style="margin-top:6px">${br==='ALL'?'Upper North':nameOf(br)} · เรียงตาม ${mode==='q'?'QTY':'Net'} · All Product Rawdata ถึง ${AP_ASOF[prod]||'-'} · ${prod==='Device'?'Target รุ่น จากไฟล์ Target by Brand':'Target หมวดย่อยของแบรนด์ จากไฟล์ Target GIA by Category'} (Target ถึงวันนี้ = ${(M.frac*100).toFixed(0)}% ของเดือน)</div>${html}</details>`;
+    <div class="sub" style="margin-top:6px">${br==='ALL'?'Upper North':nameOf(br)} · เรียงตาม ${mode==='q'?'QTY':'Net'} · All Product Rawdata ถึง ${AP_ASOF[prod]||'-'} · ${prod==='Device'?'Target รุ่น จากไฟล์ Target by Brand':'Target หมวดย่อยของแบรนด์ จากไฟล์ Target GIA by Category'} (Target ถึงวันนี้ = ${(M.frac*100).toFixed(0)}% ของเดือน)${SK?` · Stock ณ ${SK.asof} (ไฟล์ stock_balance_report ล่าสุด · พร้อมขาย = MAIN_STOCK ไม่รวมเครื่อง Demo · พอขาย = Stock ÷ ยอดขายเฉลี่ยต่อวันเดือนนี้)`:''}</div>${html}</details>`;
 }
 function detailMix(pid){
   const prod=MIXP[pid], X=MX[prod], br=state.branch, mode=state.mode, M=X.months[D.cur], Pm=D.prev&&X.months[D.prev], P_=PILLARS.find(p=>p.id===pid);

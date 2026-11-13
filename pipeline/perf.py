@@ -721,7 +721,8 @@ def _stock_build():
     for r in s.itertuples():
         if r.code not in items: items[r.code] = [r.prod, *label(r.code, r.name, r.prod), r.name]
         a = shops_.setdefault(r.shop, {}).setdefault(r.code, [0.0, 0.0, None])
-        a[0 if r.loc.upper() == 'MAIN_STOCK' else 1] += float(r.qty)
+        demo = 'DEMO' in [x.strip().upper() for x in r.name.split(',')]
+        a[0 if r.loc.upper() == 'MAIN_STOCK' and not demo else 1] += float(r.qty)
         if r.age == r.age: a[2] = max(a[2] or 0, float(r.age))
     return {'asof': _meta().get('perf_stock_asof', ''), 'items': items, 'shops': shops_, 'locs': s.groupby('loc').qty.sum().to_dict()}
 
