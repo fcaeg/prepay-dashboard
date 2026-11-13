@@ -153,3 +153,4 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   Revenue, GM, EBIT, Front Cost (inverse), rent ค่าเช่า (inverse), Transactions; 100 = UPC average of the same shop type
   (area: mix-weighted by our shops' sqm). BMA shown for reference. DTAC COCO / HALL have no SQM in the report → no per-sqm values.
   GitHub Actions installs pyxlsb for .xlsb. First load (Aug 2026 report) was done by hand from the file Nami attached in chat.
+- DTAC COCO (D) shops 80101655 / 80101661 / 80101670 = 10 sqm each (Nami, 14 Nov 2026; perf.PL_SQM_OVERRIDE), compared with UPC Non Matching.

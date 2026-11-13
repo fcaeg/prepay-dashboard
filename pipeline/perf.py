@@ -255,6 +255,11 @@ def merge_pl(fp):
     m_ = _meta(); m_['perf_pl_month'] = out.month.max(); json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
     print(f'perf: P&L months {out.month.min()}..{out.month.max()} · our shops {mine.shop.nunique()} · bench rows {len(bench)}')
 
+# Shops without an area in the report (DTAC COCO has none): Nami, 14 Nov 2026 - these three are 10 sqm each.
+# Shops of a type with no per-sqm average are compared with UPC Non Matching.
+PL_SQM_OVERRIDE = {'80101655': 10.0, '80101661': 10.0, '80101670': 10.0}
+PL_BENCH_FALLBACK = 'Non Matching'
+
 PL_AXES = [('Revenue / ตร.ม.', 'rev', 1), ('GM / ตร.ม.', 'gm', 1), ('EBIT / ตร.ม.', 'ebit', 1),
            ('Front Cost / ตร.ม.', 'front', -1), ('ค่าเช่า / ตร.ม.', 'rent', -1), ('Transaction / ตร.ม.', 'tx', 1)]
 
@@ -262,6 +267,7 @@ def _pl_build():
     s = _load('perf_pl_shop.csv'); b = _load('perf_pl_bench.csv')
     if s is None or b is None: return None
     for c in PL_SUM: s[c] = pd.to_numeric(s[c])
+    ov = s.shop.map(PL_SQM_OVERRIDE); s['sqm'] = s.sqm.where(s.sqm > 0, ov).fillna(0.0)
     for c in b.columns:
         if c not in ('month', 'grp', 'type'): b[c] = pd.to_numeric(b[c])
     months = sorted(s.month.unique()); last = months[-1]; prev = months[-2] if len(months) > 1 else None
@@ -277,11 +283,12 @@ def _pl_build():
         sm = s[s.month == m]; shops_out = {}; exp = {k: 0.0 for _, k, _ in PL_AXES}; tot = {k: 0.0 for k in PL_SUM}
         for _, r in sm.iterrows():
             typ = r.type; sq = r.sqm
-            row = {'type': typ, 'sqm': sq, **{k: float(r[k]) for k in PL_SUM}}
+            btyp = typ if bench(m, 'UPC', typ, 'rev') is not None else PL_BENCH_FALLBACK  # e.g. DTAC COCO -> Non Matching
+            row = {'type': typ, 'bench_type': btyp, 'sqm': sq, **{k: float(r[k]) for k in PL_SUM}}
             if sq > 0:
                 vals = [];
                 for lbl, k, sign in PL_AXES:
-                    ben = bench(m, 'UPC', typ, k); own = r[k] / sq; vals.append(idx(own, ben, sign))
+                    ben = bench(m, 'UPC', btyp, k); own = r[k] / sq; vals.append(idx(own, ben, sign))
                     if ben is not None: exp[k] += ben * sq
                 row['idx'] = vals; row['per_sqm'] = {k: r[k] / sq for _, k, _ in PL_AXES}
                 for k in PL_SUM: tot[k] += r[k]
