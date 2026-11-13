@@ -356,6 +356,25 @@ def _pl_build():
                             'area_own': [a_own[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
                             'area_ben': [a_exp[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
                             'ref': ref, 'no_sqm': [sh for sh, v in shops_out.items() if not v['sqm']]}
+    # history for the alerts (Nami, 14 Nov 2026): latest month vs average of the 3 months before it, and vs the same month last year
+    LINES_H = ['rev_prod', 'rev_svc', 'rev_nonsale', 'gm', 'pers', 'rent', 'var', 'front', 'ebitda', 'ebit', 'tx']
+    l3 = [m for m in months if m < last][-3:]; ly = f'{int(last[:4]) - 1}{last[4:]}'; ly = ly if ly in months else None
+    def vals(z):  # one month (or several, averaged per month) of a set of shop rows -> axis values + line values per sqm
+        if not len(z): return None
+        nm = z.month.nunique(); sq = z[z.sqm > 0]
+        ax = []
+        for _, k, _, unit in PL_AXES:
+            zz = sq if unit == 'sqm' else z[z.man > 0]; den = zz.sqm.sum() if unit == 'sqm' else zz.man.sum()
+            ax.append(float(zz[k].sum() / den) if den > 0 else None)
+        ln = {k: (float(sq[k].sum() / sq.sqm.sum()) if sq.sqm.sum() > 0 else None) for k in LINES_H}
+        return {'axes': ax, 'lines': ln, 'months': nm}
+    hist = {'l3': l3, 'ly': ly, 'area': {}, 'shops': {}}
+    for key, ms in (('cur', [last]), ('l3', l3), ('ly', [ly] if ly else [])):
+        z = s[s.month.isin(ms)]
+        if not len(z): continue
+        hist['area'][key] = vals(z)
+        for sh_, g in z.groupby('shop'): hist['shops'].setdefault(sh_, {})[key] = vals(g)
+    res['hist'] = hist
     trend = s[s.month >= months[max(0, len(months) - 12)]].groupby('month')[['rev', 'gm', 'ebit', 'sqm']].sum()
     res['trend'] = [{'month': mm, **{k: float(v) for k, v in r.items()}} for mm, r in trend.iterrows()]
     return res

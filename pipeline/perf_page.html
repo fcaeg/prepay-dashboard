@@ -387,11 +387,35 @@ function ebitAnalysis(){
       const loss=D.shops.filter(s=>M.shops[s.shop]&&M.shops[s.shop].ebit<0).map(s=>`<b>${s.name.replace('True Shop ','')}</b> ขาดทุน EBIT ${fK(M.shops[s.shop].ebit)} บาท`);
       if(i===2) bad.unshift(...loss);
     } else { const r=M.shops[br]; if(r&&r.ebit<0) bad.unshift(`สาขานี้ขาดทุน EBIT ${fK(r.ebit)} บาท`); }
+    // vs average of the 3 months before, and vs the same month last year (both directions)
+    const H=PL.hist, hs = H ? (br==='ALL' ? H.area : (H.shops[br]||{})) : {};
+    const sign=[1,1,1,-1,-1,1][i], unitL = PL.units&&PL.units[i]==='man'?'บาท/คน':'บาท/ตร.ม.';
+    const chg=(a,b,sg)=> a==null||b==null||!b ? null : (sg>0 ? (a-b)/Math.abs(b)*100 : (b-a)/Math.abs(b)*100);   // + = better
+    const cmp=(lbl,a,b,sg,txt)=>{ const c=chg(a,b,sg); if(c==null) return; const raw=(a-b)/Math.abs(b)*100;
+      const t2=`<b>${lbl}</b> ${fK(a)} ${txt} ${raw>=0?'เพิ่มขึ้น':'ลดลง'} ${Math.abs(raw).toFixed(0)}% (${fK(b)})`;
+      if(c>=5) hg.push(t2); else if(c<=-5) hb.push(t2); };
+    const hg=[], hb=[];
+    if(hs.cur){ const nm=PL.axes[i].replace(' / ตร.ม.','').replace(' / พนักงาน','');
+      cmp(`${nm} ${unitL}`, hs.cur.axes[i], hs.l3&&hs.l3.axes[i], sign, `เทียบเฉลี่ย 3 เดือนก่อน (${H.l3.map(plLbl).join(', ')})`);
+      cmp(`${nm} ${unitL}`, hs.cur.axes[i], hs.ly&&hs.ly.axes[i], sign, `เทียบ ${H.ly?plLbl(H.ly):'ปีก่อน'}`);
+      SEL[i].filter(k=>k!=='tx'&&k!==['rev','gm','ebit','front','rent','x'][i]).forEach(k=>{ const lb=LL[k][0], sg=LL[k][1];
+        cmp(lb+' /ตร.ม.', hs.cur.lines[k], hs.l3&&hs.l3.lines[k], sg, 'เทียบเฉลี่ย 3 เดือน');
+        cmp(lb+' /ตร.ม.', hs.cur.lines[k], hs.ly&&hs.ly.lines[k], sg, 'เทียบปีก่อน'); });
+      if(br==='ALL'){ const sr=D.shops.map(s=>{const h=H.shops[s.shop]||{}; return {n:s.name.replace('True Shop ',''), l3:chg(h.cur&&h.cur.axes[i], h.l3&&h.l3.axes[i], sign), ly:chg(h.cur&&h.cur.axes[i], h.ly&&h.ly.axes[i], sign)};});
+        const pick=(key,lbl)=>{ const r=sr.filter(x=>x[key]!=null).sort((a,b)=>a[key]-b[key]);
+          const w=r.filter(x=>x[key]<=-15).slice(0,3), b2=r.filter(x=>x[key]>=15).reverse().slice(0,3);
+          if(w.length) hb.push(`แย่ลงมากสุด${lbl}: ${w.map(x=>`<b>${x.n}</b> ${x[key].toFixed(0)}%`).join(' · ')}`);
+          if(b2.length) hg.push(`ดีขึ้นมากสุด${lbl}: ${b2.map(x=>`<b>${x.n}</b> +${x[key].toFixed(0)}%`).join(' · ')}`); };
+        pick('l3',' (เทียบเฉลี่ย 3 เดือน)'); pick('ly',' (เทียบปีก่อน)'); }
+    }
+    good.unshift(...hg.map(t=>'📈 '+t)); bad.unshift(...hb.map(t=>'📉 '+t));
     const t = PL.trend; if(t.length>=2){ const a=t[t.length-1], b=t[t.length-2]; const ea=a.ebit/a.rev*100, eb=b.ebit/b.rev*100;
       if(br==='ALL'&&i===2) (ea>=eb?good:bad).push(`EBIT% ภาพรวม ${ea.toFixed(1)}% ${ea>=eb?'ดีขึ้น':'ลดลง'}จาก ${eb.toFixed(1)}% เดือนก่อน`); }
-    const tbl=`<table style="margin-top:10px"><thead><tr><th>บรรทัด P&L (ต่อ ตร.ม. / เดือน)</th><th>${br==='ALL'?'Upper North':'สาขา'}</th><th>UPC</th><th>ดัชนี</th></tr></thead><tbody>${rowsAll.map(x=>`<tr ${SEL[i].includes(x.k)?'style="background:#fafafa;font-weight:600"':''}><td>${x.lbl}${x.s<0?' <span style="font-size:11px;color:var(--muted)">(ต่ำ = ดี)</span>':''}</td><td>${x.k==='tx'?(x.own||0).toFixed(1):fK(x.own)}</td><td>${x.k==='tx'?(x.ben||0).toFixed(1):fK(x.ben)}</td><td>${x.idx==null?'–':`<span class="pill p-${cls(x.idx)}">${x.idx.toFixed(0)}</span>`}</td></tr>`).join('')}</tbody></table>
-      <div class="note">ค่าเฉลี่ย UPC ถ่วงตามประเภทและพื้นที่ของสาขาเรา · แถวตัวหนา = เกี่ยวกับแกนที่เลือก · ข้อมูล ${plLbl(PL.last)}</div>`;
-    return lists(good.slice(0,9), bad.slice(0,10)) + tbl;
+    const tbl=`<table style="margin-top:10px"><thead><tr><th>บรรทัด P&L (ต่อ ตร.ม. / เดือน)</th><th>${br==='ALL'?'Upper North':'สาขา'}</th><th>UPC</th><th>ดัชนี</th><th>เฉลี่ย 3 เดือนก่อน</th><th>vs 3 เดือน</th><th>${H&&H.ly?plLbl(H.ly):'ปีก่อน'}</th><th>vs ปีก่อน</th></tr></thead><tbody>${rowsAll.map(x=>{ const f=v=>v==null?'–':x.k==='tx'?v.toFixed(1):fK(v); const cur=hs.cur&&hs.cur.lines[x.k], a3=hs.l3&&hs.l3.lines[x.k], a1=hs.ly&&hs.ly.lines[x.k];
+    const d=(b)=>{ if(cur==null||b==null||!b) return '–'; const raw=(cur-b)/Math.abs(b)*100, better=(x.s>0?raw:-raw)>=0; if(Math.abs(raw)<0.5) return '<span style="color:var(--muted)">0%</span>'; return `<span class="${better?'up':'down'}">${raw>=0?'▲':'▼'} ${Math.abs(raw).toFixed(0)}%</span>`; };
+    return `<tr ${SEL[i].includes(x.k)?'style="background:#fafafa;font-weight:600"':''}><td>${x.lbl}${x.s<0?' <span style="font-size:11px;color:var(--muted)">(ต่ำ = ดี)</span>':''}</td><td>${f(x.own)}</td><td>${f(x.ben)}</td><td>${x.idx==null?'–':`<span class="pill p-${cls(x.idx)}">${x.idx.toFixed(0)}</span>`}</td><td>${f(a3)}</td><td>${d(a3)}</td><td>${f(a1)}</td><td>${d(a1)}</td></tr>`; }).join('')}</tbody></table>
+      <div class="note">ค่าเฉลี่ย UPC ถ่วงตามประเภทและพื้นที่ของสาขาเรา · แถวตัวหนา = เกี่ยวกับแกนที่เลือก · ข้อมูล ${plLbl(PL.last)} · เฉลี่ย 3 เดือนก่อน = ${H?H.l3.map(plLbl).join(', '):'-'} · ▲▼ สีเขียว = ดีขึ้น (แถวต้นทุน: ลดลง = ดี) · ✅ / ⚠️ เมื่อเปลี่ยนตั้งแต่ 5% (รายสาขา 15%)</div>`;
+    return lists(good.slice(0,14), bad.slice(0,14)) + tbl;
   });
 }
 function serviceAnalysis(){
