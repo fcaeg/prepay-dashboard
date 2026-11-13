@@ -218,11 +218,17 @@ def merge_allprod(fp):
             elif ww is None or str(r[ww] or '').strip().upper() == 'WW':
                 q_, n_ = float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)
                 g = str(r[ag] or '').strip().upper() if ag is not None else ''
-                scopes = ([g] if g in ('UPC', 'BMA') else []) + (['UN', code] if code in sh else [])
+                emp = str(r[ix['SALE_ID']] or '').strip()
+                scopes = ([g] if g in ('UPC', 'BMA') else []) + (['UN', code] + (['E:' + emp] if emp else []) if code in sh else [])
+                get = lambda c: str(r[hx[c]] if c in hx and r[hx[c]] is not None else '').strip()
+                lucky = (('มงคล · ' + (get('CAMPAIGN_GROUP_LV2') or '-')) if get('CAMPAIGN_GROUP_LV1') == 'เบอร์มงคล' else 'เบอร์ทั่วไป') if product == 'Postpay' else None
+                item = f"{get('SUB_MODEL') or get('PRODUCT_DESCRIPTION')}|{get('BRAND')}|{get('CATEGORY')} / {get('SUB_CATEGORY')}" if product in ('Device', 'GIA') else None
                 fl = tvs_flag(product, lambda c: r[hx[c]] if c in hx else None)
                 for sc in scopes:
                     add(mon, product, sc, 'ALL', 'ALL', q_, n_, code)
                     for c in dcols: add(mon, product, sc, c, str(r[hx[c]] if r[hx[c]] is not None else '').strip() or '(ว่าง)', q_, n_, code)
+                    if lucky: add(mon, product, sc, 'เบอร์มงคล', lucky, q_, n_, code)
+                    if item and sc not in ('UPC', 'BMA'): add(mon, product, sc, 'สินค้า', item, q_, n_, code)  # product | brand | category (local scopes only)
                     # TVS sources (TVS NOW without the bundle redeem + Postpay / TOL bundles) - same rule as the TVS axis
                     if product == 'True Visions' and fl != 'redeem_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'TVS NOW ' + str(r[hx['SUB_PRODUCT']] if 'SUB_PRODUCT' in hx else '').replace('TVS NOW ', ''), q_, 0.0, code)
                     if product in ('Postpay', 'True Online') and fl == 'tvs_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'Postpay 5G DEVICE TVS' if product == 'Postpay' else 'TOL 3P/4P OTT', q_, 0.0, code)
