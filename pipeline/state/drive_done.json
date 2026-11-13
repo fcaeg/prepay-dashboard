@@ -316,5 +316,11 @@
   "kind": "indtarget",
   "at": "2026-11-14 00:11",
   "ok": true
+ },
+ "1TMH2L03ROFvKoAFUWqxM2kQ0JABCOBZd": {
+  "name": "Self Refresh All Product Rawdata Latest 2 Months For DB.zip",
+  "kind": "allprod",
+  "at": "2026-11-14 00:16",
+  "ok": true
  }
 }
