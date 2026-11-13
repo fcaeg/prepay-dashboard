@@ -159,3 +159,8 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   Req / Save / Cancel / %Save / Rev Req / Rev Save) → `--retention <csv> ...` (Drive: names starting "Retention_Shops") → `state/perf_ret.csv`
   (month from the date in the name; a newer file of the same month + product replaces it). KPI = %Save (Save ÷ Req), pass mark 88%.
   Radar plots %Save ÷ 88% but labels the real %Save; no previous-month line (Nami, 14 Nov 2026). BMA = Region starting "BMA", the rest UPC. Service Level / iCsat / On Time: pending.
+- Service Level / iCsat / On Time (Nami, 14 Nov 2026; pass 85% / 92% / 95%): `ServiceLevel_Shops_<date>.csv` (Shop Code, Transactions,
+  SL% Overall), `OnTime_by_Shop_<date>.csv` and `iCSAT_by_Shop_<date>.csv` (no code column: the 8-digit code is read from the end of
+  the Shop name) → `--service <csv> ...` (Drive: names starting ServiceLevel / OnTime / iCSAT; a zip may hold all three) → `state/perf_svc.csv`
+  (num/den per shop: SL = SL% x Transactions, On Time = in due ÷ (in due + closed over due + pending over due), iCsat = % x surveys).
+  drive_sync unpacks every csv of a retention / service zip.

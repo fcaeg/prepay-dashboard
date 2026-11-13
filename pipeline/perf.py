@@ -343,6 +343,61 @@ def merge_retention(fp):
     mine = out[out.shop.isin(shops())]
     print(f'perf: retention {prod} {asof}: {len(out)} shops, ours {len(mine)} · %Save ours {mine.save.sum() / max(mine.req.sum(), 1) * 100:.1f}%')
 
+# Service Level / On Time / iCSAT (Nami, 14 Nov 2026: pass marks 85% / 95% / 92%); files of all shops, month to date:
+#   ServiceLevel_Shops_<date>.csv  (Shop Code, Region BMA / UPC I / UPC II, Transactions, SL% Overall)  -> weight = Transactions
+#   OnTime_by_Shop_<date>.csv      (Shop = name + code, Area WW, Close in due, Close over due, Pending over due) -> in due ÷ (in + over + pending over)
+#   iCSAT_by_Shop_<date>.csv       (Shop = name + code, Area WW, survey counts, %iCSAT - <Mon> <yy>)    -> weight = surveys
+SVC_PASS = {'Service Level': 85.0, 'iCsat': 92.0, 'On Time': 95.0}
+
+def _code(v):
+    m = re.search(r'(?<!\d)(80\d{6}|10\d{6})(?!\d)', str(v)); return m.group(1) if m else None
+
+def merge_service(fp):
+    name = os.path.basename(fp); low = name.lower()
+    m = re.search(r'(\d{4})-(\d{2})-(\d{2})', name)
+    if not m: print('perf: service file has no date in its name', name); return
+    asof = f'{m.group(1)}-{m.group(2)}-{m.group(3)}'; month = asof[:7]
+    for enc in ('utf-8-sig', 'cp874'):
+        try: d = pd.read_csv(fp, dtype=str, encoding=enc); break
+        except UnicodeDecodeError: continue
+    d.columns = [c.strip() for c in d.columns]
+    pct = lambda c: pd.to_numeric(d[c].astype(str).str.replace('%', '').str.replace(',', ''), errors='coerce')
+    num = lambda c: pd.to_numeric(d[c].astype(str).str.replace(',', ''), errors='coerce').fillna(0)
+    grp = lambda c: d[c].astype(str).map(lambda r: 'BMA' if r.strip().upper().startswith('BMA') else 'UPC')
+    if low.startswith('servicelevel'):
+        kpi = 'Service Level'; den = num('Transactions'); p = pct('SL% Overall')
+        out = pd.DataFrame({'shop': d['Shop Code'].map(_code), 'grp': grp('Region'), 'den': den, 'num': den * p / 100})
+    elif low.startswith('ontime'):
+        kpi = 'On Time'; ok = num('Close in due'); den = ok + num('Close over due') + num('Pending over due')
+        out = pd.DataFrame({'shop': d['Shop'].map(_code), 'grp': grp('Area WW'), 'den': den, 'num': ok})
+    elif low.startswith('icsat'):
+        kpi = 'iCsat'; tot = [c for c in d.columns if c.endswith('- Total')][0]
+        cur = [c for c in d.columns if c.startswith('%iCSAT') and 'MoM' not in c][0]  # the first %iCSAT column = this month
+        den = num(tot); p = pct(cur).fillna(0)
+        out = pd.DataFrame({'shop': d['Shop'].map(_code), 'grp': grp('Area WW'), 'den': den, 'num': den * p / 100})
+    else: print('perf: unknown service file', name); return
+    out = out[out.shop.notna()].assign(month=month, asof=asof, kpi=kpi)
+    old = _load('perf_svc.csv')
+    if old is not None:
+        cur_ = old[(old.month == month) & (old.kpi == kpi)]
+        if len(cur_) and cur_['asof'].max() > asof: print(f'perf: {kpi} {asof} is older than {cur_["asof"].max()} - skipped'); return
+        old = old[~((old.month == month) & (old.kpi == kpi))]
+    _save(pd.concat([old, out.astype(str)]) if old is not None else out, 'perf_svc.csv')
+    mine = out[out.shop.isin(shops())]
+    print(f'perf: {kpi} {asof}: {len(out)} shops, ours {len(mine)} · {mine.num.sum() / max(mine.den.sum(), 1) * 100:.1f}%')
+
+def _svc_build():
+    v = _load('perf_svc.csv')
+    if v is None: return None
+    for c in ('num', 'den'): v[c] = pd.to_numeric(v[c])
+    sh = shops(); m = v.month.max(); x = v[v.month == m]; out = {'month': m, 'pass': SVC_PASS, 'asof': {}, 'area': {}, 'bench': {}, 'shops': {}}
+    agg = lambda z: {'num': float(z.num.sum()), 'den': float(z.den.sum())}
+    for k, y in x.groupby('kpi'):
+        out['asof'][k] = y['asof'].max(); out['area'][k] = agg(y[y.shop.isin(sh)])
+        out['bench'][k] = {'UPC': agg(y[y.grp == 'UPC']), 'BMA': agg(y[y.grp == 'BMA']), 'All': agg(y)}
+        for _, r in y[y.shop.isin(sh)].iterrows(): out['shops'].setdefault(r.shop, {})[k] = {'num': float(r.num), 'den': float(r.den)}
+    return out
+
 RET_ITEMS = ['Postpay', 'True Online', 'True Visions']
 
 def _ret_build():
@@ -431,6 +486,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build()}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")

@@ -17,6 +17,7 @@ Files are recognised by name (zip, csv or xlsx; zips are unpacked):
   *PC Brand* / *PC*vivo*              -> Vivo Dashboard PC per shop (PC Brand Update, or Update PC vivo with a "PC Active" column)
   GIA*.xlsx                            -> GIA Dashboard shop list + month targets (Nami's daily GIA report)
   Retention_Shops_<date> <product>.csv  -> Shop Performance: Retention %Save per shop (month to date)
+  ServiceLevel_Shops_ / OnTime_by_Shop_ / iCSAT_by_Shop_<date>.csv (or a zip of them) -> Shop Performance: Service Level / On Time / iCsat
   *Performance Report*                 -> Shop Performance: EBIT & Revenue (P&L per shop, .xlsb)
   *All Product*Raw*                    -> Shop Performance: all products with SALE_ID (latest 2 months)
   *Postpaid*Raw* / *TrueOnline*Raw* / *TrueVision*Raw*  -> Shop Performance: Postpay / TOL / TVS actuals (Self Refresh Rawdata, sheet Rawdata)
@@ -82,6 +83,7 @@ def kind(name):
     if 'all product' in n and 'raw' in n: return 'allprod'
     if re.search(r'performance[ _]+report', n): return 'pl'
     if n.startswith('retention_shops') or n.startswith('retention shops'): return 'retention'
+    if n.startswith(('servicelevel', 'ontime', 'icsat')): return 'service'
     if 'postpaid' in n and 'raw' in n: return 'postpay'
     if re.search(r'true ?online', n) and 'raw' in n: return 'tolraw'
     if re.search(r'true ?visions?', n) and 'raw' in n: return 'tvsraw'
@@ -110,6 +112,9 @@ def stock_time(name):
 def unpack(fp, k):
     """zip -> the file update.py needs (sales/stock keep the zip; xlsx inputs are extracted)"""
     if not fp.lower().endswith('.zip') or k in ('sales', 'stock'): return fp
+    if k in ('retention', 'service'):  # zip of one or more csv files (a ServiceLevel zip may also hold OnTime / iCSAT)
+        d = fp + '_x'; zipfile.ZipFile(fp).extractall(d)
+        return [os.path.join(r, f) for r, _, fs in os.walk(d) for f in fs if f.lower().endswith('.csv') and not f.startswith(('.', '__'))]
     d = fp + '_x'; zipfile.ZipFile(fp).extractall(d)
     xs = [os.path.join(r, f) for r, _, fs in os.walk(d) for f in fs if f.lower().endswith(('.xlsx', '.xlsm', '.xls', '.xlsb')) and not f.startswith('~$')]
     if not xs: raise RuntimeError('no Excel file inside ' + os.path.basename(fp))
@@ -137,9 +142,14 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp]}[k]
+        if isinstance(fp, list):  # several csv files from one zip; each is routed by its own name
+            for x in fp:
+                kx = kind(os.path.basename(x)) or k
+                if kx in ('retention', 'service'): args += ['--' + kx, x]
+            continue
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp], 'service': ['--service', fp]}[k]
     # update.py takes several --sales / --target values as one list each
-    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': []}
+    merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': [], '--service': []}
     for i in range(0, len(args), 2):
         if args[i] in lists: lists[args[i]].append(args[i + 1])
         else: merged += args[i:i + 2]
