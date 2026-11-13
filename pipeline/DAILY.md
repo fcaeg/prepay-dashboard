@@ -104,3 +104,9 @@ Stock time = the date/time in the file name ("... 7 Nov 2026 Time 1100.zip" -> 2
 ### Rebuilding pages by hand
 pipeline/out/ is gitignored, so a local copy can be stale. Always run `python3 -I pipeline/update.py` (no args) before
 `build_page.py`, or the Prepay page is rebuilt from old data (happened 7 Nov 2026: stock went back to 5 Nov).
+
+### Gross unit (Vivo)
+Gross = QTY x RRP per model. RRP file: an xlsx with columns Model | RRP and "vivo" + "RRP" in its name (Drive or `update.py --vivo-rrp`);
+rows are kept in state/vivo_rrp.csv and matched to models at build time (model + memory, optional 4G/5G, "Set" = PHOTOSET; a row
+without memory covers all sizes without their own row). Gross target = QTY target x RRP. Models without RRP: sales use the
+actual full price (PRICE x QTY / AMOUNT), targets use the Net target. The Amount column (7 Nov) is switched off (SHOWA = false).

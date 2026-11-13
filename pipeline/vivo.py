@@ -58,6 +58,51 @@ def key_from_target(s):
     if not m: return _norm(u), str(s).strip()
     return '|'.join([_norm(m.group(1)), m.group(2), _norm(m.group(3))]) + ('|PHOTOSET' if extra else ''), str(s).strip()
 
+# ---------- RRP (price per unit, used for "Gross" = QTY x RRP)
+def _rrp_parse(name):
+    u = str(name).upper()
+    photo = bool(re.search(r'\bSET\b|PHOTOSET', u)); u = re.sub(r'\bSET\b|PHOTOSET', ' ', u)
+    net = re.search(r'\b([2-5]G)\b', u); u2 = re.sub(r'\b[2-5]G\b', ' ', u)
+    mem = re.search(r'(\d{1,2})\s*[/+]\s*(\d{2,4}|1\s*TB)\s*(GB)?', u2)
+    model = _norm((u2[:mem.start()] if mem else u2).replace(',', ' '))
+    if model.startswith('VIVO'): model = model[4:]
+    m = (mem.group(1) + _norm(mem.group(2))) if mem else None
+    return model, net.group(1) if net else None, m, photo
+
+def rrp_rows(fp):
+    """RRP sheet (Model | RRP) -> [(name, price)]"""
+    raw = pd.read_excel(fp, header=None)
+    hr = next(i for i, r in raw.iterrows() if {'model', 'rrp'} <= {str(x).strip().lower() for x in r})
+    h = [str(x).strip().lower() for x in raw.iloc[hr]]; im, ip = h.index('model'), h.index('rrp')
+    out = []
+    for _, r in raw.iloc[hr + 1:].iterrows():
+        price = pd.to_numeric(r.iloc[ip], errors='coerce')
+        if pd.notna(price) and price > 0 and pd.notna(r.iloc[im]): out.append((str(r.iloc[im]).strip(), float(price)))
+    return out
+
+def rrp_map(rows, models):
+    """{model key: display name} -> {model key: RRP}. A row without memory size covers every size of that model that
+    has no row of its own; a row with 4G/5G only matches that network; 'Set' rows match PHOTOSET models."""
+    rows = [(n, p) + _rrp_parse(n) for n, p in rows]
+    out, used = {}, set()
+    for k, name in models.items():
+        p = k.split('|')
+        if len(p) >= 3: kmodel, knet, kmem, kphoto = p[0], p[1], p[2], 'PHOTOSET' in p
+        else: kmodel, knet, kmem, kphoto = _rrp_parse(name); knet = knet or ''   # keys that could not be split, e.g. 16/1TB
+        best = None
+        for rn, price, model, net, mem, photo in rows:
+            if model != kmodel or photo != kphoto or (net and net != knet) or (mem and mem != kmem): continue
+            score = (mem is not None) * 2 + (net is not None)
+            if best is None or score > best[0]: best = (score, price, rn)
+        if best: out[k] = best[1]; used.add(best[2])
+    return out, [r[0] for r in rows if r[0] not in used]
+
+def merge_rrp(fp):
+    rows = rrp_rows(fp)
+    pd.DataFrame(rows, columns=['model', 'rrp']).to_csv(os.path.join(ST, 'vivo_rrp.csv'), index=False)
+    _meta_set(vivo_rrp_file=os.path.basename(str(fp)))
+    print(f'vivo RRP: {len(rows)} rows from {os.path.basename(str(fp))}')
+
 # ---------- inputs
 def add_sales(raw):
     if 'DESCRIPTION' not in raw: return
@@ -277,8 +322,17 @@ def build():
     ml = sorted(models.values(), key=lambda x: (so.get(series(x['name']), 9), family(x['name']), -tn.get(x['k'], 0), x['name']))
     for x in ml: x['series'] = series(x['name']); x['family'] = family(x['name']).replace('VIVO ', '')
     ml = [x for x in ml if x['tgt'] or any(r[2] == x['k'] for r in sales) or any(r[1] == x['k'] for r in stock)]
+    # RRP per model (for the Gross unit = QTY x RRP)
+    rr = _load('vivo_rrp.csv'); rmiss = []
+    if rr is not None:
+        mp, unused = rrp_map(list(zip(rr.model, pd.to_numeric(rr.rrp))), {x['k']: x['name'] for x in ml})
+        yr = max((r[0] for r in sales), default='')[:4]; sold = {r[2] for r in sales if r[0][:4] == yr}
+        for x in ml:
+            if x['k'] in mp: x['rrp'] = mp[x['k']]
+            elif x['k'] in sold: rmiss.append(x['name'])
+        print(f"vivo RRP: {len(mp)} models priced; models sold this year without RRP (Gross uses actual full price): {rmiss}")
     portions = json.load(open(os.path.join(ST, 'vivo_portions.json'))) if os.path.exists(os.path.join(ST, 'vivo_portions.json')) else {}
-    data = {'meta': {'sales_asof': sales_asof, 'hist_asof': hasof, 'pos_asof': pos_asof, 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc,
+    data = {'meta': {'sales_asof': sales_asof, 'hist_asof': hasof, 'pos_asof': pos_asof, 'stock_asof': meta.get('vivo_stock_asof', ''), 'pc_source': pcsrc, 'rrp_source': meta.get('vivo_rrp_file', ''),
                      'first_sales': min((r[0] for r in sales), default='')},
             'portions': portions, 'models': ml, 'shops': sorted(shops.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
             'sales': _pack(sales),

@@ -16,7 +16,7 @@
  */
 const REPO = 'fcaeg/prepay-dashboard';
 const WORKFLOW = 'drive-sync.yml';
-const NAMES = /^(daily_sales|stock_balance_report|manpower|master[ _]prepaid|gia)|individual[ _]target[ _]of|target[ _]of[ _][a-z]{3}|serial.*expir|expir.*serial|^sn[ _]?sim|vivo.*(target|sale)|pc[ _]?brand|\bpc\b.*vivo|vivo.*\bpc\b/i;
+const NAMES = /^(daily_sales|stock_balance_report|manpower|master[ _]prepaid|gia)|individual[ _]target[ _]of|target[ _]of[ _][a-z]{3}|serial.*expir|expir.*serial|^sn[ _]?sim|vivo.*(target|sale|rrp)|pc[ _]?brand|\bpc\b.*vivo|vivo.*\bpc\b/i;
 const STOCK_FOLDER = 'Stock'; // sibling folder of the inbox
 const STOCK_NAME = /^stock_balance_report/i;
 

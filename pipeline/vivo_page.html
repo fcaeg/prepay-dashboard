@@ -234,7 +234,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
 
   <div class="filters" id="filters">
     <div class="f"><label for="f-month">เดือน</label><select id="f-month"></select></div>
-    <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="n" aria-pressed="true">Net Amount</button><button data-v="q" aria-pressed="false">QTY</button></div></div>
+    <div class="f"><label>หน่วย</label><div class="seg" id="f-metric"><button data-v="n" aria-pressed="true">Net Amount</button><button data-v="q" aria-pressed="false">QTY</button><button data-v="g" aria-pressed="false" title="Gross = จำนวนเครื่อง × ราคา RRP">Gross</button></div></div>
     <button class="btn fmore-btn" id="fmore-btn" type="button" aria-expanded="false" aria-controls="fmore">ตัวกรอง ▾</button>
     <div class="fmore" id="fmore">
     <div class="f"><label>Region</label><div class="msel" id="f-zone"></div></div>
@@ -444,6 +444,21 @@ const TODAY_BKK = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangk
 const CUT = (() => { const y = new Date(TODAY_BKK + 'T00:00:00'); y.setDate(y.getDate() - 1); const yd = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`; return LATEST_ALL > yd ? yd : LATEST_ALL; })();
 D.salesAll = D.sales; D.sales = D.sales.filter((r) => r[0] <= CUT);
 D.staffAll = D.staff; if (D.staff) D.staff = { e: D.staff.e, r: D.staff.r.filter((r) => r[0] <= CUT) };
+// Gross unit: the baht value of every sales row / target becomes QTY x RRP (models without RRP: actual full price for sales,
+// Net target for targets). Swapping the data keeps every tab, chart and export working the same way as Net Amount.
+const RRP = {}; for (const m of D.models || []) if (m.rrp) RRP[m.k] = m.rrp;
+const NETD = { sales: D.sales, salesAll: D.salesAll, staff: D.staff, staffAll: D.staffAll, targets: D.targets }; let GROSSD = null, CURD = 'n';
+function applyMetric() {
+  const want = S.metric === 'g' ? 'g' : 'n'; if (want === CURD) return;
+  if (want === 'g' && !GROSSD) {
+    const g = (k, u, alt) => RRP[k] != null ? u * RRP[k] : alt;
+    const st = (x) => x && { e: x.e, r: x.r.map((r) => { const y = r.slice(); y[5] = g(r[2], r[4], r[6] ?? r[5]); return y; }) };
+    const tg = {}; for (const [ym, rows] of Object.entries(NETD.targets)) tg[ym] = rows.map((r) => { const y = r.slice(); y[3] = g(r[1], r[2], r[3]); return y; });
+    const sa = NETD.salesAll.map((r) => { const y = r.slice(); y[4] = g(r[2], r[3], r[5]); return y; });
+    GROSSD = { salesAll: sa, sales: sa.filter((r) => r[0] <= CUT), staffAll: st(NETD.staffAll), staff: st(NETD.staff), targets: tg };
+  }
+  Object.assign(D, want === 'g' ? GROSSD : NETD); CURD = want;
+}
 const LATEST = CUT;
 const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.keys(D.targets)])].sort().reverse();
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
@@ -556,8 +571,9 @@ const cover = (stock, s28) => !HASSTOCK ? null : stock === 0 && s28 > 0 ? -1 : s
 const coverF = (c, stock) => c == null ? '<span class="na">–</span>' : c === -1 ? '<span class="cw bad">ของหมด</span>' : c === Infinity ? '<span class="cw warn" title="มี Stock แต่ไม่มีขายใน 28 วัน">ไม่มีขาย</span>'
   : `<span class="cw ${cwCls(c)}">${nf1.format(c)}</span>`;
 const unit = () => S.metric === 'q' ? 'เครื่อง' : 'บาท';
-// Amount = ยอดขายก่อนหักส่วนลด (ราคาเต็ม) · shown next to Net Amount when the unit is Net Amount
-const SHOWA = () => S.metric !== 'q';
+// unit labels: n = Net Amount, q = QTY, g = Gross (QTY x RRP)
+const MLAB = () => ({ q: 'QTY', g: 'Gross' })[S.metric] || 'Net Amount';
+const SHOWA = () => false; // Amount column switched off: replaced by the Gross unit button
 const MK = () => SHOWA() ? 'money' : 'num';
 const AMT_TIP = 'ก่อนหักส่วนลด';
 const amtCol = (v, o = {}) => SHOWA() ? [Object.assign({ h: 'Amount', tip: AMT_TIP, v, f: money }, o)] : [];
@@ -634,7 +650,7 @@ function sModel(mi) {
   for (const [k, x] of a) if (okModel(k) && !keys.includes(k)) add(tot, x);
   rows.push(tot);
   $('#n-model').innerHTML = portionNote(mi) + (keys.some((k) => !isT(k)) ? ' · Non Target Model = รุ่นที่ไม่มี Target แต่มียอดขายเข้ามา' : '');
-  EXPORT.model = toSheet('1 ราย Model', renderTable($('#t-model'), weeklyCols(mi, { h: 'Model', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Model · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+  EXPORT.model = toSheet('1 ราย Model', renderTable($('#t-model'), weeklyCols(mi, { h: 'Model', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Model · ${THF[mi.m - 1]} ${mi.y + 543} · ${MLAB()}`);
   return tot;
 }
 // ---------- Top 3 / Bottom 3 Area by %ACH to date, with the reasons behind each
@@ -679,7 +695,7 @@ function areaTopBottom(mi, A) {
   const L = (w, good) => (good ? [w.fUp, w.sGood] : [w.fDn, w.sBad, w.ns]).filter(Boolean).map(strip).join(' | ');
   top.forEach((r, i) => { const w = why(r); lines.push([`Top ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
   bot.forEach((r, i) => { const w = why(r); lines.push([`Bottom ${i + 1}`, r.k, r.ach, r.act, r.td, L(w, true), L(w, false)]); });
-  return { name: '3 Top-Bottom Area', title: `Top ${n} / Bottom ${n} Area · %ACH ถึงวันที่ ${mi.asofDay} ${THF[mi.m - 1]} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: Array(7).fill(''),
+  return { name: '3 Top-Bottom Area', title: `Top ${n} / Bottom ${n} Area · %ACH ถึงวันที่ ${mi.asofDay} ${THF[mi.m - 1]} · ${MLAB()}`, groups: Array(7).fill(''),
     head: ['อันดับ', 'Area', '%ACH ถึงวันนี้', 'ยอดขาย', 'Target ถึงวันนี้', 'ทำได้ดีจาก', 'ยอดไม่ดีจาก'], kinds: ['text', 'text', 'ach', MK(), MK(), 'note', 'note'], body: lines, rowCls: lines.map(() => '') };
 }
 function sArea(mi) {
@@ -694,7 +710,7 @@ function sArea(mi) {
   rows.push(tot);
   $('#n-area').innerHTML = portionNote(mi) + ' · Region: BMA (BMA I–V) · UPC I (เหนือ + อีสาน) · UPC II (กลาง ตะวันออก ตะวันตก ใต้)';
   const TB = areaTopBottom(mi, a);
-  EXPORT.area = [toSheet('2 ราย Area', renderTable($('#t-area'), weeklyCols(mi, { h: 'Region / Area', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Area · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), TB];
+  EXPORT.area = [toSheet('2 ราย Area', renderTable($('#t-area'), weeklyCols(mi, { h: 'Region / Area', v: (r) => r.name, cls: 't' }), rows), `ยอดขายราย Area · ${THF[mi.m - 1]} ${mi.y + 543} · ${MLAB()}`), TB];
 }
 function shopRows(mi, modelSel) {
   const a = aggregate(mi, (c) => c, modelSel);
@@ -766,7 +782,7 @@ function sShop(mi) {
   $('#n-shop').innerHTML = `${S.tmode === 'full' ? 'เทียบ Target ทั้งเดือน' : 'เทียบ Target ถึงวันนี้ (Target เดือน ÷ ' + mi.days + ' วัน × ' + mi.asofDay + ' วัน = ' + Math.round(mi.todate * 1000) / 10 + '% ของเดือน)'} · Runrate = ยอดขาย ÷ ${mi.asofDay} วัน × ${mi.days} วัน · Runrate %ACH เทียบ Target ทั้งเดือน · หน่วย: ${unit()} · คลิกหัวคอลัมน์เพื่อเรียง`;
   const tShop = renderTable($('#t-shop'), cols, rows, { sort: 'shop' });
   const nsList = { cols: cols.filter((c) => !/%ACH|Runrate/.test(c.h)), rows: ns.slice().sort((a, b) => a.area.localeCompare(b.area) || (b.tfull - a.tfull)) };
-  EXPORT.shop = [toSheet('3 รายสาขา', tShop, `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'} · ${tl}${S.shopview === 'ns' ? ' · เฉพาะ No Sale' : ''}`),
+  EXPORT.shop = [toSheet('3 รายสาขา', tShop, `ยอดขายรายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${MLAB()} · ${tl}${S.shopview === 'ns' ? ' · เฉพาะ No Sale' : ''}`),
     toSheet('3 No Sale ราย Area', tNs, `สรุปสาขา No Sale ราย Area · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`),
     toSheet('3 No Sale รายชื่อสาขา', nsList, `รายชื่อสาขา No Sale · ${THF[mi.m - 1]} ${mi.y + 543} ถึงวันที่ ${mi.asofDay} · Model: ${mlab}`)];
 }
@@ -946,7 +962,7 @@ function downloadPCSummary() {
     `⚠ PC ไม่มียอดติดต่อกัน 2 วันขึ้นไป: ${P.alert.length} สาขา`,
     ...GAPB.map((b) => { const g = P.alert.filter((r) => b.t(r.gap)); return `   • ${b.name}: ${g.length} สาขา` + (g.length ? ` — ${g.map((r) => r.name.replace(/^True Shop /i, '') + (b.k === 'g4' ? ` (${gapTxt(r)})` : '')).join(', ')}` : ''); }),
     best.length ? `สาขาที่ทำได้ดีสุด: ${best.map((r) => `${r.name.replace(/^True Shop /, '')} ${P2(r.ach)}%`).join(', ')}` : ''].filter(Boolean);
-  const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`, groups: ['', '', '', '', '', ''],
+  const S1 = { name: 'Summary', title: `PC Performance Summary Update · ${ml} · ${MLAB()}`, groups: ['', '', '', '', '', ''],
     head: ['กลุ่ม Performance', 'จำนวนสาขา', '% ของสาขา', `Target เดือน (${u})`, `ยอด MTD (${u})`, '%ACH ถึงวันนี้'], kinds: ['text', 'num', 'pct', MK(), MK(), 'ach'],
     body: [...tierRows, [], ['สรุปภาพรวม'], ...lines.map((l) => [l])], rowCls: [...tierRows.map((_, i) => i === tierRows.length - 1 ? 'tot' : ''), 'gap', 'line-h', ...lines.map(() => 'line')],
     rowFill: tierRows.map((_, i) => TIERS[i] ? TIERS[i].x : null) };
@@ -986,7 +1002,7 @@ function sMS(mi) {
     { h: 'ขาย 28 วัน (เครื่อง)', sort: 's28', v: (r) => r.s28, f: num }, { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
   const mlab = S.msmodel !== 'ALL' ? $('#f-msmodel').selectedOptions[0].textContent.trim() : modelLabel(4);
   $('#n-ms').innerHTML = `คลิกชื่อสาขา หรือเลือกสาขาด้านบน เพื่อดูยอดขายราย Model ของ PC สาขานั้น เทียบ MoM พร้อมบทวิเคราะห์ · Model: <b>${esc(mlab)}</b> · ${THF[mi.m - 1]} ${mi.y + 543} · หน่วย: ${unit()} (ขาย 28 วัน / Stock เป็นเครื่อง) · PC ตาม ${esc(D.meta.pc_source)}`;
-  EXPORT.ms = toSheet('5 PC Performance', renderTable($('#t-ms'), cols, list, { sort: 'ms' }), `PC Performance · ยอดขาย ${mlab} รายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+  EXPORT.ms = toSheet('5 PC Performance', renderTable($('#t-ms'), cols, list, { sort: 'ms' }), `PC Performance · ยอดขาย ${mlab} รายสาขา · ${THF[mi.m - 1]} ${mi.y + 543} · ${MLAB()}`);
   $('#t-ms').querySelectorAll('tbody tr').forEach((tr, i) => { if (list[i]) tr.onclick = () => { S.pcshop = list[i].c; $('#f-pcshop').value = S.pcshop; render(); }; });
 }
 // ---------- PC Performance: one shop, every model, MoM
@@ -1082,8 +1098,8 @@ function sPC(mi) {
   const stab = renderTable($('#t-pd-s'), [{ h: 'พนักงาน', v: (r) => r.name, cls: 't' }, { h: 'รหัส', v: (r) => r.e, cls: 't' }, { h: SHOWA() ? 'Net Amount' : `ยอดขาย (${u})`, v: (r) => r.cur, f: money }, ...amtCol((r) => r.am),
     { h: 'สัดส่วนของสาขา', p: 1, v: (r) => r.sh, f: shareF }, { h: 'Model ที่ขายมากสุด', v: (r) => r.top, cls: 't' }], srows);
   $('#n-pd-s').innerHTML = `ข้อมูลรายพนักงานมีตั้งแต่ ${thDate(addDays(D.meta.hist_asof, 1))}` + (srows.length ? '' : ' — ยังไม่มีข้อมูลในเดือนนี้');
-  EXPORT.ms = [toSheet('5 PC กลุ่ม Model', gtab, `${s.n} (${c}) · ยอดขายตามกลุ่ม Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
-    toSheet('5 PC ราย Model', mtab, `${s.n} (${c}) · ยอดขายราย Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`),
+  EXPORT.ms = [toSheet('5 PC กลุ่ม Model', gtab, `${s.n} (${c}) · ยอดขายตามกลุ่ม Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${MLAB()}`),
+    toSheet('5 PC ราย Model', mtab, `${s.n} (${c}) · ยอดขายราย Model · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl} · ${MLAB()}`),
     { name: '5 PC บทวิเคราะห์', title: `บทวิเคราะห์ ${s.n} (${c}) · ${THF[mi.m - 1]} 1–${d} เทียบ ${pl}`, groups: [''], head: ['บทวิเคราะห์'], kinds: ['note'], rowCls: li.map(() => ''), body: li.map((x) => ['• ' + x.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&amp;/g, '&')]) },
     toSheet('5 PC รายพนักงาน', stab, `${s.n} · ยอดขายรายพนักงาน`)];
 }
@@ -1162,7 +1178,7 @@ function sTrend(mi) {
     mtd: `ยอดรายเดือน · เดือนปัจจุบัน 1–${mi.asofDay} เทียบช่วงวันเดียวกันของ${THF[mi.prevM - 1]} (MoM)`,
     ytd: `ยอดสะสมตั้งแต่ 1 ม.ค. (แต่ละคอลัมน์ = สะสมถึงสิ้นเดือนนั้น) · เทียบ YTD ปีก่อนช่วงเดียวกัน${D.meta.first_sales > `${Y - 1}-12-31` ? ' — ข้อมูลในระบบเริ่ม ' + thDate(D.meta.first_sales) + ' จึงยังไม่มีปีก่อนให้เทียบ' : ''}` };
   $('#n-wk').innerHTML = notes[per] + ` · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
-  EXPORT.wk = toSheet('7 แนวโน้ม ' + TPER[per], t, `แนวโน้มการขาย ${title} · ${cur.l} · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`);
+  EXPORT.wk = toSheet('7 แนวโน้ม ' + TPER[per], t, `แนวโน้มการขาย ${title} · ${cur.l} · ${MLAB()}`);
 }
 // ---------- today: one day vs yesterday and the same weekday last week; daily Target = month Target ÷ days (flat)
 function sToday() {
@@ -1221,7 +1237,7 @@ function sToday() {
     return `<div class="z"><b>${esc(r.name)}</b><span class="v">${money(r.d)}</span><span class="s">%ACH ${a == null ? '–' : P2(a) + '%'} · ขายได้ ${r.shops.size}/${r.tshops.size} สาขา · เมื่อวาน ${dd == null ? '–' : `<span class="${dd >= 0 ? 'up' : 'dn'}">${sgn(dd)}</span>`}</span>${bar(a)}</div>`; }).join('');
   $('#t-td-area').hidden = S.tdview !== 'area'; $('#t-td-model').hidden = S.tdview !== 'model';
   $('#n-today').innerHTML = `${tm ? `<b>ข้อมูลวันนี้ยังไม่ครบวัน (ถึง ${tm} น.)</b> — เทียบกับเมื่อวานและสัปดาห์ก่อนแบบทั้งวัน · ` : ''}Target/วัน = Target เดือน ÷ ${dim} วัน · หน่วย: ${unit()} · ตามตัวกรองด้านบน`;
-  EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${S.metric === 'q' ? 'QTY' : 'Net Amount'}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
+  EXPORT.today = [toSheet('1 วันนี้ ราย Area', tA, `ยอดขาย ${thDate(d)}${tm ? ' ถึง ' + tm + ' น.' : ''} ราย Area · ${MLAB()}`), toSheet('1 วันนี้ ราย Model', tM, `ยอดขาย ${thDate(d)} ราย Model`),
     toSheet('1 วันนี้ รายสาขา', tS, `ยอดขาย ${thDate(d)} รายสาขา`), toSheet('1 วันนี้ รายพนักงาน', tE, `ยอดขาย ${thDate(d)} รายพนักงาน`)];
 }
 function kpis(mi, tot, ts) {
@@ -1385,14 +1401,14 @@ function initControls() {
   $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
 }
 function rawSheet() {
-  const rows = D.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
-    .map(([d, c, k, u, n]) => [d, c, SH[c].n, SH[c].area, zoneOf(SH[c].area), SH[c].type, SH[c].pc || 0, (MD[k] || { name: k }).name, u, n]);
-  return { name: 'Data ยอดขายรายวัน', title: 'ยอดขายรายวัน ' + S.month + ' (ตามตัวกรอง)', groups: Array(10).fill(''), head: ['วันที่', 'รหัสสาขา', 'สาขา', 'Area', 'Region', 'ประเภท', 'PC Vivo', 'Model', 'QTY', 'Net Amount'],
-    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'text', 'num', 'num'], body: rows, rowCls: rows.map(() => ''), raw: true };
+  const rows = NETD.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
+    .map(([d, c, k, u, n, a]) => [d, c, SH[c].n, SH[c].area, zoneOf(SH[c].area), SH[c].type, SH[c].pc || 0, (MD[k] || { name: k }).name, u, n, RRP[k] != null ? u * RRP[k] : a, RRP[k] ?? '']);
+  return { name: 'Data ยอดขายรายวัน', title: 'ยอดขายรายวัน ' + S.month + ' (ตามตัวกรอง) · Gross = QTY × RRP', groups: Array(12).fill(''), head: ['วันที่', 'รหัสสาขา', 'สาขา', 'Area', 'Region', 'ประเภท', 'PC Vivo', 'Model', 'QTY', 'Net Amount', 'Gross', 'RRP'],
+    kinds: ['text', 'text', 'text', 'text', 'text', 'text', 'num', 'text', 'num', 'num', 'num', 'num'], body: rows, rowCls: rows.map(() => ''), raw: true };
 }
 
 function render() {
-  const mi = monthInfo(S.month); EXPORT = {};
+  applyMetric(); const mi = monthInfo(S.month); EXPORT = {};
   sToday(); const tot = sModel(mi); sArea(mi); sTrend(mi); sShop(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
 }
 
@@ -1435,7 +1451,7 @@ function requireDL(fn) {
     DL_OK = true; close(); fn(); };
 }
 function filterText() {
-  const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : 'Net Amount (บาท)'}`, `Region: ${setLab(S.zone, 'ทั้งหมด', undefined, 9)}`, `Area: ${setLab(S.area, 'ทั้งหมด', undefined, 15)}`,
+  const f = [`หน่วย: ${S.metric === 'q' ? 'QTY (เครื่อง)' : MLAB() + ' (บาท)'}`, `Region: ${setLab(S.zone, 'ทั้งหมด', undefined, 9)}`, `Area: ${setLab(S.area, 'ทั้งหมด', undefined, 15)}`,
     `ประเภท: ${setLab(S.type, 'ทั้งหมด', undefined, 9)}`, `PC: ${setLab(S.pc, 'ทั้งหมด', (x) => PCLAB[x])}`, `Model: ${modelLabel(20)}`];
   return f.join('  |  ') + `  |  ข้อมูลถึง ${thDate(S.tab === 'today' ? D.meta.sales_asof : LATEST)}${S.tab === 'today' ? '' : ' (Day-1)'} · Stock ณ ${thDate(D.meta.stock_asof)}`;
 }
@@ -1529,7 +1545,7 @@ function downloadXlsx(sheets, fname) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
-$('#asof').innerHTML = `<span>ข้อมูลวิเคราะห์ถึง <b>${thDate(LATEST)} (Day-1)</b> · ยอดวันนี้ถึง ${thDate(D.meta.sales_asof)}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span><span>อัปเดตหน้า __BUILT__</span>`;
+$('#asof').innerHTML = `<span>ข้อมูลวิเคราะห์ถึง <b>${thDate(LATEST)} (Day-1)</b> · ยอดวันนี้ถึง ${thDate(D.meta.sales_asof)}</span><span>Stock ณ ${thDate(D.meta.stock_asof)}</span><span>PC: ${esc(D.meta.pc_source)}</span>${D.meta.rrp_source ? `<span>RRP: ${esc(D.meta.rrp_source)}</span>` : ''}<span>อัปเดตหน้า __BUILT__</span>`;
 initControls(); render();
 </script>
 </body>

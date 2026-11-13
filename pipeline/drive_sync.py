@@ -75,6 +75,7 @@ def move(s, f, src, dst):
 def kind(name):
     n = name.lower()
     if n.startswith('daily_sales'): return 'sales'
+    if 'vivo' in n and 'rrp' in n: return 'vivorrp'
     if 'vivo' in n and 'target' in n: return 'vivotarget'
     if 'vivo' in n and 'sale' in n: return 'vivohist'
     if re.search(r'pc[ _]?brand', n) or re.search(r'\bpc\b', n.replace('_', ' ')) and 'vivo' in n: return 'pc'
@@ -119,7 +120,7 @@ def main():
     for f, k in sorted(todo, key=lambda x: x[0]['createdTime']):
         if k == 'stock' and f['id'] != keep_stock: used.append((f, k, 'older stock file - skipped')); continue
         fp = unpack(download(s, f, os.path.join(tmp, f['id'])), k); used.append((f, k, fp))
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'giatarget': ['--gia-target', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp]}[k]
     # update.py takes several --sales / --target values as one list each
     merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': []}
     for i in range(0, len(args), 2):
