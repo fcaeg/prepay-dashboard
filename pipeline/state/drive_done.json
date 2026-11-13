@@ -292,5 +292,11 @@
   "kind": "sales",
   "at": "2026-11-13 23:46",
   "ok": true
+ },
+ "1cVyzX9nKOT9dsbLsx1IsVwLrkOUbTswD": {
+  "name": "3.Self Refresh Postpaid Rawdata This year 2026 For DB.zip",
+  "kind": "postpay",
+  "at": "2026-11-13 23:56",
+  "ok": true
  }
 }
