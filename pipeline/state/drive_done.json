@@ -322,5 +322,41 @@
   "kind": "allprod",
   "at": "2026-11-14 00:29",
   "ok": true
+ },
+ "1q1VjYPqwFm5WJS8dsax3NaAkHJvZa4UR": {
+  "name": "iCSAT_by_Shop_2026-11-13.zip",
+  "kind": "service",
+  "at": "2026-11-14 01:28",
+  "ok": true
+ },
+ "154lSMXMiWBVl2sk3E25PC1Ntei0MK5is": {
+  "name": "OnTime_by_Shop_2026-11-13.zip",
+  "kind": "service",
+  "at": "2026-11-14 01:28",
+  "ok": true
+ },
+ "1DCbHnZL7dQFJJtBATvgq5cm6CvP86zdy": {
+  "name": "ServiceLevel_Shops_2026-11-13.zip",
+  "kind": "service",
+  "at": "2026-11-14 01:28",
+  "ok": true
+ },
+ "1wVstrPplHbcGr7RwmLAT0XJpMZE4uFqU": {
+  "name": "Retention_Shops_2026-11-13 True Online.zip",
+  "kind": "retention",
+  "at": "2026-11-14 01:28",
+  "ok": true
+ },
+ "1LACZPWQFW5qPG44yRToR1xZN77Sv1em-": {
+  "name": "Retention_Shops_2026-11-13 True Visions.zip",
+  "kind": "retention",
+  "at": "2026-11-14 01:28",
+  "ok": true
+ },
+ "1RYlSbsVLEYguEXlA4MjM-TIwpR6s2EYB": {
+  "name": "Retention_Shops_2026-11-13 Postpay.zip",
+  "kind": "retention",
+  "at": "2026-11-14 01:28",
+  "ok": true
  }
 }

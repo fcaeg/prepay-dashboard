@@ -1,4 +1,101 @@
 month,asof,product,shop,name,grp,kpitype,req,save,cancel,rev_req,rev_save
+2026-11,2026-11-13,True Visions,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,39,37,2,27981,27582
+2026-11,2026-11-13,True Visions,80100925,True Shop Fashion Island,BMA,Matching,37,32,5,26989,24234
+2026-11,2026-11-13,True Visions,80101185,True Shop Central Plaza West Gate,BMA,Matching,34,31,3,16154,15854
+2026-11,2026-11-13,True Visions,80100836,True Shop Central World Fl.4,BMA,Matching,26,26,0,23849,23849
+2026-11,2026-11-13,True Visions,80101071,True Shop Seacon Square 2,BMA,Matching,25,24,1,23125,23025
+2026-11,2026-11-13,True Visions,80101713,True Shop Central Northville,BMA,Matching,25,25,0,14189,14189
+2026-11,2026-11-13,True Visions,80101070,True Shop Mega Bangna,BMA,Matching,24,23,1,21048,20948
+2026-11,2026-11-13,True Visions,80101221,True Shop Emquartier,BMA,Matching,23,23,0,28578,28578
+2026-11,2026-11-13,True Visions,80100481,True Shop The Mall Bangkapi,BMA,Matching,22,20,2,14963,14763
+2026-11,2026-11-13,True Visions,80101066,True Shop Central Bangna,BMA,Matching,21,20,1,16204,16104
+2026-11,2026-11-13,True Visions,80101186,True Shop Central Festival East Ville,BMA,Matching,20,20,0,13515,13515
+2026-11,2026-11-13,True Visions,80101296,True Shop Paradise Park Srinakarin,BMA,Non_Matching,20,18,2,18369,16700
+2026-11,2026-11-13,True Visions,80101340,True Shop Future Park Rangsit,BMA,Matching,20,15,5,16992,12969
+2026-11,2026-11-13,True Visions,80101068,True Shop Central Rama 3,BMA,Matching,19,19,0,19454,19454
+2026-11,2026-11-13,True Visions,80100483,True Shop The Mall Thapra,BMA,Matching,19,15,4,11309,10509
+2026-11,2026-11-13,True Visions,80100484,True Shop The Mall Bangkae,BMA,Matching,19,15,4,14418,13819
+2026-11,2026-11-13,True Visions,80101123,True Shop Lotus's Sukhapiban 3,BMA,Non_Matching,18,18,0,8319,8319
+2026-11,2026-11-13,True Visions,80101180,True Shop Wongsawang Town Center,BMA,Non_Matching,16,14,2,11317,10918
+2026-11,2026-11-13,True Visions,80100486,True Shop Central Festival Chiangmai,UPC,Matching,16,15,1,7361,7261
+2026-11,2026-11-13,True Visions,80100565,True Shop Central Rama 2,BMA,Matching,14,13,1,8004,7904
+2026-11,2026-11-13,True Visions,80100928,True Shop Seacon Bangkae,BMA,Matching,14,12,2,4775,4575
+2026-11,2026-11-13,True Visions,80100476,True Shop Central Festival Phuket,UPC,Matching,14,12,2,9981,9781
+2026-11,2026-11-13,True Visions,80100477,True Shop Central Ladprao,BMA,Matching,13,12,1,10046,9946
+2026-11,2026-11-13,True Visions,80100622,True Shop Central Rama 9 4Fl.,BMA,Matching,11,11,0,6608,6608
+2026-11,2026-11-13,True Visions,80101627,True Shop Central Westville,BMA,Matching,11,9,2,8663,8264
+2026-11,2026-11-13,True Visions,80100623,True Shop Central Rama 9,BMA,Matching,10,9,1,7843,7743
+2026-11,2026-11-13,True Visions,80101629,True Shop Central Nakhonpathom,UPC,Matching,10,8,2,2596,2396
+2026-11,2026-11-13,True Visions,80100615,True Shop Central Festival Pattaya Beach,UPC,Matching,10,10,0,8423,8423
+2026-11,2026-11-13,True Visions,80100625,True Shop Central Plaza Rayong,UPC,Matching,10,8,2,3561,3361
+2026-11,2026-11-13,True Visions,80100480,True Shop The Mall Ngamwongwan 5Fl.,BMA,Matching,9,9,0,4768,4768
+2026-11,2026-11-13,True Visions,80101067,True Shop Central Airport Plaza Chiangmai,UPC,Matching,9,7,2,12274,12074
+2026-11,2026-11-13,True Visions,80101271,True Shop Big C Chaengwattana,BMA,Non_Matching,8,7,1,4299,3999
+2026-11,2026-11-13,True Visions,80101312,True Shop Robinson Kanchanaburi,UPC,Non_Matching,8,6,2,6114,5914
+2026-11,2026-11-13,True Visions,80100621,True Shop Central Chiangrai,UPC,Matching,8,8,0,7694,7694
+2026-11,2026-11-13,True Visions,80101119,True Shop Central Plaza Nakhonratchasima,UPC,Matching,8,8,0,6637,6637
+2026-11,2026-11-13,True Visions,80101214,True Shop Central Plaza Salaya,UPC,Matching,7,7,0,4472,4472
+2026-11,2026-11-13,True Visions,80100837,True Shop Central Chonburi,UPC,Matching,7,6,1,2913,2813
+2026-11,2026-11-13,True Visions,80101184,True Shop Chonburi,UPC,Non_Matching,7,6,1,900,800
+2026-11,2026-11-13,True Visions,80100478,True Shop Terminal 21,BMA,Matching,6,3,3,6209,3614
+2026-11,2026-11-13,True Visions,80101269,True Shop Mahboon Krong 4Fl.,BMA,Non_Matching,6,6,0,2566,2566
+2026-11,2026-11-13,True Visions,80101182,True Shop Central Chaengwattana,BMA,Matching,6,6,0,6333,6333
+2026-11,2026-11-13,True Visions,80100859,True Shop Trat,UPC,Non_Matching,6,3,3,2905,2405
+2026-11,2026-11-13,True Visions,80101363,True Shop at Chamchuri Square 1,BMA,Non_Matching,5,5,0,3612,3612
+2026-11,2026-11-13,True Visions,80100763,True Shop The Walk Nakornsawan,UPC,Non_Matching,5,5,0,1457,1457
+2026-11,2026-11-13,True Visions,80101189,True shop Central Plaza Si Racha,UPC,Matching,5,3,2,3814,3614
+2026-11,2026-11-13,True Visions,80101648,True Shop UD Town Udonthani,UPC,Non_Matching,5,4,1,1288,798
+2026-11,2026-11-13,True Visions,80101584,True Shop Robinson Ratchapruek,BMA,Non_Matching,4,4,0,999,999
+2026-11,2026-11-13,True Visions,80101263,True Shop Maya Chiangmai,UPC,Non_Matching,4,3,1,2265,1965
+2026-11,2026-11-13,True Visions,80101290,True Shop Big C Korat2,UPC,Non_Matching,4,2,2,3880,3480
+2026-11,2026-11-13,True Visions,80101264,True Shop Central Plaza Ramindra,BMA,Non_Matching,3,2,1,1494,1394
+2026-11,2026-11-13,True Visions,80101349,True Shop Silom Complex,BMA,Non_Matching,3,3,0,3231,3231
+2026-11,2026-11-13,True Visions,80101418,True Shop Imperial Samrong,BMA,Non_Matching,3,2,1,1666,1566
+2026-11,2026-11-13,True Visions,80101305,True Shop Robinson Sri Saman,BMA,Matching,3,3,0,4128,4128
+2026-11,2026-11-13,True Visions,80100840,True Shop Central Plaza Mahachai,UPC,Matching,3,2,1,1335,1235
+2026-11,2026-11-13,True Visions,80100926,True Shop Ayudhaya Park,UPC,Matching,3,2,1,1967,399
+2026-11,2026-11-13,True Visions,80101378,True Shop South Pattaya,UPC,Non_Matching,3,3,0,698,698
+2026-11,2026-11-13,True Visions,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC,Non_Matching,3,2,1,1335,1235
+2026-11,2026-11-13,True Visions,80101198,True Shop Central Phitsanulok,UPC,Matching,3,3,0,808,808
+2026-11,2026-11-13,True Visions,80101281,True Shop Big C Chiangmai,UPC,Non_Matching,3,3,0,2558,2558
+2026-11,2026-11-13,True Visions,80101225,True Shop Kao Yai Market Village,UPC,Non_Matching,3,2,1,2612,2313
+2026-11,2026-11-13,True Visions,80100838,True Shop Central Festival Samui,UPC,Matching,3,1,2,699,100
+2026-11,2026-11-13,True Visions,80101222,True Shop Central Festival Hadyai,UPC,Matching,3,3,0,1736,1736
+2026-11,2026-11-13,True Visions,80101698,True Shop (dtac) Central Plaza Westgate 2Fl.,BMA,Hall,2,2,0,2314,2314
+2026-11,2026-11-13,True Visions,80101358,True Shop Central Ayutthaya,UPC,Matching,2,2,0,699,699
+2026-11,2026-11-13,True Visions,80101628,True Shop Central Nakhonsawan,UPC,Matching,2,2,0,2351,2351
+2026-11,2026-11-13,True Visions,80100750,True Shop Lotus's Fang Chiangmai,UPC,Non_Matching,2,1,1,651,551
+2026-11,2026-11-13,True Visions,80100858,True Shop Maesai Chiangrai,UPC,Non_Matching,2,2,0,2950,2950
+2026-11,2026-11-13,True Visions,80100727,True Shop Lotus's Udonthani,UPC,Non_Matching,2,2,0,3814,3814
+2026-11,2026-11-13,True Visions,80101183,True Shop Central Khonkaen,UPC,Matching,2,2,0,3266,3266
+2026-11,2026-11-13,True Visions,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC,Non_Matching,2,2,0,399,399
+2026-11,2026-11-13,True Visions,80100764,True Shop Lotus's Sangkha Surin,UPC,Non_Matching,2,1,1,400,100
+2026-11,2026-11-13,True Visions,80100780,True Shop Lotus's Prakhonchai Buriram,UPC,Non_Matching,2,2,0,2565,2565
+2026-11,2026-11-13,True Visions,80101303,True Shop Robinson Roi Et,UPC,Matching,2,2,0,757,757
+2026-11,2026-11-13,True Visions,80101331,True Shop Big C Nongki Buriram,UPC,Non_Matching,2,1,1,851,551
+2026-11,2026-11-13,True Visions,80100839,True Shop Central Plaza Nakhonsithammarat,UPC,Matching,2,2,0,558,558
+2026-11,2026-11-13,True Visions,80101115,True Shop Central Plaza Suratthani,UPC,Matching,2,2,0,800,800
+2026-11,2026-11-13,True Visions,80101709,True Shop (dtac) Mega Bangna 2Fl.,BMA,Hall,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101341,True Shop Future Park Rangsit(H),BMA,Matching,1,1,0,490,490
+2026-11,2026-11-13,True Visions,80100627,True Shop Huahin,UPC,Non_Matching,1,0,1,100,0
+2026-11,2026-11-13,True Visions,80101307,True Shop Robinson Lopburi,UPC,Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100479,True Shop Terminal 21 Pattaya,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100782,True Shop Lotus's Thaluang Phichit,UPC,Non_Matching,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101117,True Shop Central Lampang,UPC,Matching,1,1,0,936,936
+2026-11,2026-11-13,True Visions,80101306,True Shop Robinson Mae Sot,UPC,Non_Matching,1,0,1,300,0
+2026-11,2026-11-13,True Visions,80101704,True Shop (dtac) Central Phitsanulok 2Fl.,UPC,Hall,1,1,0,2014,2014
+2026-11,2026-11-13,True Visions,80100760,True Shop Lotus's Nakhon Phanom,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101294,True Shop Big C Loei,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101313,True Shop Robinson Chaiyaphum,UPC,Matching,1,1,0,300,300
+2026-11,2026-11-13,True Visions,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC,Non_Matching,1,1,0,458,458
+2026-11,2026-11-13,True Visions,80100769,True Shop Lotus's Thatum Surin,UPC,Non_Matching,1,1,0,458,458
+2026-11,2026-11-13,True Visions,80100778,True Shop Lotus's Yasothon,UPC,Non_Matching,1,1,0,1466,1466
+2026-11,2026-11-13,True Visions,80100793,True Shop Lotus's Satuek Buriram,UPC,Non_Matching,1,1,0,200,200
+2026-11,2026-11-13,True Visions,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC,Non_Matching,1,1,0,100,100
+2026-11,2026-11-13,True Visions,80101227,True Shop Tesco Lotus Ubonratchathani,UPC,Non_Matching,1,1,0,2014,2014
+2026-11,2026-11-13,True Visions,80101345,True Shop Down Town Nakhonratchasima,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80100822,True Shop Lotus's Ranong,UPC,Non_Matching,1,1,0,299,299
+2026-11,2026-11-13,True Visions,80101122,True Shop  Ocean Complex Chumphon,UPC,Non_Matching,1,1,0,1466,1466
 2026-11,2026-11-13,True Online,80100925,True Shop Fashion Island,BMA,Matching,1170,1021,149,658395,571143
 2026-11,2026-11-13,True Online,80101071,True Shop Seacon Square 2,BMA,Matching,979,889,90,643545,589319
 2026-11,2026-11-13,True Online,80101340,True Shop Future Park Rangsit,BMA,Matching,918,821,97,534044,470217
@@ -188,103 +285,6 @@ month,asof,product,shop,name,grp,kpitype,req,save,cancel,rev_req,rev_save
 2026-11,2026-11-13,True Online,80101688,True Shop (dtac) Lotus's Chaiya 1Fl.,UPC,COCO,1,1,0,499,499
 2026-11,2026-11-13,True Online,80101699,True Shop (dtac) Central Festival Hatyai 3Fl.,UPC,Hall,1,1,0,539,539
 2026-11,2026-11-13,True Online,80101710,True Shop (dtac) Phuket Thalang,UPC,Hall,1,1,0,569,569
-2026-11,2026-11-13,True Visions,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,39,37,2,27981,27582
-2026-11,2026-11-13,True Visions,80100925,True Shop Fashion Island,BMA,Matching,37,32,5,26989,24234
-2026-11,2026-11-13,True Visions,80101185,True Shop Central Plaza West Gate,BMA,Matching,34,31,3,16154,15854
-2026-11,2026-11-13,True Visions,80100836,True Shop Central World Fl.4,BMA,Matching,26,26,0,23849,23849
-2026-11,2026-11-13,True Visions,80101071,True Shop Seacon Square 2,BMA,Matching,25,24,1,23125,23025
-2026-11,2026-11-13,True Visions,80101713,True Shop Central Northville,BMA,Matching,25,25,0,14189,14189
-2026-11,2026-11-13,True Visions,80101070,True Shop Mega Bangna,BMA,Matching,24,23,1,21048,20948
-2026-11,2026-11-13,True Visions,80101221,True Shop Emquartier,BMA,Matching,23,23,0,28578,28578
-2026-11,2026-11-13,True Visions,80100481,True Shop The Mall Bangkapi,BMA,Matching,22,20,2,14963,14763
-2026-11,2026-11-13,True Visions,80101066,True Shop Central Bangna,BMA,Matching,21,20,1,16204,16104
-2026-11,2026-11-13,True Visions,80101186,True Shop Central Festival East Ville,BMA,Matching,20,20,0,13515,13515
-2026-11,2026-11-13,True Visions,80101296,True Shop Paradise Park Srinakarin,BMA,Non_Matching,20,18,2,18369,16700
-2026-11,2026-11-13,True Visions,80101340,True Shop Future Park Rangsit,BMA,Matching,20,15,5,16992,12969
-2026-11,2026-11-13,True Visions,80101068,True Shop Central Rama 3,BMA,Matching,19,19,0,19454,19454
-2026-11,2026-11-13,True Visions,80100483,True Shop The Mall Thapra,BMA,Matching,19,15,4,11309,10509
-2026-11,2026-11-13,True Visions,80100484,True Shop The Mall Bangkae,BMA,Matching,19,15,4,14418,13819
-2026-11,2026-11-13,True Visions,80101123,True Shop Lotus's Sukhapiban 3,BMA,Non_Matching,18,18,0,8319,8319
-2026-11,2026-11-13,True Visions,80101180,True Shop Wongsawang Town Center,BMA,Non_Matching,16,14,2,11317,10918
-2026-11,2026-11-13,True Visions,80100486,True Shop Central Festival Chiangmai,UPC,Matching,16,15,1,7361,7261
-2026-11,2026-11-13,True Visions,80100565,True Shop Central Rama 2,BMA,Matching,14,13,1,8004,7904
-2026-11,2026-11-13,True Visions,80100928,True Shop Seacon Bangkae,BMA,Matching,14,12,2,4775,4575
-2026-11,2026-11-13,True Visions,80100476,True Shop Central Festival Phuket,UPC,Matching,14,12,2,9981,9781
-2026-11,2026-11-13,True Visions,80100477,True Shop Central Ladprao,BMA,Matching,13,12,1,10046,9946
-2026-11,2026-11-13,True Visions,80100622,True Shop Central Rama 9 4Fl.,BMA,Matching,11,11,0,6608,6608
-2026-11,2026-11-13,True Visions,80101627,True Shop Central Westville,BMA,Matching,11,9,2,8663,8264
-2026-11,2026-11-13,True Visions,80100623,True Shop Central Rama 9,BMA,Matching,10,9,1,7843,7743
-2026-11,2026-11-13,True Visions,80101629,True Shop Central Nakhonpathom,UPC,Matching,10,8,2,2596,2396
-2026-11,2026-11-13,True Visions,80100615,True Shop Central Festival Pattaya Beach,UPC,Matching,10,10,0,8423,8423
-2026-11,2026-11-13,True Visions,80100625,True Shop Central Plaza Rayong,UPC,Matching,10,8,2,3561,3361
-2026-11,2026-11-13,True Visions,80100480,True Shop The Mall Ngamwongwan 5Fl.,BMA,Matching,9,9,0,4768,4768
-2026-11,2026-11-13,True Visions,80101067,True Shop Central Airport Plaza Chiangmai,UPC,Matching,9,7,2,12274,12074
-2026-11,2026-11-13,True Visions,80101271,True Shop Big C Chaengwattana,BMA,Non_Matching,8,7,1,4299,3999
-2026-11,2026-11-13,True Visions,80101312,True Shop Robinson Kanchanaburi,UPC,Non_Matching,8,6,2,6114,5914
-2026-11,2026-11-13,True Visions,80100621,True Shop Central Chiangrai,UPC,Matching,8,8,0,7694,7694
-2026-11,2026-11-13,True Visions,80101119,True Shop Central Plaza Nakhonratchasima,UPC,Matching,8,8,0,6637,6637
-2026-11,2026-11-13,True Visions,80101214,True Shop Central Plaza Salaya,UPC,Matching,7,7,0,4472,4472
-2026-11,2026-11-13,True Visions,80100837,True Shop Central Chonburi,UPC,Matching,7,6,1,2913,2813
-2026-11,2026-11-13,True Visions,80101184,True Shop Chonburi,UPC,Non_Matching,7,6,1,900,800
-2026-11,2026-11-13,True Visions,80100478,True Shop Terminal 21,BMA,Matching,6,3,3,6209,3614
-2026-11,2026-11-13,True Visions,80101269,True Shop Mahboon Krong 4Fl.,BMA,Non_Matching,6,6,0,2566,2566
-2026-11,2026-11-13,True Visions,80101182,True Shop Central Chaengwattana,BMA,Matching,6,6,0,6333,6333
-2026-11,2026-11-13,True Visions,80100859,True Shop Trat,UPC,Non_Matching,6,3,3,2905,2405
-2026-11,2026-11-13,True Visions,80101363,True Shop at Chamchuri Square 1,BMA,Non_Matching,5,5,0,3612,3612
-2026-11,2026-11-13,True Visions,80100763,True Shop The Walk Nakornsawan,UPC,Non_Matching,5,5,0,1457,1457
-2026-11,2026-11-13,True Visions,80101189,True shop Central Plaza Si Racha,UPC,Matching,5,3,2,3814,3614
-2026-11,2026-11-13,True Visions,80101648,True Shop UD Town Udonthani,UPC,Non_Matching,5,4,1,1288,798
-2026-11,2026-11-13,True Visions,80101584,True Shop Robinson Ratchapruek,BMA,Non_Matching,4,4,0,999,999
-2026-11,2026-11-13,True Visions,80101263,True Shop Maya Chiangmai,UPC,Non_Matching,4,3,1,2265,1965
-2026-11,2026-11-13,True Visions,80101290,True Shop Big C Korat2,UPC,Non_Matching,4,2,2,3880,3480
-2026-11,2026-11-13,True Visions,80101264,True Shop Central Plaza Ramindra,BMA,Non_Matching,3,2,1,1494,1394
-2026-11,2026-11-13,True Visions,80101349,True Shop Silom Complex,BMA,Non_Matching,3,3,0,3231,3231
-2026-11,2026-11-13,True Visions,80101418,True Shop Imperial Samrong,BMA,Non_Matching,3,2,1,1666,1566
-2026-11,2026-11-13,True Visions,80101305,True Shop Robinson Sri Saman,BMA,Matching,3,3,0,4128,4128
-2026-11,2026-11-13,True Visions,80100840,True Shop Central Plaza Mahachai,UPC,Matching,3,2,1,1335,1235
-2026-11,2026-11-13,True Visions,80100926,True Shop Ayudhaya Park,UPC,Matching,3,2,1,1967,399
-2026-11,2026-11-13,True Visions,80101378,True Shop South Pattaya,UPC,Non_Matching,3,3,0,698,698
-2026-11,2026-11-13,True Visions,80100754,True Shop Lotus's Ruamchok Chiangmai,UPC,Non_Matching,3,2,1,1335,1235
-2026-11,2026-11-13,True Visions,80101198,True Shop Central Phitsanulok,UPC,Matching,3,3,0,808,808
-2026-11,2026-11-13,True Visions,80101281,True Shop Big C Chiangmai,UPC,Non_Matching,3,3,0,2558,2558
-2026-11,2026-11-13,True Visions,80101225,True Shop Kao Yai Market Village,UPC,Non_Matching,3,2,1,2612,2313
-2026-11,2026-11-13,True Visions,80100838,True Shop Central Festival Samui,UPC,Matching,3,1,2,699,100
-2026-11,2026-11-13,True Visions,80101222,True Shop Central Festival Hadyai,UPC,Matching,3,3,0,1736,1736
-2026-11,2026-11-13,True Visions,80101698,True Shop (dtac) Central Plaza Westgate 2Fl.,BMA,Hall,2,2,0,2314,2314
-2026-11,2026-11-13,True Visions,80101358,True Shop Central Ayutthaya,UPC,Matching,2,2,0,699,699
-2026-11,2026-11-13,True Visions,80101628,True Shop Central Nakhonsawan,UPC,Matching,2,2,0,2351,2351
-2026-11,2026-11-13,True Visions,80100750,True Shop Lotus's Fang Chiangmai,UPC,Non_Matching,2,1,1,651,551
-2026-11,2026-11-13,True Visions,80100858,True Shop Maesai Chiangrai,UPC,Non_Matching,2,2,0,2950,2950
-2026-11,2026-11-13,True Visions,80100727,True Shop Lotus's Udonthani,UPC,Non_Matching,2,2,0,3814,3814
-2026-11,2026-11-13,True Visions,80101183,True Shop Central Khonkaen,UPC,Matching,2,2,0,3266,3266
-2026-11,2026-11-13,True Visions,80101348,True Shop Asawann Shopping Complex Nongkhai,UPC,Non_Matching,2,2,0,399,399
-2026-11,2026-11-13,True Visions,80100764,True Shop Lotus's Sangkha Surin,UPC,Non_Matching,2,1,1,400,100
-2026-11,2026-11-13,True Visions,80100780,True Shop Lotus's Prakhonchai Buriram,UPC,Non_Matching,2,2,0,2565,2565
-2026-11,2026-11-13,True Visions,80101303,True Shop Robinson Roi Et,UPC,Matching,2,2,0,757,757
-2026-11,2026-11-13,True Visions,80101331,True Shop Big C Nongki Buriram,UPC,Non_Matching,2,1,1,851,551
-2026-11,2026-11-13,True Visions,80100839,True Shop Central Plaza Nakhonsithammarat,UPC,Matching,2,2,0,558,558
-2026-11,2026-11-13,True Visions,80101115,True Shop Central Plaza Suratthani,UPC,Matching,2,2,0,800,800
-2026-11,2026-11-13,True Visions,80101709,True Shop (dtac) Mega Bangna 2Fl.,BMA,Hall,1,1,0,100,100
-2026-11,2026-11-13,True Visions,80101341,True Shop Future Park Rangsit(H),BMA,Matching,1,1,0,490,490
-2026-11,2026-11-13,True Visions,80100627,True Shop Huahin,UPC,Non_Matching,1,0,1,100,0
-2026-11,2026-11-13,True Visions,80101307,True Shop Robinson Lopburi,UPC,Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80100479,True Shop Terminal 21 Pattaya,UPC,Non_Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80100782,True Shop Lotus's Thaluang Phichit,UPC,Non_Matching,1,1,0,100,100
-2026-11,2026-11-13,True Visions,80101117,True Shop Central Lampang,UPC,Matching,1,1,0,936,936
-2026-11,2026-11-13,True Visions,80101306,True Shop Robinson Mae Sot,UPC,Non_Matching,1,0,1,300,0
-2026-11,2026-11-13,True Visions,80101704,True Shop (dtac) Central Phitsanulok 2Fl.,UPC,Hall,1,1,0,2014,2014
-2026-11,2026-11-13,True Visions,80100760,True Shop Lotus's Nakhon Phanom,UPC,Non_Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80101294,True Shop Big C Loei,UPC,Non_Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80101313,True Shop Robinson Chaiyaphum,UPC,Matching,1,1,0,300,300
-2026-11,2026-11-13,True Visions,80101327,True Shop Big C Phangkhon Sakonnakhon,UPC,Non_Matching,1,1,0,458,458
-2026-11,2026-11-13,True Visions,80100769,True Shop Lotus's Thatum Surin,UPC,Non_Matching,1,1,0,458,458
-2026-11,2026-11-13,True Visions,80100778,True Shop Lotus's Yasothon,UPC,Non_Matching,1,1,0,1466,1466
-2026-11,2026-11-13,True Visions,80100793,True Shop Lotus's Satuek Buriram,UPC,Non_Matching,1,1,0,200,200
-2026-11,2026-11-13,True Visions,80100867,True Shop Dan Khun Thot Nakhonratchasima,UPC,Non_Matching,1,1,0,100,100
-2026-11,2026-11-13,True Visions,80101227,True Shop Tesco Lotus Ubonratchathani,UPC,Non_Matching,1,1,0,2014,2014
-2026-11,2026-11-13,True Visions,80101345,True Shop Down Town Nakhonratchasima,UPC,Non_Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80100822,True Shop Lotus's Ranong,UPC,Non_Matching,1,1,0,299,299
-2026-11,2026-11-13,True Visions,80101122,True Shop  Ocean Complex Chumphon,UPC,Non_Matching,1,1,0,1466,1466
 2026-11,2026-11-13,Postpay,80100925,True Shop Fashion Island,BMA,Matching,1571,1355,216,844239,734093
 2026-11,2026-11-13,Postpay,80101340,True Shop Future Park Rangsit,BMA,Matching,1373,1202,171,681460,603078
 2026-11,2026-11-13,Postpay,80100626,True Shop Central Pinklao 3Fl.,BMA,Matching,1189,1065,124,652365,588392
