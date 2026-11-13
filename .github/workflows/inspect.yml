@@ -20,6 +20,7 @@ jobs:
           DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
           PREFIXES: ${{ inputs.prefixes }}
           SHOW_UN: '1'
+          SHOW_AREA: 'Upper North'
         run: |
           IFS='|' read -ra P <<< "$PREFIXES"
           python pipeline/inspect_drive.py "${P[@]}"

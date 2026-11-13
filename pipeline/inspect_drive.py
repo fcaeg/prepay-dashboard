@@ -34,6 +34,9 @@ def describe(d):
             if nu <= 30: info['values'] = {str(k)[:40]: int(x) for k, x in v.value_counts().head(30).items() if not re.search(r'\d{9,}', str(k))}
             elif len(v): info['shape'] = re.sub(r'[A-Za-zก-๙]', 'a', re.sub(r'\d', '9', str(v.iloc[0])))[:30]
         print(json.dumps(info, ensure_ascii=False))
+    if os.environ.get('SHOW_AREA') and len(d) < 5000:  # shop-level KPI files without a shop code: rows of one area
+        m = d.apply(lambda col: col.astype(str).str.contains(os.environ['SHOW_AREA'], regex=False)).any(axis=1)
+        if m.any(): print(d[m][[x for x in d.columns if not SENS.search(str(x)) or str(x) == 'Shop']].to_string(max_colwidth=40))
     for c in d.columns:
         hit = int(d[c].astype(str).str.strip().isin(UN).sum())
         if hit: print('UN shop codes found in column', c, hit, 'rows')
