@@ -232,6 +232,149 @@ function showHint(id){ const h=HINT[id]; const el=document.createElement('div');
   document.addEventListener('keydown',function k(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',k);} });
   document.body.appendChild(el); }
 
+/* ---------- per-axis analysis (strengths / alerts) ---------- */
+state.axis = {};
+const DM = D.dims || {};
+const AP_ASOF = D.allprod_asof || {};
+const dimLbl = {ACTIVITY_GROUP:'ประเภทการขาย', GP_SKU:'กลุ่มสินค้า (SKU)', CAMPAIGN_GROUP_LV1:'แคมเปญ', NET_RC_TIER:'ช่วงค่าบริการ (RC)', BRAND:'แบรนด์เครื่อง',
+  CAMPIGN_CODE:'แคมเปญ / แพ็กเกจ', RC_TIER:'ช่วงค่าบริการ (RC)', FLAG_BUNDLE:'ขายเดี่ยว / พ่วง', TECHNOLOGY:'เทคโนโลยี', SUB_PRODUCT:'ประเภท TVS NOW',
+  'ที่มา':'ที่มาของยอด TVS', CATEGORY:'หมวดสินค้า', SUB_CATEGORY:'หมวดย่อย', PRICE_TIER:'ช่วงราคา', CAPACITY:'ความจุ'};
+const setAxis = (pid,i) => { state.axis[pid]=i; render(); const el=document.getElementById('an-'+pid); if(el) el.scrollIntoView({block:'nearest'}); };
+const fK = v => v==null?'–':Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' ล้าน':Math.round(v).toLocaleString('th-TH');
+const li = (t) => `<li style="padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.5">${t}</li>`;
+const lists = (good, bad) => `<div class="grid g2" style="gap:14px;margin-top:6px">
+  <div style="background:#f0fdf4;border-radius:10px;padding:10px 14px"><b style="color:var(--good)">✅ ทำได้ดี</b><ul style="list-style:none;margin:6px 0 0;padding:0">${good.length?good.map(li).join(''):li('<span style="color:var(--muted)">ไม่มีจุดที่โดดเด่นกว่าค่าเทียบ</span>')}</ul></div>
+  <div style="background:#fef2f2;border-radius:10px;padding:10px 14px"><b style="color:var(--bad)">⚠️ Alert</b><ul style="list-style:none;margin:6px 0 0;padding:0">${bad.length?bad.map(li).join(''):li('<span style="color:var(--muted)">ไม่มีจุดที่ต่ำกว่าค่าเทียบ</span>')}</ul></div></div>`;
+function analysisCard(pid, axes, body){
+  const i = Math.min(state.axis[pid]||0, axes.length-1);
+  const chips = axes.map((a,k)=>`<button onclick="setAxis('${pid}',${k})" style="font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid ${k===i?'var(--ink)':'var(--line)'};background:${k===i?'var(--ink)':'#fff'};color:${k===i?'#fff':'var(--ink)'};cursor:pointer">${a}</button>`).join(' ');
+  return `<div class="card" id="an-${pid}" style="margin-bottom:16px"><h3>🔎 วิเคราะห์รายแกน</h3><div class="sub">เลือกแกนเพื่อดูว่าอะไรทำได้ดีและอะไรต้อง Alert · ${state.branch==='ALL'?'ภาพรวม Upper North':nameOf(state.branch)}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${chips}</div>${body(i)}</div>`;
+}
+/* shop ranking helper: rows [{name, v, txt}] -> good (>=hi) / bad (<lo) */
+function shopRank(rows, hi, lo, fmt){
+  const r = rows.filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
+  return { good: r.filter(x=>x.v>=hi).slice(0,4).map(x=>`<b>${x.name}</b> ${fmt(x)}`), bad: r.filter(x=>x.v<lo).reverse().slice(0,5).map(x=>`<b>${x.name}</b> ${fmt(x)}`) };
+}
+/* breakdown by dimension vs UPC (share of units, units per shop, net per unit, run-rate vs last month) */
+function dimAnalysis(product){
+  const cm=D.cur, pm=D.prev, scope = state.branch==='ALL' ? 'UN' : state.branch;
+  const N = (DM[cm]||{})[product]||{}, own=N[scope], upc=N.UPC, P=((DM[pm]||{})[product]||{})[scope];
+  if(!own||!upc) return {good:[],bad:[],html:'<div class="note">ยังไม่มีข้อมูลแยกประเภทของสินค้านี้ (มาจากไฟล์ All Product Rawdata)</div>'};
+  const asof = AP_ASOF[product]; const cd = asof&&asof.slice(0,7)===cm ? +asof.slice(8) : C.days_in_month; const pdays = P? new Date(+pm.slice(0,4), +pm.slice(5), 0).getDate() : null;
+  const good=[], bad=[]; let html='';
+  const dims = Object.keys(own.dims).filter(d=>d!=='ALL' && upc.dims[d]);
+  const tot = (n,d)=> (n.dims.ALL||{}).ALL ? n.dims.ALL.ALL[0] : Object.values(n.dims[d]||{}).reduce((s,x)=>s+x[0],0);
+  for(const d of dims){
+    const oT=tot(own,d), uT=tot(upc,d); if(!oT||!uT) continue;
+    const vals = [...new Set([...Object.keys(own.dims[d]), ...Object.keys(upc.dims[d])])]
+      .map(v=>{ const o=own.dims[d][v]||[0,0], u=upc.dims[d][v]||[0,0], pr=P&&P.dims[d]&&P.dims[d][v];
+        const so=o[0]/oT*100, su=u[0]/uT*100, ps = (o[0]/own.shops)/((u[0]/upc.shops)||NaN)*100;
+        const apo = o[0]? o[1]/o[0] : null, apu = u[0]? u[1]/u[0] : null;
+        const mom = pr&&pr[0]? (o[0]/cd)/(pr[0]/pdays)*100 : null;
+        return {v, o, u, so, su, ps, apo, apu, mom}; })
+      .filter(x=>x.su>=1||x.so>=1).sort((a,b)=>b.su-a.su).slice(0,10);
+    for(const x of vals){
+      if(/NOT_CLASSIFIED|ว่าง|^OTHER$|^ $/i.test(x.v)) continue;  // not actionable: shown in the table only
+      const big = x.so>=5||x.su>=5;
+      if(big && x.so-x.su>=4) good.push(`<b>${x.v}</b> (${dimLbl[d]||d}) สัดส่วน ${x.so.toFixed(0)}% สูงกว่า UPC ${x.su.toFixed(0)}%`);
+      if(big && x.su-x.so>=4) bad.push(`<b>${x.v}</b> (${dimLbl[d]||d}) สัดส่วน ${x.so.toFixed(0)}% ต่ำกว่า UPC ${x.su.toFixed(0)}%`);
+      if(scope==='UN' && x.su>=5 && isFinite(x.ps) && x.ps<70) bad.push(`<b>${x.v}</b> (${dimLbl[d]||d}) ขายได้ต่อสาขาเพียง ${x.ps.toFixed(0)}% ของค่าเฉลี่ยสาขา UPC`);
+      if(scope==='UN' && x.su>=5 && isFinite(x.ps) && x.ps>=130) good.push(`<b>${x.v}</b> (${dimLbl[d]||d}) ขายได้ต่อสาขา ${x.ps.toFixed(0)}% ของค่าเฉลี่ยสาขา UPC`);
+      if(product!=='True Visions' && x.apo&&x.apu&&x.o[0]>=5 && x.apo/x.apu<0.85) bad.push(`<b>${x.v}</b> (${dimLbl[d]||d}) รายได้ต่อหน่วย ${fK(x.apo)} ต่ำกว่า UPC ${fK(x.apu)}`);
+      if(x.mom!=null && x.o[0]>=5 && x.mom<70) bad.push(`<b>${x.v}</b> (${dimLbl[d]||d}) อัตราขายต่อวันลดลงเหลือ ${x.mom.toFixed(0)}% ของเดือนก่อน`);
+    }
+    html += `<details ${d===dims[0]?'open':''} style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">${dimLbl[d]||d}</summary>
+      <table style="margin-top:6px"><thead><tr><th>${dimLbl[d]||d}</th><th>${scope==='UN'?'Upper North':'สาขา'}</th><th>สัดส่วน</th><th>สัดส่วน UPC</th><th>ต่างกัน</th>${scope==='UN'?'<th>ต่อสาขา vs UPC</th>':''}${product==='True Visions'?'':'<th>ต่อหน่วย</th><th>ต่อหน่วย UPC</th>'}<th>อัตราต่อวัน vs เดือนก่อน</th></tr></thead><tbody>
+      ${vals.map(x=>`<tr><td><b>${x.v}</b></td><td>${fK(x.o[0])}</td><td>${x.so.toFixed(1)}%</td><td>${x.su.toFixed(1)}%</td><td class="${x.so>=x.su?'up':'down'}">${(x.so-x.su>=0?'+':'')+(x.so-x.su).toFixed(1)} pp</td>${scope==='UN'?`<td>${isFinite(x.ps)?`<span class="pill p-${cls(x.ps)}">${x.ps.toFixed(0)}%</span>`:'–'}</td>`:''}${product==='True Visions'?'':`<td>${fK(x.apo)}</td><td>${fK(x.apu)}</td>`}<td>${x.mom==null?'–':`<span class="${x.mom>=100?'up':'down'}">${x.mom.toFixed(0)}%</span>`}</td></tr>`).join('')}</tbody></table></details>`;
+  }
+  const uniq = a => [...new Set(a)];
+  return {good:uniq(good).slice(0,7), bad:uniq(bad).slice(0,8), html: html + `<div class="note">ข้อมูลแยกประเภทจาก All Product Rawdata (มีถึง ${asof||'-'}) · ${scope==='UN'?`ต่อสาขา vs UPC = ยอดเฉลี่ยต่อสาขาของเรา ÷ ยอดเฉลี่ยต่อสาขาใน UPC × 100 (${own.shops} สาขาเทียบ ${upc.shops} สาขา)`:'มุมมองสาขาเดียวเทียบสัดส่วนกับ UPC (ไม่เทียบปริมาณ เพราะขนาดสาขาต่างกัน)'} · อัตราต่อวัน = ยอดเดือนนี้ต่อวัน ÷ ยอดเดือนก่อนต่อวัน · ไม่นับ Suspend / Terminate และร้าน Partner</div>`};
+}
+function saleAnalysis(staff){
+  const items=D.products;
+  return analysisCard(staff?'staff':'sale', items, i=>{
+    const p=items[i], a=dimAnalysis(p);
+    let good=[...a.good], bad=[...a.bad];
+    if(!staff){
+      const rows=D.shops.map(s=>({name:s.name.replace('True Shop ',''), v:shopAch(C,[s.shop],p,state.mode)}));
+      if(state.branch==='ALL'){ const r=shopRank(rows,110,80,x=>`ทำได้ ${x.v.toFixed(0)}% ของ Target ถึงวันนี้`); good=[...r.good,...good]; bad=[...r.bad,...bad]; }
+    } else if(C.has_ind && (C.staff_products||[]).includes(p)){
+      const list=shopsOf(state.branch);
+      const st=Object.values(C.staff).filter(e=>list.includes(e.shop)).map(e=>{ const r=e.p[p]; const t=(r['t'+state.mode]||0)*frs(C,p); return {name:e.name, v: t? (r['a'+state.mode]||0)/t*100 : null, a:r['a'+state.mode]||0, shop:nameOf(e.shop)}; }).filter(x=>x.v!=null);
+      const r=shopRank(st,120,50,x=>`${x.v.toFixed(0)}% (${x.shop})`); good=[...r.good,...good]; bad=[...r.bad,...bad];
+      const zero=st.filter(x=>x.a===0).length; if(zero) bad.unshift(`มีพนักงาน <b>${zero} คน</b> ที่ยังไม่มียอด ${p} ในเดือนนี้`);
+    }
+    return lists(good.slice(0,9), bad.slice(0,10)) + (staff?'<div class="note" style="margin-top:8px">ตารางแยกประเภทด้านล่างเป็นภาพรวมสาขา (ยังไม่แยกรายคน)</div>':'') + a.html;
+  });
+}
+function ebitAnalysis(){
+  const M=PL.months[PL.last], br=state.branch;
+  const LL = {rev_prod:['รายได้ขายสินค้า',1], rev_svc:['รายได้ขายบริการ (คอมมิชชัน)',1], rev_nonsale:['Non Sale (Retention, Upsell, Renew, SQT, Bill)',1], gm:['GM',1],
+    pers:['ค่าพนักงาน',-1], rent:['ค่าเช่า',-1], var:['ต้นทุนผันแปร (MDR, ดอกเบี้ย 0%, WH)',-1], front:['Front Cost รวม',-1], ebitda:['EBITDA',1], ebit:['EBIT',1], tx:['Transaction (รายการ/ตร.ม.)',1]};
+  const SEL = [['rev_prod','rev_svc','rev_nonsale','tx'],['gm','rev_svc','rev_nonsale'],['ebitda','ebit','var','front'],['front','pers','rent','var'],['rent'],['gm','pers']];
+  return analysisCard('ebit', PL.axes, i=>{
+    const lines = br==='ALL' ? M.area_lines : ((M.shops[br]||{}).lines||{});
+    const good=[], bad=[];
+    const rowsAll = Object.keys(LL).map(k=>{ const [own,ben]=lines[k]||[null,null]; const s=LL[k][1]; const idx= own!=null&&ben ? (s>0? Math.max(0,own/ben*100) : (own>0? ben/own*100 : null)) : null; return {k,own,ben,idx,lbl:LL[k][0],s}; });
+    for(const x of rowsAll.filter(x=>SEL[i].includes(x.k))){
+      if(x.idx==null) continue;
+      const t = x.k==='tx' ? `<b>${x.lbl}</b> ${x.own.toFixed(1)} รายการ/ตร.ม. เทียบ UPC ${x.ben.toFixed(1)} (ดัชนี ${x.idx.toFixed(0)})` : `<b>${x.lbl}</b> ${fK(x.own)} บาท/ตร.ม. เทียบ UPC ${fK(x.ben)} (ดัชนี ${x.idx.toFixed(0)})`;
+      if(x.idx>=110) good.push(t); if(x.idx<90) bad.push(t);
+    }
+    // shops on this axis
+    if(br==='ALL'){
+      const rows=D.shops.map(s=>{const r=M.shops[s.shop]; return {name:s.name.replace('True Shop ',''), v:r&&r.idx?r.idx[i]:null, r};});
+      const r=shopRank(rows,120,80,x=>`ดัชนี ${x.v.toFixed(0)}`); good.push(...r.good); bad.push(...r.bad);
+      const loss=D.shops.filter(s=>M.shops[s.shop]&&M.shops[s.shop].ebit<0).map(s=>`<b>${s.name.replace('True Shop ','')}</b> ขาดทุน EBIT ${fK(M.shops[s.shop].ebit)} บาท`);
+      if(i===2) bad.unshift(...loss);
+    } else { const r=M.shops[br]; if(r&&r.ebit<0) bad.unshift(`สาขานี้ขาดทุน EBIT ${fK(r.ebit)} บาท`); }
+    const t = PL.trend; if(t.length>=2){ const a=t[t.length-1], b=t[t.length-2]; const ea=a.ebit/a.rev*100, eb=b.ebit/b.rev*100;
+      if(br==='ALL'&&i===2) (ea>=eb?good:bad).push(`EBIT% ภาพรวม ${ea.toFixed(1)}% ${ea>=eb?'ดีขึ้น':'ลดลง'}จาก ${eb.toFixed(1)}% เดือนก่อน`); }
+    const tbl=`<table style="margin-top:10px"><thead><tr><th>บรรทัด P&L (ต่อ ตร.ม. / เดือน)</th><th>${br==='ALL'?'Upper North':'สาขา'}</th><th>UPC</th><th>ดัชนี</th></tr></thead><tbody>${rowsAll.map(x=>`<tr ${SEL[i].includes(x.k)?'style="background:#fafafa;font-weight:600"':''}><td>${x.lbl}${x.s<0?' <span style="font-size:11px;color:var(--muted)">(ต่ำ = ดี)</span>':''}</td><td>${x.k==='tx'?(x.own||0).toFixed(1):fK(x.own)}</td><td>${x.k==='tx'?(x.ben||0).toFixed(1):fK(x.ben)}</td><td>${x.idx==null?'–':`<span class="pill p-${cls(x.idx)}">${x.idx.toFixed(0)}</span>`}</td></tr>`).join('')}</tbody></table>
+      <div class="note">ค่าเฉลี่ย UPC ถ่วงตามประเภทและพื้นที่ของสาขาเรา · แถวตัวหนา = เกี่ยวกับแกนที่เลือก · ข้อมูล ${plLbl(PL.last)}</div>`;
+    return lists(good.slice(0,9), bad.slice(0,10)) + tbl;
+  });
+}
+function serviceAnalysis(){
+  const axes=['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time'];
+  return analysisCard('service', axes, i=>{
+    const good=[], bad=[]; let note='';
+    if(i<3){ const p=RKEY[i], M=RT&&RT.months[RT.cur]; if(!M) return lists([],[]);
+      const rows=D.shops.map(s=>{const r=(M.shops[s.shop]||{})[p]; return {name:s.name.replace('True Shop ',''), v:r&&r.req?r.save/r.req*100:null, r};});
+      const r=shopRank(rows,92,RT.pass,x=>`%Save ${x.v.toFixed(1)}% (Req ${x.r.req}, ยกเลิก ${x.r.cancel})`); good.push(...r.good); bad.push(...r.bad);
+      const a=retRec(RT.cur,state.branch,p), b=M.bench[p];
+      if(a&&b){ const ps=a.save/a.req*100, pu=b.UPC.save/b.UPC.req*100, rv=a.rev_req?a.rev_save/a.rev_req*100:null;
+        (ps>=pu?good:bad).unshift(`%Save ${ps.toFixed(1)}% ${ps>=pu?'สูงกว่า':'ต่ำกว่า'}ค่าเฉลี่ย UPC ${pu.toFixed(1)}%`);
+        if(rv!=null&&rv<ps-1.5) bad.push(`%Rev Save ${rv.toFixed(1)}% ต่ำกว่า %Save — ลูกค้าที่หลุดเป็นกลุ่มค่าบริการสูง`);
+        if(rv!=null&&rv>ps+1.5) good.push(`%Rev Save ${rv.toFixed(1)}% สูงกว่า %Save — รักษาลูกค้าค่าบริการสูงได้ดี`); }
+      const lost=rows.filter(x=>x.r).sort((a,b)=>b.r.cancel-a.r.cancel).slice(0,3).map(x=>`${x.name} ${x.r.cancel}`); if(lost.length) note=`<div class="note">สาขาที่มีจำนวนยกเลิกมากที่สุด: ${lost.join(' · ')}</div>`;
+    } else { const k=SKEY[i-3]; if(!SV) return lists([],[]);
+      const rows=D.shops.map(s=>{const r=(SV.shops[s.shop]||{})[k]; return {name:s.name.replace('True Shop ',''), v:r&&r.den?r.num/r.den*100:null, r};});
+      const r=shopRank(rows,SV.pass[k]+3,SV.pass[k],x=>`${x.v.toFixed(1)}% (ฐาน ${Math.round(x.r.den)})`); good.push(...r.good); bad.push(...r.bad);
+      const v=svcPct(state.branch,k), b=SV.bench[k], pu=b&&b.UPC.den?b.UPC.num/b.UPC.den*100:null;
+      if(v!=null&&pu!=null) (v>=pu?good:bad).unshift(`${k} ${v.toFixed(1)}% ${v>=pu?'สูงกว่า':'ต่ำกว่า'}ค่าเฉลี่ย UPC ${pu.toFixed(1)}% (เกณฑ์ ${SV.pass[k]}%)`);
+      const miss=rows.filter(x=>x.v==null).length; if(miss&&state.branch==='ALL') note=`<div class="note">${miss} สาขาไม่มีข้อมูล ${k}${k==='Service Level'?' (ไม่มีระบบคิว)':''}</div>`;
+    }
+    return lists(good.slice(0,8), bad.slice(0,9)) + note;
+  });
+}
+function longevityAnalysis(){
+  return analysisCard('longevity', PILLARS[3].items, i=>{
+    const k=LKEY[i], K=LN&&LN.kpis[k]; if(!K) return lists([],[])+'<div class="note">รอไฟล์ข้อมูล</div>';
+    const good=[], bad=[];
+    const rows=D.shops.map(s=>{const v=lonVal(s.shop,k); const raw=(LN.shops[s.shop]||{})[k]; return {name:s.name.replace('True Shop ',''), v:v&&v.idx, lab:v&&v.lab, raw};});
+    const r=shopRank(rows,110,K.mode==='target'?50:85,x=>`${x.lab} (ดัชนี ${x.v.toFixed(0)})`); good.push(...r.good); bad.push(...r.bad);
+    const zero=rows.filter(x=>x.raw&&x.raw.num===0&&K.mode!=='avg_inv');
+    if(zero.length&&state.branch==='ALL'){ bad.splice(0, bad.length, ...bad.filter(t=>!zero.some(z=>t.startsWith('<b>'+z.name+'</b>')))); bad.unshift(`<b>${zero.length} สาขา</b> ยังไม่มียอดเลย: ${zero.map(x=>x.name).join(', ')}`); }
+    const v=lonVal(state.branch,k); const ub=K.bench.UPC;
+    if(v&&ub&&ub.den){ const own=v.idx; const upcA = K.mode==='target' ? ub.num/(ub.den*K.frac)*100 : null;
+      if(upcA!=null) (own>=upcA?good:bad).unshift(`ทำได้ ${own.toFixed(0)}% ของ Target ถึงวันนี้ ${own>=upcA?'สูงกว่า':'ต่ำกว่า'} UPC (${upcA.toFixed(0)}%)`);
+      else (own>=100?good:bad).unshift(`${v.lab} ${own>=100?'ดีกว่า':'แย่กว่า'}ค่าเฉลี่ย UPC (${(ub.num/ub.den*100).toFixed(1)}%)`); }
+    return lists(good.slice(0,8), bad.slice(0,9));
+  });
+}
+
 /* ---------- views ---------- */
 function summary(){
   const br=state.branch;
@@ -263,6 +406,7 @@ function detailSale(){
       <table><thead><tr><th>สินค้า</th><th>Actual</th><th>Target ถึงวันนี้</th><th>Target เดือน</th><th>%Ach</th><th>${PREV}</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="note">Postpay / TOL / TVS = Self Refresh Rawdata (QTY เทียบ Target POST / TOL / TVS · Net Amount เทียบ Target POST_NEW / TOL_NEW / TVS_NEW · ไม่นับเบอร์ Suspend / Terminate) · TVS รวมแพ็กเกจพ่วง: Postpay 5G DEVICE TVS + TOL 3P/4P OTT (Net ของรายการพ่วง = จำนวน × รายได้ต่อราย ตาม Target TVS; ไม่นับ TVS NOW Redeem จาก Postpaid / TOL ซ้ำ) · Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC · Target ถึงวันนี้คิดตามวันล่าสุดของข้อมูลแต่ละสินค้า</div></div>
   </div>
+  ${saleAnalysis(false)}
   <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
   <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
   <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>`;
@@ -282,6 +426,7 @@ function detailStaff(){
     <div class="card"><h3>สรุป</h3><div class="sub">มียอดขาย ${act.length} คน · ต่ำกว่า Target (เฉลี่ย) ${act.filter(r=>r.avg!=null&&r.avg<100).length} คน · ไม่พบยอดขาย ${none.length} คน</div>
       <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>Postpay / TOL / TVS รายคน: จากไฟล์ All Product Rawdata (SALE_ID) · ไม่นับเบอร์ Suspend / Terminate<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
   </div>
+  ${saleAnalysis(true)}
   <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
   <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>
   <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>
@@ -305,6 +450,7 @@ function detailLongevity(){
       <table><thead><tr><th>ตัวชี้วัด</th><th>ยอดจริง</th><th>Target ถึงวันนี้ / ฐาน</th><th>ค่า</th><th>ดัชนี</th><th>UPC</th><th>BMA</th><th>ทั้งประเทศ</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="note">TMC: จำนวนเครื่อง · Customer Hub: จำนวน Consent · Ext. Warranty: บาท · Trade In: ยอด Trade-in / ฐาน = เครื่องที่ขาย · Down Sell: บาทที่ลดลง / ฐาน = RC เดิม · คอลัมน์ UPC / BMA / ทั้งประเทศ = % ทำได้ (TMC, Ext.) หรือค่าเฉลี่ยของกลุ่ม (Trade In, Down Sell)</div></div>
   </div>
+  ${longevityAnalysis()}
   <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · สีตามดัชนี (เขียว ≥ 100) · "–" = ไม่มีข้อมูล</div>
     <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${PILLARS[3].items.map(p=>`<th style="text-align:center">${p}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>`;
 }
@@ -331,6 +477,7 @@ function detailService(){
       <table><thead><tr><th>ตัวชี้วัด</th><th>${br==='ALL'?'Upper North':'สาขา'}</th><th>เกณฑ์</th><th>vs เกณฑ์</th><th>ฐาน</th><th>UPC</th><th>BMA</th><th>ทั้งประเทศ</th></tr></thead><tbody>${svcRows}</tbody></table>
       <div class="note">ฐาน: Service Level = จำนวน Transaction (ถ่วงน้ำหนัก) · iCsat = จำนวน Survey · On Time = งานที่ปิดแล้ว + ค้างเกินกำหนด</div></div>
   </div>
+  ${serviceAnalysis()}
   <div class="card"><h3>รายสาขา</h3><div class="sub">เรียงจากสาขาที่แย่สุด · สีเทียบเกณฑ์ของแต่ละตัว (เขียว = ผ่าน) · ตัวเล็ก = ฐานที่ใช้คำนวณ · "–" = ไม่มีข้อมูล (เช่น สาขาที่ไม่มีระบบคิวจะไม่มี Service Level)</div>
     <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${['Ret. Postpay','Ret. TOL','Ret. TVS','Service Level','iCsat','On Time'].map(p=>`<th style="text-align:center">${p}</th>`).join('')}</tr></thead><tbody>${shRows}</tbody></table></div></div>`;
 }
@@ -356,6 +503,7 @@ function detailEbit(){
       <table><thead><tr><th>ประเภท</th>${PL.axes.map(a=>`<th>${short(a)}</th>`).join('')}</tr></thead><tbody>${refRows}</tbody></table>
       <div class="note">ต่อ ตร.ม. ใช้พื้นที่ SQM All (รวม True Coffee เพราะ P&L รวมต้นทุนส่วนนี้) · DTAC COCO / HALL ไม่มีพื้นที่ในรายงาน — สาขา (D) ของเราใช้ 10 ตร.ม. และเทียบ UPC Non Matching (ส่วน GM/คน เทียบ DTAC COCO) · จำนวนพนักงาน = คอลัมน์ Man ในรายงาน (Sup + ITF + Sales + Service + Multi + Outsource)</div></div>
   </div>
+  ${ebitAnalysis()}
   <div class="card" style="margin-bottom:16px"><h3>รายสาขา · ${plLbl(PL.last)}</h3><div class="sub">เรียงจากดัชนีเฉลี่ยต่ำสุด · ตัวเลขในช่อง = ดัชนีเทียบ UPC ประเภทเดียวกัน · ⚠ = ขาดทุน</div>
     <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th><th>Revenue</th><th>GM</th><th>EBIT</th><th>EBIT%</th>${PL.axes.map(a=>`<th style="text-align:center">${short(a)}</th>`).join('')}<th style="text-align:center">เฉลี่ย</th></tr></thead><tbody>${shRows}</tbody></table></div></div>
   <div class="card"><h3>แนวโน้ม 12 เดือน · สาขาในพื้นที่</h3><div class="sub">บาท · รวมทุกสาขาที่มีในรายงานเดือนนั้น (ก่อน ก.ค. 2569 ยังไม่มีสาขา DTAC)</div>

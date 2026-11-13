@@ -169,3 +169,9 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
   (Down Sell ÷ RC Prev, lower is better; no date in the name → the day before the run) vs the UPC average (Nami: "use the average").
   Customer Hub = `consent_shop_performance_<from>_<to>.csv` (CONSENT_ACQUISITION vs TARGET_CONSENT to the <to> date; Nami 14 Nov).
   → `--longevity <csv> ...` → `state/perf_lon.csv`. No previous-month line.
+- Per-axis analysis (Nami, 14 Nov 2026): every detail page has a "วิเคราะห์รายแกน" card (chips per axis → ✅ strengths / ⚠️ alerts + table).
+  Sale / Staff use `state/perf_dims.csv` (built by merge_allprod from the All Product file: per product × month × scope (our shop codes,
+  UN, UPC, BMA; WW shops only; no Suspend/Terminate) × dimension (ACTIVITY_GROUP, GP_SKU, CAMPAIGN_GROUP_LV1, NET_RC_TIER, BRAND,
+  CAMPIGN_CODE, RC_TIER, FLAG_BUNDLE, TECHNOLOGY, SUB_PRODUCT, CATEGORY, SUB_CATEGORY, PRICE_TIER, CAPACITY; TVS 'ที่มา' = sources)).
+  Rules: mix share ±4 pp vs UPC, units per shop vs UPC <70 / ≥130 (area view only), net per unit <85% of UPC, daily run-rate <70% of last month;
+  NOT_CLASSIFIED / blank values stay in the tables only. EBIT uses P&L lines per sqm (area_lines / shops[].lines) vs UPC.
