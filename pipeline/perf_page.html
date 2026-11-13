@@ -622,6 +622,11 @@ function staffSection(id, p){
     });
   });
   let tbl='';
+  if(MX[p]&&MX[p].months[D.cur]){ const ax=MX[p].axes.map(x=>({x, ...(empAxis(p,id,x,mode)||{a:0,t:0,v:null})})).filter(z=>z.a||z.t);
+    ax.forEach(z=>{ if(z.t>=1&&z.v!=null){ if(z.v>=100&&z.a>0) good.push(`<b>${z.x}</b> ทำได้ ${z.v.toFixed(0)}% ของ Target แบรนด์ (ประมาณ)`); else if(z.v<50) bad.push(`<b>${z.x}</b> ทำได้ ${z.v.toFixed(0)}% ของ Target แบรนด์ (ประมาณ ${fmtN(z.t)})`); } });
+    tbl+=`<details open style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">เทียบ Target รายแบรนด์ (ค่าประมาณ)</summary><table style="margin-top:6px"><thead><tr><th>แบรนด์</th><th>ยอดจริง</th><th>Target ประมาณ ถึงวันนี้</th><th>%</th></tr></thead><tbody>
+      ${ax.map(z=>`<tr><td style="text-align:left"><b>${z.x}</b></td><td>${fmtN(z.a)}</td><td>${fmtN(z.t)}</td><td><span class="pill p-${cls(z.v)}">${fmtP(z.v)}</span></td></tr>`).join('')}</tbody></table>
+      <div class="note">Target ประมาณ = Target แบรนด์ของสาขา × สัดส่วน Indy Target ${p} ของคนนี้ในสาขา (${((empShare(p,id)||0)*100).toFixed(0)}%) · ${mode==='q'?'QTY':'Net ฿'}</div></details>`; }
   if(n.dims['สินค้า']){
     const it=Object.entries(n.dims['สินค้า']).sort((x,y)=>y[1][1]-x[1][1]);
     tbl=`<details open style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">สินค้าที่ขาย (${it.length} รายการ)</summary><div class="scroll" style="max-height:320px"><table style="margin-top:6px"><thead><tr><th>สินค้า</th><th>แบรนด์</th><th>ประเภท</th><th>จำนวน</th><th>Net ฿</th></tr></thead><tbody>
@@ -646,18 +651,26 @@ function showStaff(id, p){
   document.addEventListener('keydown',function k(ev){ if(ev.key==='Escape'){close();document.removeEventListener('keydown',k);} });
   document.body.appendChild(el);
 }
+/* estimated staff brand target = shop brand target x (staff Indy target / shop staff Indy target total); Net share, QTY share if Net target is 0 */
+function empShare(prod,id){ const e=C.staff[id]; if(!e) return null;
+  const tot=k=>Object.values(C.staff).filter(x=>x.shop===e.shop).reduce((s,x)=>s+((x.p[prod]||{})[k]||0),0);
+  const r=e.p[prod]||{}; const tn=tot('tn'), tq=tot('tq');
+  return tn>0 ? (r.tn||0)/tn : tq>0 ? (r.tq||0)/tq : null; }
+function empAxis(prod,id,ax,mode){ // {a, t (to date), v}
+  const X=MX[prod], M=X&&X.months[D.cur], e=C.staff[id], k_=mode==='q'?0:1; if(!M||!e) return null;
+  const n=empNode(prod,id); let a=0; if(n&&n.dims.BRAND) Object.entries(n.dims.BRAND).forEach(([b,x])=>{ if((X.axes.includes(b)?b:'อื่นๆ')===ax) a+=x[k_]; });
+  const sh=empShare(prod,id), st=M.shops[e.shop]&&M.shops[e.shop][ax]; const t = sh!=null&&st ? st[k_+2]*sh*M.frac : 0;
+  return {a, t, v: t? a/t*100 : null}; }
 function mixStaffTable(pid){
   const prod=MIXP[pid], X=MX[prod], mode=state.mode, k_=mode==='q'?0:1, list=shopsOf(state.branch);
   const ids=Object.keys(C.staff).filter(id=>list.includes(C.staff[id].shop));
-  const rows=ids.map(id=>{ const e=C.staff[id], n=empNode(prod,id), by={}; X.axes.forEach(a=>by[a]=0);
-    if(n&&n.dims.BRAND) Object.entries(n.dims.BRAND).forEach(([b,x])=>{ const ax=X.axes.includes(b)?b:'อื่นๆ'; if(ax in by) by[ax]+=x[k_]; });
-    const tot=Object.values(by).reduce((s,x)=>s+x,0), r=e.p[prod], t=(r['t'+mode]||0)*frs(C,prod), a=r['a'+mode]||0;
+  const rows=ids.map(id=>{ const e=C.staff[id], by={}; X.axes.forEach(a=>by[a]=empAxis(prod,id,a,mode)||{a:0,t:0,v:null});
+    const tot=Object.values(by).reduce((s,x)=>s+x.a,0), r=e.p[prod], t=(r['t'+mode]||0)*frs(C,prod), a=r['a'+mode]||0;
     return {id,e,by,tot,v:t?a/t*100:null}; }).filter(x=>x.tot>0||x.v!=null).sort((x,y)=>y.tot-x.tot);
-  const mx=X.axes.map(a=>Math.max(...rows.map(r=>r.by[a]),1));
   return `<div class="card" style="margin-top:16px"><h3>Staff Ranking · ${prod}</h3><div class="sub">เรียงจากยอดรวมสูงสุด · ${mode==='q'?'จำนวนชิ้น':'Net ฿'} รายแบรนด์ จาก All Product Rawdata (ถึง ${AP_ASOF[prod]||'-'}) · % Indy = ยอด ${prod} ทั้งหมด ÷ Indy Target ถึงวันนี้</div>
   <div class="scroll"><table class="hm"><thead><tr><th>#</th><th>พนักงาน</th><th style="text-align:center">รวม</th><th style="text-align:center">% Indy</th>${X.axes.map(a=>`<th style="text-align:center">${a}</th>`).join('')}</tr></thead><tbody>
-  ${rows.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r.e.name}${moreBtn(r.id,prod)}<div style="font-size:11px;color:var(--muted)">${nameOf(r.e.shop)}</div></td><td class="c"><b>${fmtN(r.tot)}</b></td><td class="c"><span class="pill p-${cls(r.v)}">${fmtP(r.v)}</span></td>${X.axes.map((a,j)=>`<td class="c" style="${r.by[a]?`background:rgba(228,0,43,${(.08+.5*r.by[a]/mx[j]).toFixed(2)})`:'color:#9ca3af'}">${r.by[a]?fmtN(r.by[a]):'–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-  <div class="note">แสดงเฉพาะพนักงานที่มี Indy Target · สีเข้ม = ยอดสูงในแบรนด์นั้น</div></div>`;
+  ${rows.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r.e.name}${moreBtn(r.id,prod)}<div style="font-size:11px;color:var(--muted)">${nameOf(r.e.shop)}</div></td><td class="c"><b>${fmtN(r.tot)}</b></td><td class="c"><span class="pill p-${cls(r.v)}">${fmtP(r.v)}</span></td>${X.axes.map(a=>{const z=r.by[a]; return `<td class="c" style="${hmColor(z.v)}" title="ยอด ${fmtN(z.a)} / Target ประมาณ ${fmtN(z.t)}">${z.v==null?'–':z.v.toFixed(0)+'%'}<div style="font-size:10px;font-weight:400">${fmtN(z.a)} / ${fmtN(z.t)}</div></td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
+  <div class="note">ช่องแบรนด์ = % เทียบ <b>Target แบรนด์รายคน (ค่าประมาณ)</b> · ตัวเลขเล็ก = ยอดจริง / Target ประมาณ ถึงวันนี้ · Target ประมาณ = Target แบรนด์ของสาขา × สัดส่วน Indy Target ${prod} ของคนนั้นในสาขา (ใช้ Net ถ้า Indy Target Net เป็น 0 ใช้ QTY) · แสดงเฉพาะพนักงานที่มี Indy Target</div></div>`;
 }
 function pendingView(id){ const p=PILLARS.find(x=>x.id===id); return `<div class="card pending"><h2>${p.name}</h2><p>รอข้อมูล${p.items.length?': '+p.items.join(' · '):''}</p></div>`; }
 
