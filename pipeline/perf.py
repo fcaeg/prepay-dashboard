@@ -260,8 +260,9 @@ def merge_pl(fp):
 PL_SQM_OVERRIDE = {'80101655': 10.0, '80101661': 10.0, '80101670': 10.0}
 PL_BENCH_FALLBACK = 'Non Matching'
 
-PL_AXES = [('Revenue / ตร.ม.', 'rev', 1), ('GM / ตร.ม.', 'gm', 1), ('EBIT / ตร.ม.', 'ebit', 1),
-           ('Front Cost / ตร.ม.', 'front', -1), ('ค่าเช่า / ตร.ม.', 'rent', -1), ('Transaction / ตร.ม.', 'tx', 1)]
+PL_AXES = [('Revenue / ตร.ม.', 'rev', 1, 'sqm'), ('GM / ตร.ม.', 'gm', 1, 'sqm'), ('EBIT / ตร.ม.', 'ebit', 1, 'sqm'),
+           ('Front Cost / ตร.ม.', 'front', -1, 'sqm'), ('ค่าเช่า / ตร.ม.', 'rent', -1, 'sqm'),
+           ('GM / พนักงาน', 'gm', 1, 'man')]  # Nami, 14 Nov 2026: GM per staff replaces Transactions per sqm
 
 def _pl_build():
     s = _load('perf_pl_shop.csv'); b = _load('perf_pl_bench.csv')
@@ -271,35 +272,40 @@ def _pl_build():
     for c in b.columns:
         if c not in ('month', 'grp', 'type'): b[c] = pd.to_numeric(b[c])
     months = sorted(s.month.unique()); last = months[-1]; prev = months[-2] if len(months) > 1 else None
-    def bench(m, grp, typ, k):  # per-sqm average of a group (shops with an area only)
+    def bench(m, grp, typ, k, unit):
+        """group average per unit: per sqm over shops that have an area; per staff over all shops"""
         r = b[(b.month == m) & (b.grp == grp) & (b.type == typ)]
-        return float(r[k + '_s'].sum() / r.sqm.sum()) if len(r) and r.sqm.sum() > 0 else None
+        if not len(r): return None
+        num, den = (r[k + '_s'].sum(), r.sqm.sum()) if unit == 'sqm' else (r[k].sum(), r.man.sum())
+        return float(num / den) if den > 0 else None
+    def btype(m, typ, unit):  # a type with no average of its own (DTAC COCO per sqm) -> UPC Non Matching
+        return typ if bench(m, 'UPC', typ, 'rev', unit) is not None else PL_BENCH_FALLBACK
     def idx(own, ben, sign):
         if own is None or ben is None or ben <= 0: return None
         if sign > 0: return max(0.0, own / ben * 100)
         return ben / own * 100 if own > 0 else None
-    res = {'last': last, 'prev': prev, 'axes': [a[0] for a in PL_AXES], 'months': {}}
+    res = {'last': last, 'prev': prev, 'axes': [a[0] for a in PL_AXES], 'units': [a[3] for a in PL_AXES], 'months': {}}
     for m in [x for x in (prev, last) if x]:
-        sm = s[s.month == m]; shops_out = {}; exp = {k: 0.0 for _, k, _ in PL_AXES}; tot = {k: 0.0 for k in PL_SUM}
+        sm = s[s.month == m]; shops_out = {}; nexp = len(PL_AXES)
+        a_own = [0.0] * nexp; a_den = [0.0] * nexp; a_exp = [0.0] * nexp; tot = {k: 0.0 for k in PL_SUM}
         for _, r in sm.iterrows():
-            typ = r.type; sq = r.sqm
-            btyp = typ if bench(m, 'UPC', typ, 'rev') is not None else PL_BENCH_FALLBACK  # e.g. DTAC COCO -> Non Matching
-            row = {'type': typ, 'bench_type': btyp, 'sqm': sq, **{k: float(r[k]) for k in PL_SUM}}
-            if sq > 0:
-                vals = [];
-                for lbl, k, sign in PL_AXES:
-                    ben = bench(m, 'UPC', btyp, k); own = r[k] / sq; vals.append(idx(own, ben, sign))
-                    if ben is not None: exp[k] += ben * sq
-                row['idx'] = vals; row['per_sqm'] = {k: r[k] / sq for _, k, _ in PL_AXES}
-                for k in PL_SUM: tot[k] += r[k]
+            typ = r.type; row = {'type': typ, 'bench_type': btype(m, typ, 'sqm'), 'sqm': float(r.sqm), **{k: float(r[k]) for k in PL_SUM}}
+            own_l, ben_l, idx_l = [], [], []
+            for i, (lbl, k, sign, unit) in enumerate(PL_AXES):
+                den = r.sqm if unit == 'sqm' else r.man
+                bt = btype(m, typ, unit); ben = bench(m, 'UPC', bt, k, unit)
+                own = (r[k] / den) if den > 0 else None
+                own_l.append(own); ben_l.append(ben); idx_l.append(idx(own, ben, sign))
+                if den > 0 and ben is not None: a_own[i] += r[k]; a_den[i] += den; a_exp[i] += ben * den
+            row.update({'own': own_l, 'ben': ben_l, 'idx': idx_l})
+            for k in PL_SUM: tot[k] += r[k]
             shops_out[r.shop] = row
-        area_idx = []
-        for lbl, k, sign in PL_AXES:
-            own = tot[k]; e = exp[k]
-            area_idx.append(None if e <= 0 else (max(0.0, own / e * 100) if sign > 0 else (e / own * 100 if own > 0 else None)))
-        types = sorted(set(sm.type))
-        ref = {g: {t: {k: bench(m, g, t, k) for _, k, _ in PL_AXES} for t in types} for g in ('UPC', 'BMA')}
-        res['months'][m] = {'shops': shops_out, 'area_idx': area_idx, 'area_tot': tot, 'area_bench': {k: (exp[k] / tot['sqm'] if tot['sqm'] else None) for _, k, _ in PL_AXES},
+        area_idx = [None if a_exp[i] <= 0 else (max(0.0, a_own[i] / a_exp[i] * 100) if PL_AXES[i][2] > 0 else (a_exp[i] / a_own[i] * 100 if a_own[i] > 0 else None)) for i in range(nexp)]
+        types = sorted(set(sm.type) | {PL_BENCH_FALLBACK})
+        ref = {g: {t: [bench(m, g, t, k, unit) for _, k, _, unit in PL_AXES] for t in types} for g in ('UPC', 'BMA')}
+        res['months'][m] = {'shops': shops_out, 'area_idx': area_idx, 'area_tot': tot,
+                            'area_own': [a_own[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
+                            'area_ben': [a_exp[i] / a_den[i] if a_den[i] else None for i in range(nexp)],
                             'ref': ref, 'no_sqm': [sh for sh, v in shops_out.items() if not v['sqm']]}
     trend = s[s.month >= months[max(0, len(months) - 12)]].groupby('month')[['rev', 'gm', 'ebit', 'sqm']].sum()
     res['trend'] = [{'month': mm, **{k: float(v) for k, v in r.items()}} for mm, r in trend.iterrows()]

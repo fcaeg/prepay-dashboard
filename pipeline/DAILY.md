@@ -150,7 +150,8 @@ page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built
 - EBIT & Revenue (Nami, 14 Nov 2026): `<n>. <yyyy>_Performance Report (Model WW)_<Mon>'<yy> ....xlsb` (monthly, ~3 months behind; sheet
   "Data Model 2 WW" = P&L per shop per month; column positions are checked by name in perf.PL_FIELDS) → `--pl` (Drive: "performance report")
   → `state/perf_pl_shop.csv` (our shops) + `perf_pl_bench.csv` (month x BMA/UPC x type sums). Radar = 6 values PER SQM (SQM All):
-  Revenue, GM, EBIT, Front Cost (inverse), rent ค่าเช่า (inverse), Transactions; 100 = UPC average of the same shop type
+  Revenue, GM, EBIT, Front Cost (inverse), rent ค่าเช่า (inverse) per sqm + GM per staff (column Man; replaced Transactions/sqm, Nami 14 Nov);
+  100 = UPC average of the same shop type
   (area: mix-weighted by our shops' sqm). BMA shown for reference. DTAC COCO / HALL have no SQM in the report → no per-sqm values.
   GitHub Actions installs pyxlsb for .xlsb. First load (Aug 2026 report) was done by hand from the file Nami attached in chat.
 - DTAC COCO (D) shops 80101655 / 80101661 / 80101670 = 10 sqm each (Nami, 14 Nov 2026; perf.PL_SQM_OVERRIDE), compared with UPC Non Matching.
