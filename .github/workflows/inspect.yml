@@ -19,6 +19,7 @@ jobs:
           GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
           PREFIXES: ${{ inputs.prefixes }}
+          SHOW_UN: '1'
         run: |
           IFS='|' read -ra P <<< "$PREFIXES"
           python pipeline/inspect_drive.py "${P[@]}"

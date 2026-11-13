@@ -37,6 +37,9 @@ def describe(d):
     for c in d.columns:
         hit = int(d[c].astype(str).str.strip().isin(UN).sum())
         if hit: print('UN shop codes found in column', c, hit, 'rows')
+        if hit and os.environ.get('SHOW_UN') and len(d) < 5000:  # shop-level KPI files only (no personal columns are printed)
+            cols = [x for x in d.columns if not SENS.search(str(x))]
+            print(d[d[c].astype(str).str.strip().isin(UN)][cols].to_string(max_colwidth=28))
 
 if sys.argv[1:] == ['ANALYZE_TVS']:
     import runpy; runpy.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'analyze_tvs.py')); sys.exit(0)
