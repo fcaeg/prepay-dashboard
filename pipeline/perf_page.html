@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upper North Shop Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --cur:#e4002b; --prev:#94a3b8; --target:#1b1f24;
+  --good:#16a34a; --goodbg:#dcfce7; --warn:#d97706; --warnbg:#fef3c7; --bad:#dc2626; --badbg:#fee2e2;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"IBM Plex Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.hwrap{max-width:1500px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.brand{font-weight:700;font-size:18px}
+.brand small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.spacer{flex:1}
+select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+nav{max-width:1500px;margin:0 auto;padding:0 20px;display:flex;gap:4px;overflow-x:auto}
+nav a{padding:10px 14px;text-decoration:none;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;font-weight:500}
+nav a.on{color:var(--ink);border-color:var(--cur)}
+main{max-width:1500px;margin:0 auto;padding:20px}
+.banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 12px;border-radius:8px;margin-bottom:16px;font-size:13px}
+.grid{display:grid;gap:16px}
+.g5{grid-template-columns:repeat(5,1fr)}
+.radars .card{padding:12px}
+.g2{grid-template-columns:1.25fr 1fr}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1200px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1000px){.g5{grid-template-columns:repeat(2,1fr)}.g2,.g4{grid-template-columns:1fr}}
+@media(max-width:600px){.g5{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h3{margin:0 0 4px;font-size:15px}
+.card .sub{color:var(--muted);font-size:12px;margin-bottom:8px}
+.tile{cursor:pointer;transition:box-shadow .15s}
+.tile:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.tile .lbl{color:var(--muted);font-size:12.5px}
+.tile .val{font-size:28px;font-weight:700;margin:2px 0}
+.tile .d{font-size:12.5px}
+.up{color:var(--good)} .down{color:var(--bad)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
+.p-good{background:var(--goodbg);color:var(--good)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-bad{background:var(--badbg);color:var(--bad)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.radar text{font-family:inherit}
+.mini{cursor:pointer}
+.mini:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.mini .go{font-size:12px;color:var(--cur);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:500;font-size:12px;background:#fafafa;position:sticky;top:0}
+.hm td.c{text-align:center;font-weight:600;font-size:12px}
+.hm tr:hover td{outline:0;background-image:linear-gradient(rgba(0,0,0,.03),rgba(0,0,0,.03))}
+.hm td:first-child{cursor:pointer}
+.scroll{overflow:auto;max-height:560px}
+.fail-list li{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.fail-list{list-style:none;margin:0;padding:0}
+.fail-list a{color:inherit;text-decoration:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;border:0;background:#fff;padding:6px 12px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--ink);color:#fff}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.pending{text-align:center;padding:40px 20px;color:var(--muted)}
+.pending h2{color:var(--ink)}
+.note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand">Upper North · Shop Performance<small id="period"></small></div>
+    <div class="spacer"></div>
+    <label>สาขา&nbsp;<select id="branch"></select></label>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<script id="perf-data" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('perf-data').textContent);
+const TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const mLbl = m => `${TH[+m.slice(5)-1]} ${+m.slice(0,4)+543}`;
+const CUR = mLbl(D.cur), PREV = mLbl(D.prev);
+const C = D.months[D.cur], P = D.months[D.prev] || null;
+const PILLARS = [
+  {id:'sale', name:'Sale', th:'ยอดขาย', basis:'เทียบ Target สาขา (ถึงวันนี้)', items:D.products},
+  {id:'service', name:'Service & Retention', th:'บริการและรักษาฐานลูกค้า', pending:true, items:['Retention Postpay','Retention True Online','Retention True Visions','Service Level','iCsat','On Time']},
+  {id:'ebit', name:'EBIT & Revenue', th:'กำไรและรายได้', pending:true, items:[]},
+  {id:'longevity', name:'Sale Longevity', th:'สินค้าต่อยอด', pending:true, items:['True Mobile Care','Extended Warranty','Trade In','Customer Hub','Down Sale']},
+  {id:'staff', name:'Staff Productivity', th:'ผลิตภาพพนักงาน', basis:'ยอดพนักงาน เทียบ Indy Target (ถึงวันนี้)', items:D.products}
+];
+const SHORT = {'Postpay':'Postpay','True Online':'TOL','Device':'Device','GIA':'GIA','True Visions':'TVS'};
+let state = {branch:'ALL', mode:'n'};
+
+/* ---------- calc ---------- */
+// achievement % for a month: actual / (target x frac). null when no actual for that product.
+function shopAch(M, shopList, p, mode){
+  if(!M || !M.actual_products.includes(p)) return null;
+  let a=0,t=0; shopList.forEach(s=>{const r=M.shops[s]&&M.shops[s][p]; if(r){a+=r['a'+mode]||0;t+=r['t'+mode]||0;}});
+  return t? a/(t*M.frac)*100 : null;
+}
+function staffAch(M, shopList, p, mode){
+  if(!M || !M.has_ind || !M.actual_products.includes(p)) return null;
+  let a=0,t=0; Object.values(M.staff).forEach(e=>{ if(!shopList.includes(e.shop)) return; const r=e.p[p]; a+=r['a'+mode]||0; t+=r['t'+mode]||0; });
+  return t? a/(t*M.frac)*100 : null;
+}
+const shopsOf = br => br==='ALL' ? D.shops.map(s=>s.shop) : [br];
+function pillarVals(pid, M, br, mode){
+  const P_ = PILLARS.find(x=>x.id===pid); const f = pid==='staff'?staffAch:shopAch;
+  return P_.items.map(p=>f(M, shopsOf(br), p, mode||state.mode));
+}
+const avg = v => { const x=v.filter(z=>z!=null); return x.length? x.reduce((s,z)=>s+Math.min(150,z),0)/x.length : null; };
+const cls = v => v==null?'':v>=100?'good':v>=90?'warn':'bad';
+const fmtP = v => v==null?'–':v.toFixed(0)+'%';
+const fmtN = v => v==null?'–':Math.round(v).toLocaleString('th-TH');
+const delta = (c,p) => (c==null||p==null)?'<span style="color:var(--muted)">–</span>':`<span class="${c>=p?'up':'down'}">${c>=p?'▲':'▼'} ${Math.abs(c-p).toFixed(1)} pt</span>`;
+const hmColor = v => v==null?'background:#f3f4f6;color:#9ca3af':v>=100?`background:rgba(22,163,74,${Math.min(.55,.15+(v-100)/80)})`:v>=90?'background:#fde68a':`background:rgba(220,38,38,${Math.min(.75,.25+(90-v)/50)});color:${v<75?'#fff':'#1b1f24'}`;
+
+/* ---------- radar ---------- */
+function radar(labels, series, opt={}){
+  const W=opt.w||460,H=opt.h||380,cx=W/2,cy=H/2+4,R=Math.min(W,H)/2-(opt.pad||70),MAX=150,n=labels.length;
+  const ang=i=>-Math.PI/2+i*2*Math.PI/n;
+  const pt=(i,v)=>{const r=R*Math.max(0,Math.min(MAX,v))/MAX;return [cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];};
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" style="display:block;margin:auto;max-width:${opt.small?320:470}px">`;
+  [50,100,150].forEach(lv=>{
+    s+=`<polygon points="${labels.map((_,i)=>pt(i,lv).join(',')).join(' ')}" fill="none" stroke="${lv===100?'#1b1f24':'#e5e7eb'}" stroke-width="${lv===100?1.4:1}" ${lv===100?'stroke-dasharray="5 4"':''}/>`;
+    if(!opt.small&&lv<150) s+=`<text x="${cx+4}" y="${cy-R*lv/MAX+12}" font-size="10" fill="#9ca3af">${lv}%</text>`;
+  });
+  labels.forEach((_,i)=>{const [x,y]=pt(i,MAX);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e5e7eb"/>`;});
+  series.forEach(se=>{
+    const idx=se.values.map((v,i)=>v==null?null:i).filter(i=>i!=null);
+    if(idx.length>=2) s+=`<polygon points="${idx.map(i=>pt(i,se.values[i]).join(',')).join(' ')}" fill="${se.color}" fill-opacity="${se.fill??.15}" stroke="${se.color}" stroke-width="${se.width||2}" ${se.dash?`stroke-dasharray="${se.dash}"`:''}/>`;
+    if(se.dots) idx.forEach(i=>{const v=se.values[i],[x,y]=pt(i,v);s+=`<circle cx="${x}" cy="${y}" r="${opt.small?3:4}" fill="${v<100?'#dc2626':se.color}" stroke="#fff" stroke-width="1.5"><title>${labels[i]}: ${v.toFixed(1)}%</title></circle>`;});
+  });
+  labels.forEach((l,i)=>{
+    const [x,y]=pt(i,MAX+(opt.small?20:24)); const a=Math.cos(ang(i)); const anc=Math.abs(a)<.2?'middle':a>0?'start':'end';
+    const v=series[0].values[i];
+    s+=`<text x="${x}" y="${y}" text-anchor="${anc}" dominant-baseline="middle" font-size="${opt.small?10.5:12.5}" font-weight="500" fill="#1b1f24">${l}</text>`;
+    s+=`<text x="${x}" y="${y+(opt.small?13:15)}" text-anchor="${anc}" dominant-baseline="middle" font-size="${opt.small?10.5:11.5}" font-weight="700" fill="${v==null?'#9ca3af':v>=100?'#16a34a':v>=90?'#d97706':'#dc2626'}">${v==null?'รอข้อมูล':v.toFixed(0)+'%'}</text>`;
+  });
+  return s+'</svg>';
+}
+const hasPrev = pid => P && pillarVals(pid,P,state.branch).some(v=>v!=null);
+const legend = () => `<div class="legend"><span><i style="background:var(--cur)"></i>${CUR} (ถึง ${C.last_day?+C.last_day.slice(8):'-'} ${TH[+D.cur.slice(5)-1]})</span><span><i style="background:var(--prev)"></i>${PREV} ${hasPrev('sale')?'':'(ยังไม่มีข้อมูล)'}</span><span><i style="background:none;border-top:2px dashed #1b1f24;height:0"></i>100% = Target</span></div>`;
+const seriesFor = (pid,br) => [{values:pillarVals(pid,C,br),color:'#e4002b',dots:true},{values:P?pillarVals(pid,P,br):[],color:'#94a3b8',fill:.05,width:1.5,dash:'4 3'}];
+const modeSeg = () => `<div class="seg"><button class="${state.mode==='n'?'on':''}" onclick="setMode('n')">Net Amount</button><button class="${state.mode==='q'?'on':''}" onclick="setMode('q')">QTY</button></div>`;
+
+/* ---------- views ---------- */
+function summary(){
+  const br=state.branch;
+  const cards=PILLARS.map(p=>{
+    if(p.pending) return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}</h3><div class="sub">${p.th}</div><div class="pending" style="padding:80px 10px">รอข้อมูล</div><div class="go">กดเพื่อดู Detail →</div></div>`;
+    return `<div class="card mini" onclick="go('${p.id}')"><h3>${p.name}</h3><div class="sub">${p.basis}</div>${radar(p.items.map(i=>SHORT[i]||i),seriesFor(p.id,br),{w:300,h:300,small:true,pad:64})}<div class="go">กดเพื่อดู Detail →</div></div>`;
+  }).join('');
+  return `<div class="row"><h2 style="margin:0">${br==='ALL'?`Upper North (${D.shops.length} สาขา)`:nameOf(br)}</h2>${legend()}<div class="spacer"></div><span style="font-size:12px;color:var(--muted)">Sale / Staff:</span>${modeSeg()}</div>
+  <div class="grid g5 radars">${cards}</div>
+  <div class="note">% = ยอดจริง ÷ Target ถึงวันนี้ (Target เดือน × ${(C.frac*100).toFixed(0)}% ของเดือน) · Postpay / TOL / TVS รอไฟล์ยอดขาย · ข้อมูลขายถึง ${D.sales_asof||'-'}</div>`;
+}
+const nameOf = s => (D.shops.find(x=>x.shop===s)||{name:s}).name.replace('True Shop ','');
+
+function detailSale(){
+  const br=state.branch, items=D.products, mode=state.mode;
+  const cur=pillarVals('sale',C,br), prv=P?pillarVals('sale',P,br):items.map(()=>null);
+  const list=shopsOf(br);
+  const rows=items.map((p,k)=>{
+    let a=0,t=0; list.forEach(s=>{const r=C.shops[s][p]; a+=r['a'+mode]||0; t+=r['t'+mode]||0;});
+    const has=C.actual_products.includes(p);
+    return `<tr><td><b>${p}</b></td><td>${has?fmtN(a):'รอข้อมูล'}</td><td>${fmtN(t*C.frac)}</td><td>${fmtN(t)}</td><td><span class="pill p-${cls(cur[k])}">${fmtP(cur[k])}</span></td><td>${fmtP(prv[k])}</td><td>${delta(cur[k],prv[k])}</td></tr>`;}).join('');
+  const hm=D.shops.map(s=>{const v=items.map(p=>shopAch(C,[s.shop],p,mode)); return {s,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
+  const hmRows=hm.map(r=>`<tr ${r.s.shop===br?'style="outline:2px solid var(--cur)"':''}><td onclick="pick('${r.s.shop}')">${r.s.name.replace('True Shop ','')}</td>${r.v.map(v=>`<td class="c" style="${hmColor(v)}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
+  return `<div class="row"><h2 style="margin:0">Sale</h2><span style="color:var(--muted)">ยอดขายเทียบ Target สาขา</span><div class="spacer"></div>${modeSeg()}</div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">% Achievement เทียบ Target ถึงวันนี้</div>${radar(items,seriesFor('sale',br))}${legend()}</div>
+    <div class="card"><h3>ตัวเลขเทียบ Target</h3><div class="sub">${mode==='n'?'Net Amount (บาท)':'จำนวน (QTY)'} · ถึง ${C.last_day||'-'}</div>
+      <table><thead><tr><th>สินค้า</th><th>Actual</th><th>Target ถึงวันนี้</th><th>Target เดือน</th><th>%Ach</th><th>${PREV}</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="note">Device = H/S (รวม Tablet) + iPad · GIA = Accessory + Gadget + IOT (กติกาเดียวกับ GIA Dashboard) · ไม่นับรายการ FOC</div></div>
+  </div>
+  <div class="card"><h3>Heatmap รายสาขา (% Achievement ${CUR})</h3><div class="sub">เรียงจากสาขาที่แย่สุด · แดง &lt;90% · เหลือง 90–99% · เขียว ≥100% · กดชื่อสาขาเพื่อดูเฉพาะสาขา</div>
+  <div class="scroll"><table class="hm"><thead><tr><th>สาขา</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${hmRows}</tbody></table></div>
+  <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>`;
+}
+function detailStaff(){
+  const br=state.branch, items=D.products, mode=state.mode, list=shopsOf(br);
+  if(!C.has_ind) return `<div class="card pending"><h2>Staff Productivity</h2><p>ยังไม่มี Indy Target ของ ${CUR}</p></div>`;
+  const st=Object.entries(C.staff).filter(([,e])=>list.includes(e.shop)).map(([id,e])=>{
+    const v=items.map(p=>{ if(!C.actual_products.includes(p)) return null; const r=e.p[p]; const t=(r['t'+mode]||0)*C.frac; return t?(r['a'+mode]||0)/t*100:null; });
+    return {id,e,v,avg:avg(v)};}).sort((a,b)=>(a.avg??999)-(b.avg??999));
+  const rows=st.map(r=>`<tr><td>${r.e.name}<div style="font-size:11px;color:var(--muted)">${r.e.role} · ${nameOf(r.e.shop)}</div></td>${r.v.map((v,k)=>`<td class="c" style="${hmColor(v)}" title="Actual ${fmtN(r.e.p[items[k]]['a'+mode])} / Target ${fmtN(r.e.p[items[k]]['t'+mode])}">${v==null?'–':v.toFixed(0)}</td>`).join('')}<td class="c"><span class="pill p-${cls(r.avg)}">${fmtP(r.avg)}</span></td></tr>`).join('');
+  return `<div class="row"><h2 style="margin:0">Staff Productivity</h2><span style="color:var(--muted)">ยอดพนักงานเทียบ Indy Target</span><div class="spacer"></div>${modeSeg()}</div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>${br==='ALL'?'Upper North':nameOf(br)} · ${CUR}</h3><div class="sub">รวมยอดพนักงานที่มี Indy Target ÷ Target ถึงวันนี้</div>${radar(items,seriesFor('staff',br))}${legend()}</div>
+    <div class="card"><h3>สรุป</h3><div class="sub">${st.length} คน · ต่ำกว่า Target (เฉลี่ย) ${st.filter(r=>r.avg!=null&&r.avg<100).length} คน</div>
+      <div class="note">ยอดขายนับตามรหัสพนักงานขาย (SALE_CODE) ในไฟล์ขาย ซึ่งตรงกับ emp_id ใน Indy Target<br>ชี้ที่ช่องเพื่อดู Actual / Target</div></div>
+  </div>
+  <div class="card"><h3>รายพนักงาน (% Achievement)</h3><div class="sub">เรียงจากคนที่ต่ำสุด</div>
+  <div class="scroll"><table class="hm"><thead><tr><th>พนักงาน</th>${items.map(i=>`<th style="text-align:center">${SHORT[i]}</th>`).join('')}<th style="text-align:center">เฉลี่ย*</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="note">* เฉลี่ยเฉพาะสินค้าที่มีข้อมูลยอดขายแล้ว</div></div>`;
+}
+function pendingView(id){ const p=PILLARS.find(x=>x.id===id); return `<div class="card pending"><h2>${p.name}</h2><p>รอข้อมูล${p.items.length?': '+p.items.join(' · '):''}</p></div>`; }
+
+/* ---------- router ---------- */
+function render(){
+  const id=(location.hash||'#summary').slice(1);
+  document.getElementById('nav').innerHTML=[{id:'summary',name:'Summary'}].concat(PILLARS).map(p=>`<a href="#${p.id}" class="${p.id===id?'on':''}">${p.name}</a>`).join('');
+  const P_=PILLARS.find(p=>p.id===id);
+  document.getElementById('app').innerHTML = !P_?summary(): P_.pending?pendingView(id): id==='sale'?detailSale():detailStaff();
+}
+function go(id){location.hash=id;}
+function pick(b){state.branch=b;document.getElementById('branch').value=b;render();}
+function setMode(m){state.mode=m;render();}
+document.getElementById('period').textContent=`${CUR} · ${D.shops.length} สาขา · อัปเดต __BUILT__`;
+const sel=document.getElementById('branch');
+sel.innerHTML='<option value="ALL">ทั้งหมด (Upper North)</option>'+D.shops.map(s=>`<option value="${s.shop}">${s.name.replace('True Shop ','')}</option>`).join('');
+sel.onchange=e=>{state.branch=e.target.value;render();};
+window.addEventListener('hashchange',()=>{render();scrollTo(0,0);});
+render();
+</script>
+</body>
+</html>

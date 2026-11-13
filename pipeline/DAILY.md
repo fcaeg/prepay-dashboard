@@ -118,3 +118,15 @@ actual full price (PRICE x QTY / AMOUNT), targets use the Net target. The Amount
 Each stock file appends shop x matcode counts to state/stock_hist.csv.gz (180 days); out/stock_lastpos.json = last stock file in which a
 shop still had a Matcode it has 0 of now. Card "สินค้าหมด ราย Matcode" (Stock tab): out since ≈ later of last sale / last stock seen,
 avg = units in the 28 days before that ÷ 28, lost = avg × days out × list price; Excel via SheetJS (cdnjs) on click.
+
+## Shop Performance Dashboard (https://fcaeg.github.io/prepay-dashboard/performance/)
+Upper North shop performance (radar summary → detail per topic). `pipeline/perf.py` (hooked into update.py; an error never stops Prepay),
+page `pipeline/perf_page.html` → `performance/index.html` (perf_page.py, built by build_page.py). Data stays inline (no fetch).
+- Shops (Nami, 13 Nov 2026): region UPC - Upper North of the target file, minus type Lotus's (Nan, Hangdong, Chiang Khong) = 17 shops.
+- Targets: the same Drive files as Prepay — `*Target of <Mon> <yy>*` → `state/perf_targets.csv` (POST / TOL / DEVICE / ACC=GIA / TVS:
+  Target Subscribers + Target Revenue), `*Individual Target of*` → `state/perf_ind_targets.csv` (same products per employee).
+- Actuals: Device = H/S (incl. tablets) + IPAD, no FOC (Nami, 13 Nov 2026) from every daily_sales → `state/perf_dev_<YYYY-MM>.csv.gz`
+  (day x shop x SALE_CODE; newer snapshot of a day replaces it). GIA from gia.py's state. SALE_CODE = emp_id8 of the Indy Target.
+- % = actual ÷ (month target × days to latest sale ÷ days in month); previous month = full month.
+- Pending: Postpay / TOL / TVS actuals (report from Nami), Service & Retention, EBIT & Revenue, Sale Longevity; Oct 2026 actuals.
+- Nov 2026 Device was backfilled by hand from Drive snapshots: 3 Nov missing, 4 Nov up to 16:23, 5 Nov up to 19:00 (Device understated).

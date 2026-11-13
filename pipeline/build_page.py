@@ -141,3 +141,7 @@ except Exception as e: print('vivo page: WARNING', repr(e))
 try:
     sys.path.insert(0, HERE); import gia_page; gia_page.main()
 except Exception as e: print('gia page: WARNING', repr(e))
+# Shop Performance Dashboard (performance/index.html) - a failure here never blocks the Prepay page
+try:
+    sys.path.insert(0, HERE); import perf_page; perf_page.main()
+except Exception as e: print('perf page: WARNING', repr(e))

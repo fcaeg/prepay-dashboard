@@ -15,7 +15,7 @@ Then rebuilds pipeline/out/*.json + sales_daily.csv, and pipeline/build_page.py 
 import argparse, glob, io, json, os, re, sys, zipfile
 import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import vivo
+import vivo, perf
 import gia
 
 def _vivo(fn, *a):
@@ -156,7 +156,7 @@ def merge_sales(paths):
     old = load_sim(); changed = set()
     for path in paths:
         raw, label = read_csv_any(path)
-        watch_hits(raw); _vivo(vivo.add_sales, raw); _vivo(gia.add_sales, raw)
+        watch_hits(raw); _vivo(vivo.add_sales, raw); _vivo(gia.add_sales, raw); _vivo(perf.add_sales, raw)
         new = sim_rows(raw); n0 = 0 if old is None else len(old)
         add = new if old is None else new[~new.key.isin(set(old.key))]
         changed |= set(_month(add))
@@ -410,9 +410,11 @@ if __name__ == '__main__':
     if a.snexpiry: load_snexpiry(a.snexpiry)
     if a.manpower: merge_manpower(a.manpower)
     if a.indtarget: merge_indtarget(a.indtarget)
+    if a.indtarget: _vivo(perf.merge_indtarget, a.indtarget)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')
     if a.target: merge_targets(a.target)
+    for fp in a.target: _vivo(perf.merge_target, fp)
     if a.sales: merge_sales(a.sales)
     if a.stock: merge_stock(a.stock)
     for fp in a.vivo_target: vivo.merge_target(fp)
@@ -423,3 +425,4 @@ if __name__ == '__main__':
     build()
     _vivo(vivo.build)
     _vivo(gia.build)
+    _vivo(perf.build)
