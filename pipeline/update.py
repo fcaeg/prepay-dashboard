@@ -183,6 +183,7 @@ def merge_stock(path):
         cut = (pd.Timestamp(meta['stock_asof'][:10]) - pd.Timedelta(days=180)).strftime('%Y-%m-%d'); save(h[h['asof'].str[:10] >= cut], 'stock_hist.csv.gz')
     except Exception as e: print('stock history skipped:', e)
     _vivo(vivo.set_stock, st, meta['stock_asof'])
+    _vivo(perf.set_stock, st, meta['stock_asof'])
     _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
 

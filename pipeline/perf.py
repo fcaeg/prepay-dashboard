@@ -198,7 +198,7 @@ def merge_allprod(fp):
     sh = shops()
     if not sh: print('perf: no shop list yet - all-product file skipped'); return
     import collections
-    wb = openpyxl.load_workbook(fp, read_only=True); rows = []; months = set(); asof = {}
+    wb = openpyxl.load_workbook(fp, read_only=True); rows = []; months = set(); asof = {}; items = {}
     dims = collections.defaultdict(lambda: [0.0, 0.0]); dshops = collections.defaultdict(set); found = {}
     def add(month, product, scope, dim, val, q, n, shop):
         a = dims[(month, product, scope, dim, val)]; a[0] += q; a[1] += n; dshops[(month, product, scope)].add(shop)
@@ -229,6 +229,7 @@ def merge_allprod(fp):
                     for c in dcols: add(mon, product, sc, c, str(r[hx[c]] if r[hx[c]] is not None else '').strip() or '(ว่าง)', q_, n_, code)
                     if lucky: add(mon, product, sc, 'เบอร์มงคล', lucky, q_, n_, code)
                     if item and sc not in ('UPC', 'BMA'): add(mon, product, sc, 'สินค้า', item, q_, n_, code)  # product | brand | category (local scopes only)
+                    if item and get('PRODUCT_CODE'): items[get('PRODUCT_CODE')] = [product, *item.split('|')]
                     # TVS sources (TVS NOW without the bundle redeem + Postpay / TOL bundles) - same rule as the TVS axis
                     if product == 'True Visions' and fl != 'redeem_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'TVS NOW ' + str(r[hx['SUB_PRODUCT']] if 'SUB_PRODUCT' in hx else '').replace('TVS NOW ', ''), q_, 0.0, code)
                     if product in ('Postpay', 'True Online') and fl == 'tvs_bundle': add(mon, 'True Visions', sc, 'ที่มา', 'Postpay 5G DEVICE TVS' if product == 'Postpay' else 'TOL 3P/4P OTT', q_, 0.0, code)
@@ -237,6 +238,9 @@ def merge_allprod(fp):
             rows.append((product, f'{bm[:4]}-{bm[4:]}', int(float(r[ix['DAY']] or 0)), str(r[ix['SHOP_CODE']]).strip(), str(r[ix['SALE_ID']] or '').strip(),
                          str(r[st] or '') if st is not None else '', tvs_flag(product, lambda c: r[hx[c]] if c in hx else None),
                          float(r[ix['QTY']] or 0), float(r[ix['NET_AMOUNT']] or 0)))
+    if items:  # product code -> model / brand / category, used to label the stock file (which only has PRODUCT_NAME)
+        it_ = pd.DataFrame([(k, *v) for k, v in items.items()], columns=['code', 'prod', 'model', 'brand', 'cat'])
+        oi = _load('perf_items.csv'); _save(pd.concat([oi[~oi.code.isin(it_.code)], it_]) if oi is not None else it_, 'perf_items.csv')
     d = pd.DataFrame(rows, columns=['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'flag', 'q', 'n'])
     d = d.groupby(['product', 'month', 'day', 'shop', 'emp', 'sim_status', 'flag'], as_index=False)[['q', 'n']].sum()
     old = _load('perf_allprod.csv')
@@ -681,6 +685,46 @@ def _mongkol_build(cur):
     # per-shop average achievement in UPC (bottom-up per shop) for the shop comparison
     return out
 
+# ---------- Stock (Device / GIA) of our shops, from the same stock_balance_report the Prepay Dashboard uses (hook in update.merge_stock) ----------
+def set_stock(st, asof=None):
+    import gia
+    sh = shops()
+    if not sh: return
+    pn = 'PRODUCT_NAME' if 'PRODUCT_NAME' in st else 'DESCRIPTION'
+    k = st[st.SHOP_CODE.astype(str).str.strip().isin(sh)].copy()
+    k['name'] = k[pn].astype(str).str.strip()
+    k['prod'] = k.name.map(lambda x: 'Device' if is_device(x) else ('GIA' if gia.group(x) else None))
+    k = k[k['prod'].notna()]
+    k['qty'] = pd.to_numeric(k['BALANCE'], errors='coerce').fillna(1) if 'BALANCE' in k else 1.0
+    k['age'] = pd.to_numeric(k['FIRST_AGING'], errors='coerce') if 'FIRST_AGING' in k else None
+    k['loc'] = k['LOCATION_NAME'].astype(str).str.strip() if 'LOCATION_NAME' in k else 'MAIN_STOCK'
+    k['code'] = k.PRODUCT_CODE.astype(str).str.strip(); k['shop'] = k.SHOP_CODE.astype(str).str.strip()
+    out = k.groupby(['shop', 'code', 'name', 'prod', 'loc'], as_index=False).agg(qty=('qty', 'sum'), age=('age', 'max'))
+    _save(out, 'perf_stock.csv')
+    m_ = _meta(); m_['perf_stock_asof'] = asof or m_.get('stock_asof', ''); json.dump(m_, open(_p('meta.json'), 'w'), indent=1)
+    print(f'perf: stock {asof}: {len(out)} rows · ours Device {out[out["prod"] == "Device"].qty.sum():,.0f} · GIA {out[out["prod"] == "GIA"].qty.sum():,.0f} · locations', out.groupby('loc').qty.sum().to_dict())
+
+BRAND_TOK = {'SS': 'SAMSUNG', 'SAMSUNG': 'SAMSUNG', 'IPH': 'IPHONE', 'IPHONE': 'IPHONE', 'IPAD': 'IPAD', 'OPPO': 'OPPO', 'VIVO': 'VIVO', 'XIAOMI': 'XIAOMI', 'REDMI': 'XIAOMI', 'POCO': 'XIAOMI',
+             'HONOR': 'HONOR', 'REALME': 'REALME', 'TECNO': 'TECNO', 'INFINIX': 'INFINIX', 'HUAWEI': 'HUAWEI', 'APPLE': 'APPLE', 'SUPLIFE': 'SUPLIFE (PVL)', 'FOCUS': 'FOCUS', 'ALLDOCUBE': 'ALLDOCUBE'}
+def _stock_build():
+    s = _load('perf_stock.csv')
+    if s is None: return None
+    for c in ('qty', 'age'): s[c] = pd.to_numeric(s[c], errors='coerce')
+    it = _load('perf_items.csv'); im = {r.code: (r.model, r.brand, r.cat) for r in it.itertuples()} if it is not None else {}
+    def label(code, name, prod):
+        if code in im: return im[code]
+        p = [x.strip().upper() for x in name.split(',')]
+        b = next((BRAND_TOK[t] for t in p[1:4] for t in [t.split(' ')[0]] if t in BRAND_TOK), '')
+        if b == 'IPHONE' and p[0] == 'IPAD': b = 'IPAD'
+        return (name, b, '')
+    items, shops_ = {}, {}
+    for r in s.itertuples():
+        if r.code not in items: items[r.code] = [r.prod, *label(r.code, r.name, r.prod), r.name]
+        a = shops_.setdefault(r.shop, {}).setdefault(r.code, [0.0, 0.0, None])
+        a[0 if r.loc.upper() == 'MAIN_STOCK' else 1] += float(r.qty)
+        if r.age == r.age: a[2] = max(a[2] or 0, float(r.age))
+    return {'asof': _meta().get('perf_stock_asof', ''), 'items': items, 'shops': shops_, 'locs': s.groupby('loc').qty.sum().to_dict()}
+
 def build():
     t = _load('perf_targets.csv')
     if t is None: print('perf: no targets - page not built'); return
@@ -739,6 +783,6 @@ def build():
                      'frac': round(frac, 4), 'actual_products': [p for p, a in act.items() if a is not None and len(a)], 'staff_products': [p for p in PRODUCTS if p in sact], 'frac_sp': {p: round((int(a.day.max()[8:]) / dim) if m == cur else 1.0, 4) for p, a in sact.items()}, 'src': src, 'frac_p': frac_p, 'last_day_p': {p: a.day.max() for p, a in act.items() if a is not None and len(a)}, 'shops': S, 'staff': E}
     data = {'cur': cur, 'prev': prev, 'products': PRODUCTS, 'shops': [{'shop': s, 'name': names.loc[s, 'name'], 'type': names.loc[s, 'type']} for s in sh],
             'months': months, 'sales_asof': m_.get('perf_sales_asof', ''), 'post_asof': m_.get('perf_post_asof', ''), 'raw_asof': m_.get('perf_raw_asof', {}), 'allprod_asof': m_.get('perf_allprod_asof', {}),
-            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev), 'mongkol': _mongkol_build(cur)}
+            'notes': {}, 'pl': _pl_build(), 'ret': _ret_build(), 'svc': _svc_build(), 'lon': _lon_build(), 'dims': _dims_build(cur, prev), 'mix': _mix_build(cur, prev), 'mongkol': _mongkol_build(cur), 'stock': _stock_build()}
     os.makedirs(OUT, exist_ok=True); json.dump(data, open(os.path.join(OUT, 'perf_data.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     c = months[cur]; print(f"perf: built {cur} (to {c['last_day']}, frac {c['frac']}) · {len(sh)} shops · {len(c['staff'])} staff · actual {c['actual_products']}")
