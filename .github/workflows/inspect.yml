@@ -1,0 +1,24 @@
+name: Inspect Drive file
+# Manual only: prints the column structure of files in the Drive inbox (no personal data). Used when a new report type is added.
+on:
+  workflow_dispatch:
+    inputs:
+      prefixes:
+        description: 'File name prefixes, separated by |'
+        required: true
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install pandas openpyxl google-auth requests
+      - env:
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
+          PREFIXES: ${{ inputs.prefixes }}
+        run: |
+          IFS='|' read -ra P <<< "$PREFIXES"
+          python pipeline/inspect_drive.py "${P[@]}"

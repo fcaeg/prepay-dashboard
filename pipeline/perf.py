@@ -12,7 +12,7 @@ GIA actuals come from gia.py's state/gia_sales_<YYYY-MM>.csv.gz (same GIA rule a
   merge_postpay(xlsx)    '3.Self Refresh Postpaid Rawdata This year <yyyy> For DB' (sheet Rawdata, one row per sale, whole year)
                          -> state/perf_post.csv (month x day x shop x activity x SIM_STATUS: q = QTY, n = NET_AMOUNT); months in the file replace.
                          Postpay Net Amount is compared with the target's POST_NEW revenue (acquisition), QTY with POST subscribers.
-                         The file has no salesperson, so Staff Productivity shows Postpay as 'no data'.
+                         Lines with SIM_STATUS Suspend / Terminate are not counted (Nami, 14 Nov 2026). The file has no salesperson, so Staff Productivity shows Postpay as 'no data'.
 True Online / True Visions actuals: not wired yet (waiting for the report from Nami).
 Shops (Nami, 13 Nov 2026): region UPC - Upper North in the target file, without the Lotus's-company shops (Nan, Hangdong, Chiang Khong) = 17 shops.
 GIA target = column ACC of the target file (Nami, 13 Nov 2026). Device = H/S incl. tablets + iPad (Nami, 13 Nov 2026).
@@ -135,7 +135,7 @@ def merge_postpay(fp):
 def _post_actual(month):
     p = _load('perf_post.csv')
     if p is None: return None
-    p = p[p.month == month].copy()
+    p = p[(p.month == month) & ~p.sim_status.fillna('').str.upper().str.contains('SUSPEND|TERMINATE')].copy()  # Nami, 14 Nov 2026
     if not len(p): return None
     for c in ('q', 'n'): p[c] = pd.to_numeric(p[c])
     p['day'] = month + '-' + p.day.astype(int).map('{:02d}'.format); p['emp'] = ''
