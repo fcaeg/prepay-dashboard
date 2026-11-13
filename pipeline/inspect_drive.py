@@ -38,6 +38,8 @@ def describe(d):
         hit = int(d[c].astype(str).str.strip().isin(UN).sum())
         if hit: print('UN shop codes found in column', c, hit, 'rows')
 
+if sys.argv[1:] == ['ANALYZE_TVS']:
+    import runpy; runpy.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'analyze_tvs.py')); sys.exit(0)
 s = ds.session(); folder = os.environ['DRIVE_FOLDER_ID'].strip(); files = ds.ls(s, folder)
 for pref in sys.argv[1:]:
     f = next((x for x in files if x['name'].lower().startswith(pref.lower().strip())), None)
