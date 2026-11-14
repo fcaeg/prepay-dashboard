@@ -602,7 +602,7 @@ function renderTable(el, cols, rows, opt = {}) {
 }
 function toSheet(name, t, title) {
   const clean = (x) => String(x || '').replace(/<[^>]+>/g, '').replace('●', '').trim();
-  const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : (c.h === 'MoM %' || c.h === 'WoW %') ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : SHOWA() && c.f && (c.f === money || c.f === tgtF || /\bmoney\(|tgtF\(/.test(String(c.f))) ? 'money' : 'num';
+  const kind = (c) => /ACH/.test(c.h) && c.p ? 'ach' : /(MoM|WoW) %$/.test(c.h) ? 'mom' : /Cover/.test(c.h) ? 'cover' : c.p ? 'pct' : c.cls === 't' ? 'text' : SHOWA() && c.f && (c.f === money || c.f === tgtF || /\bmoney\(|tgtF\(/.test(String(c.f))) ? 'money' : 'num';
   const body = t.rows.map((r) => t.cols.map((c) => { const v = c.v(r); if (c.x) return c.x(v, r); if (v === Infinity) return 'ไม่มีขาย'; if (/Cover/.test(c.h) && v === -1) return 'ของหมด'; return v == null || (typeof v === 'number' && !isFinite(v)) ? '' : v; }));
   return { name, title, groups: t.cols.map((c) => clean(c.g)), head: t.cols.map((c) => clean(c.h) + (c.tip ? ` (${c.tip})` : '')), body, rowCls: t.rows.map((r) => r._cls || ''), kinds: t.cols.map(kind) };
 }
@@ -617,6 +617,8 @@ function weeklyCols(mi, first) {
     { g: `ถึงวันที่ ${mi.asofDay}`, h: '%ACH', p: 1, v: (r) => ratio(V(r), T(r) * mi.todate), f: pct },
     { g: 'Runrate', h: 'ยอดทั้งเดือน', v: (r) => mi.asofDay ? V(r) / mi.asofDay * mi.days : null, f: money },
     { g: 'Runrate', h: '%ACH', p: 1, v: (r) => mi.asofDay ? ratio(V(r) / mi.asofDay * mi.days, T(r)) : null, f: pct },
+    { g: 'Runrate', h: 'MoM %', tip: `Runrate เทียบ ${TH[mi.prevM - 1]} ทั้งเดือน`, p: 1, v: (r) => mi.asofDay && PF(r) > 0 ? (V(r) / mi.asofDay * mi.days) / PF(r) - 1 : null,
+      f: (v, r) => !(PF(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(PF(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
     { g: mg, gtip: `${THF[mi.m - 1]} 1–${mi.asofDay} เทียบ ${THF[mi.prevM - 1]} 1–${mi.prevSame} (ช่วงวันเดียวกัน)`, h: `${TH[mi.prevM - 1]} 1–${mi.prevSame}`, v: (r) => P(r), f: money },
     { g: mg, h: 'MoM %', p: 1, v: (r) => P(r) > 0 ? V(r) / P(r) - 1 : null, f: (v, r) => !(P(r) > 0) && V(r) > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(P(r) > 0) && V(r) > 0 ? 'ใหม่' : v == null ? '' : v },
     { g: mg, h: `${TH[mi.prevM - 1]} ทั้งเดือน`, v: (r) => PF(r), f: money });
@@ -716,7 +718,7 @@ function shopRows(mi, modelSel) {
   const a = aggregate(mi, (c) => c, modelSel);
   return [...a.entries()].map(([c, x]) => { const s = SH[c];
     const tg = S.tmode === 'full' ? T(x) : T(x) * mi.todate; const rr = mi.asofDay ? V(x) / mi.asofDay * mi.days : null;
-    return { c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: tg, tfull: T(x), act: V(x), amt: x.a, ach: ratio(V(x), tg), rr, rach: ratio(rr, T(x)) }; });
+    return { c, name: s.n, area: s.area, type: s.type, pc: s.pc, tgt: tg, tfull: T(x), act: V(x), amt: x.a, ach: ratio(V(x), tg), rr, rach: ratio(rr, T(x)), pfull: S.metric === 'q' ? x.fu : x.fn, rrmom: rr != null && (S.metric === 'q' ? x.fu : x.fn) > 0 ? rr / (S.metric === 'q' ? x.fu : x.fn) - 1 : null }; });
 }
 const sorter = (key) => { const [k, d] = S.sort[key]; return (a, b) => { const x = a[k], y = b[k]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
   return (typeof x === 'string' ? x.localeCompare(y) : (x === y ? 0 : x > y ? 1 : -1)) * d; }; };
@@ -772,7 +774,7 @@ function sShop(mi) {
     { h: 'PC', sort: 'pc', v: (r) => r.pc, f: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `PC ${v}` : 'No PC' },
     { h: tl, sort: 'tgt', v: (r) => r.tgt, f: tgtF }, { h: SHOWA() ? 'Net Amount' : 'ยอดขายจริง', sort: 'act', v: (r) => r.act, f: money }, ...amtCol((r) => r.amt, { sort: 'amt' }),
     { h: '%ACH', sort: 'ach', p: 1, v: (r) => r.ach, f: pct },
-    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: money }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
+    { h: 'Runrate ทั้งเดือน', sort: 'rr', v: (r) => r.rr, f: money }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct }, { h: 'Runrate MoM %', tip: `เทียบ ${TH[mi.prevM - 1]} ทั้งเดือน`, sort: 'rrmom', p: 1, v: (r) => r.rrmom, f: (v, r) => !(r.pfull > 0) && r.act > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.pfull > 0) && r.act > 0 ? 'ใหม่' : v == null ? '' : v },
     { h: 'ขายล่าสุด', sort: 'last', v: (r) => r.last, f: (v, r) => r._cls === 'tot' ? '' : v ? `${thDate(v)}${r.idle > 0 ? ` <span class="na">(${r.idle} วัน)</span>` : ''}` : '<span class="cw bad">ไม่เคยขาย</span>', x: (v, r) => r._cls === 'tot' ? '' : v || 'ไม่เคยขาย' },
     ...(HASSTOCK ? [{ h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }] : [])];
   rows.forEach((r) => { if (r.ns) r._cls = 'ns-row'; });
@@ -998,7 +1000,7 @@ function sMS(mi) {
   const cols = [{ h: 'สาขา', sort: 'name', v: (r) => r.name, cls: 't' }, { h: 'Area', sort: 'area', v: (r) => r.area, cls: 't' },
     { h: 'PC Vivo', sort: 'pc', v: (r) => r.pc, f: (v) => v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="na">ไม่มี</span>', x: (v) => v > 0 ? 'PC ' + v : 'ไม่มี' },
     { h: 'Target เดือน', sort: 'tfull', v: (r) => r.tfull, f: tgtF }, { h: SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', sort: 'act', v: (r) => r.act, f: money }, ...amtCol((r) => r.amt, { sort: 'amt' }),
-    { h: '%ACH', sort: 'ach', p: 1, v: (r) => ratio(r.act, r.tfull), f: pct }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct },
+    { h: '%ACH', sort: 'ach', p: 1, v: (r) => ratio(r.act, r.tfull), f: pct }, { h: 'Runrate %ACH', sort: 'rach', p: 1, v: (r) => r.rach, f: pct }, { h: 'Runrate MoM %', tip: `เทียบ ${TH[mi.prevM - 1]} ทั้งเดือน`, sort: 'rrmom', p: 1, v: (r) => r.rrmom, f: (v, r) => !(r.pfull > 0) && r.act > 0 ? '<span class="up">ใหม่</span>' : momF(v), x: (v, r) => !(r.pfull > 0) && r.act > 0 ? 'ใหม่' : v == null ? '' : v },
     { h: 'ขาย 28 วัน (เครื่อง)', sort: 's28', v: (r) => r.s28, f: num }, { h: 'Stock', sort: 'stock', v: (r) => r.stock, f: num }, { h: 'Cover Week', sort: 'cw', v: (r) => r.cw, f: coverF }];
   const mlab = S.msmodel !== 'ALL' ? $('#f-msmodel').selectedOptions[0].textContent.trim() : modelLabel(4);
   $('#n-ms').innerHTML = `คลิกชื่อสาขา หรือเลือกสาขาด้านบน เพื่อดูยอดขายราย Model ของ PC สาขานั้น เทียบ MoM พร้อมบทวิเคราะห์ · Model: <b>${esc(mlab)}</b> · ${THF[mi.m - 1]} ${mi.y + 543} · หน่วย: ${unit()} (ขาย 28 วัน / Stock เป็นเครื่อง) · PC ตาม ${esc(D.meta.pc_source)}`;
@@ -1244,11 +1246,11 @@ function kpis(mi, tot, ts) {
   const rr = mi.asofDay ? V(tot) / mi.asofDay * mi.days : 0;
   const k = (l, v, s, p) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div>${p != null ? `<div class="bar"><i style="width:${Math.min(100, Math.max(0, p * 100))}%;background:var(--${pctCls(p)})"></i></div>` : ''}</div>`;
   const a1 = ratio(V(tot), T(tot)), a2 = ratio(V(tot), T(tot) * mi.todate), a3 = ratio(rr, T(tot));
-  const cW = S.metric === 'q' ? tot.cu : tot.cn, qW = S.metric === 'q' ? tot.qu : tot.qn;
+  const cW = S.metric === 'q' ? tot.cu : tot.cn, qW = S.metric === 'q' ? tot.qu : tot.qn, PFT = S.metric === 'q' ? tot.fu : tot.fn;
   $('#kpis').innerHTML = k(`Target ${THF[mi.m - 1]}`, tgtF(T(tot)) || '–', unit()) +
     k(SHOWA() ? 'Net Amount MTD' : 'ยอดขาย MTD', money(V(tot)), `${SHOWA() ? `Amount ${money(tot.a)} · ` : ''}%ACH เดือน ${a1 == null ? '–' : P2(a1) + '%'}`, a1) +
     k(`%ACH ถึงวันที่ ${mi.asofDay}`, a2 == null ? '–' : P2(a2) + '%', `Target ถึงวันนี้ ${tgtF(T(tot) * mi.todate)}`, a2) +
-    k('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${a3 == null ? '–' : P2(a3) + '%'}`, a3) +
+    k('Runrate ทั้งเดือน', money(rr), `Runrate %ACH ${a3 == null ? '–' : P2(a3) + '%'}${PFT > 0 && rr != null ? ` · MoM <span class="${rr >= PFT ? 'up' : 'dn'}">${sgn(rr / PFT - 1)}</span> เทียบ ${TH[mi.prevM - 1]} ทั้งเดือน` : ''}`, a3) +
     k(`WoW · W${mi.wk} vs W${mi.pwk}${mi.fullWeek ? '' : ` (${mi.nd} วัน)`}`, qW > 0 ? `<span class="${cW >= qW ? 'up' : 'dn'}">${sgn(cW / qW - 1)}</span>` : '–', `W${mi.wk} ${money(cW)} · W${mi.pwk} ${money(qW)}`) +
     k('Stock คงเหลือ', HASSTOCK ? num(ts.stock) : '–', !HASSTOCK ? 'รอไฟล์ Stock ที่มีเครื่อง Vivo' : `Cover ${ts.s28 > 0 ? nf1.format(ts.stock / (ts.s28 / 4)) + ' สัปดาห์' : '–'} · ขาย 28 วัน ${num(ts.s28)} เครื่อง`);
 }
