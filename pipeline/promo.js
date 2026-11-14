@@ -21,6 +21,7 @@ window.PROMO = {
     name: 'Travel World SIM', tagline: 'เที่ยวทั่วโลก เชื่อมต่อทุกเส้นทาง', period: '1–30 พ.ย. 2569',
     pack: 'SIM GO TRAVEL Worldwide · 15 GB | 30 วัน', was: 1599, now: 1499, off: 100, esim: true,
     matcodes: ['3000106115'],
+    code: 'AAR4196', codeName: 'Promotion Clearance SIM GO Travel Worldwide 15GB 30D', codeFrom: '2026-11-01', codeTo: '2026-11-30', codeOff: 100,
   },
   cards: [
     { key: 'ready', color: '#9b3fc4', title: 'ซิมพร้อมใช้', fit: 'เหมาะกับลูกค้าที่ต้องการ “ซื้อแล้วใช้ได้ทันที”', items: [
@@ -92,6 +93,7 @@ window.PROMO = {
 .pm-hero h3 { margin: 0; font-size: 22px; font-weight: 600; } .pm-hero h3 small { font-size: 14px; font-weight: 500; color: var(--color-fg-muted); margin-left: 6px; }
 .pm-hero p { margin: 0; font-size: 13.5px; color: var(--color-fg-muted); line-height: 1.6; }
 .pm-price { text-align: right; } .pm-price s { color: var(--color-fg-muted); font-size: 14px; } .pm-price b { display: block; font-size: 30px; line-height: 1.1; color: #d42a2a; font-weight: 700; } .pm-price span { font-size: 12.5px; }
+.pm-code { margin-top: 6px !important; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, #2a5fd4 8%, transparent); border: 1px dashed color-mix(in srgb, #2a5fd4 45%, transparent); color: var(--color-fg) !important; } .pm-code b { font-size: 15px; } .pm-ok { color: var(--color-ok); }
 .pm-badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, #d42a2a 14%, transparent); color: var(--color-bad); margin-left: 4px; vertical-align: 1px; }
 .pm-badge.w { background: color-mix(in srgb, #b7791f 16%, transparent); color: var(--color-warn); }
 .pm-badge.g { background: color-mix(in srgb, #2a5fd4 14%, transparent); color: #2a5fd4; }
@@ -161,6 +163,7 @@ window.PROMO = {
     const scope = p.shop !== 'ALL' ? 'สาขา ' + esc((sm.get(String(p.shop)) || {}).name || p.shop) : (p.area === 'ALL' ? 'ทุกภาค' : esc(p.area)) + (p.stype === 'ALL' ? '' : ' · ' + esc(p.stype));
     const asof = lastDate ? 'ยอดขาย ' + monTH(month) + ' ถึง ' + (+lastDate.slice(8, 10)) + ' ' + TH[+lastDate.slice(5, 7) - 1] : 'ยังไม่มียอดขายเดือน ' + monTH(month);
     const hq = sum(q, H.matcodes), hs = sum(stock, H.matcodes);
+    let hcU = 0, hnU = 0; if (H.code) for (const r of sales) { const d = String(r.date); if (d < H.codeFrom || d > H.codeTo || !okShop(r.shop) || !H.matcodes.includes(String(r.matcode))) continue; const u = +r.units; if (!u) continue; if ((+r.disc || 0) / u >= H.codeOff * 0.9) hcU += u; else hnU += u; }
     const row = (it) => { const a = sum(q, it.matcodes), b = sum(n, it.matcodes), s = sum(stock, it.matcodes);
       const badge = it.note ? ' <span class="pm-badge' + (it.warn ? ' w' : it.hot ? '' : ' g') + '">' + esc(it.note) + '</span>' : '';
       return '<tr><td class="wrap">' + esc(it.label) + badge + '<small>Matcode ' + it.matcodes.map(esc).join(', ') + '</small></td><td>' + nf(a) + '</td><td>' + nf(b) + '</td><td class="' + (s === 0 ? 'pm-zero' : '') + '">' + nf(s) + '</td></tr>'; };
@@ -194,7 +197,9 @@ window.PROMO = {
       + '<div class="pm-steps">' + N.steps.map((s, i) => '<div class="pm-step"><em>' + (i + 1) + '</em><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('') + '</div>'
       + '<div class="pm-rule">' + esc(N.rule) + '</div></div>'
       + '<div class="pm-hero"><div><h3>' + esc(H.name) + '<small>' + esc(H.tagline) + '</small></h3><p>' + esc(H.pack) + (H.esim ? ' · รองรับ eSIM' : '') + ' · Period ' + esc(H.period) + ' · Matcode ' + H.matcodes.map(esc).join(', ')
-      + '<br>เดือนนี้ขายได้ <b>' + nf(hq) + '</b> ชิ้น · Stock คงเหลือ <b class="' + (hs === 0 ? 'pm-zero' : '') + '">' + nf(hs) + '</b> ชิ้น (' + scope + ')</p></div>'
+      + '<br>เดือนนี้ขายได้ <b>' + nf(hq) + '</b> ชิ้น · Stock คงเหลือ <b class="' + (hs === 0 ? 'pm-zero' : '') + '">' + nf(hs) + '</b> ชิ้น (' + scope + ')</p>'
+      + (H.code ? '<p class="pm-code">🏷️ Discount Code <b>' + esc(H.code) + '</b> · ' + esc(H.codeName) + ' · ลด ' + nf(H.codeOff) + ' บาท/ชิ้น (ซื้อขั้นต่ำ 1) · ' + esc(H.period)
+        + '<br>เดือนนี้: ใช้โค้ดแล้ว <b class="pm-ok">' + nf(hcU) + '</b> ชิ้น · ขายราคาเต็มไม่ได้ใช้โค้ด <b class="' + (hnU ? 'pm-zero' : '') + '">' + nf(hnU) + '</b> ชิ้น' + (hnU ? ' → ย้ำทีมขายให้ใส่โค้ด ' + esc(H.code) + ' ทุกครั้ง' : '') + '</p>' : '') + '</div>'
       + '<div class="pm-price"><s>' + nf(H.was) + ' บาท</s><b>' + nf(H.now) + ' บาท</b><span class="pm-badge">ลด ' + nf(H.off) + ' บาท</span></div></div>'
       + '<div class="pm-grid">' + P.cards.map(card).join('') + '</div>'
       + '<h2 class="pc-title" style="font-size:20px;margin-top:8px">รายละเอียดซิมแต่ละแพ็ก</h2><p class="pc-take">ข้อมูลแพ็กจาก Monthly Business Steering · Stock / ขายเฉลี่ยต่อสัปดาห์ (28 วันล่าสุด) / Cover Week คำนวณจากข้อมูลจริงตามตัวกรอง (' + scope + ')</p>'
