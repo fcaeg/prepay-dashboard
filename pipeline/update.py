@@ -421,7 +421,7 @@ if __name__ == '__main__':
     for fp in a.retention: _vivo(perf.merge_retention, fp)
     for fp in a.service: _vivo(perf.merge_service, fp)
     for fp in a.longevity: _vivo(perf.merge_longevity, fp)
-    for fp in a.mix_target: _vivo(perf.merge_mix_target, fp)
+    for fp in a.mix_target: _vivo(perf.merge_mix_target, fp); _vivo(tecno.merge_target, fp)
     for fp in a.mongkol: _vivo(perf.merge_mongkol, fp)
     if a.master:
         import shutil; shutil.copy(a.master, os.path.join(ST, 'master.xlsx')); print('master replaced')

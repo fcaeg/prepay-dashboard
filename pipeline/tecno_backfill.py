@@ -14,6 +14,19 @@ def main():
     for f in sales:
         try: raw, _ = update.read_csv_any(ds.download(s, f, os.path.join(tmp, f['id']))); print(f['createdTime'][:16], f['name'], end=' · '); tecno.add_sales(raw)
         except Exception as e: print('  skipped', f['name'], e)
+    # newest '<yyyymm>_Target by Brand' file of each month -> Tecno targets
+    tf = {}
+    for f in files:
+        if ds.kind(f['name']) == 'mixtarget' and 'gia' not in f['name'].lower():
+            mo = f['name'][:6]
+            if f['createdTime'] > tf.get(mo, {}).get('createdTime', ''): tf[mo] = f
+    for mo, f in sorted(tf.items()):
+        x = ds.unpack(ds.download(s, f, os.path.join(tmp, f['id'])), 'mixtarget')
+        for fp in (x if isinstance(x, list) else [x]):
+            if ds.kind(os.path.basename(fp)) in ('mixtarget', None) and 'gia' not in os.path.basename(fp).lower():
+                if not os.path.basename(fp)[:6].isdigit():  # keep the zip's month in the name
+                    import shutil; nf = os.path.join(os.path.dirname(fp), f['name'][:7] + os.path.basename(fp)); shutil.copy(fp, nf); fp = nf
+                print('target:', f['name'], '->', os.path.basename(fp)); tecno.merge_target(fp)
     if stocks:
         f = stocks[-1]; st, label = update.read_csv_any(ds.download(s, f, os.path.join(tmp, f['id'])))
         tecno.set_stock(st, ds.stock_time(f['name']) or update.json.load(open(os.path.join(tecno.ST, 'meta.json'))).get('stock_asof'))

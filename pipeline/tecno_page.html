@@ -77,7 +77,7 @@ svg text { fill: var(--muted); font: 11px var(--font); }
 .fam[aria-pressed="true"] { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
 .fam .nm { font-size: 16px; font-weight: 600; }
 .fam .nm small { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
-.fam .big { display: flex; gap: 18px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.fam .big { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
 .fam .big div { display: flex; flex-direction: column; }
 .fam .big b { font-size: 22px; font-weight: 600; line-height: 1.2; }
 .fam .big span { font-size: 11.5px; color: var(--muted); }
@@ -85,6 +85,7 @@ svg text { fill: var(--muted); font: 11px var(--font); }
 .fam .share i { display: block; height: 100%; background: var(--bar); }
 .fam .caps { font-size: 12.5px; color: var(--muted); display: grid; grid-template-columns: 1fr auto auto; gap: 2px 12px; font-variant-numeric: tabular-nums; }
 .fam .caps b { color: var(--fg); font-weight: 500; }
+strong.ach { font-weight: inherit; font-size: inherit; }
 .empty { color: var(--muted); padding: 24px 0; text-align: center; }
 .scroll { max-height: 520px; overflow: auto; }
 @media (max-width: 640px) { .kpi .v { font-size: 20px; } .bar { grid-template-columns: 7rem 1fr 3.5rem; } }
@@ -187,6 +188,19 @@ const types = [...new Set((D.ww || []).map((x) => x[2]).concat(D.shops.map((x) =
 $('#stype').innerHTML += types.map((a) => `<option>${esc(a)}</option>`).join('');
 
 function range() { const a = S.d1 || first, b = S.d2 || last; return a <= b ? [a, b] : [b, a]; }
+// monthly targets, pro-rated to the chosen dates (days of the month inside the range / days in the month)
+function tgt(a, b) {
+  const out = [];
+  Object.entries(D.targets || {}).forEach(([mo, rs]) => {
+    const m0 = mo + '-01', dim = new Date(Date.UTC(+mo.slice(0, 4), +mo.slice(5, 7), 0)).getUTCDate(), m1 = mo + '-' + String(dim).padStart(2, '0');
+    const x0 = a > m0 ? a : m0, x1 = b < m1 ? b : m1; if (x0 > x1) return;
+    const f = ((Date.parse(x1) - Date.parse(x0)) / 864e5 + 1) / dim;
+    rs.forEach((r) => out.push([r[0], r[1], r[2] * f, r[3] * f]));
+  });
+  return out;
+}
+const pct = (u, t) => t > 0 ? `<strong class="ach ${u >= t ? 'pos' : ''}">${Math.round(100 * u / t)}%</strong>` : '-';
+const sumT = (rs, i) => rs.reduce((s, r) => s + r[i], 0);
 const shopOk = (c) => { const x = shop[c] || {}; return (!S.area || x.area === S.area) && (!S.type || x.type === S.type); };
 
 function draw() {
@@ -210,7 +224,8 @@ function draw() {
   $('#caps').hidden = !S.fam || ks.length < 2;
   $('#caps').innerHTML = `<span class="lbl">ความจุ</span><button class="chip" data-m="" aria-pressed="${!S.model}">ทุกความจุ</button>` +
     ks.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(capOf(m.k))}</button>`).join('');
-  famCards(rows, stk);
+  const T0 = tgt(a, b).filter((r) => shopOk(r[0])), Tsel = T0.filter((r) => mOk(r[1]));
+  famCards(rows, stk, T0);
   // KPIs
   const u = sel.reduce((s, r) => s + r[4], 0), n = sel.reduce((s, r) => s + r[5], 0), g = sel.reduce((s, r) => s + r[6], 0);
   const days = new Set(sel.map((r) => r[0])).size || 1;
@@ -221,14 +236,15 @@ function draw() {
     ['ยอดขายสุทธิ (Net)', fmt(n) + ' ฿', 'หลังส่วนลด / แพ็กเกจ'],
     ['ราคาเต็ม (Gross)', fmt(g) + ' ฿', g ? `ส่วนลดเฉลี่ย ${fmt((g - n) / Math.max(u, 1))} ฿/เครื่อง` : ''],
     ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `${days} วันที่มียอด`],
+    ['Target (เครื่อง)', Tsel.length ? fmt(sumT(Tsel, 2)) : '-', Tsel.length ? `%ACH ${pct(u, sumT(Tsel, 2))} · Net ${pct(n, sumT(Tsel, 3))} (Target Net ${fmt(sumT(Tsel, 3))} ฿)` : 'ยังไม่มี Target เดือนนี้'],
     ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt((D.ww || []).filter((x) => (!S.area || x[1] === S.area) && (!S.type || x[2] === S.type)).length)} สาขา WW`],
   ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   trend(all.filter((r) => mOk(r[2])), a, b);
-  modelTable(rows, stk);
+  modelTable(rows, stk, T0);
   colours(sel);
-  areaTable(sel, stkSel);
+  areaTable(sel, stkSel, Tsel);
   hours(a, b);
-  shopTable(sel, stkSel, all.filter((r) => mOk(r[2])));
+  shopTable(sel, stkSel, all.filter((r) => mOk(r[2])), Tsel);
 }
 
 function trend(rows, a, b) {
@@ -261,20 +277,20 @@ function table(el, cols, data, key, foot, rowAttr) {
 }
 
 function selName() { return !S.fam ? 'ทุกรุ่น' : S.model ? short(S.model) : S.fam; }
-function famCards(rows, stk) {
+function famCards(rows, stk, T0) {
   const tot = rows.reduce((s, r) => s + r[4], 0) || 1;
   $('#fams').innerHTML = FAMS.map((f) => {
     const r = rows.filter((x) => famOf[x[2]] === f), k = stk.filter((x) => famOf[x[1]] === f);
-    const u = r.reduce((s, x) => s + x[4], 0), n = r.reduce((s, x) => s + x[5], 0), st = k.reduce((s, x) => s + x[4], 0);
+    const u = r.reduce((s, x) => s + x[4], 0), n = r.reduce((s, x) => s + x[5], 0), tq = sumT(T0.filter((x) => famOf[x[1]] === f), 2);
     const caps = D.models.filter((m) => m.fam === f).map((m) => [capOf(m.k), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[4], 0), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[5], 0)]);
     return `<button class="fam" data-f="${esc(f)}" aria-pressed="${S.fam === f}"><div class="nm">TECNO ${esc(f)}<small>${Math.round(100 * u / tot)}% ของเครื่องที่ขาย</small></div>
-      <div class="big"><div><b>${fmt(u)}</b><span>เครื่อง</span></div><div><b>${fmt(n)}</b><span>ยอดขาย Net (฿)</span></div></div>
-      <div class="share"><i style="width:${100 * u / tot}%"></i></div>
+      <div class="big"><div><b>${fmt(u)}</b><span>เครื่อง</span></div><div><b>${fmt(n)}</b><span>ยอดขาย Net (฿)</span></div><div><b>${tq ? fmt(tq) : '-'}</b><span>Target (เครื่อง)</span></div><div><b>${pct(u, tq)}</b><span>%ACH</span></div></div>
+      <div class="share" title="%ACH"><i style="width:${tq ? Math.min(100, 100 * u / tq) : 0}%"></i></div>
       <div class="caps">${caps.map(([c, cu, cn]) => `<span>${esc(c || '-')}</span><b>${fmt(cu)} เครื่อง</b><span>${fmt(cn)} ฿</span>`).join('')}</div></button>`;
   }).join('');
 }
 
-function modelTable(rows, stk) {
+function modelTable(rows, stk, T0) {
   // no model chosen: one row per model (all capacities together); a model chosen: its capacities x colours
   const by = S.fam ? (k, col) => k + '\u0001' + col : (k) => famOf[k];
   const lab = (key) => S.fam ? `${capOf(key.split('\u0001')[0])} · ${key.split('\u0001')[1] || '-'}` : key;
@@ -283,12 +299,14 @@ function modelTable(rows, stk) {
   stk.filter((r) => !S.fam || mOk(r[1])).forEach((r) => (get(by(r[1], r[2])).s += r[4]));
   $('#mt-h').textContent = S.fam ? `รายละเอียด ${selName()}` : 'สรุปรายรุ่น';
   $('#mt-sub').textContent = S.fam ? 'แยกความจุ · สี' : 'รวมทุกความจุ · กดที่แถวเพื่อดูรายละเอียดความจุ';
+  if (!S.fam) T0.forEach((r) => (get(famOf[r[1]]).t = (get(famOf[r[1]]).t || 0) + r[2]));
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-model'), [
     { h: S.fam ? 'ความจุ · สี' : 'รุ่น', l: 1, v: (x) => lab(x.k), f: (x) => esc(lab(x.k)) },
     { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
     { h: 'สาขาที่ขาย', v: (x) => x.sh.size },
-  ], data, 'model', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '', ''],
+  ].concat(S.fam ? [] : [{ h: 'Target', v: (x) => x.t || 0 }, { h: '%ACH', v: (x) => x.t ? x.u / x.t : 0, f: (x) => pct(x.u, x.t) }]), data, 'model',
+  ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '', ''].concat(S.fam ? [] : [fmt(T((x) => x.t || 0)), pct(T((x) => x.u), T((x) => x.t || 0))]),
   (x) => S.fam ? '' : `class="click" data-f="${esc(x.k)}"`);
   $('#tb-model').querySelectorAll('tr[data-f]').forEach((tr) => tr.onclick = () => { S.fam = tr.dataset.f; S.model = ''; draw(); });
 }
@@ -304,16 +322,19 @@ function colours(sel) {
   $('#col-sub').textContent = S.fam ? selName() : 'ทุกรุ่น (รุ่น · สี)';
 }
 
-function areaTable(sel, stk) {
+function areaTable(sel, stk, Ts) {
   const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, s: 0, sh: new Set() });
   (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).t = (get(ar).t || 0) + 1; });
   sel.forEach((r) => { const x = get((shop[r[1]] || {}).area || '-'); x.u += r[4]; x.n += r[5]; if (r[4] > 0) x.sh.add(r[1]); });
   stk.forEach((r) => (get((shop[r[0]] || {}).area || '-').s += r[4]));
+  const wa = Object.fromEntries((D.ww || []).map((x) => [x[0], x[1]]));
+  Ts.forEach((r) => { const x = get(wa[r[0]] || '-'); x.tq = (x.tq || 0) + r[2]; });
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-area'), [
     { h: 'Area', l: 1, v: (x) => x.k, f: (x) => esc(x.k) },
-    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.t || 0 },
-  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.t || 0))]);
+    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'Target', v: (x) => x.tq || 0 }, { h: '%ACH', v: (x) => x.tq ? x.u / x.tq : 0, f: (x) => pct(x.u, x.tq) },
+    { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.t || 0 },
+  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.tq || 0)), pct(T((x) => x.u), T((x) => x.tq || 0)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.t || 0))]);
 }
 
 function hours(a, b) {
@@ -324,11 +345,13 @@ function hours(a, b) {
 }
 
 let shopRows = [];
-function shopTable(sel, stk, allRows) {
+function shopTable(sel, stk, allRows, Ts) {
   const m = {}; const get = (c) => (m[c] ||= { c, u: 0, n: 0, s: 0, last: '' });
   sel.forEach((r) => { const x = get(r[1]); x.u += r[4]; x.n += r[5]; });
   stk.forEach((r) => (get(r[0]).s += r[4]));
   allRows.forEach((r) => { if (m[r[1]] && r[4] > 0 && r[0] > m[r[1]].last) m[r[1]].last = r[0]; });
+  const tq = {}; Ts.forEach((r) => (tq[r[0]] = (tq[r[0]] || 0) + r[2]));
+  Object.values(m).forEach((x) => (x.t = tq[x.c] || 0));
   const q = S.q.toLowerCase();
   shopRows = Object.values(m).filter((x) => x.u || x.n).filter((x) => !q || x.c.includes(q) || String((shop[x.c] || {}).n || '').toLowerCase().includes(q));
   const T = (f) => shopRows.reduce((s, x) => s + f(x), 0);
@@ -337,14 +360,15 @@ function shopTable(sel, stk, allRows) {
     { h: 'Area', l: 1, v: (x) => (shop[x.c] || {}).area || '', f: (x) => esc((shop[x.c] || {}).area || '-') },
     { h: 'ประเภท', l: 1, v: (x) => (shop[x.c] || {}).type || '', f: (x) => esc((shop[x.c] || {}).type || '-') },
     { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n },
+    { h: 'Target', v: (x) => x.t, f: (x) => x.t ? fmt(x.t) : '-' }, { h: '%ACH', v: (x) => x.t ? x.u / x.t : 0, f: (x) => pct(x.u, x.t) },
     { h: 'ขายล่าสุด', v: (x) => x.last, f: (x) => dTH(x.last) },
-  ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '']);
+  ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.t)), pct(T((x) => x.u), T((x) => x.t)), '']);
 }
 
 $('#csv').onclick = () => {
   const [a, b] = range();
-  const L = [['Shop Code', 'Shop', 'Area', 'Type', 'Units', 'Net', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
-    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), x.last, selName(), a, b];
+  const L = [['Shop Code', 'Shop', 'Area', 'Type', 'Units', 'Net', 'Target', '%ACH', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
+    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), Math.round(x.t * 10) / 10, x.t ? Math.round(100 * x.u / x.t) + '%' : '', x.last, selName(), a, b];
   }));
   const csv = '﻿' + L.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
