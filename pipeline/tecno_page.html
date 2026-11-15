@@ -181,9 +181,9 @@ preset(S.p);
 const mOk = (k) => (!S.fam || famOf[k] === S.fam) && (!S.model || k === S.model);
 
 $('#asof').textContent = `ยอดขายถึง ${dtTH(D.meta.sales_asof)} · ข้อมูลจาก TSM (สาขา WW)`;
-const areas = [...new Set(D.shops.map((x) => x.area).filter(Boolean))].sort();
+const areas = D.areas || [...new Set(D.shops.map((x) => x.area).filter(Boolean))].sort();
 $('#area').innerHTML += areas.map((a) => `<option>${esc(a)}</option>`).join('');
-const types = [...new Set(D.shops.map((x) => x.type).filter(Boolean))].sort();
+const types = [...new Set((D.ww || []).map((x) => x[2]).concat(D.shops.map((x) => x.type)).filter(Boolean))].sort();
 $('#stype').innerHTML += types.map((a) => `<option>${esc(a)}</option>`).join('');
 
 function range() { const a = S.d1 || first, b = S.d2 || last; return a <= b ? [a, b] : [b, a]; }
@@ -203,13 +203,13 @@ function draw() {
   // model (family) chips, then capacity chips of the chosen model
   const fu = {}; rows.forEach((r) => (fu[famOf[r[2]]] = (fu[famOf[r[2]]] || 0) + r[4]));
   $('#models').innerHTML = `<span class="lbl">รุ่น</span>` +
-    FAMS.map((f) => `<button class="chip" data-f="${esc(f)}" aria-pressed="${S.fam === f}">${esc(f)}<small>${fmt(fu[f] || 0)}</small></button>`).join('') +
-    `<button class="chip" data-f="" aria-pressed="${!S.fam}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>`;
+    FAMS.map((f) => `<button class="chip" data-f="${esc(f)}" aria-pressed="${S.fam === f}">${esc(f)}</button>`).join('') +
+    `<button class="chip" data-f="" aria-pressed="${!S.fam}">ทุกรุ่น</button>`;
   const ks = D.models.filter((m) => m.fam === S.fam);
   const mu = {}; rows.forEach((r) => (mu[r[2]] = (mu[r[2]] || 0) + r[4]));
   $('#caps').hidden = !S.fam || ks.length < 2;
   $('#caps').innerHTML = `<span class="lbl">ความจุ</span><button class="chip" data-m="" aria-pressed="${!S.model}">ทุกความจุ</button>` +
-    ks.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(capOf(m.k))}<small>${fmt(mu[m.k] || 0)}</small></button>`).join('');
+    ks.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(capOf(m.k))}</button>`).join('');
   famCards(rows, stk);
   // KPIs
   const u = sel.reduce((s, r) => s + r[4], 0), n = sel.reduce((s, r) => s + r[5], 0), g = sel.reduce((s, r) => s + r[6], 0);
@@ -221,7 +221,7 @@ function draw() {
     ['ยอดขายสุทธิ (Net)', fmt(n) + ' ฿', 'หลังส่วนลด / แพ็กเกจ'],
     ['ราคาเต็ม (Gross)', fmt(g) + ' ฿', g ? `ส่วนลดเฉลี่ย ${fmt((g - n) / Math.max(u, 1))} ฿/เครื่อง` : ''],
     ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `${days} วันที่มียอด`],
-    ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt(new Set(D.shops.filter((x) => shopOk(x.c)).map((x) => x.c)).size)} สาขาที่มีข้อมูล`],
+    ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt((D.ww || []).filter((x) => (!S.area || x[1] === S.area) && (!S.type || x[2] === S.type)).length)} สาขา WW`],
   ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   trend(all.filter((r) => mOk(r[2])), a, b);
   modelTable(rows, stk);
@@ -306,13 +306,14 @@ function colours(sel) {
 
 function areaTable(sel, stk) {
   const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, s: 0, sh: new Set() });
+  (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).t = (get(ar).t || 0) + 1; });
   sel.forEach((r) => { const x = get((shop[r[1]] || {}).area || '-'); x.u += r[4]; x.n += r[5]; if (r[4] > 0) x.sh.add(r[1]); });
   stk.forEach((r) => (get((shop[r[0]] || {}).area || '-').s += r[4]));
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-area'), [
     { h: 'Area', l: 1, v: (x) => x.k, f: (x) => esc(x.k) },
-    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size },
-  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.sh.size))]);
+    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.t || 0 },
+  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.t || 0))]);
 }
 
 function hours(a, b) {

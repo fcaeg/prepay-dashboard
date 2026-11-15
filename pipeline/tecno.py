@@ -87,7 +87,15 @@ def _shops():
             if c: shops[c] = {'c': c, 'n': r.get('name', c), 'area': r.get('region', '') or r.get('area', ''), 'type': r.get('type', '')}
     xf = os.path.join(ST, 'watch_exclude_shops.txt')
     nx = {l.split('#')[0].strip() for l in open(xf, encoding='utf-8')} - {''} if os.path.exists(xf) else set()
+    for x in shops.values(): x['area'] = _area(x['area'])
     return {c: x for c, x in shops.items() if c not in nx}
+
+def _area(a):
+    """'BMA II (South West)' -> 'BMA II - South West', 'Upper South' -> 'UPC - Upper South' (the target-file spelling)"""
+    a = re.sub(r'\s+', ' ', str(a or '')).strip()
+    m = re.match(r'^(BMA [IVX]+) \((.*)\)$', a)
+    if m: return f'{m.group(1)} - {m.group(2)}'
+    return a if a.startswith(('BMA', 'UPC')) or not a or a == 'NOT_CLASSIFIED' else 'UPC - ' + a
 
 def build():
     meta = _meta()
@@ -130,6 +138,7 @@ def build():
     ml = sorted(models.values(), key=lambda x: (x['fam'], x['name']))
     data = {'meta': {'sales_asof': meta.get('tecno_sales_asof', ''), 'stock_asof': meta.get('tecno_stock_asof', ''),
                      'first_sales': f.date.min() if len(f) else ''},
+            'areas': sorted({x['area'] for x in shops.values() if x['area']}), 'ww': [[c, x['area'], x['type']] for c, x in sorted(shops.items())],
             'models': ml, 'shops': sorted(sh.values(), key=lambda x: (x['area'] or '', x['n'] or '')),
             'sales': [[r.date, r.SHOP_CODE, r.m, r.col, int(r.u), round(float(r.n)), round(float(r.a))] for r in f.itertuples()],
             'hours': [[r.date, int(r.h), r.m, int(r.u)] for r in hr.itertuples()],
