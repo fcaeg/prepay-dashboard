@@ -205,7 +205,7 @@ function trend(rows, a, b) {
   const d1 = S.p === 'all' || S.p === 'today' || S.p === 'yday' ? last : b;
   const ds = []; for (let d = d0; d <= d1 && ds.length < 400; d = addDays(d, 1)) ds.push(d);
   if (!ds.length) { $('#trend').innerHTML = '<div class="empty">ยังไม่มียอดขาย</div>'; return; }
-  const W = Math.max(ds.length * 26, 600), H = 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
+  const W = Math.max(ds.length * 26, $('#trend').clientWidth || 900), H = 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
   const bw = W / ds.length;
   const bars = ds.map((d, i) => {
     const v = by[d] || 0, h = (H - pb - pt) * v / mx, x = i * bw + bw * .15, y = H - pb - h;
