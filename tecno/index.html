@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1a18" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tecno">
+<meta name="format-detection" content="telephone=no">
 <title>Tecno Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -88,7 +94,64 @@ svg text { fill: var(--muted); font: 11px var(--font); }
 strong.ach { font-weight: inherit; font-size: inherit; }
 .empty { color: var(--muted); padding: 24px 0; text-align: center; }
 .scroll { max-height: 520px; overflow: auto; }
-@media (max-width: 640px) { .kpi .v { font-size: 20px; } .bar { grid-template-columns: 7rem 1fr 3.5rem; } }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); -webkit-tap-highlight-color: transparent; }
+.fg { display: flex; align-items: center; gap: 6px; }
+.tw { -webkit-overflow-scrolling: touch; }
+.sm { display: none; }
+button, select, input { touch-action: manipulation; }
+/* tablet (iPad portrait / landscape) */
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+}
+/* phone (iOS / Android) */
+@media (max-width: 640px) {
+  .wrap { padding: 12px 12px 40px; }
+  h1 { font-size: 20px; }
+  .filters { position: static; padding-top: 4px; }
+  .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fdate, .fper { grid-column: 1 / -1; }
+  .fdate input { flex: 1; min-width: 0; }
+  .fdate .lbl { display: none; }
+  .fper { display: flex; }
+  .fper button { flex: 1; padding: 8px 2px; }
+  .fsel .lbl { display: none; }
+  .ftm { grid-column: 1 / -1; }
+  .ftm .seg { flex: 1; } .ftm .seg button { flex: 1; }
+  .fsel select { width: 100%; max-width: none; }
+  select, input[type=search], input[type=date] { font-size: 16px; padding: 7px 8px; } /* 16px: iOS does not zoom in */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: -12px; margin-right: -12px; padding: 0 12px 2px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips .lbl { min-width: auto; }
+  .chip { padding: 8px 14px; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi { padding: 10px 12px; }
+  .kpi .v { font-size: 20px; }
+  .fam { padding: 12px 14px; }
+  .fam .big { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 4px 10px; }
+  .fam .big b { font-size: 18px; }
+  .fam .nm small { display: block; margin: 2px 0 0; }
+  .card { padding: 12px; border-radius: 10px; }
+  .card .hd .row { width: 100%; }
+  .card .hd .row input[type=search] { flex: 1; min-width: 0; }
+  th, td { padding: 7px 5px; }
+  table { font-size: 12.5px; }
+  .hs { display: none; }
+  .sm { display: block; font-size: 11.5px; }
+  .bar { grid-template-columns: 6.5rem 1fr 3rem; }
+  .scroll { max-height: 75vh; }
+}
+/* small Android phones (360 px and less) */
+.xs { display: none; }
+@media (max-width: 400px) {
+  .hx { display: none; }
+  .xs { display: inline; }
+  td.l { min-width: 0; }
+  .kpi .v { font-size: 18px; }
+  .fam .big b { font-size: 16px; }
+  .fper button { font-size: 12.5px; }
+}
 </style>
 </head>
 <body>
@@ -99,18 +162,14 @@ strong.ach { font-weight: inherit; font-size: inherit; }
 </header>
 
 <div class="filters">
-  <div class="row">
-    <span class="lbl">วันที่</span>
-    <input type="date" id="d1" aria-label="ตั้งแต่วันที่"> <span class="muted">ถึง</span> <input type="date" id="d2" aria-label="ถึงวันที่">
-    <div class="seg" id="per">
+  <div class="row frow">
+    <div class="fg fdate"><span class="lbl">วันที่</span><input type="date" id="d1" aria-label="ตั้งแต่วันที่"><span class="muted">ถึง</span><input type="date" id="d2" aria-label="ถึงวันที่"></div>
+    <div class="seg fper" id="per">
       <button data-p="today">วันนี้</button><button data-p="yday">เมื่อวาน</button><button data-p="d7">7 วัน</button><button data-p="mtd">เดือนนี้</button><button data-p="all">ทั้งหมด</button>
     </div>
-    <span class="lbl" style="margin-left:6px">พื้นที่</span>
-    <select id="area"><option value="">ทุกพื้นที่</option></select>
-    <span class="lbl" style="margin-left:6px">ประเภทสาขา</span>
-    <select id="stype"><option value="">ทุกประเภท</option></select>
-    <span id="tmw" style="display:inline-flex;align-items:center;gap:6px;margin-left:6px"><span class="lbl">Target</span>
-    <div class="seg" id="tm"><button data-t="q">QTY</button><button data-t="n">Net Amount</button></div></span>
+    <div class="fg fsel"><span class="lbl">พื้นที่</span><select id="area" aria-label="พื้นที่"><option value="">ทุกพื้นที่</option></select></div>
+    <div class="fg fsel"><span class="lbl">ประเภทสาขา</span><select id="stype" aria-label="ประเภทสาขา"><option value="">ทุกประเภท</option></select></div>
+    <span id="tmw" class="fg ftm"><span class="lbl">Target</span><div class="seg" id="tm"><button data-t="q">QTY</button><button data-t="n">Net Amount</button></div></span>
   </div>
   <div class="chips" id="models" role="group" aria-label="เลือกรุ่น"></div>
   <div class="chips" id="caps" role="group" aria-label="เลือกความจุ"></div>
@@ -213,17 +272,17 @@ const LBL = () => isN()
   ? { t: 'Target Net (฿)', a: 'ยอด Net (฿)', b: 'ยอดขายสะสม (เครื่อง)' }
   : { t: 'Target (เครื่อง)', a: 'ยอด QTY', b: 'ยอดขายสะสม (฿)' };
 const tcols = () => { const L = LBL(); return [
-  { h: L.t, v: (x) => x.t || 0, f: (x) => x.t ? fmt(x.t) : '-' },
+  { h: L.t, hs: 1, v: (x) => x.t || 0, f: (x) => x.t ? fmt(x.t) : '-' },
   { h: L.a, v: A, def: 1 },
   { h: '%ACH', v: (x) => x.t ? A(x) / x.t : 0, f: (x) => pct(A(x), x.t) },
-  { h: L.b, v: B },
+  { h: L.b, hx: 1, v: B },
 ]; };
 const tfoot = (T) => [fmt(T((x) => x.t || 0)), fmt(T(A)), pct(T(A), T((x) => x.t || 0)), fmt(T(B))];
 const shopOk = (c) => { const x = shop[c] || {}; return (!S.area || x.area === S.area) && (!S.type || x.type === S.type); };
 
 function draw() {
   try { localStorage.setItem('tecno', JSON.stringify({ p: S.p === 'custom' ? 'mtd' : S.p, tm: S.tm })); } catch (e) {}
-  $('#tmw').style.display = hasNet ? 'inline-flex' : 'none';
+  $('#tmw').style.display = hasNet ? '' : 'none';
   document.querySelectorAll('#tm button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.t === S.tm));
   document.querySelectorAll('#per button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === S.p));
   $('#d1').value = S.d1; $('#d2').value = S.d2;
@@ -275,16 +334,17 @@ function trend(rows, a, b) {
   if (d1 < addDays(d0, 13)) { d0 = addDays(d1, -13) < first ? first : addDays(d1, -13); }
   const ds = []; for (let d = d0; d <= d1 && ds.length < 400; d = addDays(d, 1)) ds.push(d);
   if (!ds.length) { $('#trend').innerHTML = '<div class="empty">ยังไม่มียอดขาย</div>'; return; }
-  const W = Math.max(ds.length * 26, $('#trend').clientWidth || 900), H = 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
+  const cw = $('#trend').clientWidth || 900, W = Math.max(ds.length * (cw < 500 ? 12 : 26), cw), H = cw < 500 ? 150 : 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
+  const lab = Math.ceil(ds.length / Math.max(1, Math.floor(W / 30)));
   const bw = W / ds.length;
   const bars = ds.map((d, i) => {
     const v = by[d] || 0, h = (H - pb - pt) * v / mx, x = i * bw + bw * .15, y = H - pb - h;
     const on = d >= a && d <= b;
     return `<rect x="${x}" y="${y}" width="${bw * .7}" height="${h}" rx="3" fill="var(${on ? '--bar' : '--bar2'})"><title>${dTH(d)}: ${v} เครื่อง</title></rect>` +
-      (v ? `<text x="${x + bw * .35}" y="${y - 3}" text-anchor="middle">${v}</text>` : '') +
-      (ds.length <= 31 || i % Math.ceil(ds.length / 31) === 0 ? `<text x="${x + bw * .35}" y="${H - 6}" text-anchor="middle">${+d.slice(8)}</text>` : '');
+      (v && bw >= 16 ? `<text x="${x + bw * .35}" y="${y - 3}" text-anchor="middle">${v}</text>` : '') +
+      (i % lab === 0 ? `<text x="${x + bw * .35}" y="${H - 6}" text-anchor="middle">${+d.slice(8)}</text>` : '');
   }).join('');
-  $('#trend').innerHTML = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${Math.min(W, 900)}px;height:auto">${bars}</svg></div>`;
+  $('#trend').innerHTML = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;max-width:none">${bars}</svg></div>`;
   $('#trend-sub').textContent = `เครื่อง / วัน · ${dTH(ds[0])} – ${dTH(ds[ds.length - 1])}` + ' · ' + selName();
 }
 
@@ -292,9 +352,9 @@ function table(el, cols, data, key, foot, rowAttr) {
   const st = S.sort[key] || { i: cols.findIndex((c) => c.def), dir: -1 };
   const i = st.i < 0 ? 1 : st.i;
   data.sort((x, y) => { const p = cols[i].v(x), q = cols[i].v(y); return (typeof p === 'string' ? p.localeCompare(q, 'th') : p - q) * st.dir; });
-  el.innerHTML = data.length ? `<table><thead><tr>${cols.map((c, j) => `<th class="${c.l ? 'l' : ''}" data-i="${j}">${c.h}${j === i ? (st.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
-    data.map((r) => `<tr ${rowAttr ? rowAttr(r) : ''}>${cols.map((c) => `<td class="${c.l ? 'l' : ''}">${c.f ? c.f(r) : fmt(c.v(r))}</td>`).join('')}</tr>`).join('') +
-    `</tbody>${foot ? `<tfoot><tr>${foot.map((x, j) => `<td class="${cols[j].l ? 'l' : ''}">${x}</td>`).join('')}</tr></tfoot>` : ''}</table>` : '<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>';
+  el.innerHTML = data.length ? `<table><thead><tr>${cols.map((c, j) => `<th class="${c.l ? 'l' : ''} ${c.hs ? 'hs' : ''} ${c.hx ? 'hx' : ''}" data-i="${j}">${c.h}${j === i ? (st.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
+    data.map((r) => `<tr ${rowAttr ? rowAttr(r) : ''}>${cols.map((c) => `<td class="${c.l ? 'l' : ''} ${c.hs ? 'hs' : ''} ${c.hx ? 'hx' : ''}">${c.f ? c.f(r) : fmt(c.v(r))}</td>`).join('')}</tr>`).join('') +
+    `</tbody>${foot ? `<tfoot><tr>${foot.map((x, j) => `<td class="${cols[j].l ? 'l' : ''} ${cols[j].hs ? 'hs' : ''} ${cols[j].hx ? 'hx' : ''}">${x}</td>`).join('')}</tr></tfoot>` : ''}</table>` : '<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>';
   el.querySelectorAll('th').forEach((th) => th.onclick = () => { const j = +th.dataset.i; S.sort[key] = { i: j, dir: j === i ? -st.dir : (cols[j].l ? 1 : -1) }; draw(); });
 }
 
@@ -324,9 +384,9 @@ function modelTable(rows, stk, T0) {
   if (!S.fam) T0.forEach((r) => (get(famOf[r[1]]).t = (get(famOf[r[1]]).t || 0) + r[tI()]));
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-model'), [
-    { h: S.fam ? 'ความจุ · สี' : 'รุ่น', l: 1, v: (x) => lab(x.k), f: (x) => esc(lab(x.k)) },
+    { h: S.fam ? 'ความจุ · สี' : 'รุ่น', l: 1, v: (x) => lab(x.k), f: (x) => esc(lab(x.k)) + (!S.fam && x.t ? `<span class="sm muted">Target ${fmt(x.t)}</span>` : '') },
   ].concat(S.fam ? [{ h: 'ยอด QTY', v: (x) => x.u, def: 1 }, { h: 'ยอดขายสะสม (฿)', v: (x) => x.n }] : tcols(), [
-    { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size },
+    { h: 'Net/เครื่อง', hs: 1, v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', hs: 1, v: (x) => x.sh.size },
   ]), data, 'model' + (S.fam ? 'c' : ''),
   ['รวม'].concat(S.fam ? [fmt(T((x) => x.u)), fmt(T((x) => x.n))] : tfoot(T), ['', '']),
   (x) => S.fam ? '' : `class="click" data-f="${esc(x.k)}"`);
@@ -353,9 +413,9 @@ function areaTable(sel, stk, Ts) {
   Ts.forEach((r) => { const x = get(wa[r[0]] || '-'); x.t = (x.t || 0) + r[tI()]; });
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-area'), [
-    { h: 'Area', l: 1, v: (x) => x.k, f: (x) => esc(x.k) },
-    ...tcols(), { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
-    { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.all || 0 },
+    { h: 'Area', l: 1, v: (x) => x.k, f: (x) => `${esc(x.k)}<span class="sm muted">Target ${fmt(x.t || 0)}<span class="xs"> · ${LBL().b} ${fmt(B(x))}</span> · ขาย ${x.sh.size}/${x.all || 0} สาขา</span>` },
+    ...tcols(), { h: 'Net/เครื่อง', hs: 1, v: (x) => x.u ? x.n / x.u : 0 },
+    { h: 'สาขาที่ขาย', hs: 1, v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', hs: 1, v: (x) => x.all || 0 },
   ], data, 'area', ['รวม', ...tfoot(T), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.all || 0))]);
 }
 
@@ -378,11 +438,11 @@ function shopTable(sel, stk, allRows, Ts) {
   shopRows = Object.values(m).filter((x) => x.u || x.n).filter((x) => !q || x.c.includes(q) || String((shop[x.c] || {}).n || '').toLowerCase().includes(q));
   const T = (f) => shopRows.reduce((s, x) => s + f(x), 0);
   table($('#tb-shop'), [
-    { h: 'สาขา', l: 1, v: (x) => (shop[x.c] || {}).n || x.c, f: (x) => `${esc((shop[x.c] || {}).n || x.c)} <span class="muted">${x.c}</span>` },
-    { h: 'Area', l: 1, v: (x) => (shop[x.c] || {}).area || '', f: (x) => esc((shop[x.c] || {}).area || '-') },
-    { h: 'ประเภท', l: 1, v: (x) => (shop[x.c] || {}).type || '', f: (x) => esc((shop[x.c] || {}).type || '-') },
+    { h: 'สาขา', l: 1, v: (x) => (shop[x.c] || {}).n || x.c, f: (x) => `${esc((shop[x.c] || {}).n || x.c)} <span class="muted">${x.c}</span><span class="sm muted">${x.t ? 'Target ' + fmt(x.t) + ' · ' : ''}<span class="xs">${LBL().b} ${fmt(B(x))} · </span>${esc((shop[x.c] || {}).area || '')} · ขายล่าสุด ${dTH(x.last)}</span>` },
+    { h: 'Area', l: 1, hs: 1, v: (x) => (shop[x.c] || {}).area || '', f: (x) => esc((shop[x.c] || {}).area || '-') },
+    { h: 'ประเภท', l: 1, hs: 1, v: (x) => (shop[x.c] || {}).type || '', f: (x) => esc((shop[x.c] || {}).type || '-') },
     ...tcols(),
-    { h: 'ขายล่าสุด', v: (x) => x.last, f: (x) => dTH(x.last) },
+    { h: 'ขายล่าสุด', hs: 1, v: (x) => x.last, f: (x) => dTH(x.last) },
   ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', ...tfoot(T), '']);
 }
 
@@ -405,6 +465,7 @@ $('#stype').onchange = (e) => { S.type = e.target.value; draw(); };
 $('#q').oninput = (e) => { S.q = e.target.value; draw(); };
 $('#d1').min = $('#d2').min = first; $('#d1').max = $('#d2').max = last;
 $('#d1').onchange = (e) => { S.d1 = e.target.value || first; S.p = 'custom'; draw(); }; $('#d2').onchange = (e) => { S.d2 = e.target.value || last; S.p = 'custom'; draw(); };
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(draw, 200); });
 draw();
 </script>
 </body>
