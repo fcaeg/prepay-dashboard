@@ -69,6 +69,22 @@ tfoot td { font-weight: 600; border-top: 1px solid var(--fg); border-bottom: 0; 
 .bar .fl { height: 100%; background: var(--bar); border-radius: 4px; }
 .bar .n { text-align: right; font-variant-numeric: tabular-nums; }
 svg text { fill: var(--muted); font: 11px var(--font); }
+.fams { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; margin-bottom: 14px; }
+.chips[hidden] { display: none; }
+.chips .lbl { align-self: center; min-width: 3.2rem; }
+.fam { display: flex; flex-direction: column; justify-content: flex-start; text-align: left; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; }
+.fam:hover { border-color: var(--muted); }
+.fam[aria-pressed="true"] { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.fam .nm { font-size: 16px; font-weight: 600; }
+.fam .nm small { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
+.fam .big { display: flex; gap: 18px; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.fam .big div { display: flex; flex-direction: column; }
+.fam .big b { font-size: 22px; font-weight: 600; line-height: 1.2; }
+.fam .big span { font-size: 11.5px; color: var(--muted); }
+.fam .share { height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.fam .share i { display: block; height: 100%; background: var(--bar); }
+.fam .caps { font-size: 12.5px; color: var(--muted); display: grid; grid-template-columns: 1fr auto auto; gap: 2px 12px; font-variant-numeric: tabular-nums; }
+.fam .caps b { color: var(--fg); font-weight: 500; }
 .empty { color: var(--muted); padding: 24px 0; text-align: center; }
 .scroll { max-height: 520px; overflow: auto; }
 @media (max-width: 640px) { .kpi .v { font-size: 20px; } .bar { grid-template-columns: 7rem 1fr 3.5rem; } }
@@ -83,18 +99,21 @@ svg text { fill: var(--muted); font: 11px var(--font); }
 
 <div class="filters">
   <div class="row">
-    <span class="lbl">ช่วงเวลา</span>
+    <span class="lbl">วันที่</span>
+    <input type="date" id="d1" aria-label="ตั้งแต่วันที่"> <span class="muted">ถึง</span> <input type="date" id="d2" aria-label="ถึงวันที่">
     <div class="seg" id="per">
-      <button data-p="today">วันนี้</button><button data-p="yday">เมื่อวาน</button><button data-p="d7">7 วัน</button><button data-p="mtd">เดือนนี้</button><button data-p="all">ทั้งหมด</button><button data-p="custom">กำหนดเอง</button>
+      <button data-p="today">วันนี้</button><button data-p="yday">เมื่อวาน</button><button data-p="d7">7 วัน</button><button data-p="mtd">เดือนนี้</button><button data-p="all">ทั้งหมด</button>
     </div>
-    <span id="custom" hidden><input type="date" id="d1"> – <input type="date" id="d2"></span>
     <span class="lbl" style="margin-left:6px">พื้นที่</span>
     <select id="area"><option value="">ทุกพื้นที่</option></select>
     <span class="lbl" style="margin-left:6px">ประเภทสาขา</span>
     <select id="stype"><option value="">ทุกประเภท</option></select>
   </div>
   <div class="chips" id="models" role="group" aria-label="เลือกรุ่น"></div>
+  <div class="chips" id="caps" role="group" aria-label="เลือกความจุ"></div>
 </div>
+
+<section class="fams" id="fams" aria-label="สรุปรายรุ่น"></section>
 
 <div class="kpis" id="kpis"></div>
 
@@ -104,7 +123,7 @@ svg text { fill: var(--muted); font: 11px var(--font); }
     <div id="trend"></div>
   </section>
   <section class="card">
-    <div class="hd"><div><h2>สรุปรายรุ่น</h2><div class="sub">กดที่แถวเพื่อเลือกรุ่น · Stock ณ เวลาของไฟล์ Stock ล่าสุด</div></div></div>
+    <div class="hd"><div><h2 id="mt-h">สรุปรายรุ่น</h2><div class="sub" id="mt-sub"></div></div></div>
     <div class="tw" id="tb-model"></div>
   </section>
   <section class="card">
@@ -142,8 +161,22 @@ const mname = Object.fromEntries(D.models.map((x) => [x.k, x.name]));
 const short = (k) => (mname[k] || k).replace(/^TECNO /, '');
 const last = D.meta.sales_asof.slice(0, 10) || (D.sales.length ? D.sales[D.sales.length - 1][0] : '');
 const addDays = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
-const S = { p: 'mtd', model: '', area: '', type: '', q: '', d1: last.slice(0, 8) + '01', d2: last, sort: {} };
+const famOf = Object.fromEntries(D.models.map((x) => [x.k, x.fam]));
+const capOf = (k) => k.split('|').slice(1).filter(Boolean).join(' ').replace(/(\d+\/\d+)$/, '$1GB');
+const FAMS = [...new Set(D.models.map((x) => x.fam))];
+const first = D.meta.first_sales || last;
+const S = { p: 'mtd', fam: '', model: '', area: '', type: '', q: '', sort: {} };
 try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; } catch (e) {}
+function preset(p) {
+  S.p = p;
+  if (p === 'today') S.d1 = S.d2 = last;
+  else if (p === 'yday') S.d1 = S.d2 = addDays(last, -1);
+  else if (p === 'd7') { S.d1 = addDays(last, -6); S.d2 = last; }
+  else if (p === 'mtd') { S.d1 = last.slice(0, 8) + '01'; S.d2 = last; }
+  else { S.p = 'all'; S.d1 = first; S.d2 = last; }
+}
+preset(S.p);
+const mOk = (k) => (!S.fam || famOf[k] === S.fam) && (!S.model || k === S.model);
 
 $('#asof').textContent = `ยอดขายถึง ${dtTH(D.meta.sales_asof)} · Stock ${D.meta.stock_asof ? dtTH(D.meta.stock_asof) : 'ยังไม่มี'} · ข้อมูลจาก TSM (สาขา WW)`;
 const areas = [...new Set(D.shops.map((x) => x.area).filter(Boolean))].sort();
@@ -151,37 +184,36 @@ $('#area').innerHTML += areas.map((a) => `<option>${esc(a)}</option>`).join('');
 const types = [...new Set(D.shops.map((x) => x.type).filter(Boolean))].sort();
 $('#stype').innerHTML += types.map((a) => `<option>${esc(a)}</option>`).join('');
 
-function range() {
-  if (S.p === 'today') return [last, last];
-  if (S.p === 'yday') { const y = addDays(last, -1); return [y, y]; }
-  if (S.p === 'd7') return [addDays(last, -6), last];
-  if (S.p === 'mtd') return [last.slice(0, 8) + '01', last];
-  if (S.p === 'all') return ['0000', '9999'];
-  return [S.d1, S.d2];
-}
+function range() { const a = S.d1 || first, b = S.d2 || last; return a <= b ? [a, b] : [b, a]; }
 const shopOk = (c) => { const x = shop[c] || {}; return (!S.area || x.area === S.area) && (!S.type || x.type === S.type); };
 
 function draw() {
-  try { localStorage.setItem('tecno', JSON.stringify({ p: S.p })); } catch (e) {}
+  try { localStorage.setItem('tecno', JSON.stringify({ p: S.p === 'custom' ? 'mtd' : S.p })); } catch (e) {}
   document.querySelectorAll('#per button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === S.p));
-  $('#custom').hidden = S.p !== 'custom';
+  $('#d1').value = S.d1; $('#d2').value = S.d2;
   const [a, b] = range();
   const inR = (d) => d >= a && d <= b;
   const all = D.sales.filter((r) => shopOk(r[1]));                // every model, current shop filter
   const rows = all.filter((r) => inR(r[0]));                        // + period
-  const sel = rows.filter((r) => !S.model || r[2] === S.model);    // + model
+  const sel = rows.filter((r) => mOk(r[2]));                      // + model / capacity
   const stk = D.stock.filter((r) => shopOk(r[0]) && r[3] !== 'DEMO');
-  const stkSel = stk.filter((r) => !S.model || r[1] === S.model);
-  // model chips (units in the period)
+  const stkSel = stk.filter((r) => mOk(r[1]));
+  // model (family) chips, then capacity chips of the chosen model
+  const fu = {}; rows.forEach((r) => (fu[famOf[r[2]]] = (fu[famOf[r[2]]] || 0) + r[4]));
+  $('#models').innerHTML = `<span class="lbl">รุ่น</span><button class="chip" data-f="" aria-pressed="${!S.fam}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>` +
+    FAMS.map((f) => `<button class="chip" data-f="${esc(f)}" aria-pressed="${S.fam === f}">${esc(f)}<small>${fmt(fu[f] || 0)}</small></button>`).join('');
+  const ks = D.models.filter((m) => m.fam === S.fam);
   const mu = {}; rows.forEach((r) => (mu[r[2]] = (mu[r[2]] || 0) + r[4]));
-  $('#models').innerHTML = `<button class="chip" data-m="" aria-pressed="${!S.model}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>` +
-    D.models.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(short(m.k))}<small>${fmt(mu[m.k] || 0)}</small></button>`).join('');
+  $('#caps').hidden = !S.fam || ks.length < 2;
+  $('#caps').innerHTML = `<span class="lbl">ความจุ</span><button class="chip" data-m="" aria-pressed="${!S.model}">ทุกความจุ</button>` +
+    ks.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(capOf(m.k))}<small>${fmt(mu[m.k] || 0)}</small></button>`).join('');
+  famCards(rows, stk);
   // KPIs
   const u = sel.reduce((s, r) => s + r[4], 0), n = sel.reduce((s, r) => s + r[5], 0), g = sel.reduce((s, r) => s + r[6], 0);
   const su = stkSel.reduce((s, r) => s + r[4], 0);
   const days = new Set(sel.map((r) => r[0])).size || 1;
   const nsh = new Set(sel.filter((r) => r[4] > 0).map((r) => r[1])).size;
-  const per = S.p === 'all' ? `${dTH(D.meta.first_sales)} – ${dTH(last)}` : a === b ? dTH(a) : `${dTH(a)} – ${dTH(b)}`;
+  const per = a === b ? dTH(a) : `${dTH(a)} – ${dTH(b)}`;
   $('#kpis').innerHTML = [
     ['เครื่องที่ขาย', fmt(u), per],
     ['ยอดขายสุทธิ (Net)', fmt(n) + ' ฿', 'หลังส่วนลด / แพ็กเกจ'],
@@ -190,19 +222,18 @@ function draw() {
     ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt(new Set(D.shops.filter((x) => shopOk(x.c)).map((x) => x.c)).size)} สาขาที่มีข้อมูล`],
     ['Stock คงเหลือ', D.meta.stock_asof ? fmt(su) : '-', D.meta.stock_asof ? `${new Set(stkSel.filter((r) => r[4] > 0).map((r) => r[0])).size} สาขา · ไม่นับ DEMO` : 'รอไฟล์ Stock'],
   ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
-  trend(all.filter((r) => !S.model || r[2] === S.model), a, b);
+  trend(all.filter((r) => mOk(r[2])), a, b);
   modelTable(rows, stk);
   colours(sel);
   areaTable(sel, stkSel);
   hours(a, b);
-  shopTable(sel, stkSel, all.filter((r) => !S.model || r[2] === S.model));
+  shopTable(sel, stkSel, all.filter((r) => mOk(r[2])));
 }
 
 function trend(rows, a, b) {
   const by = {}; rows.forEach((r) => (by[r[0]] = (by[r[0]] || 0) + r[4]));
-  let d0 = S.p === 'all' || S.p === 'today' || S.p === 'yday' ? (D.meta.first_sales || last) : a;
-  if (S.p === 'today' || S.p === 'yday') d0 = addDays(last, -27) < d0 ? d0 : addDays(last, -27);
-  const d1 = S.p === 'all' || S.p === 'today' || S.p === 'yday' ? last : b;
+  let d0 = a, d1 = b;
+  if (d1 < addDays(d0, 13)) { d0 = addDays(d1, -13) < first ? first : addDays(d1, -13); }
   const ds = []; for (let d = d0; d <= d1 && ds.length < 400; d = addDays(d, 1)) ds.push(d);
   if (!ds.length) { $('#trend').innerHTML = '<div class="empty">ยังไม่มียอดขาย</div>'; return; }
   const W = Math.max(ds.length * 26, $('#trend').clientWidth || 900), H = 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
@@ -215,7 +246,7 @@ function trend(rows, a, b) {
       (ds.length <= 31 || i % Math.ceil(ds.length / 31) === 0 ? `<text x="${x + bw * .35}" y="${H - 6}" text-anchor="middle">${+d.slice(8)}</text>` : '');
   }).join('');
   $('#trend').innerHTML = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${Math.min(W, 900)}px;height:auto">${bars}</svg></div>`;
-  $('#trend-sub').textContent = `เครื่อง / วัน · ${dTH(ds[0])} – ${dTH(ds[ds.length - 1])}` + (S.model ? ` · ${short(S.model)}` : ' · ทุกรุ่น');
+  $('#trend-sub').textContent = `เครื่อง / วัน · ${dTH(ds[0])} – ${dTH(ds[ds.length - 1])}` + ' · ' + selName();
 }
 
 function table(el, cols, data, key, foot, rowAttr) {
@@ -228,18 +259,37 @@ function table(el, cols, data, key, foot, rowAttr) {
   el.querySelectorAll('th').forEach((th) => th.onclick = () => { const j = +th.dataset.i; S.sort[key] = { i: j, dir: j === i ? -st.dir : (cols[j].l ? 1 : -1) }; draw(); });
 }
 
+function selName() { return !S.fam ? 'ทุกรุ่น' : S.model ? short(S.model) : S.fam; }
+function famCards(rows, stk) {
+  const tot = rows.reduce((s, r) => s + r[4], 0) || 1;
+  $('#fams').innerHTML = FAMS.map((f) => {
+    const r = rows.filter((x) => famOf[x[2]] === f), k = stk.filter((x) => famOf[x[1]] === f);
+    const u = r.reduce((s, x) => s + x[4], 0), n = r.reduce((s, x) => s + x[5], 0), st = k.reduce((s, x) => s + x[4], 0);
+    const caps = D.models.filter((m) => m.fam === f).map((m) => [capOf(m.k), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[4], 0), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[5], 0)]);
+    return `<button class="fam" data-f="${esc(f)}" aria-pressed="${S.fam === f}"><div class="nm">TECNO ${esc(f)}<small>${Math.round(100 * u / tot)}% ของเครื่องที่ขาย</small></div>
+      <div class="big"><div><b>${fmt(u)}</b><span>เครื่อง</span></div><div><b>${fmt(n)}</b><span>ยอดขาย Net (฿)</span></div><div><b>${D.meta.stock_asof ? fmt(st) : '-'}</b><span>Stock</span></div></div>
+      <div class="share"><i style="width:${100 * u / tot}%"></i></div>
+      <div class="caps">${caps.map(([c, cu, cn]) => `<span>${esc(c || '-')}</span><b>${fmt(cu)} เครื่อง</b><span>${fmt(cn)} ฿</span>`).join('')}</div></button>`;
+  }).join('');
+}
+
 function modelTable(rows, stk) {
+  // no model chosen: one row per model (all capacities together); a model chosen: its capacities x colours
+  const by = S.fam ? (k, col) => k + '\u0001' + col : (k) => famOf[k];
+  const lab = (key) => S.fam ? `${capOf(key.split('\u0001')[0])} · ${key.split('\u0001')[1] || '-'}` : key;
   const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, g: 0, s: 0, sh: new Set() });
-  rows.forEach((r) => { const x = get(r[2]); x.u += r[4]; x.n += r[5]; x.g += r[6]; if (r[4] > 0) x.sh.add(r[1]); });
-  stk.forEach((r) => (get(r[1]).s += r[4]));
+  rows.filter((r) => !S.fam || mOk(r[2])).forEach((r) => { const x = get(by(r[2], r[3])); x.u += r[4]; x.n += r[5]; x.g += r[6]; if (r[4] > 0) x.sh.add(r[1]); });
+  stk.filter((r) => !S.fam || mOk(r[1])).forEach((r) => (get(by(r[1], r[2])).s += r[4]));
+  $('#mt-h').textContent = S.fam ? `รายละเอียด ${selName()}` : 'สรุปรายรุ่น';
+  $('#mt-sub').textContent = S.fam ? 'แยกความจุ · สี · Stock ณ ไฟล์ Stock ล่าสุด' : 'รวมทุกความจุ · กดที่แถวเพื่อดูรายละเอียดความจุ';
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-model'), [
-    { h: 'รุ่น', l: 1, v: (x) => short(x.k), f: (x) => esc(short(x.k)) },
+    { h: S.fam ? 'ความจุ · สี' : 'รุ่น', l: 1, v: (x) => lab(x.k), f: (x) => esc(lab(x.k)) },
     { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
     { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'Stock', v: (x) => x.s },
   ], data, 'model', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '', '', fmt(T((x) => x.s))],
-  (x) => `class="click ${S.model === x.k ? 'sel' : ''}" data-m="${esc(x.k)}"`);
-  $('#tb-model').querySelectorAll('tr[data-m]').forEach((tr) => tr.onclick = () => { S.model = S.model === tr.dataset.m ? '' : tr.dataset.m; draw(); });
+  (x) => S.fam ? '' : `class="click" data-f="${esc(x.k)}"`);
+  $('#tb-model').querySelectorAll('tr[data-f]').forEach((tr) => tr.onclick = () => { S.fam = tr.dataset.f; S.model = ''; draw(); });
 }
 
 function bars(el, items, unit) {
@@ -248,9 +298,9 @@ function bars(el, items, unit) {
 }
 
 function colours(sel) {
-  const c = {}; sel.forEach((r) => { const k = (S.model ? '' : short(r[2]) + ' · ') + (r[3] || '-'); c[k] = (c[k] || 0) + r[4]; });
+  const c = {}; sel.forEach((r) => { const k = (S.fam ? '' : famOf[r[2]] + ' · ') + (r[3] || '-'); c[k] = (c[k] || 0) + r[4]; });
   bars($('#colours'), Object.entries(c).sort((a, b) => b[1] - a[1]));
-  $('#col-sub').textContent = S.model ? short(S.model) : 'ทุกรุ่น (รุ่น · สี)';
+  $('#col-sub').textContent = S.fam ? selName() : 'ทุกรุ่น (รุ่น · สี)';
 }
 
 function areaTable(sel, stk) {
@@ -265,7 +315,7 @@ function areaTable(sel, stk) {
 }
 
 function hours(a, b) {
-  const h = {}; D.hours.forEach((r) => { if (r[0] >= a && r[0] <= b && (!S.model || r[2] === S.model)) h[r[1]] = (h[r[1]] || 0) + r[3]; });
+  const h = {}; D.hours.forEach((r) => { if (r[0] >= a && r[0] <= b && mOk(r[2])) h[r[1]] = (h[r[1]] || 0) + r[3]; });
   if (S.area || S.type) { $('#hours').innerHTML = '<div class="empty">ดูได้เฉพาะเมื่อเลือกทุกพื้นที่ / ทุกประเภทสาขา</div>'; return; }
   const ks = Object.keys(h).map(Number).sort((x, y) => x - y);
   bars($('#hours'), ks.map((k) => [`${String(k).padStart(2, '0')}:00–${String(k + 1).padStart(2, '0')}:00`, h[k]]));
@@ -292,19 +342,21 @@ function shopTable(sel, stk, allRows) {
 $('#csv').onclick = () => {
   const [a, b] = range();
   const L = [['Shop Code', 'Shop', 'Area', 'Type', 'Units', 'Net', 'Stock', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
-    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), x.s, x.last, S.model ? short(S.model) : 'All', a === '0000' ? D.meta.first_sales : a, b === '9999' ? last : b];
+    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), x.s, x.last, selName(), a, b];
   }));
   const csv = '﻿' + L.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-  el.download = `tecno_shops_${S.model ? short(S.model).replace(/\W+/g, '_') : 'all'}_${last}.csv`; el.click();
+  el.download = `tecno_shops_${selName().replace(/\W+/g, '_')}_${a}_${b}.csv`; el.click();
 };
-$('#per').onclick = (e) => { const p = e.target.closest('button')?.dataset.p; if (p) { S.p = p; draw(); } };
-$('#models').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.model = b.dataset.m; draw(); } };
+$('#per').onclick = (e) => { const p = e.target.closest('button')?.dataset.p; if (p) { preset(p); draw(); } };
+$('#models').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.fam = b.dataset.f; S.model = ''; draw(); } };
+$('#caps').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.model = b.dataset.m; draw(); } };
+$('#fams').onclick = (e) => { const b = e.target.closest('.fam'); if (b) { S.fam = S.fam === b.dataset.f ? '' : b.dataset.f; S.model = ''; draw(); } };
 $('#area').onchange = (e) => { S.area = e.target.value; draw(); };
 $('#stype').onchange = (e) => { S.type = e.target.value; draw(); };
 $('#q').oninput = (e) => { S.q = e.target.value; draw(); };
-$('#d1').value = S.d1; $('#d2').value = S.d2;
-$('#d1').onchange = (e) => { S.d1 = e.target.value; draw(); }; $('#d2').onchange = (e) => { S.d2 = e.target.value; draw(); };
+$('#d1').min = $('#d2').min = first; $('#d1').max = $('#d2').max = last;
+$('#d1').onchange = (e) => { S.d1 = e.target.value || first; S.p = 'custom'; draw(); }; $('#d2').onchange = (e) => { S.d2 = e.target.value || last; S.p = 'custom'; draw(); };
 draw();
 </script>
 </body>
