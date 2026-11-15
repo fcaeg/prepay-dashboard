@@ -163,9 +163,11 @@ const last = D.meta.sales_asof.slice(0, 10) || (D.sales.length ? D.sales[D.sales
 const addDays = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const famOf = Object.fromEntries(D.models.map((x) => [x.k, x.fam]));
 const capOf = (k) => k.split('|').slice(1).filter(Boolean).join(' ').replace(/(\d+\/\d+)$/, '$1GB');
-const FAMS = [...new Set(D.models.map((x) => x.fam))];
+const FORDER = ['POP20', 'CAMON'];  // POP 20 first, then Camon, then other models
+const frank = (f) => { const i = FORDER.findIndex((p) => f.startsWith(p)); return i < 0 ? 9 : i; };
+const FAMS = [...new Set(D.models.map((x) => x.fam))].sort((a, b) => frank(a) - frank(b) || a.localeCompare(b));
 const first = D.meta.first_sales || last;
-const S = { p: 'mtd', fam: '', model: '', area: '', type: '', q: '', sort: {} };
+const S = { p: 'mtd', fam: FAMS[0] || '', model: '', area: '', type: '', q: '', sort: {} };
 try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; } catch (e) {}
 function preset(p) {
   S.p = p;
@@ -200,8 +202,9 @@ function draw() {
   const stkSel = stk.filter((r) => mOk(r[1]));
   // model (family) chips, then capacity chips of the chosen model
   const fu = {}; rows.forEach((r) => (fu[famOf[r[2]]] = (fu[famOf[r[2]]] || 0) + r[4]));
-  $('#models').innerHTML = `<span class="lbl">รุ่น</span><button class="chip" data-f="" aria-pressed="${!S.fam}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>` +
-    FAMS.map((f) => `<button class="chip" data-f="${esc(f)}" aria-pressed="${S.fam === f}">${esc(f)}<small>${fmt(fu[f] || 0)}</small></button>`).join('');
+  $('#models').innerHTML = `<span class="lbl">รุ่น</span>` +
+    FAMS.map((f) => `<button class="chip" data-f="${esc(f)}" aria-pressed="${S.fam === f}">${esc(f)}<small>${fmt(fu[f] || 0)}</small></button>`).join('') +
+    `<button class="chip" data-f="" aria-pressed="${!S.fam}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>`;
   const ks = D.models.filter((m) => m.fam === S.fam);
   const mu = {}; rows.forEach((r) => (mu[r[2]] = (mu[r[2]] || 0) + r[4]));
   $('#caps').hidden = !S.fam || ks.length < 2;
