@@ -70,7 +70,7 @@ tfoot td { font-weight: 600; border-top: 1px solid var(--fg); border-bottom: 0; 
 .bar .n { text-align: right; font-variant-numeric: tabular-nums; }
 svg text { fill: var(--muted); font: 11px var(--font); }
 .fams { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; margin-bottom: 14px; }
-.chips[hidden] { display: none; }
+.chips[hidden], .seg[hidden] { display: none; }
 .chips .lbl { align-self: center; min-width: 3.2rem; }
 .fam { display: flex; flex-direction: column; justify-content: flex-start; text-align: left; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; }
 .fam:hover { border-color: var(--muted); }
@@ -109,6 +109,8 @@ strong.ach { font-weight: inherit; font-size: inherit; }
     <select id="area"><option value="">ทุกพื้นที่</option></select>
     <span class="lbl" style="margin-left:6px">ประเภทสาขา</span>
     <select id="stype"><option value="">ทุกประเภท</option></select>
+    <span id="tmw" style="display:inline-flex;align-items:center;gap:6px;margin-left:6px"><span class="lbl">Target</span>
+    <div class="seg" id="tm"><button data-t="q">QTY</button><button data-t="n">Net Amount</button></div></span>
   </div>
   <div class="chips" id="models" role="group" aria-label="เลือกรุ่น"></div>
   <div class="chips" id="caps" role="group" aria-label="เลือกความจุ"></div>
@@ -168,8 +170,9 @@ const FORDER = ['POP20', 'CAMON'];  // POP 20 first, then Camon, then other mode
 const frank = (f) => { const i = FORDER.findIndex((p) => f.startsWith(p)); return i < 0 ? 9 : i; };
 const FAMS = [...new Set(D.models.map((x) => x.fam))].sort((a, b) => frank(a) - frank(b) || a.localeCompare(b));
 const first = D.meta.first_sales || last;
-const S = { p: 'mtd', fam: FAMS[0] || '', model: '', area: '', type: '', q: '', sort: {} };
-try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; } catch (e) {}
+const hasNet = Object.values(D.targets || {}).some((rs) => rs.some((r) => r[3] > 0));  // net-amount target in the file?
+const S = { tm: 'q', p: 'mtd', fam: FAMS[0] || '', model: '', area: '', type: '', q: '', sort: {} };
+try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; if (sv.tm === 'n' && hasNet) S.tm = 'n'; } catch (e) {}
 function preset(p) {
   S.p = p;
   if (p === 'today') S.d1 = S.d2 = last;
@@ -201,10 +204,27 @@ function tgt(a, b) {
 }
 const pct = (u, t) => t > 0 ? `<strong class="ach ${u >= t ? 'pos' : ''}">${Math.round(100 * u / t)}%</strong>` : '-';
 const sumT = (rs, i) => rs.reduce((s, r) => s + r[i], 0);
+// Target mode: QTY (default) or Net amount. Column order everywhere: Target > ยอด > %ACH > ยอดขายสะสม
+const isN = () => S.tm === 'n';
+const tI = () => (isN() ? 3 : 2);                       // index of the target in tgt() rows
+const A = (x) => (isN() ? x.n : x.u);                    // actual measured against the target
+const B = (x) => (isN() ? x.u : x.n);                    // the other measure, shown as ยอดขายสะสม
+const LBL = () => isN()
+  ? { t: 'Target Net (฿)', a: 'ยอด Net (฿)', b: 'ยอดขายสะสม (เครื่อง)' }
+  : { t: 'Target (เครื่อง)', a: 'ยอด QTY', b: 'ยอดขายสะสม (฿)' };
+const tcols = () => { const L = LBL(); return [
+  { h: L.t, v: (x) => x.t || 0, f: (x) => x.t ? fmt(x.t) : '-' },
+  { h: L.a, v: A, def: 1 },
+  { h: '%ACH', v: (x) => x.t ? A(x) / x.t : 0, f: (x) => pct(A(x), x.t) },
+  { h: L.b, v: B },
+]; };
+const tfoot = (T) => [fmt(T((x) => x.t || 0)), fmt(T(A)), pct(T(A), T((x) => x.t || 0)), fmt(T(B))];
 const shopOk = (c) => { const x = shop[c] || {}; return (!S.area || x.area === S.area) && (!S.type || x.type === S.type); };
 
 function draw() {
-  try { localStorage.setItem('tecno', JSON.stringify({ p: S.p === 'custom' ? 'mtd' : S.p })); } catch (e) {}
+  try { localStorage.setItem('tecno', JSON.stringify({ p: S.p === 'custom' ? 'mtd' : S.p, tm: S.tm })); } catch (e) {}
+  $('#tmw').style.display = hasNet ? 'inline-flex' : 'none';
+  document.querySelectorAll('#tm button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.t === S.tm));
   document.querySelectorAll('#per button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === S.p));
   $('#d1').value = S.d1; $('#d2').value = S.d2;
   const [a, b] = range();
@@ -231,12 +251,14 @@ function draw() {
   const days = new Set(sel.map((r) => r[0])).size || 1;
   const nsh = new Set(sel.filter((r) => r[4] > 0).map((r) => r[1])).size;
   const per = a === b ? dTH(a) : `${dTH(a)} – ${dTH(b)}`;
+  const L = LBL(), tt = sumT(Tsel, tI()), av = isN() ? n : u;
   $('#kpis').innerHTML = [
-    ['เครื่องที่ขาย', fmt(u), per],
-    ['ยอดขายสุทธิ (Net)', fmt(n) + ' ฿', 'หลังส่วนลด / แพ็กเกจ'],
+    [L.t, Tsel.length ? fmt(tt) : '-', Tsel.length ? per : 'ยังไม่มี Target เดือนนี้'],
+    [L.a, fmt(av), per],
+    ['%ACH', pct(av, tt), isN() ? `เทียบ Target Net` : `เทียบ Target เครื่อง`],
+    [L.b, fmt(isN() ? u : n), isN() ? 'เครื่องที่ขาย' : 'ยอดขายสุทธิ หลังส่วนลด / แพ็กเกจ'],
     ['ราคาเต็ม (Gross)', fmt(g) + ' ฿', g ? `ส่วนลดเฉลี่ย ${fmt((g - n) / Math.max(u, 1))} ฿/เครื่อง` : ''],
-    ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `${days} วันที่มียอด`],
-    ['Target (เครื่อง)', Tsel.length ? fmt(sumT(Tsel, 2)) : '-', Tsel.length ? `%ACH ${pct(u, sumT(Tsel, 2))} · Net ${pct(n, sumT(Tsel, 3))} (Target Net ${fmt(sumT(Tsel, 3))} ฿)` : 'ยังไม่มี Target เดือนนี้'],
+    ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `เครื่อง · ${days} วันที่มียอด`],
     ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt((D.ww || []).filter((x) => (!S.area || x[1] === S.area) && (!S.type || x[2] === S.type)).length)} สาขา WW`],
   ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   trend(all.filter((r) => mOk(r[2])), a, b);
@@ -281,11 +303,11 @@ function famCards(rows, stk, T0) {
   const tot = rows.reduce((s, r) => s + r[4], 0) || 1;
   $('#fams').innerHTML = FAMS.map((f) => {
     const r = rows.filter((x) => famOf[x[2]] === f), k = stk.filter((x) => famOf[x[1]] === f);
-    const u = r.reduce((s, x) => s + x[4], 0), n = r.reduce((s, x) => s + x[5], 0), tq = sumT(T0.filter((x) => famOf[x[1]] === f), 2);
+    const u = r.reduce((s, x) => s + x[4], 0), n = r.reduce((s, x) => s + x[5], 0), tq = sumT(T0.filter((x) => famOf[x[1]] === f), tI()), L = LBL(), av = isN() ? n : u;
     const caps = D.models.filter((m) => m.fam === f).map((m) => [capOf(m.k), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[4], 0), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[5], 0)]);
     return `<button class="fam" data-f="${esc(f)}" aria-pressed="${S.fam === f}"><div class="nm">TECNO ${esc(f)}<small>${Math.round(100 * u / tot)}% ของเครื่องที่ขาย</small></div>
-      <div class="big"><div><b>${fmt(u)}</b><span>เครื่อง</span></div><div><b>${fmt(n)}</b><span>ยอดขาย Net (฿)</span></div><div><b>${tq ? fmt(tq) : '-'}</b><span>Target (เครื่อง)</span></div><div><b>${pct(u, tq)}</b><span>%ACH</span></div></div>
-      <div class="share" title="%ACH"><i style="width:${tq ? Math.min(100, 100 * u / tq) : 0}%"></i></div>
+      <div class="big"><div><b>${tq ? fmt(tq) : '-'}</b><span>${L.t}</span></div><div><b>${fmt(av)}</b><span>${L.a}</span></div><div><b>${pct(av, tq)}</b><span>%ACH</span></div><div><b>${fmt(isN() ? u : n)}</b><span>${L.b}</span></div></div>
+      <div class="share" title="%ACH"><i style="width:${tq ? Math.min(100, 100 * av / tq) : 0}%"></i></div>
       <div class="caps">${caps.map(([c, cu, cn]) => `<span>${esc(c || '-')}</span><b>${fmt(cu)} เครื่อง</b><span>${fmt(cn)} ฿</span>`).join('')}</div></button>`;
   }).join('');
 }
@@ -299,14 +321,14 @@ function modelTable(rows, stk, T0) {
   stk.filter((r) => !S.fam || mOk(r[1])).forEach((r) => (get(by(r[1], r[2])).s += r[4]));
   $('#mt-h').textContent = S.fam ? `รายละเอียด ${selName()}` : 'สรุปรายรุ่น';
   $('#mt-sub').textContent = S.fam ? 'แยกความจุ · สี' : 'รวมทุกความจุ · กดที่แถวเพื่อดูรายละเอียดความจุ';
-  if (!S.fam) T0.forEach((r) => (get(famOf[r[1]]).t = (get(famOf[r[1]]).t || 0) + r[2]));
+  if (!S.fam) T0.forEach((r) => (get(famOf[r[1]]).t = (get(famOf[r[1]]).t || 0) + r[tI()]));
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-model'), [
     { h: S.fam ? 'ความจุ · สี' : 'รุ่น', l: 1, v: (x) => lab(x.k), f: (x) => esc(lab(x.k)) },
-    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
-    { h: 'สาขาที่ขาย', v: (x) => x.sh.size },
-  ].concat(S.fam ? [] : [{ h: 'Target', v: (x) => x.t || 0 }, { h: '%ACH', v: (x) => x.t ? x.u / x.t : 0, f: (x) => pct(x.u, x.t) }]), data, 'model',
-  ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '', ''].concat(S.fam ? [] : [fmt(T((x) => x.t || 0)), pct(T((x) => x.u), T((x) => x.t || 0))]),
+  ].concat(S.fam ? [{ h: 'ยอด QTY', v: (x) => x.u, def: 1 }, { h: 'ยอดขายสะสม (฿)', v: (x) => x.n }] : tcols(), [
+    { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size },
+  ]), data, 'model' + (S.fam ? 'c' : ''),
+  ['รวม'].concat(S.fam ? [fmt(T((x) => x.u)), fmt(T((x) => x.n))] : tfoot(T), ['', '']),
   (x) => S.fam ? '' : `class="click" data-f="${esc(x.k)}"`);
   $('#tb-model').querySelectorAll('tr[data-f]').forEach((tr) => tr.onclick = () => { S.fam = tr.dataset.f; S.model = ''; draw(); });
 }
@@ -324,17 +346,17 @@ function colours(sel) {
 
 function areaTable(sel, stk, Ts) {
   const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, s: 0, sh: new Set() });
-  (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).t = (get(ar).t || 0) + 1; });
+  (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).all = (get(ar).all || 0) + 1; });
   sel.forEach((r) => { const x = get((shop[r[1]] || {}).area || '-'); x.u += r[4]; x.n += r[5]; if (r[4] > 0) x.sh.add(r[1]); });
   stk.forEach((r) => (get((shop[r[0]] || {}).area || '-').s += r[4]));
   const wa = Object.fromEntries((D.ww || []).map((x) => [x[0], x[1]]));
-  Ts.forEach((r) => { const x = get(wa[r[0]] || '-'); x.tq = (x.tq || 0) + r[2]; });
+  Ts.forEach((r) => { const x = get(wa[r[0]] || '-'); x.t = (x.t || 0) + r[tI()]; });
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
   table($('#tb-area'), [
     { h: 'Area', l: 1, v: (x) => x.k, f: (x) => esc(x.k) },
-    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 }, { h: 'Target', v: (x) => x.tq || 0 }, { h: '%ACH', v: (x) => x.tq ? x.u / x.tq : 0, f: (x) => pct(x.u, x.tq) },
-    { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.t || 0 },
-  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.tq || 0)), pct(T((x) => x.u), T((x) => x.tq || 0)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.t || 0))]);
+    ...tcols(), { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
+    { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'สาขาทั้งหมด', v: (x) => x.all || 0 },
+  ], data, 'area', ['รวม', ...tfoot(T), fmt(T((x) => x.n) / Math.max(T((x) => x.u), 1)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.all || 0))]);
 }
 
 function hours(a, b) {
@@ -350,8 +372,8 @@ function shopTable(sel, stk, allRows, Ts) {
   sel.forEach((r) => { const x = get(r[1]); x.u += r[4]; x.n += r[5]; });
   stk.forEach((r) => (get(r[0]).s += r[4]));
   allRows.forEach((r) => { if (m[r[1]] && r[4] > 0 && r[0] > m[r[1]].last) m[r[1]].last = r[0]; });
-  const tq = {}; Ts.forEach((r) => (tq[r[0]] = (tq[r[0]] || 0) + r[2]));
-  Object.values(m).forEach((x) => (x.t = tq[x.c] || 0));
+  const tq = {}, tq2 = {}; Ts.forEach((r) => { tq[r[0]] = (tq[r[0]] || 0) + r[tI()]; tq2[r[0]] = (tq2[r[0]] || 0) + r[2]; });
+  Object.values(m).forEach((x) => { x.t = tq[x.c] || 0; x.tqty = tq2[x.c] || 0; });
   const q = S.q.toLowerCase();
   shopRows = Object.values(m).filter((x) => x.u || x.n).filter((x) => !q || x.c.includes(q) || String((shop[x.c] || {}).n || '').toLowerCase().includes(q));
   const T = (f) => shopRows.reduce((s, x) => s + f(x), 0);
@@ -359,21 +381,21 @@ function shopTable(sel, stk, allRows, Ts) {
     { h: 'สาขา', l: 1, v: (x) => (shop[x.c] || {}).n || x.c, f: (x) => `${esc((shop[x.c] || {}).n || x.c)} <span class="muted">${x.c}</span>` },
     { h: 'Area', l: 1, v: (x) => (shop[x.c] || {}).area || '', f: (x) => esc((shop[x.c] || {}).area || '-') },
     { h: 'ประเภท', l: 1, v: (x) => (shop[x.c] || {}).type || '', f: (x) => esc((shop[x.c] || {}).type || '-') },
-    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n },
-    { h: 'Target', v: (x) => x.t, f: (x) => x.t ? fmt(x.t) : '-' }, { h: '%ACH', v: (x) => x.t ? x.u / x.t : 0, f: (x) => pct(x.u, x.t) },
+    ...tcols(),
     { h: 'ขายล่าสุด', v: (x) => x.last, f: (x) => dTH(x.last) },
-  ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.t)), pct(T((x) => x.u), T((x) => x.t)), '']);
+  ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', ...tfoot(T), '']);
 }
 
 $('#csv').onclick = () => {
   const [a, b] = range();
-  const L = [['Shop Code', 'Shop', 'Area', 'Type', 'Units', 'Net', 'Target', '%ACH', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
-    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), Math.round(x.t * 10) / 10, x.t ? Math.round(100 * x.u / x.t) + '%' : '', x.last, selName(), a, b];
+  const L = [['Shop Code', 'Shop', 'Area', 'Type', isN() ? 'Target Net' : 'Target QTY', isN() ? 'Net' : 'Units', '%ACH', isN() ? 'Units' : 'Net', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
+    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', Math.round(x.t * 10) / 10, Math.round(A(x)), x.t ? Math.round(100 * A(x) / x.t) + '%' : '', Math.round(B(x)), x.last, selName(), a, b];
   }));
   const csv = '﻿' + L.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   el.download = `tecno_shops_${selName().replace(/\W+/g, '_')}_${a}_${b}.csv`; el.click();
 };
+$('#tm').onclick = (e) => { const t = e.target.closest('button')?.dataset.t; if (t) { S.tm = t; draw(); } };
 $('#per').onclick = (e) => { const p = e.target.closest('button')?.dataset.p; if (p) { preset(p); draw(); } };
 $('#models').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.fam = b.dataset.f; S.model = ''; draw(); } };
 $('#caps').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.model = b.dataset.m; draw(); } };
