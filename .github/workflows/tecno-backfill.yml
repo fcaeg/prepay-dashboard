@@ -1,0 +1,40 @@
+name: Tecno backfill
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Read daily_sales files created on or after (YYYY-MM-DD)'
+        required: false
+        default: '2026-10-01'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drive-sync
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas openpyxl pyxlsb google-auth requests cryptography
+      - env:
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID }}
+          FROM: ${{ inputs.from }}
+        run: python pipeline/tecno_backfill.py
+      - run: |
+          git config user.name "prepay-dashboard-bot"
+          git config user.email "prepay-dashboard-bot@users.noreply.github.com"
+          git add -A pipeline/state/tecno_* pipeline/state/meta.json tecno
+          git diff --cached --quiet && exit 0
+          git commit -m "Tecno backfill from Google Drive"
+          git pull --rebase -q origin main
+          git push origin main

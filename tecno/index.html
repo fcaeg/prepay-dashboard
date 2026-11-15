@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Tecno Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #f6f5f1; --panel: #ffffff; --fg: #1f1e1c; --muted: #6b6862; --line: #e3e0d8; --soft: #f1efe9;
+  --acc: #1f5fbf; --acc-soft: #e5edf9; --good: #1d7a4a; --bad: #b4382c; --bad-soft: #f8e6e3; --bar: #3b78d4; --bar2: #c9d8f0;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --acc: #7fa9ec; --acc-soft: #22324a; --good: #5cc28d; --bad: #ec7f73; --bad-soft: #3a2421; --bar: #6b9be2; --bar2: #33445e;
+} }
+:root[data-theme="dark"] {
+  --bg: #1b1a18; --panel: #252421; --fg: #eeece6; --muted: #a5a29a; --line: #393733; --soft: #2d2b28;
+  --acc: #7fa9ec; --acc-soft: #22324a; --good: #5cc28d; --bad: #ec7f73; --bad-soft: #3a2421; --bar: #6b9be2; --bar2: #33445e;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 16px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 10px; }
+h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: -.01em; }
+.asof { color: var(--muted); font-size: 12.5px; }
+.filters { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lbl { font-size: 12px; color: var(--muted); margin-right: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 6px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.chip small { color: var(--muted); margin-left: 4px; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--fg); padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--acc-soft); color: var(--acc); font-weight: 600; }
+select, input[type=search], input[type=date] { font: inherit; font-size: 13px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; max-width: 15rem; }
+.btn { font: inherit; font-size: 12.5px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 7px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.kpi .t { font-size: 12px; color: var(--muted); }
+.kpi .v { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi .s { font-size: 12px; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+.card h2 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+.card .sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.card .hd { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.full { grid-column: 1 / -1; }
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { font-weight: 500; color: var(--muted); font-size: 12px; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+td.l { white-space: normal; min-width: 9rem; }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--soft); }
+tr.sel td { background: var(--acc-soft); }
+tfoot td { font-weight: 600; border-top: 1px solid var(--fg); border-bottom: 0; }
+.muted { color: var(--muted); }
+.neg { color: var(--bad); } .pos { color: var(--good); }
+.tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--bad-soft); color: var(--bad); }
+.bars { display: flex; flex-direction: column; gap: 6px; }
+.bar { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr 4.5rem; gap: 8px; align-items: center; font-size: 13px; }
+.bar .tr { height: 14px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+.bar .fl { height: 100%; background: var(--bar); border-radius: 4px; }
+.bar .n { text-align: right; font-variant-numeric: tabular-nums; }
+svg text { fill: var(--muted); font: 11px var(--font); }
+.empty { color: var(--muted); padding: 24px 0; text-align: center; }
+.scroll { max-height: 520px; overflow: auto; }
+@media (max-width: 640px) { .kpi .v { font-size: 20px; } .bar { grid-template-columns: 7rem 1fr 3.5rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Tecno Dashboard</h1>
+  <span class="asof" id="asof"></span>
+</header>
+
+<div class="filters">
+  <div class="row">
+    <span class="lbl">ช่วงเวลา</span>
+    <div class="seg" id="per">
+      <button data-p="today">วันนี้</button><button data-p="yday">เมื่อวาน</button><button data-p="d7">7 วัน</button><button data-p="mtd">เดือนนี้</button><button data-p="all">ทั้งหมด</button><button data-p="custom">กำหนดเอง</button>
+    </div>
+    <span id="custom" hidden><input type="date" id="d1"> – <input type="date" id="d2"></span>
+    <span class="lbl" style="margin-left:6px">พื้นที่</span>
+    <select id="area"><option value="">ทุกพื้นที่</option></select>
+    <span class="lbl" style="margin-left:6px">ประเภทสาขา</span>
+    <select id="stype"><option value="">ทุกประเภท</option></select>
+  </div>
+  <div class="chips" id="models" role="group" aria-label="เลือกรุ่น"></div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <section class="card full">
+    <div class="hd"><div><h2>ยอดขายรายวัน</h2><div class="sub" id="trend-sub">เครื่อง / วัน</div></div></div>
+    <div id="trend"></div>
+  </section>
+  <section class="card">
+    <div class="hd"><div><h2>สรุปรายรุ่น</h2><div class="sub">กดที่แถวเพื่อเลือกรุ่น · Stock ณ เวลาของไฟล์ Stock ล่าสุด</div></div></div>
+    <div class="tw" id="tb-model"></div>
+  </section>
+  <section class="card">
+    <div class="hd"><div><h2>สีที่ขาย</h2><div class="sub" id="col-sub"></div></div></div>
+    <div id="colours"></div>
+  </section>
+  <section class="card">
+    <div class="hd"><div><h2>ราย Area</h2><div class="sub">เครื่องที่ขาย · Stock · จำนวนสาขาที่ขายได้</div></div></div>
+    <div class="tw" id="tb-area"></div>
+  </section>
+  <section class="card">
+    <div class="hd"><div><h2>ช่วงเวลาที่ขาย</h2><div class="sub">เครื่องที่ขาย แยกตามชั่วโมงของบิล</div></div></div>
+    <div id="hours"></div>
+  </section>
+  <section class="card full">
+    <div class="hd">
+      <div><h2>รายสาขา</h2><div class="sub">สาขาที่มียอดขายหรือมี Stock · <span class="tag">ไม่มีของ</span> ขายได้แต่ Stock เหลือ 0</div></div>
+      <div class="row"><input type="search" id="q" placeholder="ค้นหาสาขา / รหัส"><button class="btn" id="csv">Export CSV</button></div>
+    </div>
+    <div class="tw scroll" id="tb-shop"></div>
+  </section>
+</div>
+</div>
+
+<script>
+const D = {"meta":{"sales_asof":"2026-11-15 11:51","stock_asof":"","first_sales":"2026-11-15"},"models":[{"k":"CAMONSLIM|5G|8/256","name":"TECNO CAMONSLIM 5G 8/256GB","fam":"CAMONSLIM"},{"k":"POP20C|4G|4/64","name":"TECNO POP20C 4G 4/64GB","fam":"POP20C"}],"shops":[{"c":"80101185","n":"True Shop Central West Gate","area":"BMA I - North West","type":"matching"},{"c":"80100480","n":"True Shop The Mall Ngamwongwan 6Fl.","area":"BMA I - North West","type":"matching"},{"c":"80101350","n":"True Shop iPlace Latkrabang","area":"BMA III - North East","type":"non_matching"},{"c":"80101632","n":"True Shop Lotus's Bangna-trad","area":"BMA IV - South East","type":"non_matching"},{"c":"80101709","n":"True Shop Mega Bangna (D)","area":"BMA IV - South East","type":"HALL"},{"c":"80101071","n":"True Shop Seacon Square 2","area":"BMA IV - South East","type":"matching"},{"c":"80101269","n":"True Shop Mahboon Krong 4Fl.","area":"BMA V - Central","type":"matching"},{"c":"80100926","n":"True Shop Ayudhaya Park","area":"UPC - Central","type":"matching"},{"c":"80100861","n":"True Shop Kasetwisai Roiet","area":"UPC - Central Northeast","type":"non_matching"},{"c":"80101198","n":"True Shop Central Phitsanulok","area":"UPC - Lower North","type":"matching"},{"c":"80100782","n":"True Shop Lotus's Thaluang Phichit","area":"UPC - Lower North","type":"non_matching"},{"c":"80100854","n":"True Shop Mini Lomsak Phetchabun","area":"UPC - Lower North","type":"non_matching"},{"c":"80101306","n":"True Shop Robinson Mae Sot","area":"UPC - Lower North","type":"non_matching"},{"c":"80101659","n":"True Shop Robinson Mae Sot (D)","area":"UPC - Lower North","type":"COCO"},{"c":"80101290","n":"True Shop Big C Korat 2","area":"UPC - Lower Northeast","type":"non_matching"},{"c":"80100776","n":"True Shop Lotus's JorHor Nakhonratchasima","area":"UPC - Lower Northeast","type":"non_matching"},{"c":"80101650","n":"True Shop Lotus's Pakthongchai (D)","area":"UPC - Lower Northeast","type":"COCO"},{"c":"80100862","n":"True Shop Pakthongchai Nakhonratchasima","area":"UPC - Lower Northeast","type":"non_matching"},{"c":"80100621","n":"True Shop Central Chiangrai","area":"UPC - Upper North","type":"matching"},{"c":"80100801","n":"True Shop Lotus's Banphue Udonthani","area":"UPC - Upper Northeast","type":"non_matching"},{"c":"80100848","n":"True Shop Wangsaphung Loei","area":"UPC - Upper Northeast","type":"non_matching"},{"c":"80101675","n":"True Shop Big C Ranong (D)","area":"UPC - Upper South","type":"COCO"},{"c":"80101705","n":"True Shop Central Plaza Suratthani (D)","area":"UPC - Upper South","type":"HALL"}],"sales":[["2026-11-15","80100480","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100621","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100776","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100782","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100801","POP20C|4G|4/64","Lunar Titanium",1,4299,4299],["2026-11-15","80100848","POP20C|4G|4/64","Lunar Titanium",1,4299,4299],["2026-11-15","80100854","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100861","POP20C|4G|4/64","Lunar Titanium",1,4299,4299],["2026-11-15","80100862","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80100926","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101071","POP20C|4G|4/64","Lunar Titanium",1,4299,4299],["2026-11-15","80101185","CAMONSLIM|5G|8/256","Black",1,7499,15999],["2026-11-15","80101198","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101269","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101290","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101306","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101350","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101632","POP20C|4G|4/64","Lunar Titanium",1,4299,4299],["2026-11-15","80101650","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101659","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101675","POP20C|4G|4/64","Lunar Titanium",1,799,4299],["2026-11-15","80101705","POP20C|4G|4/64","Lunar Titanium",2,1598,8598],["2026-11-15","80101709","POP20C|4G|4/64","Lunar Titanium",2,3298,8598]],"hours":[["2026-11-15",10,"POP20C|4G|4/64",7],["2026-11-15",11,"CAMONSLIM|5G|8/256",1],["2026-11-15",11,"POP20C|4G|4/64",17]],"stock":[]};
+const $ = (s) => document.querySelector(s);
+const TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const fmt = (n) => Math.round(n || 0).toLocaleString('en-US');
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dTH = (d) => { if (!d) return '-'; const [y, m, dd] = d.slice(0, 10).split('-'); return `${+dd} ${TH[+m - 1]}`; };
+const dtTH = (s) => s ? `${dTH(s)} ${+s.slice(0, 4) + 543 - 2500} ${s.slice(11, 16)} น.` : '-';
+const shop = Object.fromEntries(D.shops.map((x) => [x.c, x]));
+const mname = Object.fromEntries(D.models.map((x) => [x.k, x.name]));
+const short = (k) => (mname[k] || k).replace(/^TECNO /, '');
+const last = D.meta.sales_asof.slice(0, 10) || (D.sales.length ? D.sales[D.sales.length - 1][0] : '');
+const addDays = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const S = { p: 'mtd', model: '', area: '', type: '', q: '', d1: last.slice(0, 8) + '01', d2: last, sort: {} };
+try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; } catch (e) {}
+
+$('#asof').textContent = `ยอดขายถึง ${dtTH(D.meta.sales_asof)} · Stock ${D.meta.stock_asof ? dtTH(D.meta.stock_asof) : 'ยังไม่มี'} · ข้อมูลจาก TSM (สาขา WW)`;
+const areas = [...new Set(D.shops.map((x) => x.area).filter(Boolean))].sort();
+$('#area').innerHTML += areas.map((a) => `<option>${esc(a)}</option>`).join('');
+const types = [...new Set(D.shops.map((x) => x.type).filter(Boolean))].sort();
+$('#stype').innerHTML += types.map((a) => `<option>${esc(a)}</option>`).join('');
+
+function range() {
+  if (S.p === 'today') return [last, last];
+  if (S.p === 'yday') { const y = addDays(last, -1); return [y, y]; }
+  if (S.p === 'd7') return [addDays(last, -6), last];
+  if (S.p === 'mtd') return [last.slice(0, 8) + '01', last];
+  if (S.p === 'all') return ['0000', '9999'];
+  return [S.d1, S.d2];
+}
+const shopOk = (c) => { const x = shop[c] || {}; return (!S.area || x.area === S.area) && (!S.type || x.type === S.type); };
+
+function draw() {
+  try { localStorage.setItem('tecno', JSON.stringify({ p: S.p })); } catch (e) {}
+  document.querySelectorAll('#per button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.p === S.p));
+  $('#custom').hidden = S.p !== 'custom';
+  const [a, b] = range();
+  const inR = (d) => d >= a && d <= b;
+  const all = D.sales.filter((r) => shopOk(r[1]));                // every model, current shop filter
+  const rows = all.filter((r) => inR(r[0]));                        // + period
+  const sel = rows.filter((r) => !S.model || r[2] === S.model);    // + model
+  const stk = D.stock.filter((r) => shopOk(r[0]) && r[3] !== 'DEMO');
+  const stkSel = stk.filter((r) => !S.model || r[1] === S.model);
+  // model chips (units in the period)
+  const mu = {}; rows.forEach((r) => (mu[r[2]] = (mu[r[2]] || 0) + r[4]));
+  $('#models').innerHTML = `<button class="chip" data-m="" aria-pressed="${!S.model}">ทุกรุ่น<small>${fmt(rows.reduce((s, r) => s + r[4], 0))}</small></button>` +
+    D.models.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(short(m.k))}<small>${fmt(mu[m.k] || 0)}</small></button>`).join('');
+  // KPIs
+  const u = sel.reduce((s, r) => s + r[4], 0), n = sel.reduce((s, r) => s + r[5], 0), g = sel.reduce((s, r) => s + r[6], 0);
+  const su = stkSel.reduce((s, r) => s + r[4], 0);
+  const days = new Set(sel.map((r) => r[0])).size || 1;
+  const nsh = new Set(sel.filter((r) => r[4] > 0).map((r) => r[1])).size;
+  const per = S.p === 'all' ? `${dTH(D.meta.first_sales)} – ${dTH(last)}` : a === b ? dTH(a) : `${dTH(a)} – ${dTH(b)}`;
+  $('#kpis').innerHTML = [
+    ['เครื่องที่ขาย', fmt(u), per],
+    ['ยอดขายสุทธิ (Net)', fmt(n) + ' ฿', 'หลังส่วนลด / แพ็กเกจ'],
+    ['ราคาเต็ม (Gross)', fmt(g) + ' ฿', g ? `ส่วนลดเฉลี่ย ${fmt((g - n) / Math.max(u, 1))} ฿/เครื่อง` : ''],
+    ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `${days} วันที่มียอด`],
+    ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt(new Set(D.shops.filter((x) => shopOk(x.c)).map((x) => x.c)).size)} สาขาที่มีข้อมูล`],
+    ['Stock คงเหลือ', D.meta.stock_asof ? fmt(su) : '-', D.meta.stock_asof ? `${new Set(stkSel.filter((r) => r[4] > 0).map((r) => r[0])).size} สาขา · ไม่นับ DEMO` : 'รอไฟล์ Stock'],
+  ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  trend(all.filter((r) => !S.model || r[2] === S.model), a, b);
+  modelTable(rows, stk);
+  colours(sel);
+  areaTable(sel, stkSel);
+  hours(a, b);
+  shopTable(sel, stkSel, all.filter((r) => !S.model || r[2] === S.model));
+}
+
+function trend(rows, a, b) {
+  const by = {}; rows.forEach((r) => (by[r[0]] = (by[r[0]] || 0) + r[4]));
+  let d0 = S.p === 'all' || S.p === 'today' || S.p === 'yday' ? (D.meta.first_sales || last) : a;
+  if (S.p === 'today' || S.p === 'yday') d0 = addDays(last, -27) < d0 ? d0 : addDays(last, -27);
+  const d1 = S.p === 'all' || S.p === 'today' || S.p === 'yday' ? last : b;
+  const ds = []; for (let d = d0; d <= d1 && ds.length < 400; d = addDays(d, 1)) ds.push(d);
+  if (!ds.length) { $('#trend').innerHTML = '<div class="empty">ยังไม่มียอดขาย</div>'; return; }
+  const W = Math.max(ds.length * 26, 600), H = 180, pb = 22, pt = 16, mx = Math.max(1, ...ds.map((d) => by[d] || 0));
+  const bw = W / ds.length;
+  const bars = ds.map((d, i) => {
+    const v = by[d] || 0, h = (H - pb - pt) * v / mx, x = i * bw + bw * .15, y = H - pb - h;
+    const on = d >= a && d <= b;
+    return `<rect x="${x}" y="${y}" width="${bw * .7}" height="${h}" rx="3" fill="var(${on ? '--bar' : '--bar2'})"><title>${dTH(d)}: ${v} เครื่อง</title></rect>` +
+      (v ? `<text x="${x + bw * .35}" y="${y - 3}" text-anchor="middle">${v}</text>` : '') +
+      (ds.length <= 31 || i % Math.ceil(ds.length / 31) === 0 ? `<text x="${x + bw * .35}" y="${H - 6}" text-anchor="middle">${+d.slice(8)}</text>` : '');
+  }).join('');
+  $('#trend').innerHTML = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:${Math.min(W, 900)}px;height:auto">${bars}</svg></div>`;
+  $('#trend-sub').textContent = `เครื่อง / วัน · ${dTH(ds[0])} – ${dTH(ds[ds.length - 1])}` + (S.model ? ` · ${short(S.model)}` : ' · ทุกรุ่น');
+}
+
+function table(el, cols, data, key, foot, rowAttr) {
+  const st = S.sort[key] || { i: cols.findIndex((c) => c.def), dir: -1 };
+  const i = st.i < 0 ? 1 : st.i;
+  data.sort((x, y) => { const p = cols[i].v(x), q = cols[i].v(y); return (typeof p === 'string' ? p.localeCompare(q, 'th') : p - q) * st.dir; });
+  el.innerHTML = data.length ? `<table><thead><tr>${cols.map((c, j) => `<th class="${c.l ? 'l' : ''}" data-i="${j}">${c.h}${j === i ? (st.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
+    data.map((r) => `<tr ${rowAttr ? rowAttr(r) : ''}>${cols.map((c) => `<td class="${c.l ? 'l' : ''}">${c.f ? c.f(r) : fmt(c.v(r))}</td>`).join('')}</tr>`).join('') +
+    `</tbody>${foot ? `<tfoot><tr>${foot.map((x, j) => `<td class="${cols[j].l ? 'l' : ''}">${x}</td>`).join('')}</tr></tfoot>` : ''}</table>` : '<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>';
+  el.querySelectorAll('th').forEach((th) => th.onclick = () => { const j = +th.dataset.i; S.sort[key] = { i: j, dir: j === i ? -st.dir : (cols[j].l ? 1 : -1) }; draw(); });
+}
+
+function modelTable(rows, stk) {
+  const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, g: 0, s: 0, sh: new Set() });
+  rows.forEach((r) => { const x = get(r[2]); x.u += r[4]; x.n += r[5]; x.g += r[6]; if (r[4] > 0) x.sh.add(r[1]); });
+  stk.forEach((r) => (get(r[1]).s += r[4]));
+  const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
+  table($('#tb-model'), [
+    { h: 'รุ่น', l: 1, v: (x) => short(x.k), f: (x) => esc(short(x.k)) },
+    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Net/เครื่อง', v: (x) => x.u ? x.n / x.u : 0 },
+    { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'Stock', v: (x) => x.s },
+  ], data, 'model', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), '', '', fmt(T((x) => x.s))],
+  (x) => `class="click ${S.model === x.k ? 'sel' : ''}" data-m="${esc(x.k)}"`);
+  $('#tb-model').querySelectorAll('tr[data-m]').forEach((tr) => tr.onclick = () => { S.model = S.model === tr.dataset.m ? '' : tr.dataset.m; draw(); });
+}
+
+function bars(el, items, unit) {
+  const mx = Math.max(1, ...items.map((x) => x[1]));
+  el.innerHTML = items.length ? `<div class="bars">${items.map(([l, v, s]) => `<div class="bar"><span>${esc(l)}${s ? ` <span class="muted">${esc(s)}</span>` : ''}</span><div class="tr"><div class="fl" style="width:${100 * Math.max(v, 0) / mx}%"></div></div><span class="n">${fmt(v)}${unit || ''}</span></div>`).join('')}</div>` : '<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>';
+}
+
+function colours(sel) {
+  const c = {}; sel.forEach((r) => { const k = (S.model ? '' : short(r[2]) + ' · ') + (r[3] || '-'); c[k] = (c[k] || 0) + r[4]; });
+  bars($('#colours'), Object.entries(c).sort((a, b) => b[1] - a[1]));
+  $('#col-sub').textContent = S.model ? short(S.model) : 'ทุกรุ่น (รุ่น · สี)';
+}
+
+function areaTable(sel, stk) {
+  const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, s: 0, sh: new Set() });
+  sel.forEach((r) => { const x = get((shop[r[1]] || {}).area || '-'); x.u += r[4]; x.n += r[5]; if (r[4] > 0) x.sh.add(r[1]); });
+  stk.forEach((r) => (get((shop[r[0]] || {}).area || '-').s += r[4]));
+  const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
+  table($('#tb-area'), [
+    { h: 'Area', l: 1, v: (x) => x.k, f: (x) => esc(x.k) },
+    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'สาขาที่ขาย', v: (x) => x.sh.size }, { h: 'Stock', v: (x) => x.s },
+  ], data, 'area', ['รวม', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.sh.size)), fmt(T((x) => x.s))]);
+}
+
+function hours(a, b) {
+  const h = {}; D.hours.forEach((r) => { if (r[0] >= a && r[0] <= b && (!S.model || r[2] === S.model)) h[r[1]] = (h[r[1]] || 0) + r[3]; });
+  if (S.area || S.type) { $('#hours').innerHTML = '<div class="empty">ดูได้เฉพาะเมื่อเลือกทุกพื้นที่ / ทุกประเภทสาขา</div>'; return; }
+  const ks = Object.keys(h).map(Number).sort((x, y) => x - y);
+  bars($('#hours'), ks.map((k) => [`${String(k).padStart(2, '0')}:00–${String(k + 1).padStart(2, '0')}:00`, h[k]]));
+}
+
+let shopRows = [];
+function shopTable(sel, stk, allRows) {
+  const m = {}; const get = (c) => (m[c] ||= { c, u: 0, n: 0, s: 0, last: '' });
+  sel.forEach((r) => { const x = get(r[1]); x.u += r[4]; x.n += r[5]; });
+  stk.forEach((r) => (get(r[0]).s += r[4]));
+  allRows.forEach((r) => { if (m[r[1]] && r[4] > 0 && r[0] > m[r[1]].last) m[r[1]].last = r[0]; });
+  const q = S.q.toLowerCase();
+  shopRows = Object.values(m).filter((x) => x.u || x.s).filter((x) => !q || x.c.includes(q) || String((shop[x.c] || {}).n || '').toLowerCase().includes(q));
+  const T = (f) => shopRows.reduce((s, x) => s + f(x), 0);
+  table($('#tb-shop'), [
+    { h: 'สาขา', l: 1, v: (x) => (shop[x.c] || {}).n || x.c, f: (x) => `${esc((shop[x.c] || {}).n || x.c)} <span class="muted">${x.c}</span>${x.u > 0 && !x.s && D.meta.stock_asof ? ' <span class="tag">ไม่มีของ</span>' : ''}` },
+    { h: 'Area', l: 1, v: (x) => (shop[x.c] || {}).area || '', f: (x) => esc((shop[x.c] || {}).area || '-') },
+    { h: 'ประเภท', l: 1, v: (x) => (shop[x.c] || {}).type || '', f: (x) => esc((shop[x.c] || {}).type || '-') },
+    { h: 'เครื่อง', v: (x) => x.u, def: 1 }, { h: 'Net (฿)', v: (x) => x.n }, { h: 'Stock', v: (x) => x.s },
+    { h: 'ขายล่าสุด', v: (x) => x.last, f: (x) => dTH(x.last) },
+  ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', fmt(T((x) => x.u)), fmt(T((x) => x.n)), fmt(T((x) => x.s)), '']);
+}
+
+$('#csv').onclick = () => {
+  const [a, b] = range();
+  const L = [['Shop Code', 'Shop', 'Area', 'Type', 'Units', 'Net', 'Stock', 'Last sale', 'Model', 'From', 'To']].concat(shopRows.map((x) => {
+    const s = shop[x.c] || {}; return [x.c, s.n || '', s.area || '', s.type || '', x.u, Math.round(x.n), x.s, x.last, S.model ? short(S.model) : 'All', a === '0000' ? D.meta.first_sales : a, b === '9999' ? last : b];
+  }));
+  const csv = '﻿' + L.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  el.download = `tecno_shops_${S.model ? short(S.model).replace(/\W+/g, '_') : 'all'}_${last}.csv`; el.click();
+};
+$('#per').onclick = (e) => { const p = e.target.closest('button')?.dataset.p; if (p) { S.p = p; draw(); } };
+$('#models').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.model = b.dataset.m; draw(); } };
+$('#area').onchange = (e) => { S.area = e.target.value; draw(); };
+$('#stype').onchange = (e) => { S.type = e.target.value; draw(); };
+$('#q').oninput = (e) => { S.q = e.target.value; draw(); };
+$('#d1').value = S.d1; $('#d2').value = S.d2;
+$('#d1').onchange = (e) => { S.d1 = e.target.value; draw(); }; $('#d2').onchange = (e) => { S.d2 = e.target.value; draw(); };
+draw();
+</script>
+</body>
+</html>

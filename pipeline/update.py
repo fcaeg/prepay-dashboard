@@ -15,7 +15,7 @@ Then rebuilds pipeline/out/*.json + sales_daily.csv, and pipeline/build_page.py 
 import argparse, glob, io, json, os, re, sys, zipfile
 import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import vivo, perf
+import vivo, perf, tecno
 import gia
 
 def _vivo(fn, *a):
@@ -156,7 +156,7 @@ def merge_sales(paths):
     old = load_sim(); changed = set()
     for path in paths:
         raw, label = read_csv_any(path)
-        watch_hits(raw); _vivo(vivo.add_sales, raw); _vivo(gia.add_sales, raw); _vivo(perf.add_sales, raw)
+        watch_hits(raw); _vivo(vivo.add_sales, raw); _vivo(tecno.add_sales, raw); _vivo(gia.add_sales, raw); _vivo(perf.add_sales, raw)
         new = sim_rows(raw); n0 = 0 if old is None else len(old)
         add = new if old is None else new[~new.key.isin(set(old.key))]
         changed |= set(_month(add))
@@ -165,7 +165,7 @@ def merge_sales(paths):
         if bd.notna().any() and bd.max().strftime('%Y-%m-%d %H:%M') > meta.get('sales_asof', ''): meta['sales_asof'] = bd.max().strftime('%Y-%m-%d %H:%M')
         print(f'sales: {label}: {len(raw):,} rows, SIM PRE {len(new):,}, new to state {len(old) - n0:,}, bills {bd.min():%Y-%m-%d}..{bd.max():%Y-%m-%d %H:%M}')
     save_sim(old, changed)
-    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
 
 def merge_stock(path):
     st, label = read_csv_any(path)
@@ -183,8 +183,9 @@ def merge_stock(path):
         cut = (pd.Timestamp(meta['stock_asof'][:10]) - pd.Timedelta(days=180)).strftime('%Y-%m-%d'); save(h[h['asof'].str[:10] >= cut], 'stock_hist.csv.gz')
     except Exception as e: print('stock history skipped:', e)
     _vivo(vivo.set_stock, st, meta['stock_asof'])
+    _vivo(tecno.set_stock, st, meta['stock_asof'])
     _vivo(perf.set_stock, st, meta['stock_asof'])
-    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
 
 def merge_targets(paths):
@@ -435,5 +436,6 @@ if __name__ == '__main__':
     if a.gia_target: gia.merge_target(a.gia_target)
     build()
     _vivo(vivo.build)
+    _vivo(tecno.build)
     _vivo(gia.build)
     _vivo(perf.build)

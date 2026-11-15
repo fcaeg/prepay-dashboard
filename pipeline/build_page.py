@@ -137,6 +137,10 @@ print(fn, os.path.getsize(fn))
 try:
     sys.path.insert(0, HERE); import vivo_page; vivo_page.main()
 except Exception as e: print('vivo page: WARNING', repr(e))
+# Tecno Dashboard (tecno/index.html) - a failure here never blocks the Prepay page
+try:
+    sys.path.insert(0, HERE); import tecno_page; tecno_page.main()
+except Exception as e: print('tecno page: WARNING', repr(e))
 # GIA Dashboard (gia/index.html) - a failure here never blocks the Prepay page
 try:
     sys.path.insert(0, HERE); import gia_page; gia_page.main()
