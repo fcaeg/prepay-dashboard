@@ -181,7 +181,7 @@ button, select, input { touch-action: manipulation; }
 
 <div class="grid">
   <section class="card full">
-    <div class="hd"><div><h2>ราย Area</h2><div class="sub">เครื่องที่ขาย · ยอดขาย · จำนวนสาขาที่ขายได้</div></div></div>
+    <div class="hd"><div><h2>ราย Area</h2><div class="sub">เครื่องที่ขาย · ยอดขาย · จำนวนสาขาที่ขายได้</div></div><button class="btn" id="area-png">ดาวน์โหลด PNG</button></div>
     <div class="tw" id="tb-area"></div>
   </section>
   <section class="card full">
@@ -404,6 +404,7 @@ function colours(sel) {
   $('#col-sub').textContent = S.fam ? selName() : 'ทุกรุ่น (รุ่น · สี)';
 }
 
+let areaImg = null;
 function areaTable(sel, stk, Ts) {
   const m = {}; const get = (k) => (m[k] ||= { k, u: 0, n: 0, s: 0, sh: new Set() });
   (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).all = (get(ar).all || 0) + 1; });
@@ -412,6 +413,7 @@ function areaTable(sel, stk, Ts) {
   const wa = Object.fromEntries((D.ww || []).map((x) => [x[0], x[1]]));
   Ts.forEach((r) => { const x = get(wa[r[0]] || '-'); x.t = (x.t || 0) + r[tI()]; });
   const data = Object.values(m), T = (f) => data.reduce((s, x) => s + f(x), 0);
+  areaImg = { data, T };
   table($('#tb-area'), [
     { h: 'Area', l: 1, v: (x) => x.k, f: (x) => `${esc(x.k)}<span class="sm muted">Target ${fmt(x.t || 0)}<span class="xs"> · ${LBL().b} ${fmt(B(x))}</span> · ขาย ${x.sh.size}/${x.all || 0} สาขา</span>` },
     ...tcols(), { h: 'Net/เครื่อง', hs: 1, v: (x) => x.u ? x.n / x.u : 0 },
@@ -445,6 +447,63 @@ function shopTable(sel, stk, allRows, Ts) {
     { h: 'ขายล่าสุด', hs: 1, v: (x) => x.last, f: (x) => dTH(x.last) },
   ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', ...tfoot(T), '']);
 }
+
+// PNG of the Area table (same rows and order as on screen; always light colours so it reads well in LINE)
+$('#area-png').onclick = async () => {
+  if (!areaImg) return;
+  try { await document.fonts.ready; } catch (e) {}
+  const { data, T } = areaImg, L = LBL(), [a, b] = range();
+  const cols = [
+    { h: 'Area', w: 250, l: 1, v: (x) => x.k },
+    { h: L.t, w: 130, v: (x) => x.t ? fmt(x.t) : '-' },
+    { h: L.a, w: 110, v: (x) => fmt(A(x)) },
+    { h: '%ACH', w: 150, ach: 1 },
+    { h: L.b, w: 150, v: (x) => fmt(B(x)) },
+    { h: 'สาขาที่ขาย', w: 110, v: (x) => `${x.sh.size}/${x.all || 0}` },
+  ];
+  const W = cols.reduce((s, c) => s + c.w, 0) + 48, RH = 34, top = 112, H = top + RH * (data.length + 2) + 40, sc = 2;
+  const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc;
+  const g = cv.getContext('2d'); g.scale(sc, sc);
+  const F = (w, z) => `${w} ${z}px "IBM Plex Sans Thai", system-ui, sans-serif`;
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#1f1e1c'; g.font = F(600, 22); g.textBaseline = 'alphabetic';
+  g.fillText(`Tecno ${selName()} — ยอดขายราย Area`, 24, 40);
+  g.fillStyle = '#6b6862'; g.font = F(400, 14);
+  const flt = [S.area, S.type].filter(Boolean).join(' · ');
+  g.fillText(`${a === b ? dTH(a) : dTH(a) + ' – ' + dTH(b)} ${+b.slice(0, 4) + 543}${flt ? ' · ' + flt : ''} · Target ${isN() ? 'Net Amount' : 'QTY'} (ตามสัดส่วนวัน) · ข้อมูลถึง ${dtTH(D.meta.sales_asof)}`, 24, 66);
+  const tot = { k: 'รวม', t: T((x) => x.t || 0), u: T((x) => x.u), n: T((x) => x.n), all: T((x) => x.all || 0), sh: { size: T((x) => x.sh.size) } };
+  const row = (x, y, head, bold) => {
+    let cx = 24;
+    cols.forEach((c) => {
+      const txt = head ? c.h : c.ach ? (x.t ? Math.round(100 * A(x) / x.t) + '%' : '-') : c.v(x);
+      g.font = F(head ? 500 : bold ? 600 : 400, head ? 13 : 14.5);
+      if (c.ach && !head && x.t) {   // small bar behind %ACH
+        const r = A(x) / x.t, bw = 70;
+        g.fillStyle = '#eef0f3'; g.fillRect(cx + c.w - 12 - bw - 52, y - 15, bw, 10);
+        g.fillStyle = r >= 1 ? '#1d7a4a' : r >= .7 ? '#3b78d4' : '#c0533f'; g.fillRect(cx + c.w - 12 - bw - 52, y - 15, bw * Math.min(1, r), 10);
+      }
+      g.fillStyle = head ? '#6b6862' : c.ach && x.t ? (A(x) >= x.t ? '#1d7a4a' : A(x) / x.t < .7 ? '#b4382c' : '#1f1e1c') : '#1f1e1c';
+      g.textAlign = c.l ? 'left' : 'right'; g.fillText(txt, c.l ? cx + 8 : cx + c.w - 12, y);
+      cx += c.w;
+    });
+    g.textAlign = 'left';
+  };
+  let y = top;
+  g.fillStyle = '#f6f5f1'; g.fillRect(24, y - 24, W - 48, RH); row(null, y - 3, true); y += RH;
+  data.forEach((x, i) => {
+    if (i % 2) { g.fillStyle = '#fafaf8'; g.fillRect(24, y - 24, W - 48, RH); }
+    g.strokeStyle = '#e3e0d8'; g.beginPath(); g.moveTo(24, y + 10); g.lineTo(W - 24, y + 10); g.stroke();
+    row(x, y - 3); y += RH;
+  });
+  g.strokeStyle = '#1f1e1c'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(24, y - 24); g.lineTo(W - 24, y - 24); g.stroke();
+  row(tot, y - 3, false, true);
+  g.fillStyle = '#9a968e'; g.font = F(400, 12); g.fillText('Tecno Dashboard · TSM (สาขา WW)', 24, H - 16);
+  cv.toBlob((bl) => {
+    const el = document.createElement('a'); el.href = URL.createObjectURL(bl);
+    el.download = `tecno_area_${selName().replace(/\W+/g, '_')}_${a}_${b}.png`; document.body.appendChild(el); el.click(); el.remove();
+    setTimeout(() => URL.revokeObjectURL(el.href), 4000);
+  }, 'image/png');
+};
 
 $('#csv').onclick = () => {
   const [a, b] = range();
