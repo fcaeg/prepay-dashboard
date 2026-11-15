@@ -442,5 +442,11 @@
   "kind": "sales",
   "at": "2026-11-15 12:30",
   "ok": true
+ },
+ "1NBaX5PHRtq20Bp7AOkeHK-QDqaKxhVXV": {
+  "name": "daily_sales (2).csv.zip",
+  "kind": "sales",
+  "at": "2026-11-15 13:05",
+  "ok": true
  }
 }
