@@ -10,6 +10,26 @@
 .mm-tile b { display: block; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
 .mm-tile small { font-size: 12px; color: var(--color-fg-muted); }
 .mm-ok { color: var(--color-good, #1d7a4a); } .mm-bad { color: var(--color-bad, #b4382c); }
+.mm-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--color-fg-muted); margin-bottom: 8px; }
+.mm-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+.mm-grid { display: grid; gap: 4px; }
+.mm-row { display: grid; grid-template-columns: 6.5rem 1fr 1fr; gap: 6px 16px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--color-border-line); }
+.mm-row.mm-hd { font-size: 12px; color: var(--color-fg-muted); border-bottom-width: 0; }
+.mm-row.now .mm-dt { font-weight: 600; }
+.mm-row.mm-tot { border-top: 1.5px solid var(--color-fg); border-bottom: 0; padding-top: 8px; font-weight: 600; }
+.mm-dt small { margin-left: 6px; font-size: 11px; font-weight: 400; color: var(--color-fg-muted); }
+.mm-pb { display: grid; grid-template-columns: 1fr 9.5rem; gap: 8px; align-items: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.mm-pb span { white-space: nowrap; } .mm-pb em { font-style: normal; color: var(--color-fg-muted); }
+.mm-tr { height: 14px; background: var(--color-border-line); border-radius: 7px; overflow: hidden; }
+.mm-tr i { display: block; height: 100%; border-radius: 7px; }
+.mm-row.fut .mm-tr { opacity: .5; }
+.mm-leg i.g, .mm-tr i.g { background: #2e9e5b; } .mm-leg i.a, .mm-tr i.a { background: #e3a21a; } .mm-leg i.r, .mm-tr i.r { background: #d8513f; }
+b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
+.mm-note { font-size: 12px; color: var(--color-fg-muted); font-weight: 400; }
+@media (max-width: 640px) {
+  .mm-row { grid-template-columns: 1fr 1fr; } .mm-row .mm-dt { grid-column: 1 / -1; } .mm-row.mm-hd span:first-child { display: none; }
+  .mm-pb { grid-template-columns: 1fr; gap: 2px; } .mm-row.mm-tot .mm-note { grid-column: 1 / -1; }
+}
 .mm-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; align-items: end; }
 .mm-day { text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
 .mm-day i { display: block; margin: 2px auto 3px; width: 70%; min-height: 2px; background: var(--color-accent, #3b78d4); border-radius: 3px 3px 0 0; }
@@ -84,11 +104,24 @@
       + '</div>';
   });
 
+  // colour bars per day: daily sales vs daily TG (Gap ÷ days of the window) and cumulative sales vs cumulative TG
   dash.draw('mom_daily', (el) => {
     const C = calc(); if (!C) { el.innerHTML = ''; return; }
-    const { M, daily, last } = C; const ds = []; for (let d = M.from; d <= M.to; d = add(d, 1)) ds.push(d);
-    const mx = Math.max(1, ...ds.map((d) => daily[d] || 0));
-    el.innerHTML = '<div class="mm-days">' + ds.map((d) => '<div class="mm-day' + (last && d > last ? ' fut' : '') + '"><b>' + (last && d > last ? '' : nf(daily[d] || 0)) + '</b><i style="height:' + (last && d > last ? 2 : Math.max(2, 70 * (daily[d] || 0) / mx)) + 'px"></i><em>' + (+d.slice(8)) + '</em></div>').join('') + '</div>';
+    const { M, daily, last, rows } = C; const ds = []; for (let d = M.from; d <= M.to; d = add(d, 1)) ds.push(d);
+    const gap = rows.reduce((a, x) => a + x.tgt, 0), tg = gap / ds.length;
+    const col = (r) => (r >= 1 ? 'g' : r >= 0.7 ? 'a' : 'r');
+    const bar = (v, t, fut) => { const r = t ? v / t : 0;
+      return '<div class="mm-pb' + (fut ? ' fut' : '') + '"><div class="mm-tr"><i class="' + (fut ? '' : col(r)) + '" style="width:' + (fut ? 0 : Math.min(100, r * 100)) + '%"></i></div>'
+        + '<span>' + (fut ? '<em>TG ' + nf(t) + '</em>' : '<b>' + nf(v) + '</b> / ' + nf(t) + ' <b class="mm-' + col(r) + '">' + Math.round(r * 100) + '%</b>') + '</span></div>'; };
+    let cum = 0;
+    const body = ds.map((d, k) => { const fut = !last || d > last; const v = daily[d] || 0; if (!fut) cum += v;
+      return '<div class="mm-row' + (fut ? ' fut' : '') + (d === last ? ' now' : '') + '"><span class="mm-dt">' + dTH(d) + (d === last ? '<small>ล่าสุด</small>' : '') + '</span>'
+        + bar(v, tg, fut) + bar(cum, tg * (k + 1), fut) + '</div>'; }).join('');
+    const doneDays = ds.filter((d) => last && d <= last).length;
+    el.innerHTML = '<div class="mm-leg"><span><i class="g"></i>≥ 100%</span><span><i class="a"></i>70–99%</span><span><i class="r"></i>&lt; 70%</span>'
+      + '<span class="mm-note">TG รายวัน = Target (Gap) ' + nf(gap) + ' ÷ ' + ds.length + ' วัน = ' + tg.toFixed(1) + ' ซิม/วัน · TG สะสม = TG รายวัน × จำนวนวัน</span></div>'
+      + '<div class="mm-grid"><div class="mm-row mm-hd"><span>วันที่</span><span>ยอดขายรายวัน / TG รายวัน</span><span>ยอดขายสะสม / TG สะสม</span></div>' + body
+      + '<div class="mm-row mm-tot"><span class="mm-dt">รวมทั้งช่วง</span>' + bar(cum, gap, false) + '<span class="mm-note">ผ่านมา ' + doneDays + ' วัน · ควรได้สะสม ' + nf(tg * doneDays) + ' · ทำได้ ' + nf(cum) + (cum < tg * doneDays ? ' · ขาดไป ' + nf(tg * doneDays - cum) : '') + '</span></div></div>';
   });
 
   dash.draw('tb_mom_area', (el) => {
