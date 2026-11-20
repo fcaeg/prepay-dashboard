@@ -142,12 +142,14 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const M = window.MOM2750, w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1], td = C.last >= M.from ? dTH(C.last) : 'Today';
     const m = new Map();
     for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
-    const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
+    const nd = days(M.from, M.to) + 1;
+    const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, tpd: a.tgt / nd, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
     PC.table(el, 'tb_mom_area', rows, { key: ['area'], def: 'rem', limit: 100, cols: [
       { f: 'area', label: 'Area', wrap: true },
       { f: 'done', label: 'สาขาผ่านแล้ว', num: true, pill: (d) => [d.done ? 'ok' : 'mute', (d.done ? '✓ ' : '') + d.done + ' / ' + d.n + ' สาขา'] },
-      { f: 'tgt', label: 'Target (จำนวนซิม)', num: true, fmt: PC.nf },
-      { f: 'today', label: 'ยอดขาย Today (' + td + ')', num: true, pill: (d) => [d.today ? 'ok' : 'mute', PC.nf(d.today)] },
+      { f: 'tgt', label: 'Target ' + w + ' (จำนวนซิม)', num: true, fmt: PC.nf },
+      { f: 'tpd', label: 'Target ต่อวัน', num: true, fmt: (v) => v.toFixed(1) },
+      { f: 'today', label: 'ยอดขาย Today (' + td + ') / เป้าวัน', num: true, pill: (d) => [d.today >= d.tpd ? 'ok' : 'bad', PC.nf(d.today) + ' / ' + d.tpd.toFixed(1)] },
       { f: 'win', label: 'ยอดขาย ' + w, num: true, bar: true, fmt: PC.nf },
       { f: 'ach', label: '%ACH', num: true, pill: (d) => (d.ach == null ? ['mute', '–'] : [d.ach >= 1 ? 'ok' : d.ach < 0.5 ? 'bad' : 'mute', Math.round(d.ach * 100) + '%']) },
       { f: 'rem', label: 'ยังขาด (ซิม)', num: true, pill: (d) => (d.rem ? ['bad', PC.nf(d.rem)] : ['ok', 'ครบ']) }] });
