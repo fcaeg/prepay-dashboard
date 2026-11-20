@@ -4,10 +4,11 @@
    Target (Gap) = LM − ยอดขาย 1 ถึงวันก่อนเริ่มติดตาม (TSM) · ยังขาด = LM − ยอดขายเดือนนี้ทั้งหมด (TSM) */
 (() => {
   const css = `
-.mm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 4px 0 14px; }
+.mm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin: 4px 0 14px; }
 .mm-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 10px 14px; }
 .mm-tile span { display: block; font-size: 12px; color: var(--color-fg-muted); }
 .mm-tile b { display: block; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.mm-tile b small { font-size: 14px; font-weight: 400; color: var(--color-fg-muted); }
 .mm-tile small { font-size: 12px; color: var(--color-fg-muted); }
 .mm-ok { color: var(--color-good, #1d7a4a); } .mm-bad { color: var(--color-bad, #b4382c); }
 .mm-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12px; color: var(--color-fg-muted); margin-bottom: 8px; }
@@ -92,14 +93,20 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const T = (f) => rows.reduce((s, x) => s + f(x), 0);
     const tgt = T((x) => x.tgt), win = T((x) => x.win), rem = T((x) => x.rem), done = rows.filter((x) => x.done).length;
     const ach = tgt ? win / tgt : 0;
-    el.innerHTML = '<div class="pc-head"><h2 class="pc-title">ติดตามสาขา %MoM ติดลบ · ซิมรายปี 2,750 บาท</h2>'
+    // daily TG and the latest day's result
+    const nd = days(M.from, M.to) + 1, tpd = tgt / nd, on = last && last >= M.from, dn = on ? days(M.from, last) + 1 : 0;
+    const today = on ? (C.daily[last] || 0) : 0, rt = tpd ? today / tpd : 0, ctg = tpd * dn, rc = ctg ? win / ctg : 0;
+    const cl = (r) => (r >= 1 ? 'mm-ok' : 'mm-bad');
+    el.innerHTML = '<div class="pc-head"><h2 class="pc-title">โฟกัสซิมรายปีปิดเดือน · สาขา %MoM ติดลบ · ซิมรายปี 2,750 บาท</h2>'
       + '<p class="pc-take">ช่วงติดตาม ' + dTH(M.from) + ' – ' + dTH(M.to) + ' ' + (+M.month.slice(0, 4) + 543)
       + ' · รายชื่อสาขาและยอดเดือนก่อน (LM ' + TH[+M.lmonth.slice(5, 7) - 1] + ') จากไฟล์ HQ ณ ' + dTH(M.asof)
       + ' · ยอดขายจาก TSM ถึง ' + dTH(last) + ' · เหลือ ' + left + ' วัน</p></div>'
       + '<div class="mm-tiles">'
       + '<div class="mm-tile"><span>สาขาที่ติดตาม</span><b>' + nf(rows.length) + '</b><small>%MoM ติดลบในไฟล์ HQ</small></div>'
       + '<div class="mm-tile"><span>Target (Gap) ' + dTH(M.from) + '–' + dTH(M.to) + '</span><b>' + nf(tgt) + '</b><small>ซิม · LM − ยอด 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + '</small></div>'
-      + '<div class="mm-tile"><span>ขายแล้วในช่วงติดตาม</span><b>' + nf(win) + '</b><small>ซิม</small></div>'
+      + '<div class="mm-tile"><span>TG รายวัน</span><b>' + tpd.toFixed(1) + '</b><small>ซิม/วัน · TG ' + nf(tgt) + ' ÷ ' + nd + ' วัน</small></div>'
+      + '<div class="mm-tile"><span>ยอดขาย ' + (on ? dTH(last) : 'วันนี้') + '</span><b class="' + (on ? cl(rt) : '') + '">' + nf(today) + ' <small>/ ' + tpd.toFixed(0) + '</small></b><small>' + (on ? Math.round(rt * 100) + '% ของ TG รายวัน · ' + (today >= tpd ? 'ครบ' : 'ขาด ' + (tpd - today).toFixed(0)) : 'ยังไม่ถึงช่วงติดตาม') + '</small><div class="mm-bar"><i style="width:' + Math.min(100, rt * 100) + '%;background:' + (rt >= 1 ? '' : '#d8513f') + '"></i></div></div>'
+      + '<div class="mm-tile"><span>ยอดสะสม vs TG สะสม (' + dn + ' วัน)</span><b class="' + (on ? cl(rc) : '') + '">' + nf(win) + ' <small>/ ' + nf(ctg) + '</small></b><small>' + (on ? Math.round(rc * 100) + '% · ' + (win >= ctg ? 'เกิน ' + nf(win - ctg) : 'ขาด ' + nf(ctg - win)) : '') + '</small><div class="mm-bar"><i style="width:' + Math.min(100, rc * 100) + '%;background:' + (rc >= 1 ? '' : '#d8513f') + '"></i></div></div>'
       + '<div class="mm-tile"><span>%ACH (Gap)</span><b class="' + (ach >= 1 ? 'mm-ok' : '') + '">' + (tgt ? Math.round(ach * 100) + '%' : '–') + '</b><div class="mm-bar"><i style="width:' + Math.min(100, ach * 100) + '%"></i></div></div>'
       + '<div class="mm-tile"><span>สาขาที่ MoM กลับมาเป็นบวก</span><b class="' + (done ? 'mm-ok' : '') + '">' + nf(done) + ' / ' + nf(rows.length) + '</b><small>ยอดเดือนนี้ ≥ LM</small></div>'
       + '<div class="mm-tile"><span>ยังขาดอีก</span><b class="' + (rem ? 'mm-bad' : 'mm-ok') + '">' + nf(rem) + '</b><small>ซิม · เฉลี่ย ' + (rem / left).toFixed(1) + ' ซิม/วัน</small></div>'
