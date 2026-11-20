@@ -32,6 +32,15 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   .mm-pb { grid-template-columns: 1fr; gap: 2px; } .mm-row.mm-tot .mm-note { grid-column: 1 / -1; }
 }
 [data-draw="tb_mom_area"] tbody tr:last-child td { font-weight: 700; border-top: 2px solid var(--color-fg); background: var(--color-panel); }
+.mm-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.mm-zone { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 12px 16px; }
+.mm-zh { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.mm-zh h4 { margin: 0; font-size: 20px; } .mm-zh small { font-size: 12px; color: var(--color-fg-muted); }
+.mm-zp { font-size: 28px; font-weight: 700; line-height: 1.1; }
+.mm-zn { display: grid; grid-template-columns: .8fr .8fr 1.3fr 1fr .9fr; gap: 6px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.mm-zn div { display: flex; flex-direction: column; min-width: 0; } .mm-zn b { font-size: 18px; font-weight: 600; white-space: nowrap; } .mm-zn b small { font-size: 13px; font-weight: 400; }
+.mm-zn span { font-size: 11.5px; color: var(--color-fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 400px) { .mm-zn { grid-template-columns: 1fr 1fr 1fr; } }
 .mm-packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; }
 .mm-pack { display: flex; gap: 16px; align-items: center; background: var(--color-panel); border: 1px solid var(--color-border-line); border-left: 4px solid var(--pk); border-radius: var(--cds-radius); padding: 12px 14px; }
 .mm-pack img { height: 130px; width: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.18); flex: none; }
@@ -148,6 +157,18 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       + '<div class="mm-row mm-tot"><span class="mm-dt">รวมทั้งช่วง</span>' + bar(cum, gap, false) + '<span class="mm-note">ผ่านมา ' + doneDays + ' วัน · ควรได้สะสม ' + nf(tg * doneDays) + ' · ทำได้ ' + nf(cum) + (cum < tg * doneDays ? ' · ขาดไป ' + nf(tg * doneDays - cum) : '') + '</span></div></div>';
   });
 
+  // Region (BMA / UPC I / UPC II) totals of the shops in the list
+  const zones = (C) => ['BMA', 'UPC I', 'UPC II'].map((z) => { const r = C.rows.filter((x) => window.PCzone(x.area) === z), S = (f) => r.reduce((a, x) => a + (x[f] || 0), 0);
+    const o = { z, n: r.length, done: r.filter((x) => x.done).length, tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem'), areas: new Set(r.map((x) => x.area)).size }; o.ach = o.tgt ? o.win / o.tgt : 0; return o; });
+  dash.draw('mom_zone', (el) => {
+    const C = calc(); if (!C) { el.innerHTML = ''; return; }
+    const td = C.last >= C.M.from ? dTH(C.last) : 'วันนี้', zs = zones(C).filter((o) => o.n);
+    el.innerHTML = '<div class="mm-zones">' + zs.map((o) => { const c = o.ach >= 1 ? 'mm-ok' : 'mm-bad', tc = o.today >= o.tpd ? 'mm-ok' : 'mm-bad';
+      return '<article class="mm-zone"><div class="mm-zh"><div><h4>' + o.z + '</h4><small>' + o.areas + ' Area · ' + o.n + ' สาขา · ผ่านแล้ว <b class="' + (o.done ? 'mm-ok' : '') + '">' + o.done + '/' + o.n + '</b></small></div><b class="mm-zp ' + c + '">' + Math.round(o.ach * 100) + '%</b></div>'
+        + '<div class="mm-bar"><i style="width:' + Math.min(100, o.ach * 100) + '%;background:' + (o.ach >= 1 ? '' : '#d8513f') + '"></i></div>'
+        + '<div class="mm-zn"><div><b>' + nf(o.tgt) + '</b><span>Target</span></div><div><b>' + o.tpd.toFixed(1) + '</b><span>เป้า/วัน</span></div><div><b class="' + tc + '">' + nf(o.today) + ' <small>/ ' + o.tpd.toFixed(1) + '</small></b><span>วันนี้ (' + td + ') / เป้า</span></div><div><b>' + nf(o.win) + '</b><span>ขายสะสม</span></div><div><b class="' + (o.rem ? 'mm-bad' : 'mm-ok') + '">' + nf(o.rem) + '</b><span>ยังขาด</span></div></div></article>'; }).join('') + '</div>';
+  });
+
   // SIM package pictures + stock / sales of the shops in the list
   const PACKS = [
     { name: 'True ซิมรายปี 2,750 บาท', sub: '15Mbps 100GB/รอบ · 12 รอบ · ทุกประเภทสาขา', mats: ['3000122199', '3000122191', '3000122169'], img: '3000122199', c: '#9b3fc4' },
@@ -193,8 +214,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       [['Stock', S('s'), S('s') ? K.fg : K.bad], ['ขาย ' + td, S('t'), K.fg], ['ขาย ' + w, S('w'), K.fg]].forEach(([l, v, c], j) => { const bx = tx + j * 150; g.fillStyle = c; g.font = F(700, 34); g.fillText(nf(v), bx, y + 120); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(l, bx, y + 144); });
       g.font = F(400, 13); g.fillStyle = K.mu; g.fillText(fit(g, P.mats.filter((m) => ((C.pk[m] || {}).s || 0) > 0).map((m) => m + ': ' + nf((C.pk[m] || {}).s || 0)).join(' · '), x + pw - tx - 12), tx, y + 180); });
     // zone cards: BMA / UPC I / UPC II
-    { const zs = ['BMA', 'UPC I', 'UPC II'].map((z) => { const r = C.rows.filter((x) => window.PCzone(x.area) === z), S = (f) => r.reduce((a, x) => a + (x[f] || 0), 0);
-        const o = { z, n: r.length, done: r.filter((x) => x.done).length, tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem'), areas: new Set(r.map((x) => x.area)).size }; o.ach = o.tgt ? o.win / o.tgt : 0; return o; });
+    { const zs = zones(C);
       const zw = (W - 48 - 40) / 3, zy = 130 + PH + 24;
       zs.forEach((o, i) => { const x = 24 + i * (zw + 20); g.fillStyle = '#ffffff'; rr(g, x, zy, zw, ZH, 12); g.fill(); g.strokeStyle = K.line; g.lineWidth = 1.5; rr(g, x, zy, zw, ZH, 12); g.stroke();
         g.fillStyle = K.fg; g.font = F(700, 24); g.fillText(o.z, x + 18, zy + 38); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(o.areas + ' Area · ' + o.n + ' สาขา · ผ่านแล้ว ' + o.done + '/' + o.n, x + 18, zy + 60);
