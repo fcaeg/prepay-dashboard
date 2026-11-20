@@ -63,7 +63,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     for (const s of M.shops) {
       const x = sm.get(s.c) || {}; const area = x.area || x.region || s.area, stype = x.stype || s.ch;
       if (!ok(s.c, area, stype)) continue;
-      rows.set(s.c, { shop: s.c, name: x.name || s.n, area, stype, lm: s.lm, src: s.src, hqmom: s.mom, stock: s.stock, note: s.rem, before: 0, win: 0, mtd: 0, byDay: {} });
+      rows.set(s.c, { shop: s.c, name: x.name || s.n, area, stype, lm: s.lm, src: s.src, hqmom: s.mom, stock: s.stock, note: s.rem, before: 0, win: 0, mtd: 0, netw: 0, byDay: {} });
     }
     let last = '';
     const daily = {};
@@ -73,12 +73,14 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       const c = String(r.shop); if (m === M.dtac_only && !dtac.has(c)) continue;
       const x = rows.get(c); if (!x) continue;
       const u = +r.units || 0; x.mtd += u;
-      if (d < M.from) x.before += u; else if (d <= M.to) { x.win += u; daily[d] = (daily[d] || 0) + u; }
+      x.byDay[d] = (x.byDay[d] || 0) + u;
+      if (d < M.from) x.before += u; else if (d <= M.to) { x.win += u; x.netw += +r.net || 0; daily[d] = (daily[d] || 0) + u; }
     }
     const left = !last || last < M.from ? days(M.from, M.to) + 1 : Math.max(1, days(last, M.to) + 1); // today counts as a selling day (files come in during the day)
     const out = [...rows.values()].map((x) => {
       const tgt = Math.max(0, x.lm - x.before), rem = Math.max(0, x.lm - x.mtd);
-      return { ...x, tgt, rem, ach: tgt ? x.win / tgt : null, mom: x.lm ? x.mtd / x.lm - 1 : null, need: rem / left, done: x.mtd >= x.lm };
+      const tpd = tgt / (days(M.from, M.to) + 1), today = last >= M.from ? (x.byDay[last] || 0) : 0;   // TG per day = Gap ÷ days of the window
+      return { ...x, tgt, rem, tpd, today, short: last >= M.from ? Math.max(0, tpd - today) : null, ach: tgt ? x.win / tgt : null, mom: x.lm ? x.mtd / x.lm - 1 : null, need: rem / left, done: x.mtd >= x.lm };
     });
     return { M, rows: out, last, left, daily };
   };
@@ -145,14 +147,18 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   dash.draw('tb_mom', (el) => {
     const r = shopRows(); if (!r) { el.innerHTML = ''; return; }
     const M = window.MOM2750, b4 = '1–' + (+add(M.from, -1).slice(8));
+    const C = calc(), td = C.last >= M.from ? dTH(C.last) : 'วันนี้', w = (+M.from.slice(8)) + '–' + (+M.to.slice(8));
+    const f1 = (v) => (v == null ? '–' : v.toFixed(1));
     PC.table(el, 'tb_mom', r, { key: ['shop'], def: 'rem', limit: 2000, q: 'mom', cols: [
       { f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'stype', label: 'ประเภท' },
-      { f: 'lm', label: 'LM ' + TH[+M.lmonth.slice(5, 7) - 1], num: true, fmt: PC.nf }, { f: 'src', label: 'ที่มา LM' },
-      { f: 'before', label: 'ขาย ' + b4, num: true, fmt: PC.nf }, { f: 'tgt', label: 'Target (Gap)', num: true, fmt: PC.nf },
-      { f: 'win', label: 'ขาย ' + (+M.from.slice(8)) + '–' + (+M.to.slice(8)), num: true, fmt: PC.nf },
+      { f: 'tgt', label: 'TG ' + w + ' (Gap)', num: true, fmt: PC.nf },
+      { f: 'tpd', label: 'TG ต่อวัน', num: true, fmt: f1 },
+      { f: 'today', label: 'ขาย ' + td, num: true, fmt: PC.nf },
+      { f: 'short', label: 'ขาด ' + td, num: true, pill: (d) => (d.short == null ? ['mute', '–'] : d.short > 0 ? ['bad', f1(d.short)] : ['ok', 'ครบ']) },
+      { f: 'win', label: 'ขาย ' + w + ' (QTY)', num: true, fmt: PC.nf },
+      { f: 'netw', label: 'Net Amount ' + w, num: true, fmt: PC.nf },
       { f: 'ach', label: '%ACH', num: true, pill: (d) => (d.ach == null ? ['mute', '–'] : [d.ach >= 1 ? 'ok' : d.ach < 0.5 ? 'bad' : 'mute', Math.round(d.ach * 100) + '%']) },
-      { f: 'rem', label: 'ยังขาด', num: true, pill: (d) => (d.rem ? ['bad', PC.nf(d.rem)] : ['ok', 'ครบ']) },
-      { f: 'need', label: 'ต้องขาย/วัน', num: true, fmt: (v) => (v ? v.toFixed(1) : '–') },
+      { f: 'rem', label: 'TG คงเหลือ ' + w, num: true, pill: (d) => (d.rem ? ['bad', PC.nf(d.rem)] : ['ok', 'ครบ']) },
       { f: 'mom', label: '%MoM ตอนนี้', num: true, pill: (d) => (d.mom == null ? ['mute', '–'] : [d.mom >= 0 ? 'ok' : 'bad', (d.mom > 0 ? '+' : '') + Math.round(d.mom * 100) + '%']) },
       { f: 'stock', label: 'Stock (HQ)', num: true, fmt: (v) => (v == null ? '–' : PC.nf(v)) },
       { f: 'note', label: 'Remark', wrap: true }] });
@@ -161,8 +167,9 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   if (!window.MOM_CSV_BOUND) { window.MOM_CSV_BOUND = true;
     document.addEventListener('click', (e) => {
       if (!(e.target.closest && e.target.closest('#mom-csv'))) return; const r = shopRows(); if (!r) return; const M = window.MOM2750;
-      const H = ['Shop Code', 'Shop', 'Area', 'Type', 'LM ' + M.lmonth, 'LM source', 'Sold ' + M.month + '-01..' + add(M.from, -1), 'Target (Gap)', 'Sold ' + M.from + '..' + M.to, '%ACH', 'Remaining', 'Need per day', '%MoM now', '%MoM HQ ' + M.asof, 'Stock (HQ)', 'Remark'];
-      const L = [H].concat(r.map((x) => [x.shop, x.name, x.area, x.stype, x.lm, x.src, x.before, x.tgt, x.win, x.ach == null ? '' : Math.round(x.ach * 100) + '%', x.rem, x.need.toFixed(1), x.mom == null ? '' : Math.round(x.mom * 100) + '%', Math.round(x.hqmom * 100) + '%', x.stock ?? '', x.note || '']));
+      const last = calc().last, w = M.from + '..' + M.to;
+      const H = ['Shop Code', 'Shop', 'Area', 'Type', 'TG ' + w + ' (Gap)', 'TG per day', 'Sold ' + last, 'Short ' + last, 'Sold ' + w + ' (QTY)', 'Net Amount ' + w, '%ACH', 'TG remaining ' + w, '%MoM now', 'Stock (HQ)', 'Remark'];
+      const L = [H].concat(r.map((x) => [x.shop, x.name, x.area, x.stype, x.tgt, x.tpd.toFixed(1), x.today, x.short == null ? '' : x.short.toFixed(1), x.win, Math.round(x.netw), x.ach == null ? '' : Math.round(x.ach * 100) + '%', x.rem, x.mom == null ? '' : Math.round(x.mom * 100) + '%', x.stock ?? '', x.note || '']));
       const csv = '﻿' + L.map((x) => x.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'MoM2750_' + view + '_' + M.from + '_' + M.to + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }); }
