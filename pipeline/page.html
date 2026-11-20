@@ -494,7 +494,7 @@ body.pc-noscroll { overflow: hidden; }
     </article>
     <article class="pc-card">
       <h3>รายสาขา</h3>
-      <div class="pc-tools"><div class="mm-seg" data-draw="mom_seg" data-source="sales_daily"></div><input class="pc-q" data-q="mom" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"><button class="pc-export pc-csv" id="mom-csv" type="button">⬇ Export Excel</button></div>
+      <div class="pc-tools"><div class="mm-seg" data-draw="mom_seg" data-source="sales_daily"></div><input class="pc-q" data-q="mom" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"><button class="pc-export" id="mom-zone-png" type="button" title="3 รูป: UPC I · UPC II · BMA แยกตาม Area พร้อมรายชื่อสาขา">⬇ รูปสาขา MoM ติดลบ (UPC I · UPC II · BMA)</button><button class="pc-export pc-csv" id="mom-csv" type="button">⬇ Export Excel</button></div>
       <div class="pc-scroll"><table data-draw="tb_mom" data-source="sales_daily shops stock_by_shop" data-row-key="shop"></table></div>
       <p class="pc-note">นับเฉพาะซิมรายปี 2,750 บาท: Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา และ 3000143085 เฉพาะ Dtac COCO / Dtac Hall · TG (Gap) = ยอดเดือนก่อน (LM จากไฟล์ HQ: Runrate ÷ (1 + %MoM); สาขาที่ HQ แสดง −100% ใช้ยอด TSM เดือนก่อน) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม · TG ต่อวัน (Rollover) = (TG − ยอดขายในช่วงติดตามก่อนวันล่าสุด) ÷ จำนวนวันที่เหลือรวมวันล่าสุด · ขาดวันนี้ = TG ต่อวัน − ยอดขายวันล่าสุด · TG คงเหลือ = TG − ยอดขายในช่วงติดตาม · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · Stock = ซิม 2,750 คงเหลือจากไฟล์ Stock ล่าสุดใน Drive (3000143085 นับเฉพาะ Dtac COCO / Hall) · เรียงจาก TG คงเหลือมากไปน้อย</p>
     </article>

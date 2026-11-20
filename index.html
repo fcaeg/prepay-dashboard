@@ -585,7 +585,7 @@ body.pc-noscroll { overflow: hidden; }
     </article>
     <article class="pc-card">
       <h3>รายสาขา</h3>
-      <div class="pc-tools"><div class="mm-seg" data-draw="mom_seg" data-source="sales_daily"></div><input class="pc-q" data-q="mom" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"><button class="pc-export pc-csv" id="mom-csv" type="button">⬇ Export Excel</button></div>
+      <div class="pc-tools"><div class="mm-seg" data-draw="mom_seg" data-source="sales_daily"></div><input class="pc-q" data-q="mom" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"><button class="pc-export" id="mom-zone-png" type="button" title="3 รูป: UPC I · UPC II · BMA แยกตาม Area พร้อมรายชื่อสาขา">⬇ รูปสาขา MoM ติดลบ (UPC I · UPC II · BMA)</button><button class="pc-export pc-csv" id="mom-csv" type="button">⬇ Export Excel</button></div>
       <div class="pc-scroll"><table data-draw="tb_mom" data-source="sales_daily shops stock_by_shop" data-row-key="shop"></table></div>
       <p class="pc-note">นับเฉพาะซิมรายปี 2,750 บาท: Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา และ 3000143085 เฉพาะ Dtac COCO / Dtac Hall · TG (Gap) = ยอดเดือนก่อน (LM จากไฟล์ HQ: Runrate ÷ (1 + %MoM); สาขาที่ HQ แสดง −100% ใช้ยอด TSM เดือนก่อน) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม · TG ต่อวัน (Rollover) = (TG − ยอดขายในช่วงติดตามก่อนวันล่าสุด) ÷ จำนวนวันที่เหลือรวมวันล่าสุด · ขาดวันนี้ = TG ต่อวัน − ยอดขายวันล่าสุด · TG คงเหลือ = TG − ยอดขายในช่วงติดตาม · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · Stock = ซิม 2,750 คงเหลือจากไฟล์ Stock ล่าสุดใน Drive (3000143085 นับเฉพาะ Dtac COCO / Hall) · เรียงจาก TG คงเหลือมากไปน้อย</p>
     </article>
@@ -3985,6 +3985,71 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   if (!window.MOM_PNG_BOUND) { window.MOM_PNG_BOUND = true;
     document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#mom-area-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
       try { const { cv, name } = await areaPNG(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
+
+  // PNG per Region (UPC I / UPC II / BMA): shops whose MoM is still negative, grouped by Area, with the shop list
+  const MOM_ZONES = ['UPC I', 'UPC II', 'BMA'];
+  const zonePNG = (C, z) => {
+    const M = C.M, K = RKX.C, rr = RKX.rr, fit = RKX.fit, p = PC.P();
+    const list = C.rows.filter((x) => !x.done && window.PCzone(x.area) === z); if (!list.length) return null;
+    const td = C.last >= M.from ? dTH(C.last) : 'Today', w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1];
+    const sum = (r) => { const S = (f) => r.reduce((a, x) => a + (x[f] || 0), 0); const o = { n: r.length, tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem'), stk: S('stk'), lm: S('lm'), mtd: S('mtd') }; o.ach = o.tgt ? o.win / o.tgt : null; o.mom = o.lm ? o.mtd / o.lm - 1 : null; return o; };
+    const ga = new Map(); for (const x of list) { if (!ga.has(x.area)) ga.set(x.area, []); ga.get(x.area).push(x); }
+    const groups = [...ga.entries()].map(([area, r]) => ({ area, r: r.sort((a, b) => b.rem - a.rem || (a.mom ?? 0) - (b.mom ?? 0)), ...sum(r) })).sort((a, b) => b.rem - a.rem);
+    const tot = sum(list);
+    const cols = [['รหัส', 110, 'l'], ['สาขา', 390, 'l'], ['ประเภท', 170, 'l'], ['Target ' + w, 160], ['TG/วัน', 100], ['ขาย ' + td, 130], ['ขาย ' + w, 140], ['%ACH', 100], ['%MoM ตอนนี้', 140], ['ยังขาด (ซิม)', 130], ['Stock', 100]];
+    const X = [24]; cols.forEach((c, i) => X.push(X[i] + c[1]));
+    const W = X[X.length - 1] + 24, RH = 42, GH = 48, top = 150, H = top + RH + groups.length * GH + list.length * RH + RH + 12 + 70, sc = 2;
+    const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc; const g = cv.getContext('2d'); g.scale(sc, sc);
+    const F = (wt, s) => wt + ' ' + s + 'px "Noto Sans Thai", "IBM Plex Sans Thai", system-ui, sans-serif';
+    g.fillStyle = K.bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = K.fg; g.font = F(700, 30); g.fillText('โฟกัสซิมรายปีปิดเดือน · สาขา MoM ติดลบ · ' + z, 24, 52);
+    g.fillStyle = K.mu; g.font = F(400, 17);
+    g.fillText('ซิมรายปี 2,750 บาท · ช่วงติดตาม ' + w + ' ' + (+M.month.slice(0, 4) + 543) + ' · ยอดขาย TSM ถึง ' + dTH(C.last) + (p.stype !== 'ALL' ? ' · ' + p.stype : '') + ' · Stock ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) + ' ' + C.stockAsof.slice(11, 16) + ' น.' : ''), 24, 84);
+    g.fillStyle = K.fg; g.font = F(600, 19);
+    g.fillText(groups.length + ' Area · ' + list.length + ' สาขาที่ MoM ยังติดลบ · Target ' + nf(tot.tgt) + ' ซิม · ขายแล้ว ' + nf(tot.win) + ' (' + (tot.tgt ? Math.round(100 * tot.win / tot.tgt) : 0) + '%) · ยังขาด ' + nf(tot.rem) + ' ซิม', 24, 118);
+    const txt = (s, i, yy, o = {}) => { const c = cols[i], span = o.span || 1, cw = X[i + span] - X[i]; g.font = F(o.b ? 700 : o.h ? 600 : 400, o.h ? 14 : 16); g.fillStyle = o.c || (o.h ? K.mu : K.fg);
+      if (c[2] === 'l') { g.textAlign = 'left'; g.fillText(fit(g, s, cw - 16), X[i] + 8, yy + RH / 2 + 6); } else { g.textAlign = 'right'; g.fillText(fit(g, s, cw - 14), X[i] + cw - 10, yy + RH / 2 + 6); } g.textAlign = 'left'; };
+    const pct = (v) => (v == null ? '–' : Math.round(v * 100) + '%'), mom = (v) => (v == null ? '–' : (v > 0 ? '+' : '') + Math.round(v * 100) + '%');
+    const nums = (o, yy, b) => { txt(nf(o.tgt), 3, yy, { b }); txt(o.tpd.toFixed(1), 4, yy, { b }); txt(nf(o.today), 5, yy, { b, c: o.today >= o.tpd ? K.ok : K.bad }); txt(nf(o.win), 6, yy, { b });
+      txt(pct(o.ach), 7, yy, { b, c: o.ach == null ? K.mu : o.ach >= 1 ? K.ok : K.bad }); txt(mom(o.mom), 8, yy, { b, c: o.mom == null ? K.mu : o.mom >= 0 ? K.ok : K.bad }); txt(o.rem ? nf(o.rem) : 'ครบ', 9, yy, { b, c: o.rem ? K.bad : K.ok }); txt(nf(o.stk), 10, yy, { b, c: o.stk ? K.fg : K.bad }); };
+    let y = top; g.fillStyle = '#f3f2ee'; g.fillRect(24, y, W - 48, RH); cols.forEach((c, i) => txt(c[0], i, y, { h: 1 })); y += RH;
+    for (const G of groups) {
+      g.fillStyle = '#e8eef8'; g.fillRect(24, y + 4, W - 48, GH - 6); g.fillStyle = '#3b5f99'; g.fillRect(24, y + 4, 5, GH - 6);
+      const gy = y + (GH - RH) / 2 + 2; txt(G.area + ' · ' + G.n + ' สาขา', 0, gy, { b: 1, span: 3, c: '#1f3d6e' }); nums(G, gy, 1); y += GH;
+      G.r.forEach((x, k) => { if (k % 2) { g.fillStyle = '#faf9f6'; g.fillRect(24, y, W - 48, RH); }
+        txt(x.shop, 0, y, { c: K.mu }); txt(String(x.name || '').trim().replace(/^True (Shop|shop|Move Shop) /, ''), 1, y); txt(x.stype || '', 2, y, { c: K.mu });
+        nums({ ...x, stk: x.stk || 0 }, y, false); g.strokeStyle = K.line; g.lineWidth = 1; g.beginPath(); g.moveTo(24, y + RH); g.lineTo(W - 24, y + RH); g.stroke(); y += RH; });
+    }
+    y += 6; g.strokeStyle = K.fg; g.lineWidth = 2; g.beginPath(); g.moveTo(24, y); g.lineTo(W - 24, y); g.stroke();
+    txt('รวม ' + z + ' · ' + groups.length + ' Area · ' + list.length + ' สาขา', 0, y, { b: 1, span: 3 }); nums(tot, y, 1);
+    g.fillStyle = K.mu; g.font = F(400, 14);
+    g.fillText(fit(g, 'เฉพาะสาขาที่ยอดเดือนนี้ยังต่ำกว่า LM (MoM ติดลบ) · Target = ยอดเดือนก่อน (HQ) − ยอดขาย 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + ' · TG/วัน แบบ Rollover · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · เรียง Area และสาขาจากยังขาดมากไปน้อย', W - 48), 24, H - 44);
+    g.fillText('Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา + 3000143085 เฉพาะ Dtac COCO / Hall · Prepay Dashboard', 24, H - 20);
+    return { cv, name: 'Focus_SIM2750_MoM_Neg_' + z.replace(/\s+/g, '') + '_' + (C.last || M.from) + '.png' };
+  };
+  // one modal with every picture: download all / share all (mobile, e.g. LINE) / download one by one
+  const showMany = async (items, skipped) => {
+    const fs = await Promise.all(items.map(({ cv, name }) => new Promise((ok) => cv.toBlob((b) => ok({ b, name, url: URL.createObjectURL(b) }), 'image/png'))));
+    const mk = (t, c, s) => { const e = document.createElement(t); if (c) e.className = c; if (s != null) e.textContent = s; return e; };
+    const m = mk('div', 'pc-xmodal'), box = mk('div', 'pc-xbox'), bt = mk('div', 'pc-xbtns');
+    const dl = (f) => { const a = document.createElement('a'); a.href = f.url; a.download = f.name; document.body.append(a); a.click(); a.remove(); };
+    const all = mk('button', 'pri', '⬇ ดาวน์โหลดทั้งหมด (' + fs.length + ' รูป)'); all.type = 'button'; all.onclick = () => fs.forEach((f, i) => setTimeout(() => dl(f), i * 500));
+    if (fs.length) bt.append(all);
+    const files = fs.map((f) => new File([f.b], f.name, { type: 'image/png' }));
+    if (files.length && navigator.canShare && navigator.canShare({ files })) { const sh = mk('button', '', 'แชร์ / บันทึกลงรูปภาพ (' + files.length + ' รูป)'); sh.type = 'button'; sh.onclick = () => navigator.share({ files, title: 'สาขา MoM ติดลบ' }).catch(() => {}); bt.append(sh); }
+    const cl = mk('button', '', '✕ ปิด'); cl.type = 'button'; bt.append(cl, mk('span', 'hint', 'ถ้าดาวน์โหลดไม่ได้: กดค้างที่รูปแล้วเลือกบันทึกรูป'));
+    box.append(bt);
+    if (skipped.length) box.append(mk('p', 'pc-note', 'ไม่มีสาขา MoM ติดลบ (หรือไม่อยู่ในตัวกรอง): ' + skipped.join(', ')));
+    fs.forEach((f) => { const h = mk('div', 'pc-xbtns'); const a = mk('a', '', '⬇ ' + f.name); a.href = f.url; a.download = f.name; h.append(a); const img = new Image(); img.src = f.url; img.alt = f.name; box.append(h, img); });
+    m.append(box); document.body.append(m);
+    const close = () => { m.remove(); fs.forEach((f) => URL.revokeObjectURL(f.url)); }; cl.onclick = close; m.onclick = (e) => { if (e.target === m) close(); };
+  };
+  if (!window.MOM_ZPNG_BOUND) { window.MOM_ZPNG_BOUND = true;
+    document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#mom-zone-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
+      try { try { await document.fonts.ready; } catch (er) {} const C = calc(); if (!C) return; const out = [], skip = [];
+        for (const z of MOM_ZONES) { const r = zonePNG(C, z); if (r) out.push(r); else skip.push(z); }
+        await showMany(out, skip);
+      } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
 
   dash.draw('tb_mom_area', (el) => {
     const C = calc(); if (!C) { el.innerHTML = ''; return; }
