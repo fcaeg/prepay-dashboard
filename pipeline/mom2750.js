@@ -174,7 +174,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const { C, rows } = areaRows(); const M = C.M, K = RKX.C, rr = RKX.rr, fit = RKX.fit, IMG = window.PROMO_IMG || {};
     const td = C.last >= M.from ? dTH(C.last) : 'Today', w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1];
     const cols = [['Area', 300, 'l'], ['สาขาผ่านแล้ว', 150], ['Target ' + w, 170], ['Target/วัน', 120], ['ขาย ' + td + ' / เป้าวัน', 200], ['ขาย ' + w, 150], ['%ACH', 100], ['ยังขาด (ซิม)', 140]];
-    const W = 48 + cols.reduce((a, c) => a + c[1], 0), RH = 44, PH = 210, top = 130 + PH + 30, H = top + RH * (rows.length + 2) + 90, sc = 2;
+    const W = 48 + cols.reduce((a, c) => a + c[1], 0), RH = 44, PH = 210, ZH = 190, top = 130 + PH + 24 + ZH + 30, H = top + RH * (rows.length + 2) + 90, sc = 2;
     const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc; const g = cv.getContext('2d'); g.scale(sc, sc);
     const F = (wt, z) => wt + ' ' + z + 'px "Noto Sans Thai", "IBM Plex Sans Thai", system-ui, sans-serif';
     g.fillStyle = K.bg; g.fillRect(0, 0, W, H);
@@ -192,6 +192,18 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       g.fillStyle = P.c; g.font = F(700, 22); g.fillText(fit(g, P.name, x + pw - tx - 12), tx, y + 40); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(fit(g, P.sub, x + pw - tx - 12), tx, y + 64);
       [['Stock', S('s'), S('s') ? K.fg : K.bad], ['ขาย ' + td, S('t'), K.fg], ['ขาย ' + w, S('w'), K.fg]].forEach(([l, v, c], j) => { const bx = tx + j * 150; g.fillStyle = c; g.font = F(700, 34); g.fillText(nf(v), bx, y + 120); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(l, bx, y + 144); });
       g.font = F(400, 13); g.fillStyle = K.mu; g.fillText(fit(g, P.mats.filter((m) => ((C.pk[m] || {}).s || 0) > 0).map((m) => m + ': ' + nf((C.pk[m] || {}).s || 0)).join(' · '), x + pw - tx - 12), tx, y + 180); });
+    // zone cards: BMA / UPC I / UPC II
+    { const zs = ['BMA', 'UPC I', 'UPC II'].map((z) => { const r = C.rows.filter((x) => window.PCzone(x.area) === z), S = (f) => r.reduce((a, x) => a + (x[f] || 0), 0);
+        const o = { z, n: r.length, done: r.filter((x) => x.done).length, tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem'), areas: new Set(r.map((x) => x.area)).size }; o.ach = o.tgt ? o.win / o.tgt : 0; return o; });
+      const zw = (W - 48 - 40) / 3, zy = 130 + PH + 24;
+      zs.forEach((o, i) => { const x = 24 + i * (zw + 20); g.fillStyle = '#ffffff'; rr(g, x, zy, zw, ZH, 12); g.fill(); g.strokeStyle = K.line; g.lineWidth = 1.5; rr(g, x, zy, zw, ZH, 12); g.stroke();
+        g.fillStyle = K.fg; g.font = F(700, 24); g.fillText(o.z, x + 18, zy + 38); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(o.areas + ' Area · ' + o.n + ' สาขา · ผ่านแล้ว ' + o.done + '/' + o.n, x + 18, zy + 60);
+        g.textAlign = 'right'; g.font = F(700, 34); g.fillStyle = o.ach >= 1 ? K.ok : K.bad; g.fillText(Math.round(o.ach * 100) + '%', x + zw - 18, zy + 46); g.textAlign = 'left';
+        const by = zy + 78, bw = zw - 36; g.fillStyle = K.grid; rr(g, x + 18, by, bw, 12, 6); g.fill(); if (o.ach > 0) { g.fillStyle = o.ach >= 1 ? K.ok : K.bad; rr(g, x + 18, by, Math.max(12, bw * Math.min(1, o.ach)), 12, 6); g.fill(); }
+        const fr = [0.17, 0.17, 0.26, 0.2, 0.2]; let cx = x + 18;
+        [['Target', nf(o.tgt)], ['เป้า/วัน', o.tpd.toFixed(1)], ['วันนี้ / เป้าวัน', nf(o.today) + ' / ' + o.tpd.toFixed(1)], ['ขายสะสม', nf(o.win)], ['ยังขาด', nf(o.rem)]].forEach(([l, v], j) => {
+          const cw = bw * fr[j]; g.fillStyle = j === 2 ? (o.today >= o.tpd ? K.ok : K.bad) : j === 4 ? (o.rem ? K.bad : K.ok) : K.fg; g.font = F(700, 20); g.fillText(fit(g, v, cw - 8), cx, zy + 130); g.fillStyle = K.mu; g.font = F(400, 13); g.fillText(fit(g, l, cw - 8), cx, zy + 152); cx += cw; }); });
+    }
     // table
     let y = top; g.fillStyle = '#f3f2ee'; g.fillRect(24, y, W - 48, RH);
     const cell = (txt, i, yy, opt = {}) => { let x = 24; for (let k = 0; k < i; k++) x += cols[k][1]; const c = cols[i]; g.font = F(opt.b ? 700 : opt.h ? 600 : 400, opt.h ? 15 : 17);
@@ -206,7 +218,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     rows.forEach((a) => row(a));
     const S = (f) => rows.reduce((s, a) => s + a[f], 0), tot = { area: 'รวม ' + rows.length + ' Area', n: S('n'), done: S('done'), tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem') }; tot.ach = tot.tgt ? tot.win / tot.tgt : null;
     g.strokeStyle = K.fg; g.lineWidth = 2; g.beginPath(); g.moveTo(24, y); g.lineTo(W - 24, y); g.stroke(); row(tot, true);
-    g.fillStyle = K.mu; g.font = F(400, 14); g.fillText('เฉพาะ Area ที่ยังขาด TG · Target = ยอดเดือนก่อน (HQ) − ยอดขาย 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + ' · Target/วัน = Target ÷ ' + (days(M.from, M.to) + 1) + ' วัน', 24, H - 44);
+    g.fillStyle = K.mu; g.font = F(400, 14); g.fillText('เฉพาะ Area ที่ยังขาด TG · Target = ยอดเดือนก่อน (HQ) − ยอดขาย 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + ' · Target/วัน แบบ Rollover = (Target − ยอดขายในช่วงก่อนวันล่าสุด) ÷ วันที่เหลือรวมวันล่าสุด', 24, H - 44);
     g.fillText('Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา + 3000143085 เฉพาะ Dtac COCO / Hall · Stock เฉพาะสาขาในรายการ · Prepay Dashboard', 24, H - 20);
     return { cv, name: 'Focus_SIM2750_Area_' + (C.last || M.from) + '.png' };
   };
