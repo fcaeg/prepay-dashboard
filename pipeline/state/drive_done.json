@@ -550,5 +550,11 @@
   "kind": "stock",
   "at": "2026-11-20 16:42",
   "ok": true
+ },
+ "1_hkTyYe4AV9lm_ZLmLJxV41dvFFCmyKp": {
+  "name": "daily_sales - 2026-11-20T164425.259.zip",
+  "kind": "sales",
+  "at": "2026-11-20 16:57",
+  "ok": true
  }
 }
