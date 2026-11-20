@@ -31,6 +31,14 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   .mm-row { grid-template-columns: 1fr 1fr; } .mm-row .mm-dt { grid-column: 1 / -1; } .mm-row.mm-hd span:first-child { display: none; }
   .mm-pb { grid-template-columns: 1fr; gap: 2px; } .mm-row.mm-tot .mm-note { grid-column: 1 / -1; }
 }
+.mm-packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; }
+.mm-pack { display: flex; gap: 16px; align-items: center; background: var(--color-panel); border: 1px solid var(--color-border-line); border-left: 4px solid var(--pk); border-radius: var(--cds-radius); padding: 12px 14px; }
+.mm-pack img { height: 130px; width: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.18); flex: none; }
+.mm-pi h4 { margin: 0; font-size: 16px; color: var(--pk); } .mm-pi > small { color: var(--color-fg-muted); font-size: 12px; }
+.mm-pn { display: flex; gap: 22px; margin: 8px 0 6px; flex-wrap: wrap; } .mm-pn div { display: flex; flex-direction: column; }
+.mm-pn b { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; } .mm-pn span { font-size: 12px; color: var(--color-fg-muted); }
+.mm-pm { display: block; font-size: 11.5px; color: var(--color-fg-muted); }
+@media (max-width: 480px) { .mm-pack img { height: 96px; } .mm-pn { gap: 14px; } .mm-pn b { font-size: 20px; } }
 .mm-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; align-items: end; }
 .mm-day { text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
 .mm-day i { display: block; margin: 2px auto 3px; width: 70%; min-height: 2px; background: var(--color-accent, #3b78d4); border-radius: 3px 3px 0 0; }
@@ -66,7 +74,8 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       if (!ok(s.c, area, stype)) continue;
       rows.set(s.c, { shop: s.c, name: x.name || s.n, area, stype, lm: s.lm, src: s.src, hqmom: s.mom, stock: s.stock, note: s.rem, before: 0, win: 0, mtd: 0, netw: 0, byDay: {} });
     }
-    let last = '';
+    let last = ''; const pk = {};
+    let lastAll = ''; for (const r of sales) { const d = String(r.date); if (d.slice(0, 7) === M.month && d > lastAll) lastAll = d; }
     const daily = {};
     for (const r of sales) {
       const d = String(r.date); if (d.slice(0, 7) !== M.month) continue; if (d > last) last = d;
@@ -74,20 +83,20 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       const c = String(r.shop); if (m === M.dtac_only && !dtac.has(c)) continue;
       const x = rows.get(c); if (!x) continue;
       const u = +r.units || 0; x.mtd += u;
-      x.byDay[d] = (x.byDay[d] || 0) + u;
+      x.byDay[d] = (x.byDay[d] || 0) + u; if (d >= M.from && d <= M.to) { const k = pk[m] || (pk[m] = { s: 0, w: 0, t: 0 }); k.w += u; if (d === lastAll) k.t += u; }
       if (d < M.from) x.before += u; else if (d <= M.to) { x.win += u; x.netw += +r.net || 0; daily[d] = (daily[d] || 0) + u; }
     }
     // real stock of the 2,750 SIMs from the latest stock file (Drive) - 3000143085 only where it can be sold
     let stockAsof = '';
     for (const r of (PC.rows('stock_by_shop') || [])) { const m = String(r.matcode); if (!mats.has(m)) continue; const c = String(r.shop);
-      if (!stockAsof && r.asof) stockAsof = String(r.asof); if (m === M.dtac_only && !dtac.has(c)) continue; const x = rows.get(c); if (x) x.stk = (x.stk || 0) + (+r.qty || 0); }
+      if (!stockAsof && r.asof) stockAsof = String(r.asof); if (m === M.dtac_only && !dtac.has(c)) continue; const x = rows.get(c); if (x) { x.stk = (x.stk || 0) + (+r.qty || 0); (pk[m] || (pk[m] = { s: 0, w: 0, t: 0 })).s += +r.qty || 0; } }
     const left = !last || last < M.from ? days(M.from, M.to) + 1 : Math.max(1, days(last, M.to) + 1); // today counts as a selling day (files come in during the day)
     const out = [...rows.values()].map((x) => {
       const tgt = Math.max(0, x.lm - x.before), rem = Math.max(0, x.lm - x.mtd);
       const tpd = tgt / (days(M.from, M.to) + 1), today = last >= M.from ? (x.byDay[last] || 0) : 0;   // TG per day = Gap ÷ days of the window
       return { ...x, tgt, rem, tpd, today, short: last >= M.from ? Math.max(0, tpd - today) : null, ach: tgt ? x.win / tgt : null, mom: x.lm ? x.mtd / x.lm - 1 : null, need: rem / left, done: x.mtd >= x.lm };
     });
-    return { M, rows: out, last, left, daily, stockAsof };
+    return { M, rows: out, last, left, daily, stockAsof, pk };
   };
   window.MOM_CALC = calc;
 
@@ -136,6 +145,72 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       + '<div class="mm-grid"><div class="mm-row mm-hd"><span>วันที่</span><span>ยอดขายรายวัน / TG รายวัน</span><span>ยอดขายสะสม / TG สะสม</span></div>' + body
       + '<div class="mm-row mm-tot"><span class="mm-dt">รวมทั้งช่วง</span>' + bar(cum, gap, false) + '<span class="mm-note">ผ่านมา ' + doneDays + ' วัน · ควรได้สะสม ' + nf(tg * doneDays) + ' · ทำได้ ' + nf(cum) + (cum < tg * doneDays ? ' · ขาดไป ' + nf(tg * doneDays - cum) : '') + '</span></div></div>';
   });
+
+  // SIM package pictures + stock / sales of the shops in the list
+  const PACKS = [
+    { name: 'True ซิมรายปี 2,750 บาท', sub: '15Mbps 100GB/รอบ · 12 รอบ · ทุกประเภทสาขา', mats: ['3000122199', '3000122191', '3000122169'], img: '3000122199', c: '#9b3fc4' },
+    { name: 'dtac คงกระพัน+ 2,750 บาท', sub: '15Mbps 100GB/รอบ · 12 รอบ · เฉพาะ Dtac COCO / Hall', mats: ['3000143085'], img: '3000143085', c: '#1a8fd4' },
+  ];
+  window.MOM_PACKS = PACKS;
+  dash.draw('mom_pack', (el) => {
+    const C = calc(); if (!C) { el.innerHTML = ''; return; }
+    const IMG = window.PROMO_IMG || {}, g = (m, f) => (C.pk[m] || {})[f] || 0, td = C.last >= C.M.from ? dTH(C.last) : 'Today';
+    el.innerHTML = '<div class="mm-packs">' + PACKS.map((P) => { const S = (f) => P.mats.reduce((a, m) => a + g(m, f), 0);
+      return '<article class="mm-pack" style="--pk:' + P.c + '">' + (IMG[P.img] ? '<img src="' + IMG[P.img] + '" alt="ปกซิม ' + esc(P.name) + '" loading="lazy">' : '') + '<div class="mm-pi"><h4>' + esc(P.name) + '</h4><small>' + esc(P.sub) + '</small>'
+        + '<div class="mm-pn"><div><b class="' + (S('s') ? '' : 'mm-bad') + '">' + nf(S('s')) + '</b><span>Stock สาขาในรายการ</span></div><div><b>' + nf(S('t')) + '</b><span>ขาย ' + td + '</span></div><div><b>' + nf(S('w')) + '</b><span>ขาย ' + (+C.M.from.slice(8)) + '–' + (+C.M.to.slice(8)) + '</span></div></div>'
+        + '<small class="mm-pm">' + P.mats.map((m) => 'Matcode ' + m + ' · Stock ' + nf(g(m, 's'))).join('<br>') + '</small></div></article>'; }).join('')
+      + '</div><p class="pc-note">Stock ณ ไฟล์ล่าสุด ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) + ' ' + C.stockAsof.slice(11, 16) + ' น.' : '') + ' · นับเฉพาะ ' + nf(C.rows.length) + ' สาขาในรายการตามตัวกรอง</p>';
+  });
+
+  // PNG of the Area table (with the SIM packages and stock on top)
+  const areaRows = () => { const C = calc(); if (!C) return null; const M = C.M, nd = days(M.from, M.to) + 1, m = new Map();
+    for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
+    return { C, rows: [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, tpd: a.tgt / nd, ach: a.tgt ? a.win / a.tgt : null })).sort((a, b) => b.rem - a.rem) }; };
+  const loadImg = (src) => new Promise((ok) => { if (!src) return ok(null); const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+  const areaPNG = async () => {
+    try { await document.fonts.ready; } catch (e) {}
+    const { C, rows } = areaRows(); const M = C.M, K = RKX.C, rr = RKX.rr, fit = RKX.fit, IMG = window.PROMO_IMG || {};
+    const td = C.last >= M.from ? dTH(C.last) : 'Today', w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1];
+    const cols = [['Area', 300, 'l'], ['สาขาผ่านแล้ว', 150], ['Target ' + w, 170], ['Target/วัน', 120], ['ขาย ' + td + ' / เป้าวัน', 200], ['ขาย ' + w, 150], ['%ACH', 100], ['ยังขาด (ซิม)', 140]];
+    const W = 48 + cols.reduce((a, c) => a + c[1], 0), RH = 44, PH = 210, top = 130 + PH + 30, H = top + RH * (rows.length + 2) + 90, sc = 2;
+    const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc; const g = cv.getContext('2d'); g.scale(sc, sc);
+    const F = (wt, z) => wt + ' ' + z + 'px "Noto Sans Thai", "IBM Plex Sans Thai", system-ui, sans-serif';
+    g.fillStyle = K.bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = K.fg; g.font = F(700, 30); g.fillText('โฟกัสซิมรายปีปิดเดือน · ซิม 2,750 บาท · สรุปราย Area', 24, 52);
+    const p = PC.P(); g.fillStyle = K.mu; g.font = F(400, 17);
+    g.fillText('สาขา %MoM ติดลบ ' + nf(C.rows.length) + ' สาขา · ช่วงติดตาม ' + w + ' ' + (+M.month.slice(0, 4) + 543) + ' · ยอดขาย TSM ถึง ' + dTH(C.last) + (p.area !== 'ALL' ? ' · ' + p.area : '') + (p.stype !== 'ALL' ? ' · ' + p.stype : '') + ' · Stock ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) + ' ' + C.stockAsof.slice(11, 16) + ' น.' : ''), 24, 84);
+    // KPI line
+    const T = (f) => C.rows.reduce((a, x) => a + f(x), 0), tg = T((x) => x.tgt), wi = T((x) => x.win), tdS = rows.reduce((a, x) => a + x.today, 0) + 0;
+    g.font = F(600, 18); g.fillStyle = K.fg; g.fillText('Target ' + nf(tg) + ' ซิม (' + (tg / (days(M.from, M.to) + 1)).toFixed(1) + '/วัน) · ขายแล้ว ' + nf(wi) + ' (' + (tg ? Math.round(100 * wi / tg) : 0) + '%) · ยังขาด ' + nf(T((x) => x.rem)) + ' · ผ่านแล้ว ' + C.rows.filter((x) => x.done).length + '/' + C.rows.length + ' สาขา', 24, 114);
+    // packages
+    const imgs = await Promise.all(PACKS.map((P) => loadImg(IMG[P.img]))); const pw = (W - 48 - 20) / 2;
+    PACKS.forEach((P, i) => { const x = 24 + i * (pw + 20), y = 130; g.fillStyle = '#faf9f6'; rr(g, x, y, pw, PH, 12); g.fill(); g.strokeStyle = P.c; g.lineWidth = 2; rr(g, x, y, pw, PH, 12); g.stroke();
+      let tx = x + 18; const im = imgs[i]; if (im) { const ih = PH - 30, iw = im.width * ih / im.height; g.drawImage(im, x + 15, y + 15, iw, ih); tx = x + 15 + iw + 20; }
+      const S = (f) => P.mats.reduce((a, m) => a + ((C.pk[m] || {})[f] || 0), 0);
+      g.fillStyle = P.c; g.font = F(700, 22); g.fillText(fit(g, P.name, x + pw - tx - 12), tx, y + 40); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(fit(g, P.sub, x + pw - tx - 12), tx, y + 64);
+      [['Stock', S('s'), S('s') ? K.fg : K.bad], ['ขาย ' + td, S('t'), K.fg], ['ขาย ' + w, S('w'), K.fg]].forEach(([l, v, c], j) => { const bx = tx + j * 150; g.fillStyle = c; g.font = F(700, 34); g.fillText(nf(v), bx, y + 120); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(l, bx, y + 144); });
+      g.font = F(400, 13); g.fillStyle = K.mu; g.fillText(fit(g, P.mats.map((m) => m + ': ' + nf((C.pk[m] || {}).s || 0)).join(' · '), x + pw - tx - 12), tx, y + 180); });
+    // table
+    let y = top; g.fillStyle = '#f3f2ee'; g.fillRect(24, y, W - 48, RH);
+    const cell = (txt, i, yy, opt = {}) => { let x = 24; for (let k = 0; k < i; k++) x += cols[k][1]; const c = cols[i]; g.font = F(opt.b ? 700 : opt.h ? 600 : 400, opt.h ? 15 : 17);
+      if (opt.pill) { const tw = g.measureText(txt).width + 22, px = c[2] === 'l' ? x + 10 : x + c[1] - 12 - tw; g.strokeStyle = opt.pill; g.lineWidth = 1.5; rr(g, px, yy + 9, tw, RH - 18, (RH - 18) / 2); g.stroke(); g.fillStyle = opt.pill; g.textAlign = 'left'; g.fillText(txt, px + 11, yy + RH / 2 + 6); return; }
+      g.fillStyle = opt.c || (opt.h ? K.mu : K.fg); g.textAlign = c[2] === 'l' ? 'left' : 'right'; g.fillText(c[2] === 'l' ? fit(g, txt, c[1] - 20) : txt, c[2] === 'l' ? x + 10 : x + c[1] - 12, yy + RH / 2 + 6); g.textAlign = 'left'; };
+    cols.forEach((c, i) => cell(c[0], i, y, { h: 1 })); y += RH;
+    const row = (a, b) => { cell(a.area, 0, y, { b });
+      cell((a.done ? '✓ ' : '') + a.done + ' / ' + a.n, 1, y, { pill: a.done ? K.ok : K.mu }); cell(nf(a.tgt), 2, y, { b }); cell(a.tpd.toFixed(1), 3, y, { b });
+      cell(nf(a.today) + ' / ' + a.tpd.toFixed(1), 4, y, { pill: a.today >= a.tpd ? K.ok : K.bad }); cell(nf(a.win), 5, y, { b });
+      cell(a.ach == null ? '–' : Math.round(a.ach * 100) + '%', 6, y, { pill: a.ach >= 1 ? K.ok : K.bad }); cell(a.rem ? nf(a.rem) : 'ครบ', 7, y, { pill: a.rem ? K.bad : K.ok });
+      g.strokeStyle = K.line; g.lineWidth = 1; g.beginPath(); g.moveTo(24, y + RH); g.lineTo(W - 24, y + RH); g.stroke(); y += RH; };
+    rows.forEach((a) => row(a));
+    const S = (f) => rows.reduce((s, a) => s + a[f], 0), tot = { area: 'รวม ' + rows.length + ' Area', n: S('n'), done: S('done'), tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem') }; tot.ach = tot.tgt ? tot.win / tot.tgt : null;
+    g.strokeStyle = K.fg; g.lineWidth = 2; g.beginPath(); g.moveTo(24, y); g.lineTo(W - 24, y); g.stroke(); row(tot, true);
+    g.fillStyle = K.mu; g.font = F(400, 14); g.fillText('เฉพาะ Area ที่ยังขาด TG · Target = ยอดเดือนก่อน (HQ) − ยอดขาย 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + ' · Target/วัน = Target ÷ ' + (days(M.from, M.to) + 1) + ' วัน', 24, H - 44);
+    g.fillText('Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา + 3000143085 เฉพาะ Dtac COCO / Hall · Stock เฉพาะสาขาในรายการ · Prepay Dashboard', 24, H - 20);
+    return { cv, name: 'Focus_SIM2750_Area_' + (C.last || M.from) + '.png' };
+  };
+  if (!window.MOM_PNG_BOUND) { window.MOM_PNG_BOUND = true;
+    document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#mom-area-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
+      try { const { cv, name } = await areaPNG(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
 
   dash.draw('tb_mom_area', (el) => {
     const C = calc(); if (!C) { el.innerHTML = ''; return; }

@@ -479,10 +479,14 @@ body.pc-noscroll { overflow: hidden; }
   <section class="pc-sec" id="promo" data-page="promo" hidden><div class="pc-sec" data-draw="promo_board" data-source="sales_daily stock_by_shop shops watch_serials"></div></section>
 
   <section class="pc-sec" id="mom" data-page="mom" hidden>
-    <div data-draw="mom_head" data-source="sales_daily shops"></div>
+    <div data-draw="mom_head" data-source="sales_daily shops stock_by_shop"></div>
     <article class="pc-card">
-      <h3>สรุปราย Area · เฉพาะ Area ที่ยังขาด TG</h3>
-      <div class="pc-scroll"><table data-draw="tb_mom_area" data-source="sales_daily shops" data-row-key="area"></table></div>
+      <h3>ซิมรายปี 2,750 · Stock และยอดขายของสาขาในรายการ</h3>
+      <div data-draw="mom_pack" data-source="sales_daily shops stock_by_shop"></div>
+    </article>
+    <article class="pc-card">
+      <div class="pc-tools" style="justify-content:space-between"><h3 style="margin:0">สรุปราย Area · เฉพาะ Area ที่ยังขาด TG</h3><button class="pc-export" id="mom-area-png" type="button">⬇ ดาวน์โหลดรูป PNG</button></div>
+      <div class="pc-scroll"><table data-draw="tb_mom_area" data-source="sales_daily shops stock_by_shop" data-row-key="area"></table></div>
     </article>
     <article class="pc-card">
       <h3>รายสาขา</h3>
