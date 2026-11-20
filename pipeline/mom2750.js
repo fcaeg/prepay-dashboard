@@ -49,7 +49,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   const dTH = (s) => (s ? (+s.slice(8, 10)) + ' ' + TH[+s.slice(5, 7) - 1] : '–');
   const add = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
   const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
-  let view = 'all';
+  let view = 'gap';   // default: shops whose MoM is still negative
 
   // one pass over the data, shared by every card of the tab
   const calc = () => {
@@ -130,7 +130,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const C = calc(); if (!C) { el.innerHTML = ''; return; }
     const m = new Map();
     for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, lm: 0, tgt: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.lm += x.lm; a.tgt += x.tgt; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
-    const rows = [...m.values()].map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null }));
+    const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
     PC.table(el, 'tb_mom_area', rows, { key: ['area'], def: 'rem', limit: 100, cols: [
       { f: 'area', label: 'Area', wrap: true }, { f: 'n', label: 'สาขา', num: true, fmt: PC.nf }, { f: 'done', label: 'MoM บวกแล้ว', num: true, fmt: PC.nf },
       { f: 'tgt', label: 'Target (Gap)', num: true, fmt: PC.nf }, { f: 'win', label: 'ขายช่วงติดตาม', num: true, fmt: PC.nf },
@@ -139,7 +139,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   });
 
   dash.draw('mom_seg', (el) => {
-    el.innerHTML = [['all', 'ทุกสาขา'], ['gap', 'ยังขาด'], ['done', 'MoM บวกแล้ว']].map(([k, l]) => '<button type="button" data-v="' + k + '" aria-pressed="' + (view === k) + '">' + l + '</button>').join('');
+    el.innerHTML = [['gap', 'MoM ยังลบ'], ['done', 'MoM บวกแล้ว'], ['all', 'ทุกสาขา']].map(([k, l]) => '<button type="button" data-v="' + k + '" aria-pressed="' + (view === k) + '">' + l + '</button>').join('');
     el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; view = b.dataset.v; dash.draw('mom_seg'); dash.draw('tb_mom'); };
   });
 
