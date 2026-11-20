@@ -31,6 +31,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
   .mm-row { grid-template-columns: 1fr 1fr; } .mm-row .mm-dt { grid-column: 1 / -1; } .mm-row.mm-hd span:first-child { display: none; }
   .mm-pb { grid-template-columns: 1fr; gap: 2px; } .mm-row.mm-tot .mm-note { grid-column: 1 / -1; }
 }
+[data-draw="tb_mom_area"] tbody tr:last-child td { font-weight: 700; border-top: 2px solid var(--color-fg); background: var(--color-panel); }
 .mm-packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; }
 .mm-pack { display: flex; gap: 16px; align-items: center; background: var(--color-panel); border: 1px solid var(--color-border-line); border-left: 4px solid var(--pk); border-radius: var(--cds-radius); padding: 12px 14px; }
 .mm-pack img { height: 130px; width: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.18); flex: none; }
@@ -159,7 +160,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     el.innerHTML = '<div class="mm-packs">' + PACKS.map((P) => { const S = (f) => P.mats.reduce((a, m) => a + g(m, f), 0);
       return '<article class="mm-pack" style="--pk:' + P.c + '">' + (IMG[P.img] ? '<img src="' + IMG[P.img] + '" alt="ปกซิม ' + esc(P.name) + '" loading="lazy">' : '') + '<div class="mm-pi"><h4>' + esc(P.name) + '</h4><small>' + esc(P.sub) + '</small>'
         + '<div class="mm-pn"><div><b class="' + (S('s') ? '' : 'mm-bad') + '">' + nf(S('s')) + '</b><span>Stock สาขาในรายการ</span></div><div><b>' + nf(S('t')) + '</b><span>ขาย ' + td + '</span></div><div><b>' + nf(S('w')) + '</b><span>ขาย ' + (+C.M.from.slice(8)) + '–' + (+C.M.to.slice(8)) + '</span></div></div>'
-        + '<small class="mm-pm">' + P.mats.map((m) => 'Matcode ' + m + ' · Stock ' + nf(g(m, 's'))).join('<br>') + '</small></div></article>'; }).join('')
+        + '<small class="mm-pm">' + P.mats.filter((m) => g(m, 's') > 0).map((m) => 'Matcode ' + m + ' · Stock ' + nf(g(m, 's'))).join('<br>') + '</small></div></article>'; }).join('')
       + '</div><p class="pc-note">Stock ณ ไฟล์ล่าสุด ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) + ' ' + C.stockAsof.slice(11, 16) + ' น.' : '') + ' · นับเฉพาะ ' + nf(C.rows.length) + ' สาขาในรายการตามตัวกรอง</p>';
   });
 
@@ -190,7 +191,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       const S = (f) => P.mats.reduce((a, m) => a + ((C.pk[m] || {})[f] || 0), 0);
       g.fillStyle = P.c; g.font = F(700, 22); g.fillText(fit(g, P.name, x + pw - tx - 12), tx, y + 40); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(fit(g, P.sub, x + pw - tx - 12), tx, y + 64);
       [['Stock', S('s'), S('s') ? K.fg : K.bad], ['ขาย ' + td, S('t'), K.fg], ['ขาย ' + w, S('w'), K.fg]].forEach(([l, v, c], j) => { const bx = tx + j * 150; g.fillStyle = c; g.font = F(700, 34); g.fillText(nf(v), bx, y + 120); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(l, bx, y + 144); });
-      g.font = F(400, 13); g.fillStyle = K.mu; g.fillText(fit(g, P.mats.map((m) => m + ': ' + nf((C.pk[m] || {}).s || 0)).join(' · '), x + pw - tx - 12), tx, y + 180); });
+      g.font = F(400, 13); g.fillStyle = K.mu; g.fillText(fit(g, P.mats.filter((m) => ((C.pk[m] || {}).s || 0) > 0).map((m) => m + ': ' + nf((C.pk[m] || {}).s || 0)).join(' · '), x + pw - tx - 12), tx, y + 180); });
     // table
     let y = top; g.fillStyle = '#f3f2ee'; g.fillRect(24, y, W - 48, RH);
     const cell = (txt, i, yy, opt = {}) => { let x = 24; for (let k = 0; k < i; k++) x += cols[k][1]; const c = cols[i]; g.font = F(opt.b ? 700 : opt.h ? 600 : 400, opt.h ? 15 : 17);
@@ -220,13 +221,15 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, tpd: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.tpd += x.tpd; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
     const nd = days(M.from, M.to) + 1;
     const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
-    PC.table(el, 'tb_mom_area', rows, { key: ['area'], def: 'rem', limit: 100, cols: [
+    const S = (f) => rows.reduce((a, x) => a + x[f], 0);
+    if (rows.length) { const t = { area: 'รวม ' + rows.length + ' Area', _tot: true, n: S('n'), done: S('done'), tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem') }; t.ach = t.tgt ? t.win / t.tgt : null; rows.push(t); }
+    PC.table(el, 'tb_mom_area', rows, { last: (r) => r._tot,  key: ['area'], def: 'rem', limit: 100, cols: [
       { f: 'area', label: 'Area', wrap: true },
       { f: 'done', label: 'สาขาผ่านแล้ว', num: true, pill: (d) => [d.done ? 'ok' : 'mute', (d.done ? '✓ ' : '') + d.done + ' / ' + d.n + ' สาขา'] },
       { f: 'tgt', label: 'Target ' + w + ' (จำนวนซิม)', num: true, fmt: PC.nf },
       { f: 'tpd', label: 'Target ต่อวัน', num: true, fmt: (v) => v.toFixed(1) },
       { f: 'today', label: 'ยอดขาย Today (' + td + ') / เป้าวัน', num: true, pill: (d) => [d.today >= d.tpd ? 'ok' : 'bad', PC.nf(d.today) + ' / ' + d.tpd.toFixed(1)] },
-      { f: 'win', label: 'ยอดขาย ' + w, num: true, bar: true, fmt: PC.nf },
+      { f: 'win', label: 'ยอดขาย ' + w, num: true, pill: (d) => [d.win ? 'ok' : 'mute', PC.nf(d.win)] },
       { f: 'ach', label: '%ACH', num: true, pill: (d) => (d.ach == null ? ['mute', '–'] : [d.ach >= 1 ? 'ok' : d.ach < 0.5 ? 'bad' : 'mute', Math.round(d.ach * 100) + '%']) },
       { f: 'rem', label: 'ยังขาด (ซิม)', num: true, pill: (d) => (d.rem ? ['bad', PC.nf(d.rem)] : ['ok', 'ครบ']) }] });
   });
