@@ -445,7 +445,7 @@ const RKX = (() => {
     const ml = N ? 'Net Amount' : 'QTY';
     list(P, 'Daily Ranking · ' + ml + ' ' + (d ? PC.day(d) : '') + ' เทียบ Target ต่อวัน', rd, 'drank', f.d, f.tpd, 'Target ต่อวัน', d ? [d, d] : null);
     list(P + lw + GAP, 'Ranking ยอดสะสม · ' + ml + ' เดือนนี้เทียบ Target ถึงวันนี้', rk, 'rank', f.act, f.ttd, 'Target ถึงวันนี้', r0 ? [r0.today.slice(0, 8) + '01', r0.today] : null);
-    g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว ≥ 100% · ส้ม 90–99% · แดง < 90%  ·  Target ต่อวัน = Target เดือน ÷ จำนวนวันในเดือน  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6);
+    g.font = F(400, 15); g.fillStyle = C.mu; g.fillText('สี: เขียว ≥ 100% · ส้ม 90–99% · แดง < 90%  ·  Target ต่อวัน (Rollover) = (Target เดือน − ยอดจริงก่อนวันนั้น) ÷ วันที่เหลือรวมวันนั้น  ·  ส่งออกจาก Prepay Dashboard ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }), P, H - P + 6);
     return { cv, name: 'Prepay_Ranking_' + (N ? 'Net' : 'QTY') + '_' + (d || 'latest') + (p.area !== 'ALL' ? '_' + p.area.replace(/[^\w]+/g, '') : '') + '.png' };
   };
   const show = (cv, name) => cv.toBlob((blob) => { const url = URL.createObjectURL(blob); const m = document.createElement('div'); m.className = 'pc-xmodal';

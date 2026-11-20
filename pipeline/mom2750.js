@@ -93,7 +93,8 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const left = !last || last < M.from ? days(M.from, M.to) + 1 : Math.max(1, days(last, M.to) + 1); // today counts as a selling day (files come in during the day)
     const out = [...rows.values()].map((x) => {
       const tgt = Math.max(0, x.lm - x.before), rem = Math.max(0, x.lm - x.mtd);
-      const tpd = tgt / (days(M.from, M.to) + 1), today = last >= M.from ? (x.byDay[last] || 0) : 0;   // TG per day = Gap ÷ days of the window
+      // TG per day, rollover: (Gap − sold in the window before the latest day) ÷ days left including the latest day
+      const today = last >= M.from ? (x.byDay[last] || 0) : 0, dl = last >= M.from ? days(last, M.to) + 1 : days(M.from, M.to) + 1, tpd = Math.max(0, tgt - (x.win - today)) / dl;
       return { ...x, tgt, rem, tpd, today, short: last >= M.from ? Math.max(0, tpd - today) : null, ach: tgt ? x.win / tgt : null, mom: x.lm ? x.mtd / x.lm - 1 : null, need: rem / left, done: x.mtd >= x.lm };
     });
     return { M, rows: out, last, left, daily, stockAsof, pk };
@@ -107,8 +108,8 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const tgt = T((x) => x.tgt), win = T((x) => x.win), rem = T((x) => x.rem), done = rows.filter((x) => x.done).length;
     const ach = tgt ? win / tgt : 0;
     // daily TG and the latest day's result
-    const nd = days(M.from, M.to) + 1, tpd = tgt / nd, on = last && last >= M.from, dn = on ? days(M.from, last) + 1 : 0;
-    const today = on ? (C.daily[last] || 0) : 0, rt = tpd ? today / tpd : 0, ctg = tpd * dn, rc = ctg ? win / ctg : 0;
+    const nd = days(M.from, M.to) + 1, tpd = rows.reduce((a, x) => a + x.tpd, 0), on = last && last >= M.from, dn = on ? days(M.from, last) + 1 : 0, dl = on ? days(last, M.to) + 1 : nd;
+    const today = on ? (C.daily[last] || 0) : 0, rt = tpd ? today / tpd : 0, ctg = tgt / nd * dn, rc = ctg ? win / ctg : 0;
     const cl = (r) => (r >= 1 ? 'mm-ok' : 'mm-bad');
     el.innerHTML = '<div class="pc-head"><h2 class="pc-title">โฟกัสซิมรายปีปิดเดือน · สาขา %MoM ติดลบ · ซิมรายปี 2,750 บาท</h2>'
       + '<p class="pc-take">ช่วงติดตาม ' + dTH(M.from) + ' – ' + dTH(M.to) + ' ' + (+M.month.slice(0, 4) + 543)
@@ -117,7 +118,7 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       + '<div class="mm-tiles">'
       + '<div class="mm-tile"><span>สาขาที่ติดตาม</span><b>' + nf(rows.length) + '</b><small>%MoM ติดลบในไฟล์ HQ</small></div>'
       + '<div class="mm-tile"><span>Target (Gap) ' + dTH(M.from) + '–' + dTH(M.to) + '</span><b>' + nf(tgt) + '</b><small>ซิม · LM − ยอด 1–' + (+add(M.from, -1).slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1] + '</small></div>'
-      + '<div class="mm-tile"><span>TG รายวัน</span><b>' + tpd.toFixed(1) + '</b><small>ซิม/วัน · TG ' + nf(tgt) + ' ÷ ' + nd + ' วัน</small></div>'
+      + '<div class="mm-tile"><span>TG รายวัน (Rollover) ' + (on ? dTH(last) : '') + '</span><b>' + tpd.toFixed(1) + '</b><small>ซิม/วัน · (TG − ยอดก่อนวันนี้) ÷ ' + dl + ' วันที่เหลือ</small></div>'
       + '<div class="mm-tile"><span>ยอดขาย ' + (on ? dTH(last) : 'วันนี้') + '</span><b class="' + (on ? cl(rt) : '') + '">' + nf(today) + ' <small>/ ' + tpd.toFixed(0) + '</small></b><small>' + (on ? Math.round(rt * 100) + '% ของ TG รายวัน · ' + (today >= tpd ? 'ครบ' : 'ขาด ' + (tpd - today).toFixed(0)) : 'ยังไม่ถึงช่วงติดตาม') + '</small><div class="mm-bar"><i style="width:' + Math.min(100, rt * 100) + '%;background:' + (rt >= 1 ? '' : '#d8513f') + '"></i></div></div>'
       + '<div class="mm-tile"><span>ยอดสะสม vs TG สะสม (' + dn + ' วัน)</span><b class="' + (on ? cl(rc) : '') + '">' + nf(win) + ' <small>/ ' + nf(ctg) + '</small></b><small>' + (on ? Math.round(rc * 100) + '% · ' + (win >= ctg ? 'เกิน ' + nf(win - ctg) : 'ขาด ' + nf(ctg - win)) : '') + '</small><div class="mm-bar"><i style="width:' + Math.min(100, rc * 100) + '%;background:' + (rc >= 1 ? '' : '#d8513f') + '"></i></div></div>'
       + '<div class="mm-tile"><span>%ACH (Gap)</span><b class="' + (ach >= 1 ? 'mm-ok' : '') + '">' + (tgt ? Math.round(ach * 100) + '%' : '–') + '</b><div class="mm-bar"><i style="width:' + Math.min(100, ach * 100) + '%"></i></div></div>'
@@ -164,8 +165,8 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
 
   // PNG of the Area table (with the SIM packages and stock on top)
   const areaRows = () => { const C = calc(); if (!C) return null; const M = C.M, nd = days(M.from, M.to) + 1, m = new Map();
-    for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
-    return { C, rows: [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, tpd: a.tgt / nd, ach: a.tgt ? a.win / a.tgt : null })).sort((a, b) => b.rem - a.rem) }; };
+    for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, tpd: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.tpd += x.tpd; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
+    return { C, rows: [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null })).sort((a, b) => b.rem - a.rem) }; };
   const loadImg = (src) => new Promise((ok) => { if (!src) return ok(null); const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
   const areaPNG = async () => {
     try { await document.fonts.ready; } catch (e) {}
@@ -216,9 +217,9 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
     const C = calc(); if (!C) { el.innerHTML = ''; return; }
     const M = window.MOM2750, w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1], td = C.last >= M.from ? dTH(C.last) : 'Today';
     const m = new Map();
-    for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
+    for (const x of C.rows) { const a = m.get(x.area) || { area: x.area, n: 0, done: 0, tgt: 0, today: 0, tpd: 0, win: 0, rem: 0 }; a.n++; a.done += x.done ? 1 : 0; a.tgt += x.tgt; a.today += x.today || 0; a.tpd += x.tpd; a.win += x.win; a.rem += x.rem; m.set(x.area, a); }
     const nd = days(M.from, M.to) + 1;
-    const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, tpd: a.tgt / nd, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
+    const rows = [...m.values()].filter((a) => a.rem > 0).map((a) => ({ ...a, ach: a.tgt ? a.win / a.tgt : null }));   // only Areas still short
     PC.table(el, 'tb_mom_area', rows, { key: ['area'], def: 'rem', limit: 100, cols: [
       { f: 'area', label: 'Area', wrap: true },
       { f: 'done', label: 'สาขาผ่านแล้ว', num: true, pill: (d) => [d.done ? 'ok' : 'mute', (d.done ? '✓ ' : '') + d.done + ' / ' + d.n + ' สาขา'] },

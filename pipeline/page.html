@@ -492,7 +492,7 @@ body.pc-noscroll { overflow: hidden; }
       <h3>รายสาขา</h3>
       <div class="pc-tools"><div class="mm-seg" data-draw="mom_seg" data-source="sales_daily"></div><input class="pc-q" data-q="mom" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"><button class="pc-export pc-csv" id="mom-csv" type="button">⬇ Export CSV</button></div>
       <div class="pc-scroll"><table data-draw="tb_mom" data-source="sales_daily shops stock_by_shop" data-row-key="shop"></table></div>
-      <p class="pc-note">นับเฉพาะซิมรายปี 2,750 บาท: Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา และ 3000143085 เฉพาะ Dtac COCO / Dtac Hall · TG (Gap) = ยอดเดือนก่อน (LM จากไฟล์ HQ: Runrate ÷ (1 + %MoM); สาขาที่ HQ แสดง −100% ใช้ยอด TSM เดือนก่อน) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม · TG ต่อวัน = TG ÷ จำนวนวันที่ติดตาม · ขาดวันนี้ = TG ต่อวัน − ยอดขายวันล่าสุด · TG คงเหลือ = TG − ยอดขายในช่วงติดตาม · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · Stock = ซิม 2,750 คงเหลือจากไฟล์ Stock ล่าสุดใน Drive (3000143085 นับเฉพาะ Dtac COCO / Hall) · เรียงจาก TG คงเหลือมากไปน้อย</p>
+      <p class="pc-note">นับเฉพาะซิมรายปี 2,750 บาท: Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา และ 3000143085 เฉพาะ Dtac COCO / Dtac Hall · TG (Gap) = ยอดเดือนก่อน (LM จากไฟล์ HQ: Runrate ÷ (1 + %MoM); สาขาที่ HQ แสดง −100% ใช้ยอด TSM เดือนก่อน) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม · TG ต่อวัน (Rollover) = (TG − ยอดขายในช่วงติดตามก่อนวันล่าสุด) ÷ จำนวนวันที่เหลือรวมวันล่าสุด · ขาดวันนี้ = TG ต่อวัน − ยอดขายวันล่าสุด · TG คงเหลือ = TG − ยอดขายในช่วงติดตาม · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · Stock = ซิม 2,750 คงเหลือจากไฟล์ Stock ล่าสุดใน Drive (3000143085 นับเฉพาะ Dtac COCO / Hall) · เรียงจาก TG คงเหลือมากไปน้อย</p>
     </article>
   </section>
 
@@ -855,7 +855,7 @@ body.pc-noscroll { overflow: hidden; }
         <span class="pc-sub">ข้อมูลถึง <span data-draw="r_date" data-source="area_rank" data-field="today">—</span></span>
       </div>
     </div>
-    <div class="pc-rkbar"><p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน = Target ของเดือน ÷ จำนวนวันในเดือน · Target ถึงวันนี้ = Target ต่อวัน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p><button class="pc-export" id="rk-export" type="button" title="ดาวน์โหลดรูป (แนวนอน) รวม Region · Daily Ranking · Ranking สะสม">⬇ Export รูป (Region + Daily + สะสม)</button></div>
+    <div class="pc-rkbar"><p class="pc-note pc-infoline"><span class="pc-info" tabindex="0" role="note" aria-label="Target ต่อวัน แบบ Rollover = (Target เดือน − ยอดจริงก่อนวันนั้น) ÷ จำนวนวันที่เหลือรวมวันนั้น · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY" data-tip="Target ต่อวัน แบบ Rollover = (Target เดือน − ยอดจริงก่อนวันนั้น) ÷ จำนวนวันที่เหลือรวมวันนั้น · Target ถึงวันนี้ = Target เดือน ÷ วันในเดือน × จำนวนวันที่ผ่านไป · สี: ■ ≥ 100% · ■ 90–99% · ■ &lt; 90% · เส้นตั้งในกราฟ = 100% ของ Target · ใช้ปุ่มด้านบนสลับ Net Amount / QTY">i</span> คำอธิบาย</p><button class="pc-export" id="rk-export" type="button" title="ดาวน์โหลดรูป (แนวนอน) รวม Region · Daily Ranking · Ranking สะสม">⬇ Export รูป (Region + Daily + สะสม)</button></div>
 
     <article class="pc-card pc-canfull" id="card-rank-alert">
         <button class="pc-expand" type="button" aria-label="ขยายเต็มจอ" title="ขยายเต็มจอ (สำหรับ Capture หน้าจอ)"><span class="ex">⤢ ขยาย</span><span class="cl">✕ ปิด</span></button>
@@ -1240,7 +1240,7 @@ dash.calc('target_monthly', PCdef('target_monthly', {
 
 dash.calc('area_rank', PCdef('area_rank', {
   title: 'Ranking Area เดือนปัจจุบัน',
-  description: 'ต่อ Area และประเภทสาขา (ALL = รวม): Target เดือนปัจจุบัน (QTY และ Net) Target ต่อวัน = Target ÷ วันในเดือน Target ถึงวันนี้ = Target ต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
+  description: 'ต่อ Area และประเภทสาขา (ALL = รวม): Target เดือนปัจจุบัน (QTY และ Net) Target ต่อวัน แบบ Rollover = (Target − ยอดจริงก่อนวันนี้) ÷ วันที่เหลือรวมวันนี้ Target ถึงวันนี้ = Target ต่อวัน × วันที่ผ่านไป ยอดเดือนนี้ % ทำได้ ส่วนต่าง และยอดที่ต้องทำต่อวัน',
   inputs: ['enriched', 'targets', 'shops'],
   fn: (enriched, targets, shops) => {
     const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
@@ -1256,9 +1256,10 @@ dash.calc('area_rank', PCdef('area_rank', {
     for (const r of enriched) if (r.month === m) for (const [t, c] of dims(r.stype, r.area)) { const a = get(t, c); a.act_units += r.units; a.act_net += r.net; if (r.units > 0) a.sold.add(r.shop); if (r.date === today) { a.today_units += r.units; a.today_net += r.net; } }
     const R = (x) => Math.round(x * 1000) / 1000;
     return [...acc.values()].filter((a) => a.area !== '-').map((a) => {
-      const tpdU = a.target_units / days, tpdN = a.target_net / days, ttdU = tpdU * elapsed, ttdN = tpdN * elapsed;
+      // Target ต่อวัน แบบ Rollover: (Target เดือน − ยอดจริงก่อนวันนี้) ÷ จำนวนวันที่เหลือรวมวันนี้ · Target ถึงวันนี้ ยังเป็นแบบเฉลี่ยเท่ากันทุกวัน
+      const dl = days - elapsed + 1, tpdU = Math.max(0, a.target_units - (a.act_units - a.today_units)) / dl, tpdN = Math.max(0, a.target_net - (a.act_net - a.today_net)) / dl, ttdU = (a.target_units / days) * elapsed, ttdN = (a.target_net / days) * elapsed;
       return { stype: a.stype, area: a.area, month: m, today, days, elapsed, left, shops: a.shops.size, sold_shops: a.sold.size, pm_units: a.pm_units, pm_net: Math.round(a.pm_net), mom_units: momR(a.act_units, a.pm_units), mom_net: momR(a.act_net, a.pm_net), pm_to: W.pto,
-        target_units: Math.round(a.target_units), target_net: Math.round(a.target_net), tpd_units: Math.round(tpdU * 10) / 10, tpd_net: Math.round(tpdN),
+        target_units: Math.round(a.target_units), target_net: Math.round(a.target_net), tpd_units: Math.round(tpdU * 10) / 10, tpd_net: Math.round(tpdN), tpd_flat_units: Math.round(a.target_units / days * 10) / 10, tpd_flat_net: Math.round(a.target_net / days),
         ttd_units: Math.round(ttdU), ttd_net: Math.round(ttdN), act_units: a.act_units, act_net: Math.round(a.act_net),
         ach_units: ttdU ? R(a.act_units / ttdU) : null, ach_net: ttdN ? R(a.act_net / ttdN) : null,
         gap_units: Math.round(a.act_units - ttdU), gap_net: Math.round(a.act_net - ttdN),
@@ -1271,15 +1272,18 @@ dash.calc('area_rank', PCdef('area_rank', {
 
 dash.calc('area_day', PCdef('area_day', {
   title: 'ยอดรายวันต่อ Area เดือนปัจจุบัน',
-  description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น Target ต่อวัน (Target เดือน ÷ วันในเดือน) และ % เทียบ Target ต่อวัน รวมวันที่ไม่มียอด (= 0)',
+  description: 'ต่อ Area × ประเภทสาขา × วันที่ของเดือนปัจจุบัน (ALL = รวม): ยอด QTY / Net ของวันนั้น Target ต่อวัน แบบ Rollover ((Target เดือน − ยอดจริงก่อนวันนั้น) ÷ จำนวนวันที่เหลือรวมวันนั้น) และ % เทียบ Target ต่อวัน รวมวันที่ไม่มียอด (= 0)',
   inputs: ['area_rank', 'enriched'],
   fn: (area_rank, enriched) => {
     const PCzone = (a) => { a = String(a || ''); if (/^BMA\b/.test(a)) return 'BMA'; if (/^UPC\b/.test(a)) return /North/i.test(a) ? 'UPC I' : 'UPC II'; return null; }; const PCz = (a) => { const z = PCzone(a); return z ? [z] : []; }; const PCin = (a, sel) => sel === 'ALL' || a === sel || PCzone(a) === sel;
     if (!area_rank.length) return [];
     const m = area_rank[0].month; const dates = [...new Set(enriched.filter((r) => r.month === m).map((r) => r.date))].sort();
     const acc = new Map();
-    for (const a of area_rank) for (const d of dates) acc.set(a.stype + '|' + a.area + '|' + d, { stype: a.stype, area: a.area, date: d, units: 0, net: 0, tpd_units: a.tpd_units, tpd_net: a.tpd_net });
+    for (const a of area_rank) for (const d of dates) acc.set(a.stype + '|' + a.area + '|' + d, { stype: a.stype, area: a.area, date: d, units: 0, net: 0, tpd_units: 0, tpd_net: 0 });
     for (const r of enriched) if (r.month === m) for (const t of [r.stype, 'ALL']) for (const c of [r.area, ...PCz(r.area), 'ALL']) { const x = acc.get(t + '|' + c + '|' + r.date); if (x) { x.units += r.units; x.net += r.net; } }
+    // Target ต่อวัน แบบ Rollover: แต่ละวัน = (Target เดือน − ยอดจริงสะสมก่อนวันนั้น) ÷ จำนวนวันที่เหลือรวมวันนั้น
+    for (const a of area_rank) { let cu = 0, cn = 0; for (const d of dates) { const x = acc.get(a.stype + '|' + a.area + '|' + d), dl = a.days - +d.slice(8, 10) + 1;
+      x.tpd_units = Math.round(Math.max(0, a.target_units - cu) / dl * 10) / 10; x.tpd_net = Math.round(Math.max(0, a.target_net - cn) / dl); cu += x.units; cn += x.net; } }
     const R = (x) => Math.round(x * 1000) / 1000;
     return [...acc.values()].map((x) => ({ ...x, net: Math.round(x.net), ach_units: x.tpd_units ? R(x.units / x.tpd_units) : null, ach_net: x.tpd_net ? R(x.net / x.tpd_net) : null }));
   },
