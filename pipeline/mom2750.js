@@ -305,20 +305,14 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       const t0 = btn.textContent; btn.disabled = true; btn.textContent = 'กำลังสร้างไฟล์…';
       try {
         await xlib(); const wb = XLSX.utils.book_new();
-        // 1) shops: same columns as the table on the page
-        XLSX.utils.book_append_sheet(wb, sheet(['รหัส', 'สาขา', 'Area', 'ประเภท', 'Target ' + w + ' (จำนวนซิม)', 'TG ต่อวัน', 'ขาย ' + td, 'ขาด ' + td, 'ขาย ' + w + ' (QTY)', 'Net Amount ' + w, '%ACH', 'TG คงเหลือ ' + w, '%MoM ตอนนี้', 'Stock ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) : ''), 'Remark'],
-          r.map((x) => [x.shop, x.name, x.area, x.stype, x.tgt, r1(x.tpd), x.today, x.short == null ? '' : r1(x.short), x.win, Math.round(x.netw), pc(x.ach), x.rem, pc(x.mom), x.stk || 0, x.note || '']),
-          [, , , , '#,##0', '0.0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0', '0%', '#,##0'], [10, 40, 24, 18, 14, 9, 10, 10, 12, 14, 8, 12, 11, 10, 24]), 'รายสาขา');
         // 2) Areas still short + total
         const A = areaRows().rows, S = (f) => A.reduce((a, x) => a + x[f], 0), T = { area: 'รวม ' + A.length + ' Area', n: S('n'), done: S('done'), tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem') }; T.ach = T.tgt ? T.win / T.tgt : null;
         XLSX.utils.book_append_sheet(wb, sheet(['Area', 'สาขาผ่านแล้ว', 'สาขาทั้งหมด', 'Target ' + w + ' (จำนวนซิม)', 'Target ต่อวัน', 'ยอดขาย Today (' + td + ')', 'ยอดขาย ' + w, '%ACH', 'ยังขาด (ซิม)'],
           [...A, T].map((x) => [x.area, x.done, x.n, x.tgt, r1(x.tpd), x.today, x.win, pc(x.ach), x.rem]), [, '#,##0', '#,##0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0'], [26, 12, 12, 16, 12, 14, 14, 8, 12]), 'ราย Area');
-        // 3) Regions
-        XLSX.utils.book_append_sheet(wb, sheet(['Region', 'Area', 'สาขา', 'สาขาผ่านแล้ว', 'Target (จำนวนซิม)', 'เป้า/วัน', 'ขาย ' + td, 'ขายสะสม ' + w, '%ACH', 'ยังขาด'],
-          zones(C).filter((o) => o.n).map((o) => [o.z, o.areas, o.n, o.done, o.tgt, r1(o.tpd), o.today, o.win, pc(o.ach), o.rem]), [, '#,##0', '#,##0', '#,##0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0'], [10, 8, 8, 12, 16, 10, 12, 14, 8, 10]), 'Region');
-        // 4) notes
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['โฟกัสซิมรายปีปิดเดือน · ซิม 2,750 บาท'], ['ช่วงติดตาม', M.from + ' ถึง ' + M.to], ['ยอดขาย TSM ถึง', C.last], ['Stock ณ', C.stockAsof], ['รายชื่อสาขา / LM', 'ไฟล์ HQ ' + M.asof + ' (สาขา %MoM ติดลบ)'], ['มุมมอง', ({ gap: 'MoM ยังลบ', done: 'MoM บวกแล้ว', all: 'ทุกสาขา' })[view]],
-          ['Target', 'ยอดเดือนก่อน (LM) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม'], ['TG ต่อวัน', 'Rollover: (Target − ยอดขายในช่วงก่อนวันล่าสุด) ÷ วันที่เหลือรวมวันล่าสุด'], ['Matcode', '3000122199 / 3000122191 / 3000122169 ทุกสาขา + 3000143085 เฉพาะ Dtac COCO / Hall']]), 'หมายเหตุ');
+        // 1) shops: same columns as the table on the page
+        XLSX.utils.book_append_sheet(wb, sheet(['รหัส', 'สาขา', 'Area', 'ประเภท', 'Target ' + w + ' (จำนวนซิม)', 'TG ต่อวัน', 'ขาย ' + td, 'ขาด ' + td, 'ขาย ' + w + ' (QTY)', 'Net Amount ' + w, '%ACH', 'TG คงเหลือ ' + w, '%MoM ตอนนี้', 'Stock ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) : ''), 'Remark'],
+          r.map((x) => [x.shop, x.name, x.area, x.stype, x.tgt, r1(x.tpd), x.today, x.short == null ? '' : r1(x.short), x.win, Math.round(x.netw), pc(x.ach), x.rem, pc(x.mom), x.stk || 0, x.note || '']),
+          [, , , , '#,##0', '0.0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0', '0%', '#,##0'], [10, 40, 24, 18, 14, 9, 10, 10, 12, 14, 8, 12, 11, 10, 24]), 'รายสาขา');
         XLSX.writeFile(wb, 'Focus_SIM2750_' + (C.last || M.from) + '.xlsx');
       } catch (err) { console.error(err); btn.dataset.err = '1'; } finally { btn.disabled = false; btn.textContent = btn.dataset.err ? 'สร้างไฟล์ไม่สำเร็จ ลองใหม่' : t0; delete btn.dataset.err; }
     }); }
