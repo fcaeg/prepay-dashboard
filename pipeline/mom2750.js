@@ -292,13 +292,34 @@ b.mm-g { color: #1d7a4a; } b.mm-a { color: #a86d00; } b.mm-r { color: #b4382c; }
       { f: 'note', label: 'Remark', wrap: true }] });
   });
 
+  // Excel export = the same tables as on the page (Region · Area · shops), Thai headers, same order
+  const xlib = () => (window.XLSX ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); }));
+  const sheet = (head, rows, fmts, widths) => { const ws = XLSX.utils.aoa_to_sheet([head, ...rows]);
+    rows.forEach((r, ri) => r.forEach((v, ci) => { const z = fmts[ci]; const c = ws[XLSX.utils.encode_cell({ r: ri + 1, c: ci })]; if (z && c && typeof v === 'number') c.z = z; }));
+    ws['!cols'] = widths.map((w) => ({ wch: w })); ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: head.length - 1 } }) }; ws['!freeze'] = { xSplit: 0, ySplit: 1 }; return ws; };
   if (!window.MOM_CSV_BOUND) { window.MOM_CSV_BOUND = true;
-    document.addEventListener('click', (e) => {
-      if (!(e.target.closest && e.target.closest('#mom-csv'))) return; const r = shopRows(); if (!r) return; const M = window.MOM2750;
-      const last = calc().last, w = M.from + '..' + M.to;
-      const H = ['Shop Code', 'Shop', 'Area', 'Type', 'TG ' + w + ' (Gap)', 'TG per day', 'Sold ' + last, 'Short ' + last, 'Sold ' + w + ' (QTY)', 'Net Amount ' + w, '%ACH', 'TG remaining ' + w, '%MoM now', 'Stock ' + (calc().stockAsof || ''), 'Remark'];
-      const L = [H].concat(r.map((x) => [x.shop, x.name, x.area, x.stype, x.tgt, x.tpd.toFixed(1), x.today, x.short == null ? '' : x.short.toFixed(1), x.win, Math.round(x.netw), x.ach == null ? '' : Math.round(x.ach * 100) + '%', x.rem, x.mom == null ? '' : Math.round(x.mom * 100) + '%', x.stk || 0, x.note || '']));
-      const csv = '﻿' + L.map((x) => x.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'MoM2750_' + view + '_' + M.from + '_' + M.to + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest && e.target.closest('#mom-csv'); if (!btn) return; const C = calc(); if (!C) return; const M = C.M;
+      const td = C.last >= M.from ? dTH(C.last) : 'Today', w = (+M.from.slice(8)) + '–' + (+M.to.slice(8)) + ' ' + TH[+M.month.slice(5, 7) - 1], r1 = (v) => Math.round(v * 10) / 10, pc = (v) => (v == null ? '' : Math.round(v * 1000) / 1000);
+      const r = shopRows().slice().sort((a, b) => b.rem - a.rem);
+      const t0 = btn.textContent; btn.disabled = true; btn.textContent = 'กำลังสร้างไฟล์…';
+      try {
+        await xlib(); const wb = XLSX.utils.book_new();
+        // 1) shops: same columns as the table on the page
+        XLSX.utils.book_append_sheet(wb, sheet(['รหัส', 'สาขา', 'Area', 'ประเภท', 'Target ' + w + ' (จำนวนซิม)', 'TG ต่อวัน', 'ขาย ' + td, 'ขาด ' + td, 'ขาย ' + w + ' (QTY)', 'Net Amount ' + w, '%ACH', 'TG คงเหลือ ' + w, '%MoM ตอนนี้', 'Stock ' + (C.stockAsof ? dTH(C.stockAsof.slice(0, 10)) : ''), 'Remark'],
+          r.map((x) => [x.shop, x.name, x.area, x.stype, x.tgt, r1(x.tpd), x.today, x.short == null ? '' : r1(x.short), x.win, Math.round(x.netw), pc(x.ach), x.rem, pc(x.mom), x.stk || 0, x.note || '']),
+          [, , , , '#,##0', '0.0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0', '0%', '#,##0'], [10, 40, 24, 18, 14, 9, 10, 10, 12, 14, 8, 12, 11, 10, 24]), 'รายสาขา');
+        // 2) Areas still short + total
+        const A = areaRows().rows, S = (f) => A.reduce((a, x) => a + x[f], 0), T = { area: 'รวม ' + A.length + ' Area', n: S('n'), done: S('done'), tgt: S('tgt'), tpd: S('tpd'), today: S('today'), win: S('win'), rem: S('rem') }; T.ach = T.tgt ? T.win / T.tgt : null;
+        XLSX.utils.book_append_sheet(wb, sheet(['Area', 'สาขาผ่านแล้ว', 'สาขาทั้งหมด', 'Target ' + w + ' (จำนวนซิม)', 'Target ต่อวัน', 'ยอดขาย Today (' + td + ')', 'ยอดขาย ' + w, '%ACH', 'ยังขาด (ซิม)'],
+          [...A, T].map((x) => [x.area, x.done, x.n, x.tgt, r1(x.tpd), x.today, x.win, pc(x.ach), x.rem]), [, '#,##0', '#,##0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0'], [26, 12, 12, 16, 12, 14, 14, 8, 12]), 'ราย Area');
+        // 3) Regions
+        XLSX.utils.book_append_sheet(wb, sheet(['Region', 'Area', 'สาขา', 'สาขาผ่านแล้ว', 'Target (จำนวนซิม)', 'เป้า/วัน', 'ขาย ' + td, 'ขายสะสม ' + w, '%ACH', 'ยังขาด'],
+          zones(C).filter((o) => o.n).map((o) => [o.z, o.areas, o.n, o.done, o.tgt, r1(o.tpd), o.today, o.win, pc(o.ach), o.rem]), [, '#,##0', '#,##0', '#,##0', '#,##0', '0.0', '#,##0', '#,##0', '0%', '#,##0'], [10, 8, 8, 12, 16, 10, 12, 14, 8, 10]), 'Region');
+        // 4) notes
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['โฟกัสซิมรายปีปิดเดือน · ซิม 2,750 บาท'], ['ช่วงติดตาม', M.from + ' ถึง ' + M.to], ['ยอดขาย TSM ถึง', C.last], ['Stock ณ', C.stockAsof], ['รายชื่อสาขา / LM', 'ไฟล์ HQ ' + M.asof + ' (สาขา %MoM ติดลบ)'], ['มุมมอง', ({ gap: 'MoM ยังลบ', done: 'MoM บวกแล้ว', all: 'ทุกสาขา' })[view]],
+          ['Target', 'ยอดเดือนก่อน (LM) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม'], ['TG ต่อวัน', 'Rollover: (Target − ยอดขายในช่วงก่อนวันล่าสุด) ÷ วันที่เหลือรวมวันล่าสุด'], ['Matcode', '3000122199 / 3000122191 / 3000122169 ทุกสาขา + 3000143085 เฉพาะ Dtac COCO / Hall']]), 'หมายเหตุ');
+        XLSX.writeFile(wb, 'Focus_SIM2750_' + (C.last || M.from) + '.xlsx');
+      } catch (err) { console.error(err); btn.dataset.err = '1'; } finally { btn.disabled = false; btn.textContent = btn.dataset.err ? 'สร้างไฟล์ไม่สำเร็จ ลองใหม่' : t0; delete btn.dataset.err; }
     }); }
 })();
