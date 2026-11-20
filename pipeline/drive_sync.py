@@ -102,6 +102,7 @@ def kind(name):
     if re.search(r'target[ _]of[ _][a-z]{3}', n): return 'target'
     if n.startswith('manpower'): return 'manpower'
     if re.search(r'serial.*expir|expir.*serial|^sn[ _]?sim|แจ้งเตือนซิม|ซิม.*หมดอายุ', n): return 'snexpiry'
+    if re.match(r'^prepaid[ _]sales[ _]by[ _]store', n): return 'mom2750'
     if n.startswith('master prepaid') or n.startswith('master_prepaid'): return 'master'
     return None
 
@@ -154,7 +155,7 @@ def main():
                 elif kx == 'mixtarget': args += ['--mix-target', x]
                 elif kx == 'mongkol': args += ['--mongkol', x]
             continue
-        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp], 'service': ['--service', fp], 'longevity': ['--longevity', fp], 'mixtarget': ['--mix-target', fp], 'mongkol': ['--mongkol', fp]}[k]
+        args += {'sales': ['--sales', fp], 'stock': ['--stock', fp], 'indtarget': ['--indtarget', fp], 'target': ['--target', fp], 'manpower': ['--manpower', fp], 'snexpiry': ['--snexpiry', fp], 'master': ['--master', fp], 'vivotarget': ['--vivo-target', fp], 'vivohist': ['--vivo-hist', fp], 'pc': ['--pc', fp], 'vivorrp': ['--vivo-rrp', fp], 'giatarget': ['--gia-target', fp], 'postpay': ['--postpay', fp], 'tolraw': ['--tol-raw', fp], 'tvsraw': ['--tvs-raw', fp], 'allprod': ['--allprod', fp], 'pl': ['--pl', fp], 'retention': ['--retention', fp], 'service': ['--service', fp], 'longevity': ['--longevity', fp], 'mixtarget': ['--mix-target', fp], 'mongkol': ['--mongkol', fp], 'mom2750': ['--mom2750', fp]}[k]
     # update.py takes several --sales / --target values as one list each
     merged, lists = [], {'--sales': [], '--target': [], '--vivo-target': [], '--vivo-hist': [], '--retention': [], '--service': [], '--longevity': [], '--mix-target': [], '--mongkol': []}
     for i in range(0, len(args), 2):

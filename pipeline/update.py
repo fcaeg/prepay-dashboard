@@ -165,7 +165,7 @@ def merge_sales(paths):
         if bd.notna().any() and bd.max().strftime('%Y-%m-%d %H:%M') > meta.get('sales_asof', ''): meta['sales_asof'] = bd.max().strftime('%Y-%m-%d %H:%M')
         print(f'sales: {label}: {len(raw):,} rows, SIM PRE {len(new):,}, new to state {len(old) - n0:,}, bills {bd.min():%Y-%m-%d}..{bd.max():%Y-%m-%d %H:%M}')
     save_sim(old, changed)
-    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_', 'mom2750_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
 
 def merge_stock(path):
     st, label = read_csv_any(path)
@@ -185,7 +185,7 @@ def merge_stock(path):
     _vivo(vivo.set_stock, st, meta['stock_asof'])
     _vivo(tecno.set_stock, st, meta['stock_asof'])
     _vivo(perf.set_stock, st, meta['stock_asof'])
-    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
+    _cur = json.load(open(os.path.join(ST, 'meta.json'))) if os.path.exists(os.path.join(ST, 'meta.json')) else {}; json.dump({**_cur, **{k_: v_ for k_, v_ in meta.items() if not k_.startswith(('vivo_', 'gia_', 'tecno_', 'mom2750_'))}}, open(os.path.join(ST, 'meta.json'), 'w'), indent=1)  # keep vivo_* keys written by vivo.py
     print(f'stock: {label}: {len(st):,} rows, SIM PRE {len(k):,}')
 
 def merge_targets(paths):
@@ -404,12 +404,13 @@ def merge_indtarget(fp):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sales', nargs='*', default=[]); ap.add_argument('--stock'); ap.add_argument('--target', nargs='*', default=[]); ap.add_argument('--master')
-    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--snexpiry', help='SN expiry snapshot xlsx from HQ (replaces the expiring-SIM lists)'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
+    ap.add_argument('--watch', help='CSV/XLSX of serials to track (column Serial)'); ap.add_argument('--watch-label', default='ซิมหมดอายุ'); ap.add_argument('--mom2750', help='HQ Prepaid_Sales_By_Store_<ddmmyyyy>.xlsx (2,750 SIM %MoM by shop)'); ap.add_argument('--snexpiry', help='SN expiry snapshot xlsx from HQ (replaces the expiring-SIM lists)'); ap.add_argument('--manpower', help='Manpower roster xlsx (current staff)'); ap.add_argument('--indtarget', help='Individual target xlsx (sheet Indy Target)')
     ap.add_argument('--vivo-target', nargs='*', default=[], help='VIVO Target xlsx (sheet TARGET_FOR_OPERATION)'); ap.add_argument('--pc', help='PC Brand Update xlsx (Vivo PC per shop)'); ap.add_argument('--vivo-hist', nargs='*', default=[], help='central-system VIVO sales xlsx'); ap.add_argument('--vivo-rrp', help='Vivo RRP xlsx (Model | RRP) for the Gross unit')
     ap.add_argument('--mongkol', nargs='*', default=[], help='Mongkol_Indi_Staff_MONGKOL_QTY_<yyyymm>.csv'); ap.add_argument('--mix-target', nargs='*', default=[], help='<yyyymm>_Target by Brand / Target GIA by CATEGORY xlsx'); ap.add_argument('--longevity', nargs='*', default=[], help='True_Mobile_Care / Extended_W / Trade_In / Downsell csv'); ap.add_argument('--service', nargs='*', default=[], help='ServiceLevel_Shops / OnTime_by_Shop / iCSAT_by_Shop csv'); ap.add_argument('--retention', nargs='*', default=[], help='Retention_Shops_<date> <product>.csv'); ap.add_argument('--pl', help='Performance Report (Model WW) xlsb/xlsx: P&L per shop'); ap.add_argument('--allprod', help='All Product Rawdata (latest 2 months, with SALE_ID)'); ap.add_argument('--tol-raw', help='TrueOnline Rawdata xlsx'); ap.add_argument('--tvs-raw', help='TrueVision Rawdata xlsx'); ap.add_argument('--postpay', help='Postpaid Rawdata xlsx (sheet Rawdata) for the Shop Performance page'); ap.add_argument('--gia-target', help="Nami's GIA report xlsx (GIA_North_<Mon>_<d>.xlsx: shops + month targets)")
     a = ap.parse_args()
     if a.watch: add_watch(a.watch, a.watch_label)
     if a.snexpiry: load_snexpiry(a.snexpiry)
+    if a.mom2750: import mom2750; mom2750.load(a.mom2750)
     if a.manpower: merge_manpower(a.manpower)
     if a.indtarget: merge_indtarget(a.indtarget)
     if a.indtarget: _vivo(perf.merge_indtarget, a.indtarget)
@@ -437,5 +438,6 @@ if __name__ == '__main__':
     build()
     _vivo(vivo.build)
     _vivo(tecno.build)
+    import mom2750; _vivo(mom2750.build)
     _vivo(gia.build)
     _vivo(perf.build)
