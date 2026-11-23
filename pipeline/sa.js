@@ -671,11 +671,13 @@ if (!window.PC_MQ_BOUND) { window.PC_MQ_BOUND = true;
   document.addEventListener('keydown', (e) => { if (e.target && e.target.id === 'q-mq' && e.key === 'Enter') apply(e.target); }); }
 dash.draw('mq_hint', (el) => { const m = MQ.sel(); el.textContent = m ? (m.auto ? 'ยังไม่ได้เลือก · แสดง Matcode ที่ขายดีที่สุดของช่วงนี้ก่อน: ' : 'กำลังดู: ') + m.matcode + ' · ' + m.name : 'พิมพ์ Matcode หรือชื่อสินค้า แล้วกด Enter'; });
 dash.draw('mq_plabel', (el) => { const I = mInfo(); el.textContent = I ? I.label : ''; });
-const mqShops = () => { const m = MQ.sel(), I = mInfo(); if (!m || !I) return null; const r = MQ.rows(m, I.from, I.to); const sh = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+const mqPrev = () => { const I = mInfo(); if (!I || I.pd === 'ytd') return null; const P = SA.period(I.pd, I.wk); return P && P.pf ? { from: P.pf, to: P.pt, ps: I.pd === 'mtd' ? 'LMTD' : I.pd === 'week' ? 'W' + (I.wk - 1) : 'Same Day LW', pct: I.pd === 'mtd' ? '%MoM' : I.pd === 'week' ? '%WoW' : '%vs LW', plabel: P.plabel } : null; };
+const mqShops = () => { const m = MQ.sel(), I = mInfo(); if (!m || !I) return null; const r = MQ.rows(m, I.from, I.to); const PV = mqPrev(); const pr = PV ? MQ.rows(m, PV.from, PV.to) : []; const sh = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
   const st = new Map(); for (const x of PC.rows('stock_by_shop') || []) if (String(x.matcode) === String(m.matcode)) st.set(String(x.shop), (st.get(String(x.shop)) || 0) + (+x.qty || 0));
   const by = new Map(); for (const x of r) { const k = String(x.shop); const a = by.get(k) || { shop: k, units: 0, net: 0, last: '', emps: new Set(), days: new Set() }; a.units += x.units; a.net += x.net; if (x.units > 0) { if (x.date > a.last) a.last = x.date; a.emps.add(x.emp); a.days.add(x.date); } by.set(k, a); }
+  for (const x of pr) { const k = String(x.shop); const a = by.get(k) || { shop: k, units: 0, net: 0, last: '', emps: new Set(), days: new Set() }; a.pu = (a.pu || 0) + x.units; a.pn = (a.pn || 0) + x.net; by.set(k, a); }
   const tot = d3.sum([...by.values()], (a) => a.units) || 1; const N = PC.isNet(); const totN = d3.sum([...by.values()], (a) => a.net) || 1;
-  return [...by.values()].filter((a) => a.units > 0).map((a) => { const s = sh.get(a.shop) || {}; return { shop: a.shop, name: String(s.name || a.shop).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area || '-', units: a.units, net: Math.round(a.net), share: N ? a.net / totN : a.units / tot, last: a.last, emps: a.emps.size, days: a.days.size, stock: st.get(a.shop) || 0 }; })
+  return [...by.values()].filter((a) => a.units > 0 || (a.pu || 0) > 0).map((a) => { const s = sh.get(a.shop) || {}; const cv = N ? a.net : a.units, pv = N ? (a.pn || 0) : (a.pu || 0); return { pu: a.pu || 0, pn: Math.round(a.pn || 0), mom: PV && pv > 0 ? cv / pv - 1 : null, shop: a.shop, name: String(s.name || a.shop).replace(/^True (Shop|shop|Move Shop) /, ''), area: s.area || '-', units: a.units, net: Math.round(a.net), share: N ? a.net / totN : a.units / tot, last: a.last, emps: a.emps.size, days: a.days.size, stock: st.get(a.shop) || 0 }; })
     .sort((a, b) => (N ? b.net - a.net : b.units - a.units)).map((x, i) => ({ ...x, rank: i + 1 })); };
 dash.draw('mq_take', (el) => { el.replaceChildren(); const m = MQ.sel(), I = mInfo(), r = mqShops(); if (!m || !I || !r) return; const B = (s) => { const b = document.createElement('b'); b.textContent = s; return b; };
   const p = PC.P(); const scope = (PC.rows('shops') || []).filter((s) => +s.stype_order < 90 && PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype) && (p.shop === 'ALL' || String(s.shop) === p.shop)).length;
@@ -683,10 +685,21 @@ dash.draw('mq_take', (el) => { el.replaceChildren(); const m = MQ.sel(), I = mIn
   el.append(B(m.name), ' (' + m.matcode + ' · ' + (m.group || '') + (m.price ? ' · ฿' + PC.nf(m.price) : '') + (m.status === 'EOL' ? ' · EOL' : '') + ') · ' + I.label + ': ขายได้ ', B(PC.nf(d3.sum(r, (x) => x.units)) + ' ชิ้น'), ' Net ', B('฿' + PC.nf(d3.sum(r, (x) => x.net))), ' จาก ', B(PC.nf(r.length) + ' สาขา'), ' (จาก ' + PC.nf(scope) + ' สาขาที่เลือก)');
   if (r[0]) el.append(' · ขายมากสุด ', B(r[0].name + ' ' + PC.nf(r[0].units) + ' ชิ้น'));
   el.append(' · Stock คงเหลือทุกสาขา ', B(PC.nf(stk) + ' ชิ้น')); });
+const mqCols = () => { const N = PC.isNet(), PV = mqPrev(); return [
+    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount', num: true, fmt: PC.nf, bar: N }]
+    .concat(PV ? [{ f: N ? 'pn' : 'pu', label: PV.ps + (N ? ' Net' : ' QTY'), num: true, fmt: PC.nf },
+      { f: 'mom', label: PV.pct, num: true, pill: (d) => (d.mom == null ? ['mute', (N ? d.net : d.units) > 0 ? 'ใหม่' : '–'] : [d.mom >= 0 ? 'ok' : 'bad', (d.mom > 0 ? '+' : '') + Math.round(d.mom * 100) + '%']) }] : []); };
 dash.draw('tb_mq_shop', (el) => { const r = mqShops(); const N = PC.isNet();
-  PC.table(el, 'tb_mq_shop', r, { key: ['shop'], def: 'rank', dir: 1, limit: 500, cols: [
-    { f: 'rank', label: '#', num: true, fmt: PC.nf }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount', num: true, fmt: PC.nf, bar: N },
+  PC.table(el, 'tb_mq_shop', r, { key: ['shop'], def: 'rank', dir: 1, limit: 500, last: (d) => !(d.units > 0), cols: [
+    ...mqCols(),
     { f: 'share', label: '% สัดส่วน', num: true, fmt: PC.pf }, { f: 'days', label: 'วันที่ขายได้', num: true, fmt: PC.nf }, { f: 'last', label: 'ขายล่าสุด', fmt: PC.day }, { f: 'emps', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf }, { f: 'stock', label: 'Stock ตอนนี้', num: true, fmt: PC.nf } ] }); });
+if (!window.PC_MQCSV_BOUND) { window.PC_MQCSV_BOUND = true;
+  document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#mq-csv'))) return; const r = mqShops(), m = MQ.sel(), I = mInfo(); if (!r || !m || !I) return; const PV = mqPrev();
+    const H = ['#', 'Shop Code', 'สาขา', 'Area', 'QTY ' + I.label, 'Net Amount ' + I.label].concat(PV ? [PV.ps + ' QTY', PV.ps + ' Net Amount', PV.pct + ' (QTY)', PV.pct + ' (Net)'] : []).concat(['% สัดส่วน', 'วันที่ขายได้', 'ขายล่าสุด', 'พนักงานที่ขาย', 'Stock ตอนนี้']);
+    const pc = (c, p) => (p > 0 ? Math.round((c / p - 1) * 100) + '%' : c > 0 ? 'ใหม่' : '');
+    const L = [['Matcode', m.matcode, m.name], ['ช่วง', I.label + (PV ? ' เทียบ ' + PV.ps + ' (' + PV.from + ' ถึง ' + PV.to + ')' : '')], [], H].concat(r.map((x) => [x.units > 0 ? x.rank : '', x.shop, x.name, x.area, x.units, x.net].concat(PV ? [x.pu, x.pn, pc(x.units, x.pu), pc(x.net, x.pn)] : []).concat([Math.round(x.share * 1000) / 10 + '%', x.days, x.last, x.emps, x.stock])));
+    const csv = '\ufeff' + L.map((row) => row.map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'Matcode_' + m.matcode + '_' + I.pd + '_' + I.to + '.csv'; document.body.appendChild(a); a.click(); a.remove(); }); }
 const mqWhen = () => { const m = MQ.sel(); if (!m) return null; const r = MQ.ytd(m); const I = mInfo(); if (!I) return null; const y0 = I.today.slice(0, 4) + '-01-01';
   const byD = d3.rollup(r, (a) => ({ units: d3.sum(a, (x) => x.units), net: d3.sum(a, (x) => x.net) }), (x) => x.date);
   const days = []; for (let d = y0; d <= I.today; d = SA.add(d, 1)) { const v = byD.get(d) || { units: 0, net: 0 }; days.push({ d, ...v, wd: new Date(d + 'T00:00:00Z').getUTCDay(), dom: +d.slice(8, 10), w: SA.isoW(d).w }); }
