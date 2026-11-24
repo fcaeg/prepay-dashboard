@@ -68,6 +68,8 @@ tr.sel td { background: var(--acc-soft); }
 tfoot td { font-weight: 600; border-top: 1px solid var(--fg); border-bottom: 0; }
 .muted { color: var(--muted); }
 .neg { color: var(--bad); } .pos { color: var(--good); }
+.cv-low { color: var(--bad); font-weight: 600; } .cv-hi { color: var(--muted); }
+.fam .stk { font-size: 12.5px; color: var(--muted); margin: -2px 0 8px; } .fam .stk b { color: var(--fg); font-weight: 600; }
 .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--bad-soft); color: var(--bad); }
 .bars { display: flex; flex-direction: column; gap: 6px; }
 .bar { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr 4.5rem; gap: 8px; align-items: center; font-size: 13px; }
@@ -191,6 +193,13 @@ button, select, input { touch-action: manipulation; }
     </div>
     <div class="tw scroll" id="tb-shop"></div>
   </section>
+  <section class="card full">
+    <div class="hd">
+      <div><h2>Stock คงเหลือ</h2><div class="sub" id="stk-sub"></div></div>
+      <div class="row"><div class="seg" id="stkv"><button data-v="area">ราย Area</button><button data-v="shop">รายสาขา</button><button data-v="col">รุ่น · สี</button></div><button class="btn" id="stk-csv">Export CSV</button></div>
+    </div>
+    <div class="tw scroll" id="tb-stock"></div>
+  </section>
   <section class="card">
     <div class="hd"><div><h2 id="mt-h">สรุปรายรุ่น</h2><div class="sub" id="mt-sub"></div></div></div>
     <div class="tw" id="tb-model"></div>
@@ -230,7 +239,7 @@ const frank = (f) => { const i = FORDER.findIndex((p) => f.startsWith(p)); retur
 const FAMS = [...new Set(D.models.map((x) => x.fam))].sort((a, b) => frank(a) - frank(b) || a.localeCompare(b));
 const first = D.meta.first_sales || last;
 const hasNet = Object.values(D.targets || {}).some((rs) => rs.some((r) => r[3] > 0));  // net-amount target in the file?
-const S = { tm: 'q', p: 'mtd', fam: FAMS[0] || '', model: '', area: '', type: '', q: '', sort: {} };
+const S = { tm: 'q', p: 'mtd', fam: FAMS[0] || '', model: '', area: '', type: '', q: '', sort: {}, sv: 'area' };
 try { const sv = JSON.parse(localStorage.getItem('tecno') || '{}'); if (sv.p) S.p = sv.p; if (sv.tm === 'n' && hasNet) S.tm = 'n'; } catch (e) {}
 function preset(p) {
   S.p = p;
@@ -243,7 +252,11 @@ function preset(p) {
 preset(S.p);
 const mOk = (k) => (!S.fam || famOf[k] === S.fam) && (!S.model || k === S.model);
 
-$('#asof').textContent = `ยอดขายถึง ${dtTH(D.meta.sales_asof)} · ข้อมูลจาก TSM (สาขา WW)`;
+$('#asof').textContent = `ยอดขายถึง ${dtTH(D.meta.sales_asof)}${D.meta.stock_asof ? ` · Stock ณ ${dtTH(D.meta.stock_asof)}` : ''} · ข้อมูลจาก TSM (สาขา WW)`;
+const SELL = (r) => r[3] !== 'DEMO';  // sellable stock (MAIN_STOCK + SUB_STOCK)
+const CV_DAYS = 7;  // cover = stock / average units per day over the last 7 days of sales data
+const cover = (s, u7) => u7 > 0 ? s / (u7 / CV_DAYS) : (s > 0 ? Infinity : 0);
+const cvF = (s, u7) => { const c = cover(s, u7); if (!s) return u7 > 0 ? '<span class="tag">หมด</span>' : '-'; if (c === Infinity) return '<span class="cv-hi">ไม่มียอด</span>'; return `<span class="${c < 7 ? 'cv-low' : ''}">${c < 10 ? c.toFixed(1) : fmt(c)} วัน</span>`; };
 const areas = D.areas || [...new Set(D.shops.map((x) => x.area).filter(Boolean))].sort();
 $('#area').innerHTML += areas.map((a) => `<option>${esc(a)}</option>`).join('');
 const types = [...new Set((D.ww || []).map((x) => x[2]).concat(D.shops.map((x) => x.type)).filter(Boolean))].sort();
@@ -291,7 +304,8 @@ function draw() {
   const all = D.sales.filter((r) => shopOk(r[1]));                // every model, current shop filter
   const rows = all.filter((r) => inR(r[0]));                        // + period
   const sel = rows.filter((r) => mOk(r[2]));                      // + model / capacity
-  const stk = [];
+  const stk = (D.stock || []).filter((r) => shopOk(r[0]));
+  const d7 = addDays(last, -(CV_DAYS - 1)), s7 = all.filter((r) => r[0] >= d7 && r[0] <= last);  // last 7 days, for cover
   const stkSel = stk.filter((r) => mOk(r[1]));
   // model (family) chips, then capacity chips of the chosen model
   const fu = {}; rows.forEach((r) => (fu[famOf[r[2]]] = (fu[famOf[r[2]]] || 0) + r[4]));
@@ -304,7 +318,7 @@ function draw() {
   $('#caps').innerHTML = `<span class="lbl">ความจุ</span><button class="chip" data-m="" aria-pressed="${!S.model}">ทุกความจุ</button>` +
     ks.map((m) => `<button class="chip" data-m="${esc(m.k)}" aria-pressed="${S.model === m.k}">${esc(capOf(m.k))}</button>`).join('');
   const T0 = tgt(a, b).filter((r) => shopOk(r[0])), Tsel = T0.filter((r) => mOk(r[1]));
-  famCards(rows, stk, T0);
+  famCards(rows, stk, T0, s7);
   // KPIs
   const u = sel.reduce((s, r) => s + r[4], 0), n = sel.reduce((s, r) => s + r[5], 0), g = sel.reduce((s, r) => s + r[6], 0);
   const days = new Set(sel.map((r) => r[0])).size || 1;
@@ -318,6 +332,8 @@ function draw() {
     [L.b, fmt(isN() ? u : n), isN() ? 'เครื่องที่ขาย' : 'ยอดขายสุทธิ หลังส่วนลด / แพ็กเกจ'],
     ['ราคาเต็ม (Gross)', fmt(g) + ' ฿', g ? `ส่วนลดเฉลี่ย ${fmt((g - n) / Math.max(u, 1))} ฿/เครื่อง` : ''],
     ['เฉลี่ยต่อวัน', (u / days).toLocaleString('en-US', { maximumFractionDigits: 1 }), `เครื่อง · ${days} วันที่มียอด`],
+    (() => { const ss = stkSel.filter(SELL).reduce((s, r) => s + r[4], 0), dm = stkSel.filter((r) => !SELL(r)).reduce((s, r) => s + r[4], 0), u7 = s7.filter((r) => mOk(r[2])).reduce((s, r) => s + r[4], 0), c = cover(ss, u7);
+      return ['Stock คงเหลือ', D.stock.length ? fmt(ss) : '-', D.stock.length ? `${c === Infinity ? 'ไม่มียอด 7 วัน' : c ? 'Cover ~' + (c < 10 ? c.toFixed(1) : fmt(c)) + ' วัน' : 'หมด'}${dm ? ` · Demo ${fmt(dm)}` : ''}` : 'ยังไม่มีไฟล์ Stock']; })(),
     ['สาขาที่ขายได้', fmt(nsh), `จาก ${fmt((D.ww || []).filter((x) => (!S.area || x[1] === S.area) && (!S.type || x[2] === S.type)).length)} สาขา WW`],
   ].map(([t, v, s]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   trend(all.filter((r) => mOk(r[2])), a, b);
@@ -326,6 +342,7 @@ function draw() {
   areaTable(sel, stkSel, Tsel);
   hours(a, b);
   shopTable(sel, stkSel, all.filter((r) => mOk(r[2])), Tsel);
+  stockTable(stkSel, s7.filter((r) => mOk(r[2])));
 }
 
 function trend(rows, a, b) {
@@ -359,7 +376,7 @@ function table(el, cols, data, key, foot, rowAttr) {
 }
 
 function selName() { return !S.fam ? 'ทุกรุ่น' : S.model ? short(S.model) : S.fam; }
-function famCards(rows, stk, T0) {
+function famCards(rows, stk, T0, s7) {
   const tot = rows.reduce((s, r) => s + r[4], 0) || 1;
   $('#fams').innerHTML = FAMS.map((f) => {
     const r = rows.filter((x) => famOf[x[2]] === f), k = stk.filter((x) => famOf[x[1]] === f);
@@ -367,6 +384,7 @@ function famCards(rows, stk, T0) {
     const caps = D.models.filter((m) => m.fam === f).map((m) => [capOf(m.k), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[4], 0), r.filter((x) => x[2] === m.k).reduce((s, x) => s + x[5], 0)]);
     return `<button class="fam" data-f="${esc(f)}" aria-pressed="${S.fam === f}"><div class="nm">TECNO ${esc(f)}<small>${Math.round(100 * u / tot)}% ของเครื่องที่ขาย</small></div>
       <div class="big"><div><b>${tq ? fmt(tq) : '-'}</b><span>${L.t}</span></div><div><b>${fmt(av)}</b><span>${L.a}</span></div><div><b>${pct(av, tq)}</b><span>%ACH</span></div><div><b>${fmt(isN() ? u : n)}</b><span>${L.b}</span></div></div>
+      ${D.stock.length ? (() => { const ss = k.filter(SELL).reduce((s, x) => s + x[4], 0), u7 = s7.filter((x) => famOf[x[2]] === f).reduce((s, x) => s + x[4], 0); return `<div class="stk">Stock <b>${fmt(ss)}</b> เครื่อง · Cover ${cvF(ss, u7)}</div>`; })() : ''}
       <div class="share" title="%ACH"><i style="width:${tq ? Math.min(100, 100 * av / tq) : 0}%"></i></div>
       <div class="caps">${caps.map(([c, cu, cn]) => `<span>${esc(c || '-')}</span><b>${fmt(cu)} เครื่อง</b><span>${fmt(cn)} ฿</span>`).join('')}</div></button>`;
   }).join('');
@@ -447,6 +465,41 @@ function shopTable(sel, stk, allRows, Ts) {
     { h: 'ขายล่าสุด', hs: 1, v: (x) => x.last, f: (x) => dTH(x.last) },
   ], shopRows, 'shop', [`รวม ${fmt(shopRows.length)} สาขา`, '', '', ...tfoot(T), '']);
 }
+
+let stkRows = [], stkCols = [];
+function stockTable(stk, s7) {
+  document.querySelectorAll('#stkv button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === S.sv));
+  if (!D.stock.length) { $('#tb-stock').innerHTML = '<div class="empty">ยังไม่มีไฟล์ Stock</div>'; $('#stk-sub').textContent = ''; return; }
+  const v = S.sv, key = (c, m, col) => v === 'area' ? (shop[c] || {}).area || '-' : v === 'shop' ? c : (S.fam ? capOf(m) : famOf[m]) + ' · ' + (col || '-');
+  const m = {}; const get = (k) => (m[k] ||= { k, s: 0, dm: 0, u7: 0, sh: new Set() });
+  stk.forEach((r) => { const x = get(key(r[0], r[1], r[2])); if (SELL(r)) { x.s += r[4]; if (r[4] > 0) x.sh.add(r[0]); } else x.dm += r[4]; });
+  s7.forEach((r) => (get(key(r[1], r[2], r[3])).u7 += r[4]));
+  if (v === 'area') (D.ww || []).forEach(([c, ar, ty]) => { if ((!S.area || ar === S.area) && (!S.type || ty === S.type) && ar) get(ar).all = (get(ar).all || 0) + 1; });
+  const q = S.q.toLowerCase();
+  stkRows = Object.values(m).filter((x) => x.s || x.dm || x.u7).filter((x) => v !== 'shop' || !q || x.k.includes(q) || String((shop[x.k] || {}).n || '').toLowerCase().includes(q));
+  const T = (f) => stkRows.reduce((s, x) => s + f(x), 0), nm = (x) => v === 'shop' ? (shop[x.k] || {}).n || x.k : x.k;
+  stkCols = [
+    { h: v === 'area' ? 'Area' : v === 'shop' ? 'สาขา' : 'รุ่น · สี', l: 1, v: nm, f: (x) => esc(nm(x)) + (v === 'shop' ? ` <span class="muted">${x.k}</span><span class="sm muted">${esc((shop[x.k] || {}).area || '')}</span>` : '') },
+    ...(v === 'shop' ? [{ h: 'Area', l: 1, hs: 1, v: (x) => (shop[x.k] || {}).area || '', f: (x) => esc((shop[x.k] || {}).area || '-') }] : []),
+    { h: 'Stock (เครื่อง)', v: (x) => x.s, def: 1 },
+    { h: 'ขาย 7 วัน', v: (x) => x.u7 },
+    { h: 'Cover', v: (x) => { const c = cover(x.s, x.u7); return c === Infinity ? 1e9 : c; }, f: (x) => cvF(x.s, x.u7) },
+    { h: 'Demo', hs: 1, v: (x) => x.dm, f: (x) => x.dm ? fmt(x.dm) : '-' },
+    ...(v === 'area' ? [{ h: 'สาขามี Stock', hs: 1, v: (x) => x.sh.size, f: (x) => `${fmt(x.sh.size)}/${fmt(x.all || 0)}` }] : []),
+  ];
+  const tot = ['รวม' + (v === 'shop' ? ` ${fmt(stkRows.length)} สาขา` : ''), ...(v === 'shop' ? [''] : []), fmt(T((x) => x.s)), fmt(T((x) => x.u7)), cvF(T((x) => x.s), T((x) => x.u7)), fmt(T((x) => x.dm)), ...(v === 'area' ? [fmt(T((x) => x.sh.size))] : [])];
+  table($('#tb-stock'), stkCols, stkRows, 'stk' + v, tot);
+  $('#stk-sub').textContent = `${selName()} · ณ ${dtTH(D.meta.stock_asof)} · Cover = Stock ÷ ยอดขายเฉลี่ย/วัน ${CV_DAYS} วันล่าสุด (${dTH(addDays(last, -(CV_DAYS - 1)))} – ${dTH(last)}) · ต่ำกว่า 7 วันเป็นสีแดง · ไม่นับเครื่อง Demo`;
+}
+$('#stkv').onclick = (e) => { const b = e.target.closest('button'); if (b) { S.sv = b.dataset.v; draw(); } };
+$('#stk-csv').onclick = () => {
+  const L = [[S.sv === 'area' ? 'Area' : S.sv === 'shop' ? 'Shop Code' : 'Model · Colour', ...(S.sv === 'shop' ? ['Shop', 'Area'] : []), 'Stock', 'Sold last 7 days', 'Cover days', 'Demo', 'Model', 'Stock as of']].concat(stkRows.map((x) => {
+    const c = cover(x.s, x.u7); return [x.k, ...(S.sv === 'shop' ? [(shop[x.k] || {}).n || '', (shop[x.k] || {}).area || ''] : []), x.s, x.u7, c === Infinity ? '' : Math.round(c * 10) / 10, x.dm, selName(), D.meta.stock_asof];
+  }));
+  const csv = '﻿' + L.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  el.download = `tecno_stock_${S.sv}_${selName().replace(/\W+/g, '_')}_${(D.meta.stock_asof || '').slice(0, 10)}.csv`; el.click();
+};
 
 // PNG of the Area table (same rows and order as on screen; always light colours so it reads well in LINE)
 $('#area-png').onclick = async () => {

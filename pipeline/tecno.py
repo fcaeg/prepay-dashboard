@@ -39,8 +39,8 @@ def parse(d):
     mem = next((x for x in p[3:] if re.fullmatch(r'\d+\s*[/+]\s*\d+\s*(GB|TB)?', x)), '')
     mem = mem.replace('GB', '').replace(' ', '')
     rest = [x for x in p[3:] if x not in (net, mem) and x.replace(' ', '') != mem]
-    demo = any(re.search(r'\bDEMO\b', x) for x in rest)
-    colour = ' '.join(x for x in rest if not re.search(r'\bDEMO\b', x)).title()
+    demo = any(re.search(r'\b(DEMO|DM)\b', x) for x in rest)  # '...,PINK,DM' is a demo unit too
+    colour = ' '.join(x for x in rest if not re.search(r'\b(DEMO|DM)\b', x)).title()
     name = ' '.join(x for x in ['TECNO', fam, net, (mem + 'GB') if mem and 'TB' not in mem else mem] if x)
     return '|'.join(re.sub(r'[^A-Z0-9/]', '', x) for x in [fam, net, mem]), name, fam, colour, demo
 
