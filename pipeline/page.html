@@ -498,6 +498,13 @@ body.pc-noscroll { overflow: hidden; }
       <div class="pc-scroll"><table data-draw="tb_mom" data-source="sales_daily shops stock_by_shop" data-row-key="shop"></table></div>
       <p class="pc-note">นับเฉพาะซิมรายปี 2,750 บาท: Matcode 3000122199 / 3000122191 / 3000122169 ทุกสาขา และ 3000143085 เฉพาะ Dtac COCO / Dtac Hall · TG (Gap) = ยอดเดือนก่อน (LM จากไฟล์ HQ: Runrate ÷ (1 + %MoM); สาขาที่ HQ แสดง −100% ใช้ยอด TSM เดือนก่อน) − ยอดขายตั้งแต่ต้นเดือนถึงวันก่อนเริ่มติดตาม · TG ต่อวัน (Rollover) = (TG − ยอดขายในช่วงติดตามก่อนวันล่าสุด) ÷ จำนวนวันที่เหลือรวมวันล่าสุด · ขาดวันนี้ = TG ต่อวัน − ยอดขายวันล่าสุด · TG คงเหลือ = TG − ยอดขายในช่วงติดตาม · %MoM ตอนนี้ = ยอดเดือนนี้ ÷ LM − 1 · Stock = ซิม 2,750 คงเหลือจากไฟล์ Stock ล่าสุดใน Drive (3000143085 นับเฉพาะ Dtac COCO / Hall) · เรียงจาก TG คงเหลือมากไปน้อย</p>
     </article>
+    <article class="pc-card">
+      <h3>ติดตาม Gameplan ปิดเดือน · 38 สาขา ทำเท่ายอด ต.ค. รับรางวัลตามกลุ่ม</h3>
+      <div data-draw="gp_head" data-source="sales_daily shops"></div>
+      <div class="pc-tools"><div class="mm-seg" data-draw="gp_seg" data-source="sales_daily"></div><input class="pc-q" data-q="gp" type="search" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา Gameplan"><button class="pc-export pc-csv" id="gp-csv" type="button">⬇ Export CSV</button></div>
+      <div class="pc-scroll"><table data-draw="tb_gp" data-source="sales_daily shops" data-row-key="shop"></table></div>
+      <p class="pc-note">กลุ่มกำหนดจากซิมที่ต้องทำเพิ่ม ณ ปิดวัน 23 พ.ย. (เป้า ต.ค. − ยอด 1–23 พ.ย.): A มากกว่า 30 ซิม ฿2,000 · B 16–30 ซิม ฿1,000 · C 1–15 ซิม ฿500 · ได้รางวัลเมื่อยอดขายทั้งเดือน พ.ย. ≥ ยอด ต.ค. · นับ Matcode 3000122199 + 3000143085 · ต้องขาย/วัน = ยังขาด ÷ วันที่เหลือรวมวันล่าสุด</p>
+    </article>
   </section>
 
   <section class="pc-sec" id="overview" data-page="overview" hidden>
@@ -1643,7 +1650,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], prstaff: ['tb_prod', 'pr_note'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'], mom: ['tb_mom'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], prstaff: ['tb_prod', 'pr_note'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'], mom: ['tb_mom'], gp: ['tb_gp'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
@@ -1847,4 +1854,5 @@ dash.draw('c_bands_net', (el) => { if (PC.failed(el, 'enriched')) return; const 
 <script src="promo.js"></script>
 <script src="mom2750_data.js"></script>
 <script src="mom2750.js"></script>
+<script src="gameplan2750.js"></script>
 
