@@ -646,5 +646,11 @@
   "kind": "sales",
   "at": "2026-11-23 20:51",
   "ok": true
+ },
+ "1JtPFQKw2KAW42Bn4-3fy7O4Xoq9SAMKS": {
+  "name": "daily_sales - 2026-11-24T131454.265.zip",
+  "kind": "sales",
+  "at": "2026-11-24 13:16",
+  "ok": true
  }
 }
