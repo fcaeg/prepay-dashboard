@@ -72,6 +72,45 @@ window.GAMEPLAN2750 = {"from":"2026-11-24","to":"2026-11-30","month":"2026-11","
       { f: 'pd', label: 'ต้องขาย/วัน', num: true, fmt: (v) => (v ? v.toFixed(1) : '–') },
       { f: 'earn', label: 'รางวัล', num: true, pill: (d) => (d.done ? ['ok', '฿' + PC.nf(d.rw)] : ['mute', '฿' + PC.nf(d.rw)]) }] });
   });
+  // PNG: tiles + groups + shop table (current filter / view)
+  const gpPNG = async () => {
+    try { await document.fonts.ready; } catch (e) {}
+    const C = calc(), r = gpRows().sort((a, b) => a.gk.localeCompare(b.gk)), K = RKX.C, rr = RKX.rr, fit = RKX.fit, td = dTH(C.last);
+    const cols = [['กลุ่ม', 70, 'c'], ['สาขา', 330, 'l'], ['Area', 200, 'l'], ['เป้า (ต.ค.)', 110], ['ยอด พ.ย. รวม', 130], ['ขาย 24–30', 110], ['ขาย ' + td, 110], ['% เป้า', 100], ['ยังขาด', 100], ['ต้องขาย/วัน', 120], ['รางวัล', 110]];
+    const W = 48 + cols.reduce((a, c) => a + c[1], 0), RH = 40, top = 430, H = top + RH * (r.length + 1) + 60, sc = 2;
+    const cv = document.createElement('canvas'); cv.width = W * sc; cv.height = H * sc; const g = cv.getContext('2d'); g.scale(sc, sc);
+    const F = (wt, z) => wt + ' ' + z + 'px "Noto Sans Thai", "IBM Plex Sans Thai", system-ui, sans-serif';
+    g.fillStyle = K.bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#c8102e'; g.font = F(700, 30); g.fillText('ติดตาม Gameplan ปิดเดือน พ.ย. · ซิมรายปี 2,750', 24, 50);
+    g.fillStyle = K.mu; g.font = F(400, 17); g.fillText('ช่วง ' + dTH(GP.from) + ' – ' + dTH(GP.to) + ' · ยอดขาย TSM ถึง ' + td + ' · เหลือ ' + C.left + ' วัน · ทำยอด พ.ย. ≥ ยอด ต.ค. รับรางวัลตามกลุ่ม · ' + ({ all: 'ทุกสาขา', gap: 'สาขาที่ยังไม่ถึง', done: 'สาขาที่ทำได้แล้ว' })[view] + ' ' + r.length + ' สาขา', 24, 80);
+    const R = C.rows, S = (f) => R.reduce((a, x) => a + f(x), 0), oct = S((x) => x.oct), nov = S((x) => x.nov), done = R.filter((x) => x.done).length;
+    const tiles = [['ทำได้แล้ว', done + ' / ' + R.length, 'สาขา', done ? K.ok : K.fg], ['ยอด พ.ย. vs เป้า ต.ค.', nf(nov) + ' / ' + nf(oct), Math.round(100 * nov / (oct || 1)) + '%', K.fg], ['ขายช่วง Gameplan', nf(S((x) => x.win)), td + ' ' + nf(S((x) => x.today)) + ' ซิม', K.fg], ['ยังขาดอีก', nf(S((x) => x.rem)), 'เฉลี่ย ' + (S((x) => x.rem) / C.left).toFixed(1) + ' ซิม/วัน', K.bad], ['รางวัลที่ได้แล้ว', '฿' + nf(S((x) => x.earn)), 'จาก ' + done + ' สาขา', K.fg]];
+    const tw = (W - 48 - 4 * 16) / 5;
+    tiles.forEach(([l, v, sub, c], i) => { const x = 24 + i * (tw + 16), y = 100; g.fillStyle = '#ffffff'; rr(g, x, y, tw, 110, 12); g.fill(); g.strokeStyle = K.line; g.lineWidth = 1.5; rr(g, x, y, tw, 110, 12); g.stroke();
+      g.fillStyle = K.mu; g.font = F(400, 15); g.fillText(l, x + 16, y + 28); g.fillStyle = c; g.font = F(700, 32); g.fillText(fit(g, v, tw - 30), x + 16, y + 68); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(sub, x + 16, y + 94); });
+    const gw = (W - 48 - 2 * 16) / 3, gc = { A: '#c8102e', B: '#d97706', C: K.fg }, gl = { A: '> 30 ซิม · ฿2,000', B: '16–30 ซิม · ฿1,000', C: '1–15 ซิม · ฿500' };
+    ['A', 'B', 'C'].forEach((k, i) => { const x = 24 + i * (gw + 16), y = 228, rs = R.filter((q) => q.grp === k), n = rs.length, d = rs.filter((q) => q.done).length;
+      g.fillStyle = '#ffffff'; rr(g, x, y, gw, 140, 12); g.fill(); g.strokeStyle = K.line; rr(g, x, y, gw, 140, 12); g.stroke();
+      g.fillStyle = gc[k]; g.font = F(700, 20); g.fillText('กลุ่ม ' + k, x + 16, y + 30); g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(gl[k], x + 100, y + 30);
+      g.fillStyle = K.grid; rr(g, x + 16, y + 46, gw - 32, 10, 5); g.fill(); if (d) { g.fillStyle = K.ok; rr(g, x + 16, y + 46, Math.max(10, (gw - 32) * d / n), 10, 5); g.fill(); }
+      [['ผ่านแล้ว', d + ' / ' + n + ' สาขา'], ['ขายช่วง Gameplan', nf(rs.reduce((a, q) => a + q.win, 0))], ['ยังขาด', nf(rs.reduce((a, q) => a + q.rem, 0)) + ' ซิม']].forEach(([l, v], j) => {
+        g.fillStyle = K.mu; g.font = F(400, 14); g.fillText(l, x + 16, y + 80 + j * 22); g.fillStyle = K.fg; g.font = F(700, 14); g.textAlign = 'right'; g.fillText(v, x + gw - 16, y + 80 + j * 22); g.textAlign = 'left'; }); });
+    let y = top; g.fillStyle = '#c8102e'; g.fillRect(24, y - RH + 6, W - 48, RH);
+    const cell = (txt, i, yy, o = {}) => { let x = 24; for (let k = 0; k < i; k++) x += cols[k][1]; const c = cols[i]; g.font = F(o.b ? 700 : o.h ? 600 : 400, o.h ? 14 : 15);
+      g.fillStyle = o.c || (o.h ? '#ffffff' : K.fg); g.textAlign = c[2] === 'l' ? 'left' : c[2] === 'c' ? 'center' : 'right';
+      g.fillText(c[2] === 'l' ? fit(g, txt, c[1] - 16) : txt, c[2] === 'l' ? x + 8 : c[2] === 'c' ? x + c[1] / 2 : x + c[1] - 10, yy); g.textAlign = 'left'; };
+    cols.forEach((c, i) => cell(c[0], i, y - 8, { h: 1 })); y += 6;
+    r.forEach((q, n) => { if (n % 2) { g.fillStyle = '#f7f8fa'; g.fillRect(24, y, W - 48, RH); }
+      const yy = y + RH / 2 + 6; cell(q.grp, 0, yy, { b: 1, c: gc[q.grp] }); cell(q.name.replace(/^True Shop /, ''), 1, yy); cell(q.areaN, 2, yy); cell(nf(q.oct), 3, yy); cell(nf(q.nov), 4, yy, { b: 1 });
+      cell(nf(q.win), 5, yy); cell(nf(q.today), 6, yy); cell(Math.round(q.pct * 100) + '%', 7, yy, { c: q.pct >= 1 ? K.ok : K.bad }); cell(q.rem ? nf(q.rem) : 'ครบ', 8, yy, { b: 1, c: q.rem ? K.bad : K.ok });
+      cell(q.rem ? q.pd.toFixed(1) : '–', 9, yy); cell('฿' + nf(q.rw), 10, yy, { b: q.done, c: q.done ? K.ok : K.mu });
+      g.strokeStyle = K.line; g.lineWidth = 1; g.beginPath(); g.moveTo(24, y + RH); g.lineTo(W - 24, y + RH); g.stroke(); y += RH; });
+    g.fillStyle = K.mu; g.font = F(400, 13); g.fillText('กลุ่มกำหนด ณ ปิดวัน 23 พ.ย. (เป้า ต.ค. − ยอด 1–23 พ.ย.) · ได้รางวัลเมื่อยอดทั้งเดือน พ.ย. ≥ ยอด ต.ค. · Matcode 3000122199 + 3000143085 · Prepay Dashboard', 24, H - 22);
+    return { cv, name: 'Gameplan_SIM2750_' + (C.last || '') + '.png' };
+  };
+  if (!window.GP_PNG_BOUND) { window.GP_PNG_BOUND = true;
+    document.addEventListener('click', async (e) => { const b = e.target.closest && e.target.closest('#gp-png'); if (!b) return; const t = b.textContent; b.disabled = true; b.textContent = 'กำลังสร้างรูป…';
+      try { const { cv, name } = await gpPNG(); RKX.show(cv, name); } catch (err) { console.error(err); } finally { b.disabled = false; b.textContent = t; } }); }
   if (!window.GP_CSV_BOUND) { window.GP_CSV_BOUND = true;
     document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#gp-csv'))) return; const r = gpRows(); if (!r) return; const C = calc();
       const H = ['กลุ่ม', 'รหัส', 'สาขา', 'Area', 'เป้า (ยอด ต.ค.)', 'ยอด 1–23 พ.ย.', 'ขาย 24–30 พ.ย.', 'ขาย ' + C.last, 'ยอด พ.ย. รวม', '% ของเป้า', 'ยังขาด', 'ต้องขาย/วัน', 'สถานะ', 'รางวัล (฿)'];
