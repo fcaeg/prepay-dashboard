@@ -1,10 +1,10 @@
 {
- "sales_asof": "2026-11-26 17:38",
+ "sales_asof": "2026-11-26 20:15",
  "stock_asof": "2026-11-23 13:25",
  "stock_file": "stock_balance_report Update 23 Nov 2026 Time 13.25.csv",
  "manpower_asof": "2026-10-26",
  "vivo_pc_sheet": "Update_PC_vivo_as._7.11.26.xlsx \u00b7 PC Active",
- "vivo_sales_asof": "2026-11-26 17:38",
+ "vivo_sales_asof": "2026-11-26 20:10",
  "vivo_hist_asof": "2026-11-03",
  "vivo_hist_from": "2026-01-01",
  "vivo_stock_asof": "2026-11-23 13:25",
@@ -34,9 +34,9 @@
   "2026-11-23": "2026-11-23 20:47:08",
   "2026-11-24": "2026-11-24 22:31:43",
   "2026-11-25": "2026-11-25 21:15:32",
-  "2026-11-26": "2026-11-26 17:39:42"
+  "2026-11-26": "2026-11-26 20:15:07"
  },
- "gia_sales_asof": "2026-11-26 17:38",
+ "gia_sales_asof": "2026-11-26 20:14",
  "vivo_rrp_file": "vivo_RRP_as.7.11.26.xlsx",
  "perf_day_asof": {
   "2026-11-01": "2026-11-01 20:49:25",
@@ -68,7 +68,7 @@
  },
  "perf_pl_month": "2026-08",
  "perf_stock_asof": "2026-11-13 11:30",
- "tecno_sales_asof": "2026-11-26 17:34",
+ "tecno_sales_asof": "2026-11-26 18:29",
  "tecno_stock_asof": "2026-11-23 13:25",
  "mom2750_asof": "2026-11-17"
 }
