@@ -125,6 +125,7 @@ tr.ns-row td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 .pg { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
 .pg.g0 { background: #f6cfcb; color: #7a1f19; } .pg.g1 { background: var(--bad-soft); color: var(--bad); } .pg.g2 { background: var(--warn-soft); color: var(--warn); } .pg.g3 { background: var(--ok-soft); color: var(--ok); }
 tr.pr-g0 td:first-child { box-shadow: inset 3px 0 0 #7a1f19; } tr.pr-g1 td:first-child { box-shadow: inset 3px 0 0 var(--bad); } tr.pr-g2 td:first-child { box-shadow: inset 3px 0 0 var(--warn); } tr.pr-g3 td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+#t-fm-q td, #t-fm-q th, #t-fm-n td, #t-fm-n th { padding: 4px 6px; } .fz { color: var(--muted); opacity: .5; } th.we, td.we { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .pd-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 4px 0 10px; }
 .pd-head b { font-size: 18px; }
 .pd-head span { color: var(--muted); font-size: 13px; }
@@ -264,6 +265,7 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
     <button role="tab" data-t="ms" aria-selected="false">6 · PC Performance</button>
     <button role="tab" data-t="wk" aria-selected="false">7 · แนวโน้มการขาย</button>
     <button role="tab" data-t="prod" aria-selected="false">8 · Productivity รายสาขา</button>
+    <button role="tab" data-t="fm" aria-selected="false">9 · Focus Model</button>
   </nav>
 
   <section class="card" id="s-today">
@@ -390,6 +392,17 @@ h3 { font-size: 14px; margin: 4px 0 8px; font-weight: 600; }
       <input type="search" id="q-prod" placeholder="ค้นหาสาขา / รหัส" aria-label="ค้นหาสาขา"></div>
     <div class="tw" id="t-pr-shop"></div>
   </section>
+
+  <section class="card" id="s-fm" hidden>
+    <div class="card-h"><h2>Focus Model · ยอดขายรายวัน</h2>
+      <div class="f"><label>Focus Model</label><div class="msel" id="f-fmodel"></div></div>
+      <div class="seg" id="f-fmdim"><button data-v="model" aria-pressed="true">ราย Model</button><button data-v="area" aria-pressed="false">ราย Area</button><button data-v="shop" aria-pressed="false">รายสาขา</button></div>
+      <span class="spacer"></span><button class="btn" data-x="fm">⤓ Excel</button></div>
+    <p class="note" id="n-fm"></p>
+    <div class="cmp" id="fm-kpi"></div>
+    <h3>QTY รายวัน (เครื่อง)</h3><div class="tw" id="t-fm-q"></div>
+    <h3 style="margin-top:14px">Net Amount รายวัน (บาท)</h3><div class="tw" id="t-fm-n"></div>
+  </section>
 </div>
 
 <div class="dlg" id="dl-gate" hidden>
@@ -486,10 +499,10 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), shop: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', ptype: 'ALL', pband: '0.1', pgrp: '', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), shop: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', ptype: 'ALL', pband: '0.1', pgrp: '', fmodel: new Set(), fmdim: 'model', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '', prod: '' } };
-try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; } catch (e) {}
-const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode })); } catch (e) {} };
+try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; if (Array.isArray(p.fmodel)) p.fmodel.forEach((k) => MD[k] && S.fmodel.add(k)); if (p.fmdim) S.fmdim = p.fmdim; } catch (e) {}
+const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode, fmodel: [...S.fmodel], fmdim: S.fmdim })); } catch (e) {} };
 
 // ---------- month geometry: Target to date = month Target ÷ days in month × days passed (flat rate)
 const iso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
@@ -1263,6 +1276,50 @@ function sProd(mi) {
   const tl = `${THF[mi.m - 1]} ${mi.y + 543} 1–${mi.asofDay} · ${S.ptype === 'ALL' ? 'All' : PTLAB[S.ptype]} · ${MLAB()} · ช่วงค่าเฉลี่ย ±${bp}%`;
   EXPORT.prod = [toSheet('8 Productivity สรุป', tT, `Productivity รายสาขา · สรุปจำนวนสาขา · ${tl}`), toSheet('8 Productivity รายสาขา', tS, `Productivity รายสาขา · ${sel == null ? 'ทุกกลุ่ม' : PGRP[sel].name} · ${tl}`)];
 }
+// ---------- Focus Model (Nami, 27 Nov 2026): chosen models, daily QTY and daily Net Amount in two tables (always Net, whatever the unit button)
+function sFocus(mi) {
+  const sel = S.fmodel; const okM = (k) => !sel.size || sel.has(k);
+  const days = Array.from({ length: mi.asofDay }, (_, i) => `${mi.ym}-${String(i + 1).padStart(2, '0')}`); const di = Object.fromEntries(days.map((d, i) => [d, i]));
+  const dim = S.fmdim; const keyOf = (c, k) => dim === 'model' ? k : dim === 'area' ? SH[c].area : c;
+  const acc = new Map(); const get = (key) => { let x = acc.get(key); if (!x) acc.set(key, x = { q: new Array(days.length).fill(0), n: new Array(days.length).fill(0) }); return x; };
+  for (const [d, c, k, u, n] of NETD.sales) { const i = di[d]; if (i == null || !okShop(c) || !okM(k)) continue; const x = get(keyOf(c, k)); x.q[i] += u; x.n[i] += n; }
+  const sum = (a) => a.reduce((s, v) => s + v, 0); const addTo = (dst, x) => { for (let i = 0; i < days.length; i++) { dst.q[i] += x.q[i]; dst.n[i] += x.n[i]; } };
+  const blank = (name, cls, extra) => Object.assign({ name, _cls: cls, q: new Array(days.length).fill(0), n: new Array(days.length).fill(0) }, extra);
+  let rows = []; const tot = blank('รวม', 'tot');
+  if (dim === 'model') {
+    rows = [...acc.entries()].map(([k, x]) => Object.assign(blank((MD[k] || { name: k }).name.replace(/^VIVO /, ''), ''), x, { o: MORDER[k] ?? 9e9 })).sort((a, b) => a.o - b.o);
+  } else if (dim === 'area') {
+    for (const zn of [...ZONES, 'อื่น ๆ']) { const ar = AREAS.filter((a) => zoneOf(a) === zn && acc.has(a)); if (!ar.length) continue;
+      const sub = blank(zn, 'sub'); rows.push(sub); for (const a of ar) { const x = acc.get(a); addTo(sub, x); rows.push(Object.assign(blank(a, 'ind'), x)); } }
+  } else {
+    rows = [...acc.entries()].map(([c, x]) => Object.assign(blank(SH[c].n, ''), x, { c, area: SH[c].area, pc: SH[c].pc })).sort((a, b) => sum(b.q) - sum(a.q) || sum(b.n) - sum(a.n));
+  }
+  for (const r of rows) if (r._cls !== 'sub') addTo(tot, r);
+  rows.push(tot);
+  const wd = (d) => new Date(d + 'T00:00:00').getDay(); const WD = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+  const first = dim === 'model' ? [{ h: 'Model', v: (r) => r.name, cls: 't' }] : dim === 'area' ? [{ h: 'Region / Area', v: (r) => r.name, cls: 't' }]
+    : [{ h: 'สาขา', v: (r) => r.name, cls: 't' }, { h: 'รหัส', v: (r) => r.c || '', cls: 't' }, { h: 'Area', v: (r) => r.area || '', cls: 't' },
+       { h: 'PC', v: (r) => r.pc, f: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `<span class="pc">PC ${v}</span>` : '<span class="nopc">No PC</span>', x: (v, r) => r._cls === 'tot' ? '' : v > 0 ? `PC ${v}` : 'No PC' }];
+  const cols = (f) => [...first, { h: 'รวม MTD', v: (r) => sum(r[f]), f: num }, { h: 'เฉลี่ย / วัน', v: (r) => days.length ? sum(r[f]) / days.length : 0, f: (v) => f === 'q' ? nf1.format(v) : num(v), x: (v) => f === 'q' ? Math.round(v * 10) / 10 : Math.round(v) },
+    ...days.map((d, i) => ({ g: `${THF[mi.m - 1]} (รายวัน)`, h: `${+d.slice(8)} ${WD[wd(d)]}`, v: (r) => r[f][i], f: (v) => v ? num(v) : '<span class="fz">0</span>', cls: wd(d) % 6 === 0 ? 'we' : '' }))];
+  // weekend columns: class on the cells; header shading via the same class
+  const tq = renderTable($('#t-fm-q'), cols('q'), rows), tn = renderTable($('#t-fm-n'), cols('n'), rows);
+  for (const id of ['#t-fm-q', '#t-fm-n']) { const ths = $(id).querySelectorAll('thead tr:last-child th'); const off = first.length + 2; days.forEach((d, i) => { if (wd(d) % 6 === 0 && ths[off + i]) ths[off + i].classList.add('we'); }); }
+  const tq_ = sum(tot.q), tn_ = sum(tot.n); const last7 = (a) => sum(a.slice(-7)), prev7 = (a) => sum(a.slice(-14, -7));
+  const best = (a) => { let m = -Infinity, i = -1; a.forEach((v, j) => { if (v > m) { m = v; i = j; } }); return i < 0 || m <= 0 ? '–' : `${thDate(days[i])} (${num(m)})`; };
+  const kc = (l, v, sub) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  const ch = (a, b) => b > 0 ? ` · 7 วันก่อนหน้า ${num(b)} (${sgn(a / b - 1)})` : '';
+  $('#fm-kpi').innerHTML = days.length ? kc('QTY MTD', num(tq_), `เฉลี่ย ${nf1.format(tq_ / days.length)} เครื่อง/วัน · สูงสุด ${best(tot.q)}`)
+    + kc('Net Amount MTD', money(tn_), `เฉลี่ย ${num(tn_ / days.length)} บาท/วัน · ${tq_ ? 'ราคาเฉลี่ย ' + num(tn_ / tq_) + ' บาท/เครื่อง' : ''}`)
+    + kc('QTY 7 วันล่าสุด', num(last7(tot.q)), `${shortD(days[Math.max(0, days.length - 7)])}–${shortD(days[days.length - 1])}${ch(last7(tot.q), prev7(tot.q))}`)
+    + kc('Net Amount 7 วันล่าสุด', money(last7(tot.n)), `${ch(last7(tot.n), prev7(tot.n)).replace(/^ · /, '')}`) : '';
+  const ml = sel.size ? [...sel].map((k) => (MD[k] || { name: k }).name.replace(/^VIVO /, '')) : ['ทุกรุ่น'];
+  const fl = filterParts().filter((x) => x !== (S.model.size && modelLabel(3)));
+  $('#n-fm').innerHTML = `Focus Model: <b>${esc(ml.length > 6 ? ml.slice(0, 6).join(', ') + ` +${ml.length - 6}` : ml.join(', '))}</b> · ${THF[mi.m - 1]} ${mi.y + 543} วันที่ 1–${mi.asofDay} (Day-1) · `
+    + `ตาราง QTY = เครื่อง, Net Amount = บาท (ไม่ขึ้นกับปุ่มหน่วยด้านบน) · ใช้ตัวกรอง Region / Area / ประเภท / PC / สาขา ด้านบน (ตัวกรอง Model ด้านบนไม่ใช้ในแท็บนี้)${fl.length ? ' · ตัวกรอง: ' + esc(fl.join(' / ')) : ''}`;
+  const tl = `${THF[mi.m - 1]} ${mi.y + 543} 1–${mi.asofDay} · Focus Model: ${ml.join(', ')}`;
+  EXPORT.fm = [toSheet('9 Focus QTY รายวัน', tq, `Focus Model · QTY รายวัน (เครื่อง) · ${tl}`), toSheet('9 Focus Net รายวัน', tn, `Focus Model · Net Amount รายวัน (บาท) · ${tl}`)];
+}
 function sToday() {
   const d = S.day; if (!d) { $('#n-today').textContent = 'ยังไม่มีข้อมูลยอดขาย'; return; }
   const y1 = addDays(d, -1), w1 = addDays(d, -7); const ym = d.slice(0, 7); const dim = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate();
@@ -1449,6 +1506,10 @@ function initControls() {
       for (const m of D.models) { const g = m.tgt ? `${m.series} Series` : 'Non Target Model'; if (!grp.has(g)) grp.set(g, []); grp.get(g).push({ v: m.k, l: m.name.replace(/^VIVO /, '') }); }
       const order = (g) => g === 'Non Target Model' ? 99 : ({ X: 0, V: 1, Y: 2, T: 3 }[g[0]] ?? 9);
       for (const [g, kids] of [...grp].sort((a, b) => order(a[0]) - order(b[0]))) out.push({ g, kids }); return out; }, null, true);
+  multiSelect($('#f-fmodel'), 'fmodel', 'ทุกรุ่น', () => { const grp = new Map();
+      for (const m of D.models) { const g = m.tgt ? `${m.series} Series` : 'Non Target Model'; if (!grp.has(g)) grp.set(g, []); grp.get(g).push({ v: m.k, l: m.name.replace(/^VIVO /, '') }); }
+      const order = (g) => g === 'Non Target Model' ? 99 : ({ X: 0, V: 1, Y: 2, T: 3 }[g[0]] ?? 9);
+      return [...grp].sort((a, b) => order(a[0]) - order(b[0])).map(([g, kids]) => ({ g, kids })); }, persist, true);
   document.addEventListener('click', (e) => { if (!e.target.closest('.msel')) document.querySelectorAll('.msel .pop').forEach((p) => p.hidden = true); });
   fillSelect($('#f-msmodel'), [['ALL', 'ตาม Model ที่กรองด้านบน'], ...modelOptions().slice(1)], 'ALL');
   const pcs = D.shops.filter((x) => x.pc > 0).sort((a, b) => a.n.localeCompare(b.n)), npc = D.shops.filter((x) => !(x.pc > 0)).sort((a, b) => a.n.localeCompare(b.n));
@@ -1471,17 +1532,17 @@ function initControls() {
   $('#f-msmodel').onchange = (e) => { S.msmodel = e.target.value; render(); };
   const seg = (id, key) => { const el = $(id); const set = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
     set(); el.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; set(); persist(); render(); }; };
-  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-tper', 'tper'); seg('#f-tdview', 'tdview'); seg('#f-shopview', 'shopview'); seg('#f-ptype', 'ptype');
+  seg('#f-metric', 'metric'); seg('#f-tmode', 'tmode'); seg('#f-wkdim', 'wkdim'); seg('#f-tper', 'tper'); seg('#f-tdview', 'tdview'); seg('#f-shopview', 'shopview'); seg('#f-ptype', 'ptype'); seg('#f-fmdim', 'fmdim');
   $('#f-pband').onchange = (e) => { S.pband = e.target.value; render(); };
   const tabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.t === S.tab)));
-    for (const t of ['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk', 'prod']) $('#s-' + t).hidden = t !== S.tab; };
+    for (const t of ['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk', 'prod', 'fm']) $('#s-' + t).hidden = t !== S.tab; };
   $('#alert').onclick = () => { if (!$('#alert').classList.contains('okay')) $('#h-risk').scrollIntoView({ behavior: 'smooth' }); };
   tabs(); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; tabs(); persist(); };
   for (const [id, key] of [['#q-shop', 'shop'], ['#q-stock', 'stock'], ['#q-ms', 'ms'], ['#q-prod', 'prod']]) $(id).oninput = (e) => { S.q[key] = e.target.value.trim(); render(); };
   $('#locs').innerHTML = D.locs.length > 1 ? 'Location ที่นับเป็น Stock: ' + D.locs.map((l, i) => `<label><input type="checkbox" data-l="${i}"${S.locs.has(i) ? ' checked' : ''}> ${esc(l)}</label>`).join('') : '';
   $('#locs').onchange = (e) => { const i = +e.target.dataset.l; if (e.target.checked) S.locs.add(i); else S.locs.delete(i); render(); };
   document.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { const k = b.dataset.x; requireDL(() => downloadXlsx([].concat(EXPORT[k]), `Vivo_${k}_${S.month}.xlsx`)); });
-  $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk', 'prod'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
+  $('#x-all').onclick = () => requireDL(() => downloadXlsx([...['today', 'model', 'area', 'shop', 'stock', 'ms', 'wk', 'prod', 'fm'].flatMap((k) => [].concat(EXPORT[k])), rawSheet()], `Vivo_Dashboard_${S.month}.xlsx`));
 }
 function rawSheet() {
   const rows = NETD.sales.filter(([d, c, k]) => d.slice(0, 7) === S.month && okShop(c) && okModel(k))
@@ -1492,7 +1553,7 @@ function rawSheet() {
 
 function render() {
   applyMetric(); const mi = monthInfo(S.month); EXPORT = {};
-  sToday(); const tot = sModel(mi); sArea(mi); sTrend(mi); sShop(mi); sProd(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
+  sToday(); const tot = sModel(mi); sArea(mi); sTrend(mi); sShop(mi); sProd(mi); sFocus(mi); const ts = sStock(); sMS(mi); kpis(mi, tot, ts);
 }
 
 // ---------- minimal XLSX writer (stored zip, no external library)
