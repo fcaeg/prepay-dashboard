@@ -376,6 +376,42 @@ dash.draw('tb_region', (el) => { const r = shAgg(), I = shInfo(), N = PC.isNet()
     rows = [...m.values()].map((a) => ({ ...a, target: a.t ? Math.round(a.t) : null, ach: a.t ? a.c / a.t : null, growth: I && I.pf && a.pv > 0 ? a.c / a.pv - 1 : null })); }
   PC.table(el, 'tb_region', rows, { key: ['area'], def: 'c', cols: [{ f: 'area', label: 'Area' }, { f: 'zone', label: 'Region' }, { f: 'sold', label: 'สาขาที่มียอด', num: true, fmt: PC.nf }, ...shCols(I, N),
     { f: N ? 'units' : 'net', label: (N ? 'QTY ' : 'Net Amount ') + ((I && I.cs) || ''), num: true, fmt: PC.nf }] }); });
+// ---- Performance ราย Matcode (Tab สาขา): ทุกสาขาตามตัวกรอง หรือเลือกสาขาเดียว
+let shMatShop = 'ALL';
+dash.draw('sh_label4', (el) => { const I = shInfo(); el.textContent = I ? I.label : ''; });
+dash.draw('f_shmat', (el) => { const p = PC.P(), shops = (PC.rows('shops') || []).filter((s) => PCin(s.area, p.area) && (p.stype === 'ALL' || s.stype === p.stype)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  if (p.shop !== 'ALL') shMatShop = String(p.shop); if (shMatShop !== 'ALL' && !shops.some((s) => String(s.shop) === shMatShop)) shMatShop = 'ALL';
+  el.innerHTML = '<option value="ALL">ทุกสาขา (ตามตัวกรอง) · ' + shops.length + ' สาขา</option>' + shops.map((s) => '<option value="' + s.shop + '">' + String(s.name).replace(/[<&]/g, '') + ' · ' + s.shop + '</option>').join('');
+  el.value = shMatShop; el.onchange = () => { shMatShop = el.value; dash.draw('tb_sh_mat'); dash.draw('sh_mat_sum'); }; });
+const shMat = (byShop) => { const r = PC.rows('enriched'), I = shInfo(); if (!r || !I) return null; const p = PC.P(), N = PC.isNet(), sel = shMatShop;
+  const mc = new Map((PC.rows('matcodes') || []).map((x) => [String(x.matcode), x])); const m = new Map(); const shops = new Map((PC.rows('shops') || []).map((x) => [String(x.shop), x]));
+  const ok = (x) => PCin(x.area, p.area) && (p.stype === 'ALL' || x.stype === p.stype) && (p.group === 'ALL' || x.group === p.group) && (sel === 'ALL' || String(x.shop) === sel);
+  const g = (k, x) => { if (!m.has(k)) { const c = mc.get(String(x.matcode)) || {}; m.set(k, { matcode: String(x.matcode), shop: String(x.shop), shopname: (shops.get(String(x.shop)) || {}).name || x.shop, area: x.area, name: c.name || x.matcode, group: c.group || x.group || '', sub: c.subgroup || x.simtype || '', price: c.price || 0, units: 0, net: 0, pu: 0, pn: 0, sh: new Set(), stock: 0 }); } return m.get(k); };
+  for (const x of r) { if (!ok(x)) continue; const cur = x.date >= I.from && x.date <= I.to, prv = I.pf && x.date >= I.pf && x.date <= I.pt; if (!cur && !prv) continue;
+    const a = g(byShop ? x.shop + '|' + x.matcode : String(x.matcode), x); if (cur) { a.units += x.units; a.net += x.net; if (x.units > 0) a.sh.add(String(x.shop)); } else { a.pu += x.units; a.pn += x.net; } }
+  for (const s of PC.rows('stock_by_shop') || []) { const S = shops.get(String(s.shop)); if (!S || !PCin(S.area, p.area) || (p.stype !== 'ALL' && S.stype !== p.stype) || (sel !== 'ALL' && String(s.shop) !== sel)) continue;
+    const k = byShop ? s.shop + '|' + s.matcode : String(s.matcode); const a = m.get(k); if (a) a.stock += +s.qty || 0; }
+  const out = [...m.values()].filter((a) => a.units || a.pu); const tot = d3.sum(out, (a) => (N ? a.net : a.units)) || 1;
+  return out.map((a) => { const c = N ? a.net : a.units, pv = N ? a.pn : a.pu; return { ...a, shops: a.sh.size, share: c / tot, growth: pv > 0 ? c / pv - 1 : null }; }); };
+dash.draw('sh_mat_sum', (el) => { const r = shMat(false), I = shInfo(); if (!r || !I) { el.textContent = ''; return; } const N = PC.isNet(), S = (f) => d3.sum(r, f), c = S((a) => (N ? a.net : a.units)), pv = S((a) => (N ? a.pn : a.pu));
+  const up = r.filter((a) => a.growth != null && a.growth > 0).length, dn = r.filter((a) => a.growth != null && a.growth < 0).length;
+  el.textContent = (shMatShop === 'ALL' ? 'ทุกสาขาตามตัวกรอง' : ((PC.rows('shops') || []).find((s) => String(s.shop) === shMatShop) || {}).name || shMatShop) + ' · ' + r.filter((a) => a.units).length + ' Matcode ที่ขายได้ · ' + (N ? 'Net ' : 'QTY ') + PC.nf(c) + (I.plabel && pv ? ' · เทียบ ' + I.plabel + ' ' + (c >= pv ? '+' : '') + Math.round((c / pv - 1) * 100) + '%' : '') + ' · โต ' + up + ' / ลด ' + dn + ' Matcode'; });
+dash.draw('tb_sh_mat', (el) => { const r = shMat(false), I = shInfo(), N = PC.isNet(); if (!r) { el.innerHTML = ''; return; } const pl = I && I.pd === 'mtd' ? 'LMTD' : I && I.pd === 'week' ? 'W-1' : 'Same Day LW';
+  PC.table(el, 'tb_sh_mat', r, { key: ['matcode'], def: N ? 'net' : 'units', limit: 300, q: 'shmat', last: (d) => !(d.units > 0), cols: [
+    { f: 'matcode', label: 'Matcode' }, { f: 'name', label: 'ชื่อซิม', wrap: true }, { f: 'sub', label: 'ประเภทซิม' }, { f: 'price', label: 'ราคา', num: true, fmt: PC.nf },
+    { f: 'units', label: 'QTY', num: true, fmt: PC.nf, bar: !N }, { f: 'net', label: 'Net Amount', num: true, fmt: PC.nf, bar: N },
+    { f: N ? 'pn' : 'pu', label: pl + (N ? ' Net' : ' QTY'), num: true, fmt: PC.nf },
+    { f: 'growth', label: I && I.pd === 'mtd' ? '%MoM' : I && I.pd === 'week' ? '%WoW' : '%vs LW', num: true, pill: (d) => (d.growth == null ? ['mute', (N ? d.net : d.units) > 0 ? 'ใหม่' : '–'] : [d.growth >= 0 ? 'ok' : 'bad', (d.growth > 0 ? '+' : '') + Math.round(d.growth * 100) + '%']) },
+    { f: 'share', label: '% สัดส่วน', num: true, fmt: (v) => (v * 100).toFixed(1) + '%' },
+    ...(shMatShop === 'ALL' ? [{ f: 'shops', label: 'สาขาที่ขายได้', num: true, fmt: PC.nf }] : []),
+    { f: 'stock', label: 'Stock ตอนนี้', num: true, fmt: PC.nf }] }); });
+if (!window.PC_SHMAT_BOUND) { window.PC_SHMAT_BOUND = true;
+  document.addEventListener('click', (e) => { if (!(e.target.closest && e.target.closest('#shmat-csv'))) return; const I = shInfo(); if (!I) return; const all = shMatShop === 'ALL', r = shMat(all); if (!r) return;
+    const H = (all ? ['Shop Code', 'สาขา', 'Area'] : []).concat(['Matcode', 'ชื่อซิม', 'ประเภทซิม', 'ราคา', 'QTY ' + I.label, 'Net Amount ' + I.label, 'QTY ' + (I.plabel || 'ช่วงก่อน'), 'Net ' + (I.plabel || 'ช่วงก่อน'), '%Growth QTY', '%Growth Net', 'Stock ตอนนี้']);
+    const pc = (c, p) => (p > 0 ? Math.round((c / p - 1) * 100) + '%' : c > 0 ? 'ใหม่' : '');
+    const L = [H].concat(r.sort((a, b) => (all ? String(a.shopname).localeCompare(String(b.shopname)) : 0) || b.units - a.units).map((a) => (all ? [a.shop, a.shopname, a.area] : []).concat([a.matcode, a.name, a.sub, a.price, a.units, Math.round(a.net), a.pu, Math.round(a.pn), pc(a.units, a.pu), pc(a.net, a.pn), a.stock])));
+    const csv = '﻿' + L.map((x) => x.map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'Matcode_Performance_' + (all ? 'by_shop' : shMatShop) + '_' + I.pd + '_' + I.to + '.csv'; document.body.appendChild(a); a.click(); a.remove(); }); }
 dash.draw('tb_shop', (el) => { const r = shAgg(), I = shInfo(), N = PC.isNet();
   PC.table(el, 'tb_shop', r, { key: ['shop'], def: 'c', q: 'shop', limit: 2000, cols: [{ f: 'shop', label: 'รหัส' }, { f: 'name', label: 'สาขา', wrap: true }, { f: 'area', label: 'Area' }, { f: 'type', label: 'ประเภทสาขา' }, ...shCols(I, N),
     { f: N ? 'units' : 'net', label: (N ? 'QTY ' : 'Net Amount ') + ((I && I.cs) || ''), num: true, fmt: PC.nf }, { f: 'asp', label: 'ราคาเฉลี่ย/ชิ้น', num: true, fmt: PC.nf }, { f: 'staff', label: 'พนักงานที่ขาย', num: true, fmt: PC.nf },

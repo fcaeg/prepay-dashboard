@@ -676,6 +676,19 @@ body.pc-noscroll { overflow: hidden; }
         <table data-draw="tb_shop" data-source="enriched targets shops stock_by_shop" data-row-key="shop"></table>
       </div>
     </article>
+    <article class="pc-card" id="card-shop-mat">
+      <h3>Performance ราย Matcode · <span data-draw="sh_label4" data-source="enriched"></span></h3>
+      <p class="pc-note" data-draw="sh_mat_sum" data-source="enriched shops stock_by_shop matcodes"></p>
+      <div class="pc-tools">
+        <label class="pc-field">สาขา
+          <select id="f-shmat" data-draw="f_shmat" data-source="shops" aria-label="เลือกสาขาสำหรับ Performance ราย Matcode"></select>
+        </label>
+        <input class="pc-q" data-q="shmat" type="search" placeholder="ค้นหา Matcode / ชื่อซิม" aria-label="ค้นหา Matcode">
+        <button class="pc-export pc-csv" id="shmat-csv" type="button">⬇ Export CSV</button>
+      </div>
+      <div class="pc-scroll"><table data-draw="tb_sh_mat" data-source="enriched shops stock_by_shop matcodes" data-row-key="matcode"></table></div>
+      <p class="pc-note">เทียบกับช่วงก่อนหน้าแบบเดียวกับตารางสาขา (MTD เทียบ LMTD · สัปดาห์เทียบสัปดาห์ก่อน · วันนี้เทียบวันเดียวกันสัปดาห์ก่อน) · Stock = ไฟล์ Stock ล่าสุด · Export CSV ได้ทั้งแบบรวม และแยกรายสาขา × Matcode เมื่อเลือก "ทุกสาขา"</p>
+    </article>
     <article class="pc-card" id="card-shop-ns">
       <h3>สาขา No Sale · <span data-draw="sh_label3" data-source="enriched"></span></h3>
       <div class="pc-tools"><p class="pc-note" data-draw="sh_ns_sum" data-source="enriched shops manpower"></p><button class="pc-export pc-csv" id="shns-csv" type="button">⬇ Export CSV</button></div>
@@ -1650,7 +1663,7 @@ tabs.forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 { const h = location.hash.slice(1); if (tabs.some((t) => t.dataset.tab === h)) showTab(h); }
 document.querySelectorAll('.pc-q').forEach((inp) => inp.addEventListener('input', () => {
   PC.queries[inp.dataset.q] = inp.value;
-  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], prstaff: ['tb_prod', 'pr_note'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'], mom: ['tb_mom'], gp: ['tb_gp'] })[inp.dataset.q].forEach((n) => dash.draw(n));
+  ({ mat: ['tb_mat'], shop: ['tb_shop'], staff: ['tb_staff'], prstaff: ['tb_prod', 'pr_note'], nosale: ['tb_ns', 'ns_list_sum'], exp: ['tb_exp', 'ag_ser_sum'], agshop: ['tb_ag_shop'], stock: ['tb_stock'], gap: ['tb_gap', 'c_gap_list', 'g_list_note'], watch: ['tb_w_serial'], mom: ['tb_mom'], gp: ['tb_gp'], shmat: ['tb_sh_mat'] })[inp.dataset.q].forEach((n) => dash.draw(n));
 }));
 document.querySelectorAll('#f-period').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ period: sel.value })));
 document.querySelectorAll('#f-slevel').forEach((sel) => sel.addEventListener('change', () => dash.setParams({ slevel: sel.value })));
