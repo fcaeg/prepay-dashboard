@@ -499,10 +499,10 @@ const months = [...new Set([...D.sales.map((r) => r[0].slice(0, 7)), ...Object.k
 const AREAS = [...new Set(D.shops.map((s) => s.area).filter(Boolean))].sort((a, b) => ZONES.indexOf(zoneOf(a)) - ZONES.indexOf(zoneOf(b)) || a.localeCompare(b));
 const TYPES = ['Matching', 'Non Matching', 'Dtac Hall', 'Dtac Coco', 'ปิดแล้ว (SIS / Makro)'].filter((t) => D.shops.some((s) => s.type === t));
 
-const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), shop: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', ptype: 'ALL', pband: '0.1', pgrp: '', fmodel: new Set(), fmdim: 'model', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
+const S = { month: months.find((m) => m === LATEST.slice(0, 7)) || months[0], metric: 'n', zone: new Set(), area: new Set(), type: new Set(), pc: new Set(), shop: new Set(), model: new Set(), tab: 'today', day: '', tdview: 'area', tper: 'week', wkdim: 'model', tmode: 'full', shopview: 'all', ptype: 'ALL', pband: '0.1', pgrp: '', fmodel: new Set(D.models.filter((m) => m.family === 'Y05').map((m) => m.k)), fmdim: 'model', pcshop: '', msmodel: 'ALL', locs: new Set(D.locs.map((_, i) => i).filter((i) => !D.locs.includes('MAIN_STOCK') || D.locs[i] === 'MAIN_STOCK')),
   sort: { shop: ['ach', -1], stock: ['stock', -1], ms: ['act', -1] }, q: { shop: '', stock: '', ms: '', prod: '' } };
-try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; if (Array.isArray(p.fmodel)) p.fmodel.forEach((k) => MD[k] && S.fmodel.add(k)); if (p.fmdim) S.fmdim = p.fmdim; } catch (e) {}
-const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode, fmodel: [...S.fmodel], fmdim: S.fmdim })); } catch (e) {} };
+try { const p = JSON.parse(localStorage.getItem('vivo-dash3') || '{}'); if (p.metric) S.metric = p.metric; if (p.tab) S.tab = p.tab; if (p.tmode) S.tmode = p.tmode; if (Array.isArray(p.fm2)) { S.fmodel.clear(); p.fm2.forEach((k) => MD[k] && S.fmodel.add(k)); } if (p.fmdim) S.fmdim = p.fmdim; } catch (e) {}
+const persist = () => { try { localStorage.setItem('vivo-dash3', JSON.stringify({ metric: S.metric, tab: S.tab, tmode: S.tmode, fm2: [...S.fmodel], fmdim: S.fmdim })); } catch (e) {} };
 
 // ---------- month geometry: Target to date = month Target ÷ days in month × days passed (flat rate)
 const iso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
@@ -1276,7 +1276,7 @@ function sProd(mi) {
   const tl = `${THF[mi.m - 1]} ${mi.y + 543} 1–${mi.asofDay} · ${S.ptype === 'ALL' ? 'All' : PTLAB[S.ptype]} · ${MLAB()} · ช่วงค่าเฉลี่ย ±${bp}%`;
   EXPORT.prod = [toSheet('8 Productivity สรุป', tT, `Productivity รายสาขา · สรุปจำนวนสาขา · ${tl}`), toSheet('8 Productivity รายสาขา', tS, `Productivity รายสาขา · ${sel == null ? 'ทุกกลุ่ม' : PGRP[sel].name} · ${tl}`)];
 }
-// ---------- Focus Model (Nami, 27 Nov 2026): chosen models, daily QTY and daily Net Amount in two tables (always Net, whatever the unit button)
+// ---------- Focus Model (Nami, 27 Nov 2026; default Y05 = all Y05 capacities): chosen models, daily QTY and daily Net Amount in two tables (always Net, whatever the unit button)
 function sFocus(mi) {
   const sel = S.fmodel; const okM = (k) => !sel.size || sel.has(k);
   const days = Array.from({ length: mi.asofDay }, (_, i) => `${mi.ym}-${String(i + 1).padStart(2, '0')}`); const di = Object.fromEntries(days.map((d, i) => [d, i]));

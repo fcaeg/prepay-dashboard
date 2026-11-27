@@ -82,7 +82,7 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
   (selector All / one type), counted if they have a Target this month or sales this / last month. Groups: 1 no sale · 2 below average ·
   3 within average (± band, default 10%, options 5 / 10 / 20%) · 4 above average. Average = MTD sales ÷ shops with sales, per shop type,
   inside the filters at the top (Region / Area / PC / Model / unit). Summary cards (click = filter the list) + table by type + shop list; Excel export.
-- Tab 9 "Focus Model" (Nami, 27 Nov 2026): page-only. Own model picker (saved in the browser; empty = all models; the top Model filter is not used),
+- Tab 9 "Focus Model" (Nami, 27 Nov 2026): page-only. Own model picker (default = Y05, all capacities; the viewer's choice is saved in the browser; empty = all models; the top Model filter is not used),
   rows by Model / Area / shop, columns = days 1..Day-1 of the month; two tables: QTY and Net Amount (always Net, not the unit button); Excel export.
 
 ## GIA Dashboard (https://fcaeg.github.io/prepay-dashboard/gia/)
