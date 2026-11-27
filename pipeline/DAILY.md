@@ -78,6 +78,10 @@ Same inputs as Prepay — every daily_sales / stock_balance_report run also keep
   RSA public key in `pipeline/vivo_lock.json`); the browser unlocks the RSA private key with the password (PBKDF2-SHA256 250k + AES-GCM).
   The password is not stored in the repo. To change it, regenerate vivo_lock.json with the new password (new key pair) and rebuild.
   GitHub Actions needs `cryptography` (installed in drive-sync.yml).
+- Tab 8 "Productivity รายสาขา" (Nami, 27 Nov 2026): page-only (no new data). Shops of type Matching / Non Matching / dtac COCO / dtac Hall
+  (selector All / one type), counted if they have a Target this month or sales this / last month. Groups: 1 no sale · 2 below average ·
+  3 within average (± band, default 10%, options 5 / 10 / 20%) · 4 above average. Average = MTD sales ÷ shops with sales, per shop type,
+  inside the filters at the top (Region / Area / PC / Model / unit). Summary cards (click = filter the list) + table by type + shop list; Excel export.
 
 ## GIA Dashboard (https://fcaeg.github.io/prepay-dashboard/gia/)
 Gadget / IOT / Accessory sales of Nami's North shops, same daily_sales input (`pipeline/gia.py`, hooked into update.py; a GIA error never stops Prepay).
